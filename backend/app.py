@@ -232,8 +232,12 @@ def admin_services(x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
     with SessionLocal() as db:
         b = owner_business(db, int(user["id"]))
-        if not b: return []
-     return db.query(Service).filter_by(business_id=b.id, active=True).order_by(Service.id.desc()).all()
+        if not b:
+            return []
+        return db.query(Service).filter_by(
+            business_id=b.id,
+            active=True
+        ).order_by(Service.id.desc()).all()
 
 @app.post("/admin/services")
 def admin_add_service(x: ServiceIn, x_telegram_init_data: str = Header(default="")):
