@@ -38,7 +38,7 @@ function Admin({onBack}:{onBack:()=>void}){
  const [tab,setTab]=useState('home');
  const [business,setBusiness]=useState<any>(null);
  const [services,setServices]=useState<any[]>([]);const [hours,setHours]=useState<any[]>([]);const [blocks,setBlocks]=useState<any[]>([]);const [bookings,setBookings]=useState<any[]>([]); const [loading,setLoading]=useState(true);
- const load=async()=>{if(!initData())return;const [b,s,h,bl,bo]=await Promise.all(['/admin/business','/admin/services','/admin/hours','/admin/blocks','/admin/bookings'].map(x=>fetch(API+x,{headers:headers()}).then(r=>r.json())));setBusiness(b);setServices(s||[]);setHours(h||[]);setBlocks(bl||[]);setBookings(bo||[])};
+ const load=async()=>{if(!initData())return;const [b,s,h,bl,bo]=await Promise.all(['/admin/business','/admin/services','/admin/hours','/admin/blocks','/admin/bookings'].map(x=>fetch(API+x,{headers:headers()}).then(r=>r.json())));setBusiness(b);setServices(s||[]);setHours(h||[]);setBlocks(bl||[]);setBookings(bo||[])};setLoading(false)
  useEffect(()=>{load()},[]);
  if(!initData())return <div className="card"><button className="back" onClick={onBack}>← Назад</button><h2>Откройте Bookly из Telegram</h2><p>Админ-панель работает внутри Telegram Mini App.</p></div>;
  return <section><button className="back" onClick={onBack}>← Назад</button>
