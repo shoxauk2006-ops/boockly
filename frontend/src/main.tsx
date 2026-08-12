@@ -12,20 +12,153 @@ const money=(v:number,c='UZS')=>`${new Intl.NumberFormat('ru-RU').format(v)} ${c
 const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
 function App(){
- const [mode,setMode]=useState<'home'|'admin'|'client'>('home');
- const [clientSlug,setClientSlug]=useState('');
+  const [mode,setMode]=useState<'home'|'admin'|'client'>('home');
+  const [clientSlug,setClientSlug]=useState('');
+  const [menuOpen,setMenuOpen]=useState(false);
+  const [adminTab,setAdminTab]=useState('home');
  useEffect(()=>{
    tg()?.ready();tg()?.expand();
    const startParam=tg()?.initDataUnsafe?.start_param || new URLSearchParams(window.location.search).get('startapp') || '';
    if(startParam){setClientSlug(startParam);setMode('client');}
  },[]);
- const openClient=()=>{const slug=clientSlug.trim();if(slug) setMode('client')};
- return <div className="app">
-  <header><div><b>Bookly</b><small>Booking inside Telegram</small></div><span>☰</span></header>
-  {mode==='home'&&<Home onAdmin={()=>setMode('admin')} slug={clientSlug} setSlug={setClientSlug} open={openClient}/>} 
-  {mode==='admin'&&<Admin onBack={()=>setMode('home')}/>} 
-  {mode==='client'&&<Client slug={clientSlug} onBack={()=>setMode('home')}/>} 
- </div>
+return <div className="app">
+
+  <header>
+    <div>
+      <b>Bookly</b>
+      <small>Booking inside Telegram</small>
+    </div>
+
+    <button
+      className="menu-button"
+      onClick={()=>setMenuOpen(v=>!v)}
+      aria-label="Открыть меню"
+    >
+      ☰
+    </button>
+  </header>
+
+  {menuOpen && (
+    <>
+      <div
+        className="menu-overlay"
+        onClick={()=>setMenuOpen(false)}
+      />
+
+      <aside className="side-menu">
+
+        <div className="side-menu-head">
+          <div>
+            <b>Bookly</b>
+            <small>Меню</small>
+          </div>
+
+          <button
+            className="menu-close"
+            onClick={()=>setMenuOpen(false)}
+          >
+            ×
+          </button>
+        </div>
+
+        {mode==='admin' ? (
+          <nav className="side-menu-nav">
+
+            <button onClick={()=>{
+              setAdminTab('home');
+              setMenuOpen(false);
+            }}>
+              🏠 Главная
+            </button>
+
+            <button onClick={()=>{
+              setAdminTab('services');
+              setMenuOpen(false);
+            }}>
+              🛠 Услуги
+            </button>
+
+            <button onClick={()=>{
+              setAdminTab('hours');
+              setMenuOpen(false);
+            }}>
+              🕐 График
+            </button>
+
+            <button onClick={()=>{
+              setAdminTab('blocks');
+              setMenuOpen(false);
+            }}>
+              🚫 Блокировки
+            </button>
+
+            <button onClick={()=>{
+              setAdminTab('bookings');
+              setMenuOpen(false);
+            }}>
+              📅 Записи
+            </button>
+
+            <button onClick={()=>{
+              setAdminTab('settings');
+              setMenuOpen(false);
+            }}>
+              ⚙️ Настройки
+            </button>
+
+          </nav>
+        ) : (
+          <nav className="side-menu-nav">
+
+            <button onClick={()=>{
+              setMode('admin');
+              setAdminTab('home');
+              setMenuOpen(false);
+            }}>
+              👨‍💼 Админ-панель
+            </button>
+
+            <button onClick={()=>{
+              setMode('home');
+              setMenuOpen(false);
+            }}>
+              🏠 Главная
+            </button>
+
+          </nav>
+        )}
+
+      </aside>
+    </>
+  )}
+
+  {mode==='home' &&
+    <Home
+      onAdmin={()=>{
+        setAdminTab('home');
+        setMode('admin');
+      }}
+      slug={clientSlug}
+      setSlug={setClientSlug}
+      open={openClient}
+    />
+  }
+
+  {mode==='admin' &&
+    <Admin
+      onBack={()=>setMode('home')}
+      initialTab={adminTab}
+    />
+  }
+
+  {mode==='client' &&
+    <Client
+      slug={clientSlug}
+      onBack={()=>setMode('home')}
+    />
+  }
+
+</div>
 }
 
 function Home(p:any){return <section>
@@ -34,8 +167,17 @@ function Home(p:any){return <section>
  <div className="card"><h3>Открыть страницу бизнеса</h3><input placeholder="Ссылка / slug бизнеса" value={p.slug} onChange={e=>p.setSlug(e.target.value)}/><button className="full" onClick={p.open}>Открыть</button></div>
  </section>}
 
-function Admin({onBack}:{onBack:()=>void}){
- const [tab,setTab]=useState('home');
+function Admin({
+  onBack,
+  initialTab
+}:{
+  onBack:()=>void;
+  initialTab:string;
+}){
+ const [tab,setTab]=useState('home'); 
+ useEffect(()=>{
+  setTab(initialTab);
+},[initialTab]);
  const [business,setBusiness]=useState<any>(null);
  const [services,setServices]=useState<any[]>([]);const [hours,setHours]=useState<any[]>([]);const [blocks,setBlocks]=useState<any[]>([]);const [bookings,setBookings]=useState<any[]>([]); const [loading,setLoading]=useState(true);
 
