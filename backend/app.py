@@ -542,7 +542,7 @@ async def lemon_webhook(request: Request):
         db.commit()
 
     return {"received": True}
-    return {"received":True}
+ 
 
 @app.post("/payments/webhook/{provider}")
 def payment_webhook(provider:str,payload:dict):
