@@ -427,7 +427,7 @@ def lemonsqueezy_checkout(owner_id: int):
             "attributes": {
                 "checkout_data": {
                     "custom": {
-                        "telegram_user_id": owner_id
+                       "telegram_user_id": str(owner_id)
                     }
                 },
                 "product_options": {
