@@ -416,24 +416,67 @@ LEMON_WEBHOOK_SECRET=os.getenv("LEMON_WEBHOOK_SECRET","")
 PUBLIC_APP_URL=os.getenv("PUBLIC_APP_URL","")
 
 
-def lemonsqueezy_checkout(owner_id:int):
+def lemonsqueezy_checkout(owner_id: int):
     if not all([LEMON_API_KEY, LEMON_STORE_ID, LEMON_VARIANT_ID]):
+        print("LEMON CONFIG ERROR: missing API key, Store ID or Variant ID")
         return None
-    payload={"data":{"type":"checkouts","attributes":{
-        "checkout_data":{"custom":{"telegram_user_id":owner_id}},
-        "product_options":{"redirect_url":PUBLIC_APP_URL or None,"receipt_button_text":"Вернуться в Bookly","receipt_link_url":PUBLIC_APP_URL or None},
-        "checkout_options":{"subscription_preview":True}
-    },"relationships":{"store":{"data":{"type":"stores","id":str(LEMON_STORE_ID)}},"variant":{"data":{"type":"variants","id":str(LEMON_VARIANT_ID)}}}}}
-    raw=json.dumps(payload).encode()
-    req=urllib_request.Request("https://api.lemonsqueezy.com/v1/checkouts",data=raw,headers={
-        "Accept":"application/vnd.api+json","Content-Type":"application/vnd.api+json","Authorization":f"Bearer {LEMON_API_KEY}"},method="POST")
+
+    payload = {
+        "data": {
+            "type": "checkouts",
+            "attributes": {
+                "checkout_data": {
+                    "custom": {
+                        "telegram_user_id": owner_id
+                    }
+                },
+                "product_options": {
+                    "redirect_url": PUBLIC_APP_URL or None,
+                    "receipt_button_text": "Вернуться в Bookly",
+                    "receipt_link_url": PUBLIC_APP_URL or None
+                },
+                "checkout_options": {
+                    "subscription_preview": True
+                }
+            },
+            "relationships": {
+                "store": {
+                    "data": {
+                        "type": "stores",
+                        "id": str(LEMON_STORE_ID)
+                    }
+                },
+                "variant": {
+                    "data": {
+                        "type": "variants",
+                        "id": str(LEMON_VARIANT_ID)
+                    }
+                }
+            }
+        }
+    }
+
+    raw = json.dumps(payload).encode()
+
+    req = urllib_request.Request(
+        "https://api.lemonsqueezy.com/v1/checkouts",
+        data=raw,
+        headers={
+            "Accept": "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json",
+            "Authorization": f"Bearer {LEMON_API_KEY}"
+        },
+        method="POST"
+    )
+
     try:
-        with urllib_request.urlopen(req,timeout=15) as r:
-            body=json.loads(r.read().decode())
+        with urllib_request.urlopen(req, timeout=15) as r:
+            body = json.loads(r.read().decode())
             return body["data"]["attributes"]["url"]
-   except Exception as e:
-    print("LEMON CHECKOUT ERROR:", repr(e))
-    return None
+
+    except Exception as e:
+        print("LEMON CHECKOUT ERROR:", repr(e))
+        return None
 @app.post("/payments/checkout/{provider}")
 def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
     if provider not in {"uzum","lemonsqueezy"}:raise HTTPException(400,"Unsupported provider")
