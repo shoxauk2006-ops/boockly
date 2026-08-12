@@ -34,13 +34,7 @@ function App(){
       <small>Booking inside Telegram</small>
     </div>
 
-    <button
-      className="menu-button"
-      onClick={()=>setMenuOpen(v=>!v)}
-      aria-label="Открыть меню"
-    >
-      ☰
-    </button>
+   
   </header>
 
   {menuOpen && (
