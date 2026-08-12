@@ -53,8 +53,11 @@
 }
 .menu-button{
   border:0;
-  background:transparent;
+  background:transparent !important;
+  color:#111 !important;
+  -webkit-text-fill-color:#111 !important;
   font-size:26px;
+  font-weight:700;
   cursor:pointer;
   padding:6px 8px;
   line-height:1;
