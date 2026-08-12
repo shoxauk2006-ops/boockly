@@ -245,7 +245,21 @@ const load = async () => {
   }
 };
 
-useEffect(()=>{load()},[]);
+useEffect(() => {
+  load();
+
+  const refreshOnReturn = () => {
+    load();
+  };
+
+  window.addEventListener('focus', refreshOnReturn);
+  document.addEventListener('visibilitychange', refreshOnReturn);
+
+  return () => {
+    window.removeEventListener('focus', refreshOnReturn);
+    document.removeEventListener('visibilitychange', refreshOnReturn);
+  };
+}, []);
 
 if(loading){
   return <div className="loading-screen">
