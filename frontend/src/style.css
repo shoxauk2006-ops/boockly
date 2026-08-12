@@ -140,3 +140,10 @@
     transform:translateX(0);
   }
 }
+.side-menu-head b{
+  color:#111;
+}
+
+.side-menu-head small{
+  color:#777;
+}
