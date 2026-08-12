@@ -431,9 +431,9 @@ def lemonsqueezy_checkout(owner_id:int):
         with urllib_request.urlopen(req,timeout=15) as r:
             body=json.loads(r.read().decode())
             return body["data"]["attributes"]["url"]
-    except Exception:
-        return None
-
+   except Exception as e:
+    print("LEMON CHECKOUT ERROR:", repr(e))
+    return None
 @app.post("/payments/checkout/{provider}")
 def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
     if provider not in {"uzum","lemonsqueezy"}:raise HTTPException(400,"Unsupported provider")
