@@ -180,36 +180,72 @@ function Admin({
  const [business,setBusiness]=useState<any>(null);
  const [services,setServices]=useState<any[]>([]);const [hours,setHours]=useState<any[]>([]);const [blocks,setBlocks]=useState<any[]>([]);const [bookings,setBookings]=useState<any[]>([]); const [loading,setLoading]=useState(true);
 
-const load=async()=>{
-  if(!initData()){
+const load = async () => {
+  if (!initData()) {
     setLoading(false);
     return;
   }
 
   try {
-    const [b,s,h,bl,bo]=await Promise.all(
-      ['/admin/business','/admin/services','/admin/hours','/admin/blocks','/admin/bookings']
-        .map(x =>
-          fetch(API+x,{headers:headers()})
-            .then(r=>r.json())
-        )
-    );
+    // Сначала получаем существующий бизнес
+    const businessResponse = await fetch(API + '/admin/business', {
+      headers: headers()
+    });
 
+    if (!businessResponse.ok) {
+      throw new Error(`Business request failed: ${businessResponse.status}`);
+    }
+
+    const b = await businessResponse.json();
+
+    // Сразу сохраняем бизнес и убираем экран загрузки
     setBusiness(b);
-    setServices(s||[]);
-    setHours(h||[]);
-    setBlocks(bl||[]);
-    setBookings(bo||[]);
-  } catch(e) {
-    console.error(e);
-  } finally {
+    setLoading(false);
+
+    // Остальные данные загружаем отдельно
+    const results = await Promise.allSettled([
+      fetch(API + '/admin/services', {
+        headers: headers()
+      }).then(r => r.ok ? r.json() : []),
+
+      fetch(API + '/admin/hours', {
+        headers: headers()
+      }).then(r => r.ok ? r.json() : []),
+
+      fetch(API + '/admin/blocks', {
+        headers: headers()
+      }).then(r => r.ok ? r.json() : []),
+
+      fetch(API + '/admin/bookings', {
+        headers: headers()
+      }).then(r => r.ok ? r.json() : [])
+    ]);
+
+    const [servicesResult, hoursResult, blocksResult, bookingsResult] = results;
+
+    if (servicesResult.status === 'fulfilled') {
+      setServices(servicesResult.value || []);
+    }
+
+    if (hoursResult.status === 'fulfilled') {
+      setHours(hoursResult.value || []);
+    }
+
+    if (blocksResult.status === 'fulfilled') {
+      setBlocks(blocksResult.value || []);
+    }
+
+    if (bookingsResult.status === 'fulfilled') {
+      setBookings(bookingsResult.value || []);
+    }
+
+  } catch (e) {
+    console.error('Bookly load error:', e);
     setLoading(false);
   }
 };
 
-useEffect(()=>{
-  load();
-},[]);(()=>{load()},[]);
+useEffect(()=>{load()},[]);
 
 if(loading){
   return <div className="loading-screen">
