@@ -276,7 +276,33 @@ function BusinessForm({onSaved}:{onSaved:()=>void}){const [f,setF]=useState({nam
 
 function Dashboard({bookings,business}:{bookings:any[],business:any}){const today=new Date().toISOString().slice(0,10);const b=bookings.filter(x=>x.day===today&&x.status==='confirmed');return <><div className="grid3"><Stat n={b.length} t="Сегодня"/><Stat n={bookings.filter(x=>x.status==='confirmed').length} t="Всего записей"/><Stat n={business.subscription_active?'✓':'—'} t="Подписка"/></div><div className="card"><h3>Сегодня</h3>{b.length?b.map(x=><BookingRow x={x} key={x.id}/>):<p>Записей пока нет.</p>}</div><Subscription/></>}
 function Stat({n,t}:{n:any,t:string}){return <div className="stat"><strong>{n}</strong><span>{t}</span></div>}
-function Subscription(){return <div className="card subscription"><div className="subscription-head"><div><h3>Bookly Pro</h3><p><b>$9.99 / месяц</b></p></div><span className="pill">Monthly</span></div><ul><li>Неограниченные записи</li><li>Ссылка для клиентов</li><li>Уведомления в Telegram</li><li>Расписание и блокировки</li></ul><p className="muted">Выберите способ оплаты.</p><div className="two"><button onClick={()=>checkout('uzum')}>🇺🇿 Uzum</button><button onClick={()=>checkout('lemonsqueezy')}>🌍 Lemon Squeezy</button></div></div>}
+function Subscription(){
+  return (
+    <div className="card subscription">
+      <div className="subscription-head">
+        <div>
+          <h3>Bookly Pro</h3>
+          <p><b>$9.99 / месяц</b></p>
+        </div>
+        <span className="pill">Monthly</span>
+      </div>
+
+      <ul>
+        <li>Неограниченные записи</li>
+        <li>Ссылка для клиентов</li>
+        <li>Уведомления в Telegram</li>
+        <li>Расписание и блокировки</li>
+      </ul>
+
+      <button
+        className="primary full"
+        onClick={()=>checkout('lemonsqueezy')}
+      >
+        Оплатить $9.99 / месяц
+      </button>
+    </div>
+  );
+}
 async function checkout(provider:string){const r=await fetch(API+`/payments/checkout/${provider}`,{method:'POST',headers:headers()});const d=await r.json();if(d.url){if(tg()?.openLink) tg().openLink(d.url); else window.open(d.url,'_blank');} else alert(provider==='lemonsqueezy'?'Lemon Squeezy ещё не настроен: нужны API key, Store ID и Variant ID.':'Uzum ещё не настроен: нужны merchant credentials.')}
 
 function Services({services,reload}:{services:any[],reload:()=>void}){const [f,setF]=useState({name:'',description:'',price:'',currency:'UZS',duration_min:'30'});const add=async()=>{const r=await fetch(API+'/admin/services',{method:'POST',headers:headers(),body:JSON.stringify({...f,price:Number(f.price),duration_min:Number(f.duration_min)})});if(r.ok){setF({name:'',description:'',price:'',currency:'UZS',duration_min:'30'});reload()}};return <div><div className="card"><h2>Добавить услугу</h2><input placeholder="Название" value={f.name} onChange={e=>setF({...f,name:e.target.value})}/><input placeholder="Описание" value={f.description} onChange={e=>setF({...f,description:e.target.value})}/><div className="two"><input type="number" placeholder="Цена" value={f.price} onChange={e=>setF({...f,price:e.target.value})}/><input type="number" placeholder="Минуты" value={f.duration_min} onChange={e=>setF({...f,duration_min:e.target.value})}/></div><button className="primary full" onClick={add}>+ Добавить услугу</button></div>{services.map(s=><div className="card row" key={s.id}><div><b>{s.name}</b><p>{money(s.price,s.currency)} · {s.duration_min} мин</p></div><button className="danger" onClick={async()=>{await fetch(API+`/admin/services/${s.id}`,{method:'DELETE',headers:headers()});reload()}}>Удалить</button></div>)}</div>}
