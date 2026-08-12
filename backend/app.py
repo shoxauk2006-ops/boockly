@@ -450,37 +450,98 @@ def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
         return {"provider":"uzum","amount":9.99,"currency":"USD","status":"not_configured","message":"Uzum merchant credentials are not configured yet."}
 
 @app.post("/payments/webhook/lemonsqueezy")
-async def lemon_webhook(request:Request):
-    raw=await request.body()
-    signature=request.headers.get("X-Signature","")
-    if not LEMON_WEBHOOK_SECRET or not hmac.compare_digest(hmac.new(LEMON_WEBHOOK_SECRET.encode(),raw,hashlib.sha256).hexdigest(),signature):
-        raise HTTPException(401,"Invalid webhook signature")
-    payload=json.loads(raw.decode() or "{}")
-    event=payload.get("meta",{}).get("event_name","")
-    custom=payload.get("meta",{}).get("custom_data",{}) or {}
-    owner_id=custom.get("telegram_user_id")
-    attrs=payload.get("data",{}).get("attributes",{}) or {}
-    renews_at=attrs.get("renews_at") or attrs.get("ends_at")
+async def lemon_webhook(request: Request):
+    raw = await request.body()
+
+    signature = request.headers.get("X-Signature", "")
+
+    if not LEMON_WEBHOOK_SECRET:
+        raise HTTPException(500, "LEMON_WEBHOOK_SECRET is not configured")
+
+    expected_signature = hmac.new(
+        LEMON_WEBHOOK_SECRET.encode(),
+        raw,
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_signature, signature):
+        raise HTTPException(401, "Invalid webhook signature")
+
+    payload = json.loads(raw.decode() or "{}")
+
+    event = payload.get("meta", {}).get("event_name", "")
+    custom = payload.get("meta", {}).get("custom_data", {}) or {}
+
+    owner_id = custom.get("telegram_user_id")
+
+    data = payload.get("data", {}) or {}
+    attrs = data.get("attributes", {}) or {}
+
+    status = attrs.get("status", "inactive")
+    renews_at = attrs.get("renews_at")
+    ends_at = attrs.get("ends_at")
+
+    urls = attrs.get("urls", {}) or {}
+    payment_method_url = urls.get("update_payment_method", "")
+
+    subscription_id = str(
+        data.get("id", "")
+    )
+
     with SessionLocal() as db:
-        b=None
+        b = None
+
         if owner_id:
-            b=owner_business(db,int(owner_id))
-        if b:
-            b.payment_provider="lemonsqueezy"
-            b.external_subscription_id=str(payload.get("data",{}).get("id",b.external_subscription_id))
-            if event in {"subscription_created","subscription_updated","subscription_resumed","subscription_payment_success","subscription_payment_recovered"}:
-                b.subscription_active=True
-                if renews_at:
-                    try:b.subscription_expires_at=datetime.fromisoformat(renews_at.replace("Z","+00:00")).replace(tzinfo=None)
-                    except ValueError:pass
-            elif event in {"subscription_expired","subscription_cancelled","subscription_payment_failed"}:
-                if event=="subscription_payment_failed":
-                    # Keep access until the current paid period ends when possible.
-                    if b.subscription_expires_at and b.subscription_expires_at>datetime.utcnow():
-                        b.subscription_active=True
-                    else:b.subscription_active=False
-                else:b.subscription_active=False
-            db.commit()
+            b = owner_business(db, int(owner_id))
+
+        if not b:
+            return {"received": True}
+
+        b.payment_provider = "lemonsqueezy"
+
+        if subscription_id:
+            b.external_subscription_id = subscription_id
+
+        # Сохраняем актуальный статус Lemon Squeezy
+        b.subscription_status = status
+
+        # Сохраняем ссылку для управления способом оплаты
+        if payment_method_url:
+            b.payment_method_url = payment_method_url
+
+        # Дата следующего списания / окончания текущего периода
+        billing_date = renews_at or ends_at
+
+        if billing_date:
+            try:
+                b.subscription_expires_at = (
+                    datetime.fromisoformat(
+                        billing_date.replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
+                )
+            except ValueError:
+                pass
+
+        # Bookly активен во всех состояниях,
+        # кроме expired.
+        if status == "expired":
+            b.subscription_active = False
+        else:
+            b.subscription_active = True
+
+        # Дополнительная защита для отменённой подписки:
+        # она действует до конца оплаченного периода.
+        if status == "cancelled":
+            if b.subscription_expires_at:
+                b.subscription_active = (
+                    b.subscription_expires_at > datetime.utcnow()
+                )
+            else:
+                b.subscription_active = False
+
+        db.commit()
+
+    return {"received": True}
     return {"received":True}
 
 @app.post("/payments/webhook/{provider}")
