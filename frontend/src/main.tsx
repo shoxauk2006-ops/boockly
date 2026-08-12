@@ -21,8 +21,13 @@ function App(){
    const startParam=tg()?.initDataUnsafe?.start_param || new URLSearchParams(window.location.search).get('startapp') || '';
    if(startParam){setClientSlug(startParam);setMode('client');}
  },[]);
-return <div className="app">
 
+ const openClient=()=>{
+   const slug=clientSlug.trim();
+   if(slug) setMode('client');
+ };
+
+ return <div className="app">
   <header>
     <div>
       <b>Bookly</b>
