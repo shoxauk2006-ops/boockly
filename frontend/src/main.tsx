@@ -439,7 +439,121 @@ function checkout(provider:string){
   });
 }
 
-}function Services({services,reload}:{services:any[],reload:()=>void}){const [f,setF]=useState({name:'',description:'',price:'',currency:'UZS',duration_min:'30'});const add=async()=>{const r=await fetch(API+'/admin/services',{method:'POST',headers:headers(),body:JSON.stringify({...f,price:Number(f.price),duration_min:Number(f.duration_min)})});if(r.ok){setF({name:'',description:'',price:'',currency:'UZS',duration_min:'30'});reload()}};return <div><div className="card"><h2>Добавить услугу</h2><input placeholder="Название" value={f.name} onChange={e=>setF({...f,name:e.target.value})}/><input placeholder="Описание" value={f.description} onChange={e=>setF({...f,description:e.target.value})}/><div className="two"><input type="number" placeholder="Цена" value={f.price} onChange={e=>setF({...f,price:e.target.value})}/><input type="number" placeholder="Минуты" value={f.duration_min} onChange={e=>setF({...f,duration_min:e.target.value})}/></div><button className="primary full" onClick={add}>+ Добавить услугу</button></div>{services.map(s=><div className="card row" key={s.id}><div><b>{s.name}</b><p>{money(s.price,s.currency)} · {s.duration_min} мин</p></div><button className="danger" onClick={async()=>{await fetch(API+`/admin/services/${s.id}`,{method:'DELETE',headers:headers()});reload()}}>Удалить</button></div>)}</div>}
+function Services({
+  services,
+  reload
+}: {
+  services: any[];
+  reload: () => void;
+}) {
+  const [f, setF] = useState({
+    name: '',
+    description: '',
+    price: '',
+    currency: 'UZS',
+    duration_min: '30'
+  });
+
+  const add = async () => {
+    const r = await fetch(API + '/admin/services', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        ...f,
+        price: Number(f.price),
+        duration_min: Number(f.duration_min)
+      })
+    });
+
+    if (r.ok) {
+      setF({
+        name: '',
+        description: '',
+        price: '',
+        currency: 'UZS',
+        duration_min: '30'
+      });
+
+      reload();
+    }
+  };
+
+  const remove = async (id: number) => {
+    await fetch(API + `/admin/services/${id}`, {
+      method: 'DELETE',
+      headers: headers()
+    });
+
+    reload();
+  };
+
+  return (
+    <div>
+      <div className="card">
+        <h2>Добавить услугу</h2>
+
+        <input
+          placeholder="Название"
+          value={f.name}
+          onChange={e => setF({ ...f, name: e.target.value })}
+        />
+
+        <input
+          placeholder="Описание"
+          value={f.description}
+          onChange={e =>
+            setF({ ...f, description: e.target.value })
+          }
+        />
+
+        <div className="two">
+          <input
+            type="number"
+            placeholder="Цена"
+            value={f.price}
+            onChange={e =>
+              setF({ ...f, price: e.target.value })
+            }
+          />
+
+          <input
+            type="number"
+            placeholder="Минуты"
+            value={f.duration_min}
+            onChange={e =>
+              setF({ ...f, duration_min: e.target.value })
+            }
+          />
+        </div>
+
+        <button
+          className="primary full"
+          onClick={add}
+        >
+          + Добавить услугу
+        </button>
+      </div>
+
+      {services.map(s => (
+        <div className="card row" key={s.id}>
+          <div>
+            <b>{s.name}</b>
+            <p>
+              {money(s.price, s.currency)} · {s.duration_min} мин
+            </p>
+          </div>
+
+          <button
+            className="danger"
+            onClick={() => remove(s.id)}
+          >
+            Удалить
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Hours({hours,reload}:{hours:any[],reload:()=>void}){const [f,setF]=useState({weekday:'0',start:'09:00',end:'18:00'});const add=async()=>{await fetch(API+'/admin/hours',{method:'POST',headers:headers(),body:JSON.stringify({...f,weekday:Number(f.weekday)})});reload()};return <div className="card"><h2>Рабочий график</h2><p>Настройте обычные рабочие часы. Потом отдельные часы можно блокировать.</p><div className="two"><select value={f.weekday} onChange={e=>setF({...f,weekday:e.target.value})}>{days.map((x,i)=><option value={i} key={x}>{x}</option>)}</select><span></span></div><div className="two"><input type="time" value={f.start} onChange={e=>setF({...f,start:e.target.value})}/><input type="time" value={f.end} onChange={e=>setF({...f,end:e.target.value})}/></div><button className="primary full" onClick={add}>Добавить интервал</button>{days.map((d,i)=>{const hs=hours.filter(h=>h.weekday===i);return <div className="dayrow" key={d}><b>{d}</b><div>{hs.length?hs.map(h=><span className="tag" key={h.id}>{h.start.slice(0,5)}–{h.end.slice(0,5)} <button onClick={async()=>{await fetch(API+`/admin/hours/${h.id}`,{method:'DELETE',headers:headers()});reload()}}>×</button></span>):<span className="muted">Выходной</span>}</div></div>})}</div>}
 
