@@ -12,7 +12,7 @@ from urllib.error import URLError
 from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, String, Integer, Boolean, Date, Time, DateTime, ForeignKey
+from sqlalchemy import create_engine, String, Integer, BigInteger, Boolean, Date, Time, DateTime, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +27,7 @@ class Base(DeclarativeBase): pass
 class Business(Base):
     __tablename__ = "businesses"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    owner_telegram_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    owner_telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     name: Mapped[str] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(String(500), default="")
     address: Mapped[str] = mapped_column(String(255), default="")
@@ -75,7 +75,7 @@ class Booking(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
     service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))
-    client_telegram_id: Mapped[int] = mapped_column(Integer, index=True)
+   client_telegram_id: Mapped[int] = mapped_column(BigInteger, index=True)
     client_name: Mapped[str] = mapped_column(String(120))
     client_phone: Mapped[str] = mapped_column(String(40), default="")
     day: Mapped[date] = mapped_column(Date)
