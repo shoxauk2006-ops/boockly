@@ -383,13 +383,12 @@ function Subscription({business}:{business:any}){
         <p className="muted">
           Оплатите подписку, чтобы активировать Bookly.
         </p>
-
-        <button
-          className="primary full"
-          onClick={()=>checkout('lemonsqueezy')}
-        >
-          Оплатить $9.99 / месяц
-        </button>
+<button
+  className="primary full"
+  onClick={()=>checkout('paddle')}
+>
+  Оплатить $9.99 / месяц
+</button>
       </div>
     );
   }
