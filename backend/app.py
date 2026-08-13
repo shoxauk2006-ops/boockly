@@ -500,101 +500,77 @@ def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
             return {"provider":provider,"amount":9.99,"currency":"USD","status":"ready","url":url}
         return {"provider":"uzum","amount":9.99,"currency":"USD","status":"not_configured","message":"Uzum merchant credentials are not configured yet."}
 
-@app.post("/payments/webhook/lemonsqueezy")
-async def lemon_webhook(request: Request):
+@app.post("/payments/webhook/paddle")
+async def paddle_webhook(request: Request):
     raw = await request.body()
+    signature_header = request.headers.get("Paddle-Signature", "")
+    if not PADDLE_WEBHOOK_SECRET:
+        raise HTTPException(500, "PADDLE_WEBHOOK_SECRET is not configured")
 
-    signature = request.headers.get("X-Signature", "")
+    # Paddle подписывает так: "ts=<timestamp>;h1=<hash>"
+    parts = dict(p.split("=", 1) for p in signature_header.split(";") if "=" in p)
+    ts = parts.get("ts", "")
+    h1 = parts.get("h1", "")
+    if not ts or not h1:
+        raise HTTPException(401, "Invalid Paddle signature header")
 
-    if not LEMON_WEBHOOK_SECRET:
-        raise HTTPException(500, "LEMON_WEBHOOK_SECRET is not configured")
-
+    signed_payload = f"{ts}:{raw.decode()}".encode()
     expected_signature = hmac.new(
-        LEMON_WEBHOOK_SECRET.encode(),
-        raw,
+        PADDLE_WEBHOOK_SECRET.encode(),
+        signed_payload,
         hashlib.sha256
     ).hexdigest()
-
-    if not hmac.compare_digest(expected_signature, signature):
+    if not hmac.compare_digest(expected_signature, h1):
         raise HTTPException(401, "Invalid webhook signature")
 
     payload = json.loads(raw.decode() or "{}")
-
-    event = payload.get("meta", {}).get("event_name", "")
-    custom = payload.get("meta", {}).get("custom_data", {}) or {}
-
+    event_type = payload.get("event_type", "")
+    data = payload.get("data", {}) or {}
+    custom = data.get("custom_data", {}) or {}
     owner_id = custom.get("telegram_user_id")
 
-    data = payload.get("data", {}) or {}
-    attrs = data.get("attributes", {}) or {}
+    status = data.get("status", "")
+    subscription_id = str(data.get("id", "") or data.get("subscription_id", ""))
 
-    status = attrs.get("status", "inactive")
-    renews_at = attrs.get("renews_at")
-    ends_at = attrs.get("ends_at")
-
-    urls = attrs.get("urls", {}) or {}
-    payment_method_url = urls.get("update_payment_method", "")
-
-    subscription_id = str(
-        data.get("id", "")
-    )
+    billing_period = data.get("current_billing_period", {}) or {}
+    next_billed_at = data.get("next_billed_at") or billing_period.get("ends_at")
 
     with SessionLocal() as db:
         b = None
-
         if owner_id:
             b = owner_business(db, int(owner_id))
-
         if not b:
             return {"received": True}
 
-        b.payment_provider = "lemonsqueezy"
-
+        b.payment_provider = "paddle"
         if subscription_id:
             b.external_subscription_id = subscription_id
-
-        # Сохраняем актуальный статус Lemon Squeezy
         b.subscription_status = status
 
-        # Сохраняем ссылку для управления способом оплаты
-        if payment_method_url:
-            b.payment_method_url = payment_method_url
-
-        # Дата следующего списания / окончания текущего периода
-        billing_date = renews_at or ends_at
-
-        if billing_date:
+        if next_billed_at:
             try:
                 b.subscription_expires_at = (
-                    datetime.fromisoformat(
-                        billing_date.replace("Z", "+00:00")
-                    ).replace(tzinfo=None)
+                    datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
+                    .replace(tzinfo=None)
                 )
             except ValueError:
                 pass
 
-        # Bookly активен во всех состояниях,
-        # кроме expired.
-        if status == "expired":
-            b.subscription_active = False
-        else:
-            b.subscription_active = True
-
-        # Дополнительная защита для отменённой подписки:
-        # она действует до конца оплаченного периода.
-        if status == "cancelled":
+        if event_type in {"transaction.completed", "subscription.created", "subscription.updated", "subscription.resumed"}:
+            b.subscription_active = status not in {"canceled", "paused"}
+        elif event_type in {"subscription.canceled", "subscription.paused"}:
             if b.subscription_expires_at:
-                b.subscription_active = (
-                    b.subscription_expires_at > datetime.utcnow()
-                )
+                b.subscription_active = b.subscription_expires_at > datetime.utcnow()
+            else:
+                b.subscription_active = False
+        elif event_type == "transaction.payment_failed":
+            if b.subscription_expires_at and b.subscription_expires_at > datetime.utcnow():
+                b.subscription_active = True
             else:
                 b.subscription_active = False
 
         db.commit()
-
     return {"received": True}
- 
-
 @app.post("/payments/webhook/{provider}")
 def payment_webhook(provider:str,payload:dict):
     if provider not in {"uzum"}:raise HTTPException(400,"Use the provider-specific webhook")
