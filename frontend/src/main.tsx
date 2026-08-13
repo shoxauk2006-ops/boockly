@@ -443,19 +443,22 @@ function checkout(provider:string){
   if(provider !== 'paddle'){
     return;
   }
-
   if(!window.Paddle){
     alert('Paddle ещё загружается. Попробуйте ещё раз.');
     return;
   }
-
+  const ownerId = tg()?.initDataUnsafe?.user?.id;
+  if(!ownerId){
+    alert('Не удалось определить пользователя Telegram.');
+    return;
+  }
   window.Paddle.Checkout.open({
     items: [
-      {
-        priceId: 'pri_01kzwxx7zeytn8sqxfvpt0a8ys',
-        quantity: 1
-      }
-    ]
+      { priceId: 'pri_01kzwxx7zeytn8sqxfvpt0a8ys', quantity: 1 }
+    ],
+    customData: {
+      telegram_user_id: String(ownerId)
+    }
   });
 }
 
