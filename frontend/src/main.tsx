@@ -1,7 +1,12 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
-
+declare global {
+  interface Window {
+    Telegram:any;
+    Paddle:any;
+  }
+}
 declare global { interface Window { Telegram:any } }
 const API=import.meta.env.VITE_API_URL||'http://localhost:8000';
 const BOT_USERNAME=import.meta.env.VITE_BOT_USERNAME||'BooklyBot';
