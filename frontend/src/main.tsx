@@ -17,6 +17,26 @@ const money=(v:number,c='UZS')=>`${new Intl.NumberFormat('ru-RU').format(v)} ${c
 const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
 function App(){
+  const [mode,setMode]=useState<'home'|'admin'|'client'>('home');
+  const [clientSlug,setClientSlug]=useState('');
+  const [menuOpen,setMenuOpen]=useState(false);
+  const [adminTab,setAdminTab]=useState('home');
+
+  useEffect(()=>{
+    tg()?.ready();
+    tg()?.expand();
+
+    const startParam =
+      tg()?.initDataUnsafe?.start_param ||
+      new URLSearchParams(window.location.search).get('startapp') ||
+      '';
+
+    if(startParam){
+      setClientSlug(startParam);
+      setMode('client');
+    }
+  },[]);
+
   useEffect(() => {
    const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
 
