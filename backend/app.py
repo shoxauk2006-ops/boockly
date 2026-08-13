@@ -414,6 +414,7 @@ LEMON_STORE_ID=os.getenv("LEMON_STORE_ID","")
 LEMON_VARIANT_ID=os.getenv("LEMON_VARIANT_ID","")
 LEMON_WEBHOOK_SECRET=os.getenv("LEMON_WEBHOOK_SECRET","")
 PUBLIC_APP_URL=os.getenv("PUBLIC_APP_URL","")
+PADDLE_WEBHOOK_SECRET=os.getenv("PADDLE_WEBHOOK_SECRET","")
 
 
 def lemonsqueezy_checkout(owner_id: int):
