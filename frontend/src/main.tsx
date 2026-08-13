@@ -338,7 +338,7 @@ function Dashboard({bookings,business}:{bookings:any[],business:any}){const toda
 function Stat({n,t}:{n:any,t:string}){return <div className="stat"><strong>{n}</strong><span>{t}</span></div>}
 function Subscription({business}:{business:any}){
   const status = business?.subscription_status || "inactive";
- const active = false;
+ const active = business?.subscription_active || false;
 
   const paymentFailed = status === "past_due" || status === "unpaid";
   const cancelledButActive = status === "cancelled" && active;
