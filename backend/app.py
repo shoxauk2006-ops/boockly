@@ -340,6 +340,81 @@ def admin_bookings(day:Optional[date]=None,x_telegram_init_data:str=Header(defau
         q=db.query(Booking).filter_by(business_id=b.id)
         if day:q=q.filter_by(day=day)
         return q.order_by(Booking.day,Booking.start).all()
+        @app.post("/admin/bookings")
+def admin_create_booking(
+    x: AdminBookingIn,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
+
+    with SessionLocal() as db:
+        business = owner_business(db, owner_id)
+
+        if not business:
+            raise HTTPException(
+                400,
+                "Create business first"
+            )
+
+        service = db.get(Service, x.service_id)
+
+        if not service or service.business_id != business.id or not service.active:
+            raise HTTPException(
+                404,
+                "Service not found"
+            )
+
+        from zoneinfo import ZoneInfo
+
+        now_tashkent = datetime.now(
+            ZoneInfo("Asia/Tashkent")
+        ).replace(tzinfo=None)
+
+        start_dt = datetime.combine(
+            x.day,
+            x.start
+        )
+
+        end_dt = start_dt + timedelta(
+            minutes=service.duration_min
+        )
+
+        if start_dt <= now_tashkent:
+            raise HTTPException(
+                400,
+                "Нельзя создать запись на прошедшее время"
+            )
+
+        if not is_free(
+            db,
+            business.id,
+            x.day,
+            x.start,
+            end_dt.time()
+        ):
+            raise HTTPException(
+                400,
+                "Это время уже занято или заблокировано"
+            )
+
+        booking = Booking(
+            business_id=business.id,
+            service_id=service.id,
+            client_telegram_id=0,
+            client_name=x.client_name.strip(),
+            client_phone=x.client_phone.strip(),
+            day=x.day,
+            start=x.start,
+            end=end_dt.time(),
+            status="confirmed"
+        )
+
+        db.add(booking)
+        db.commit()
+        db.refresh(booking)
+
+        return booking
 
 # ---------- client ----------
 def get_work_windows(db, business_id:int, day:date):
