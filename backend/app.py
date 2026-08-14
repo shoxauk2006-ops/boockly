@@ -35,11 +35,12 @@ class Business(Base):
     longitude: Mapped[Optional[float]] = mapped_column(nullable=True)
     slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
     subscription_active: Mapped[bool] = mapped_column(Boolean, default=False)
-subscription_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-subscription_status: Mapped[str] = mapped_column(String(30), default="inactive")
-payment_provider: Mapped[str] = mapped_column(String(30), default="")
-external_subscription_id: Mapped[str] = mapped_column(String(120), default="")
-payment_method_url: Mapped[str] = mapped_column(String(1000), default="")
+    subscription_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    subscription_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    subscription_status: Mapped[str] = mapped_column(String(30), default="inactive")
+    payment_provider: Mapped[str] = mapped_column(String(30), default="")
+    external_subscription_id: Mapped[str] = mapped_column(String(120), default="")
+    payment_method_url: Mapped[str] = mapped_column(String(1000), default="")
 
 class Service(Base):
     __tablename__ = "services"
