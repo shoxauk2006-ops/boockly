@@ -682,91 +682,376 @@ function Settings({business,reload}:{business:any,reload:()=>void}){const [f,set
 
 function MyBookings(){const [items,setItems]=useState<any[]>([]);useEffect(()=>{fetch(API+'/my/bookings',{headers:headers()}).then(r=>r.ok?r.json():[]).then(setItems)},[]);return <div className="card"><h2>Мои записи</h2>{items.length?items.map(x=><div className="booking" key={x.id}><div><b>{x.day}</b><span>{x.start.slice(0,5)}–{x.end.slice(0,5)}</span></div><em>{x.status==='confirmed'?'Подтверждено':'Отменено'}</em></div>):<p>У вас пока нет записей.</p>}</div>}
 
-function Client({slug,onBack}:{slug:string,onBack:()=>void}){const [business,setBusiness]=useState<any>(null);const [services,setServices]=useState<any[]>([]);const [selected,setSelected]=useState<any>(null);const [day,setDay]=useState(new Date().toISOString().slice(0,10));const [slots,setSlots]=useState<string[]>([]);const [phone,setPhone]=useState('');
- useEffect(()=>{const [business,setBusiness] = useState<any>(null);
-const [services,setServices] = useState<any[]>([]);
-const [loading,setLoading] = useState(true);
-const [error,setError] = useState('');
+function Client({
+  slug,
+  onBack
+}: {
+  slug: string;
+  onBack: () => void;
+}) {
+  const [business, setBusiness] = useState<any>(null);
+  const [services, setServices] = useState<any[]>([]);
+  const [selected, setSelected] = useState<any>(null);
+  const [day, setDay] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [slots, setSlots] = useState<string[]>([]);
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-useEffect(()=>{
-  let cancelled = false;
+  useEffect(() => {
+    let cancelled = false;
 
-  const load = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      if (!slug) {
-        throw new Error('Ссылка на бизнес не содержит slug.');
-      }
-
-      const response = await fetch(
-        API + `/businesses/${encodeURIComponent(slug)}`
-      );
-
-      const text = await response.text();
-
-      let data:any = null;
+    const load = async () => {
+      setLoading(true);
+      setError('');
 
       try {
-        data = text ? JSON.parse(text) : null;
-      } catch {
-        data = null;
-      }
-
-      if (!response.ok) {
-        if (response.status === 403) {
+        if (!slug) {
           throw new Error(
-            'Этот бизнес сейчас не активен. Владелец должен активировать подписку Bookly.'
+            'Ссылка на бизнес не содержит slug.'
           );
         }
 
-        if (response.status === 404) {
-          throw new Error(
-            'Бизнес не найден. Возможно, ссылка устарела или содержит неправильный slug.'
-          );
-        }
-
-        throw new Error(
-          data?.detail ||
-          data?.message ||
-          `Ошибка сервера: ${response.status}`
+        const response = await fetch(
+          API + `/businesses/${encodeURIComponent(slug)}`
         );
-      }
 
-      if (!data?.business) {
-        throw new Error('Сервер не вернул данные бизнеса.');
-      }
+        const text = await response.text();
 
-      if (!cancelled) {
-        setBusiness(data.business);
-        setServices(data.services || []);
-      }
+        let data: any = null;
 
-    } catch (e:any) {
-      console.error('CLIENT LOAD ERROR:', e);
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          data = null;
+        }
 
-      if (!cancelled) {
-        setBusiness(null);
-        setServices([]);
-        setError(e?.message || 'Не удалось загрузить бизнес');
+        if (!response.ok) {
+          if (response.status === 403) {
+            throw new Error(
+              'Этот бизнес сейчас не активен. Владелец должен активировать подписку Bookly.'
+            );
+          }
+
+          if (response.status === 404) {
+            throw new Error(
+              'Бизнес не найден. Возможно, ссылка устарела или содержит неправильный slug.'
+            );
+          }
+
+          throw new Error(
+            data?.detail ||
+            data?.message ||
+            `Ошибка сервера: ${response.status}`
+          );
+        }
+
+        if (!data?.business) {
+          throw new Error(
+            'Сервер не вернул данные бизнеса.'
+          );
+        }
+
+        if (!cancelled) {
+          setBusiness(data.business);
+          setServices(data.services || []);
+        }
+      } catch (e: any) {
+        console.error('CLIENT LOAD ERROR:', e);
+
+        if (!cancelled) {
+          setBusiness(null);
+          setServices([]);
+          setError(
+            e?.message ||
+            'Не удалось загрузить бизнес'
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    } finally {
-      if (!cancelled) {
-        setLoading(false);
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  const choose = async (service: any) => {
+    if (!business) return;
+
+    setSelected(service);
+    setSlots([]);
+
+    try {
+      const response = await fetch(
+        API +
+          `/businesses/${business.id}/availability?service_id=${service.id}&day=${day}`
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSlots(data?.slots || []);
+      } else {
+        setSlots([]);
       }
+    } catch (e) {
+      console.error('AVAILABILITY ERROR:', e);
+      setSlots([]);
     }
   };
 
-  load();
+  const book = async (start: string) => {
+    if (!business || !selected) return;
 
-  return () => {
-    cancelled = true;
+    try {
+      const response = await fetch(API + '/bookings', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          business_id: business.id,
+          service_id: selected.id,
+          client_phone: phone,
+          day,
+          start
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('✅ Бронирование подтверждено');
+
+        await choose(selected);
+      } else {
+        alert(
+          data?.detail ||
+          'Не удалось забронировать'
+        );
+      }
+    } catch (e) {
+      console.error('BOOKING ERROR:', e);
+
+      alert(
+        'Не удалось выполнить бронирование. Попробуйте ещё раз.'
+      );
+    }
   };
-},[slug]);.then(r=>r.ok?r.json():null).then(d=>{if(d){setBusiness(d.business);setServices(d.services)}})},[slug]);
- const choose=async(s:any)=>{setSelected(s);const r=await fetch(API+`/businesses/${business.id}/availability?service_id=${s.id}&day=${day}`);setSlots((await r.json()).slots||[])};
- const book=async(start:string)=>{const u=tg()?.initDataUnsafe?.user||{};const r=await fetch(API+'/bookings',{method:'POST',headers:headers(),body:JSON.stringify({business_id:business.id,service_id:selected.id,client_phone:phone,day,start})});if(r.ok){alert('✅ Бронирование подтверждено');choose(selected)}else alert((await r.json()).detail||'Не удалось забронировать')};
- if(!business)return <div className="card"><button className="back" onClick={onBack}>← Назад</button><p>Загрузка...</p></div>;
- return <section><button className="back" onClick={onBack}>← Назад</button><div className="client-hero"><h1>{business.name}</h1><p>{business.description}</p><p>📍 {business.address}</p></div><h2>Услуги</h2>{services.map(s=><div className={`card row ${selected?.id===s.id?'selected':''}`} key={s.id}><div><b>{s.name}</b><p>{money(s.price,s.currency)} · {s.duration_min} мин</p></div><button onClick={()=>choose(s)}>Выбрать</button></div>)}{selected&&<div className="card"><h2>{selected.name}</h2><input type="date" min={new Date().toISOString().slice(0,10)} value={day} onChange={e=>{setDay(e.target.value);setTimeout(()=>choose(selected),0)}}/><p>Номер нужен, чтобы администратор мог связаться с вами по записи.</p><button className="ghost full" onClick={()=>tg()?.requestContact?.((contact:any)=>setPhone(contact?.phone_number||''))}>📱 Поделиться номером</button>{phone&&<p className="success">✓ Номер получен</p>}<div className="slots">{slots.map(x=><button key={x} onClick={()=>book(x)}>{x}</button>)}</div>{!slots.length&&<p>На эту дату свободных мест нет.</p>}</div>}</section>}
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-logo">B</div>
+        <h2>Bookly</h2>
+        <div className="loading-spinner"></div>
+        <p>Загрузка бизнеса...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card">
+        <button
+          className="back"
+          onClick={onBack}
+        >
+          ← Назад
+        </button>
+
+        <h2>Не удалось открыть страницу</h2>
+
+        <p className="error">
+          ❌ {error}
+        </p>
+
+        <button
+          className="primary full"
+          onClick={() => window.location.reload()}
+        >
+          Повторить
+        </button>
+      </div>
+    );
+  }
+
+  if (!business) {
+    return (
+      <div className="card">
+        <button
+          className="back"
+          onClick={onBack}
+        >
+          ← Назад
+        </button>
+
+        <p>
+          Бизнес не найден.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <section>
+      <button
+        className="back"
+        onClick={onBack}
+      >
+        ← Назад
+      </button>
+
+      <div className="client-hero">
+        <h1>{business.name}</h1>
+
+        {business.description && (
+          <p>{business.description}</p>
+        )}
+
+        {business.address && (
+          <p>
+            📍 {business.address}
+          </p>
+        )}
+      </div>
+
+      <h2>Услуги</h2>
+
+      {services.length === 0 ? (
+        <div className="card">
+          <p>
+            У этого бизнеса пока нет доступных услуг.
+          </p>
+        </div>
+      ) : (
+        services.map(service => (
+          <div
+            className={`card row ${
+              selected?.id === service.id
+                ? 'selected'
+                : ''
+            }`}
+            key={service.id}
+          >
+            <div>
+              <b>{service.name}</b>
+
+              {service.description && (
+                <p>{service.description}</p>
+              )}
+
+              <p>
+                {money(
+                  service.price,
+                  service.currency
+                )}{' '}
+                · {service.duration_min} мин
+              </p>
+            </div>
+
+            <button
+              onClick={() => choose(service)}
+            >
+              Выбрать
+            </button>
+          </div>
+        ))
+      )}
+
+      {selected && (
+        <div className="card">
+          <h2>{selected.name}</h2>
+
+          <input
+            type="date"
+            min={
+              new Date()
+                .toISOString()
+                .slice(0, 10)
+            }
+            value={day}
+            onChange={async e => {
+              const newDay = e.target.value;
+
+              setDay(newDay);
+              setSlots([]);
+
+              try {
+                const response = await fetch(
+                  API +
+                    `/businesses/${business.id}/availability?service_id=${selected.id}&day=${newDay}`
+                );
+
+                const data =
+                  await response.json();
+
+                if (response.ok) {
+                  setSlots(
+                    data?.slots || []
+                  );
+                }
+              } catch (e) {
+                console.error(
+                  'DATE AVAILABILITY ERROR:',
+                  e
+                );
+              }
+            }}
+          />
+
+          <p>
+            Номер нужен, чтобы администратор
+            мог связаться с вами по записи.
+          </p>
+
+          <button
+            className="ghost full"
+            onClick={() =>
+              tg()?.requestContact?.(
+                (contact: any) => {
+                  setPhone(
+                    contact?.phone_number || ''
+                  );
+                }
+              )
+            }
+          >
+            📱 Поделиться номером
+          </button>
+
+          {phone && (
+            <p className="success">
+              ✓ Номер получен
+            </p>
+          )}
+
+          <div className="slots">
+            {slots.map(time => (
+              <button
+                key={time}
+                onClick={() => book(time)}
+              >
+                {time}
+              </button>
+            ))}
+          </div>
+
+          {!slots.length && (
+            <p>
+              На эту дату свободных мест нет.
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
 
 createRoot(document.getElementById('root')!).render(<App/>);
