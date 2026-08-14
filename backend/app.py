@@ -415,37 +415,82 @@ def availability(business_id: int, service_id: int, day: date):
         return {"slots": slots}
 
 @app.post("/bookings")
-def create_booking(x:BookingIn,x_telegram_init_data:str=Header(default="")):
-    user=telegram_user(x_telegram_init_data)
+def create_booking(
+    x: BookingIn,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+
     # Client identity always comes from signed Telegram initData.
-    x.client_telegram_id=int(user["id"])
-      with SessionLocal() as db:
-        b=db.get(Business,x.business_id);s=db.get(Service,x.service_id)
-        if not b or not s or s.business_id!=x.business_id or not s.active:raise HTTPException(404,"Not found")
-        if not b.subscription_active:raise HTTPException(403,"Business inactive")
-        end=(datetime.combine(x.day,x.start)+timedelta(minutes=s.duration_min)).time()
-        if not is_free(db,x.business_id,x.day,x.start,end):raise HTTPException(409,"This time is no longer available")
-        booking=Booking(**x.model_dump(),end=end);db.add(booking);db.commit();db.refresh(booking)
-        notify_owner_new_booking(db, booking, s)
-          telegram_api(
-    "sendMessage",
-    {
-        "chat_id": booking.client_telegram_id,
-        "text": (
-            "✅ <b>Вы успешно записаны!</b>\n\n"
-            f"💈 {s.name}\n"
-            f"📅 {booking.day.isoformat()}\n"
-            f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\n"
-            f"📞 {booking.client_phone}\n\n"
-            "Ждём вас!"
-        ),
-        "parse_mode": "HTML"
-    }
-)
+    x.client_telegram_id = int(user["id"])
 
-notify_owner_new_booking(db, booking, s)
+    with SessionLocal() as db:
+        b = db.get(Business, x.business_id)
+        s = db.get(Service, x.service_id)
+
+        if (
+            not b
+            or not s
+            or s.business_id != x.business_id
+            or not s.active
+        ):
+            raise HTTPException(404, "Not found")
+
+        if not b.subscription_active:
+            raise HTTPException(403, "Business inactive")
+
+        end = (
+            datetime.combine(x.day, x.start)
+            + timedelta(minutes=s.duration_min)
+        ).time()
+
+        if not is_free(
+            db,
+            x.business_id,
+            x.day,
+            x.start,
+            end
+        ):
+            raise HTTPException(
+                409,
+                "This time is no longer available"
+            )
+
+        booking = Booking(
+            **x.model_dump(),
+            end=end
+        )
+
+        db.add(booking)
+        db.commit()
+        db.refresh(booking)
+
+        # Уведомление владельцу
+        notify_owner_new_booking(
+            db,
+            booking,
+            s
+        )
+
+        # Уведомление клиенту
+        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": booking.client_telegram_id,
+                "text": (
+                    "✅ <b>Вы успешно записаны!</b>\n\n"
+                    f"💈 {s.name}\n"
+                    f"📅 {booking.day.isoformat()}\n"
+                    f"🕐 {booking.start.strftime('%H:%M')}–"
+                    f"{booking.end.strftime('%H:%M')}\n"
+                    f"📞 {booking.client_phone}\n\n"
+                    "Ждём вас!"
+                ),
+                "parse_mode": "HTML"
+            }
+        )
+
         return booking
-
 @app.post("/bookings/{booking_id}/cancel")
 def cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default="")):
     user=telegram_user(x_telegram_init_data);uid=int(user["id"])
