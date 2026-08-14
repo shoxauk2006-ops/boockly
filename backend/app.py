@@ -354,33 +354,65 @@ def get_business(slug:str):
         if not b.subscription_active:raise HTTPException(403,"Business is not active")
         services=db.query(Service).filter_by(business_id=b.id,active=True).all()
         return {"business":b,"services":services}
-
 @app.get("/businesses/{business_id}/availability")
-def availability(business_id:int,service_id:int,day:date):
+def availability(business_id: int, service_id: int, day: date):
     with SessionLocal() as db:
-        b=db.get(Business,business_id);s=db.get(Service,service_id)
-        if not b or not s or s.business_id!=business_id or not s.active:raise HTTPException(404,"Not found")
-        slots=[]; step=15
-        for win_start,win_end in get_work_windows(db,business_id,day):
-            cursor=datetime.combine(day,win_start); endday=datetime.combine(day,win_end)
-            while cursor+timedelta(minutes=s.duration_min)<=endday:
-                st=cursor.time();en=(cursor+timedelta(minutes=s.duration_min)).time()
-                while cursor+timedelta(minutes=s.duration_min)<=endday:
-    st=cursor.time()
-    en=(cursor+timedelta(minutes=s.duration_min)).time()
+        b = db.get(Business, business_id)
+        s = db.get(Service, service_id)
 
-    # Для сегодняшнего дня не показываем уже прошедшее время
-    if day == date.today() and cursor <= datetime.now():
-        cursor += timedelta(minutes=step)
-        continue
+        if not b or not s or s.business_id != business_id or not s.active:
+            raise HTTPException(404, "Not found")
 
-    if is_free(db,business_id,day,st,en):
-        slots.append(st.strftime("%H:%M"))
+        slots = []
+        step = 15
 
-    cursor+=timedelta(minutes=step)
-                if is_free(db,business_id,day,st,en):slots.append(st.strftime("%H:%M"))
-                cursor+=timedelta(minutes=step)
-        return {"slots":slots}
+        # Render работает в UTC, поэтому переводим текущее время
+        # в часовой пояс Узбекистана.
+        from zoneinfo import ZoneInfo
+
+        now_tashkent = datetime.now(
+            ZoneInfo("Asia/Tashkent")
+        ).replace(tzinfo=None)
+
+        for win_start, win_end in get_work_windows(
+            db,
+            business_id,
+            day
+        ):
+            cursor = datetime.combine(day, win_start)
+            endday = datetime.combine(day, win_end)
+
+            while cursor + timedelta(
+                minutes=s.duration_min
+            ) <= endday:
+
+                st = cursor.time()
+                en = (
+                    cursor +
+                    timedelta(minutes=s.duration_min)
+                ).time()
+
+                # Если выбрана сегодняшняя дата,
+                # показываем только будущее время.
+                if day == now_tashkent.date():
+                    if cursor <= now_tashkent:
+                        cursor += timedelta(minutes=step)
+                        continue
+
+                if is_free(
+                    db,
+                    business_id,
+                    day,
+                    st,
+                    en
+                ):
+                    slots.append(
+                        st.strftime("%H:%M")
+                    )
+
+                cursor += timedelta(minutes=step)
+
+        return {"slots": slots}
 
 @app.post("/bookings")
 def create_booking(x:BookingIn,x_telegram_init_data:str=Header(default="")):
