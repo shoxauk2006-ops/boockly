@@ -692,13 +692,22 @@ function Client({
   const [business, setBusiness] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
+
   const [day, setDay] = useState(
     new Date().toISOString().slice(0, 10)
   );
+
   const [slots, setSlots] = useState<string[]>([]);
+  const [selectedTime, setSelectedTime] = useState('');
+
+  const [clientName, setClientName] = useState(
+    tg()?.initDataUnsafe?.user?.first_name || ''
+  );
   const [phone, setPhone] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -709,9 +718,7 @@ function Client({
 
       try {
         if (!slug) {
-          throw new Error(
-            'Ссылка на бизнес не содержит slug.'
-          );
+          throw new Error('Ссылка на бизнес не содержит slug.');
         }
 
         const response = await fetch(
@@ -749,9 +756,7 @@ function Client({
         }
 
         if (!data?.business) {
-          throw new Error(
-            'Сервер не вернул данные бизнеса.'
-          );
+          throw new Error('Сервер не вернул данные бизнеса.');
         }
 
         if (!cancelled) {
@@ -764,10 +769,7 @@ function Client({
         if (!cancelled) {
           setBusiness(null);
           setServices([]);
-          setError(
-            e?.message ||
-            'Не удалось загрузить бизнес'
-          );
+          setError(e?.message || 'Не удалось загрузить бизнес');
         }
       } finally {
         if (!cancelled) {
@@ -783,24 +785,25 @@ function Client({
     };
   }, [slug]);
 
-  const choose = async (service: any) => {
+  const loadSlots = async (
+    service: any,
+    selectedDay: string
+  ) => {
     if (!business) return;
 
-    setSelected(service);
     setSlots([]);
+    setSelectedTime('');
 
     try {
       const response = await fetch(
         API +
-          `/businesses/${business.id}/availability?service_id=${service.id}&day=${day}`
+          `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
       );
 
       const data = await response.json();
 
       if (response.ok) {
         setSlots(data?.slots || []);
-      } else {
-        setSlots([]);
       }
     } catch (e) {
       console.error('AVAILABILITY ERROR:', e);
@@ -808,8 +811,45 @@ function Client({
     }
   };
 
-  const book = async (start: string) => {
-    if (!business || !selected) return;
+  const chooseService = async (service: any) => {
+    setSelected(service);
+    setSelectedTime('');
+    await loadSlots(service, day);
+  };
+
+  const chooseTime = (time: string) => {
+    setSelectedTime(time);
+
+    // Прокручиваем к форме данных клиента
+    setTimeout(() => {
+      document
+        .getElementById('booking-form')
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+    }, 50);
+  };
+
+  const submitBooking = async () => {
+    if (!business || !selected || !selectedTime) {
+      return;
+    }
+
+    const name = clientName.trim();
+    const clientPhone = phone.trim();
+
+    if (!name) {
+      alert('Введите ваше имя.');
+      return;
+    }
+
+    if (!clientPhone) {
+      alert('Введите номер телефона.');
+      return;
+    }
+
+    setBookingLoading(true);
 
     try {
       const response = await fetch(API + '/bookings', {
@@ -818,30 +858,38 @@ function Client({
         body: JSON.stringify({
           business_id: business.id,
           service_id: selected.id,
-          client_phone: phone,
+          client_name: name,
+          client_phone: clientPhone,
           day,
-          start
+          start: selectedTime
         })
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        alert('✅ Бронирование подтверждено');
-
-        await choose(selected);
-      } else {
+      if (!response.ok) {
         alert(
           data?.detail ||
-          'Не удалось забронировать'
+          'Не удалось забронировать время.'
         );
+        return;
       }
+
+      alert('✅ Запись успешно создана!');
+
+      // Сбрасываем выбранное время и обновляем свободные слоты
+      setSelectedTime('');
+
+      await loadSlots(selected, day);
+
     } catch (e) {
       console.error('BOOKING ERROR:', e);
 
       alert(
         'Не удалось выполнить бронирование. Попробуйте ещё раз.'
       );
+    } finally {
+      setBookingLoading(false);
     }
   };
 
@@ -892,9 +940,7 @@ function Client({
           ← Назад
         </button>
 
-        <p>
-          Бизнес не найден.
-        </p>
+        <p>Бизнес не найден.</p>
       </div>
     );
   }
@@ -916,13 +962,11 @@ function Client({
         )}
 
         {business.address && (
-          <p>
-            📍 {business.address}
-          </p>
+          <p>📍 {business.address}</p>
         )}
       </div>
 
-      <h2>Услуги</h2>
+      <h2>1. Выберите услугу</h2>
 
       {services.length === 0 ? (
         <div className="card">
@@ -957,7 +1001,9 @@ function Client({
             </div>
 
             <button
-              onClick={() => choose(service)}
+              onClick={() =>
+                chooseService(service)
+              }
             >
               Выбрать
             </button>
@@ -966,89 +1012,125 @@ function Client({
       )}
 
       {selected && (
-        <div className="card">
-          <h2>{selected.name}</h2>
+        <>
+          <div className="card">
+            <h2>2. Выберите дату</h2>
 
-          <input
-            type="date"
-            min={
-              new Date()
-                .toISOString()
-                .slice(0, 10)
-            }
-            value={day}
-            onChange={async e => {
-              const newDay = e.target.value;
-
-              setDay(newDay);
-              setSlots([]);
-
-              try {
-                const response = await fetch(
-                  API +
-                    `/businesses/${business.id}/availability?service_id=${selected.id}&day=${newDay}`
-                );
-
-                const data =
-                  await response.json();
-
-                if (response.ok) {
-                  setSlots(
-                    data?.slots || []
-                  );
-                }
-              } catch (e) {
-                console.error(
-                  'DATE AVAILABILITY ERROR:',
-                  e
-                );
+            <input
+              type="date"
+              min={
+                new Date()
+                  .toISOString()
+                  .slice(0, 10)
               }
-            }}
-          />
+              value={day}
+              onChange={async e => {
+                const newDay = e.target.value;
 
-          <p>
-            Номер нужен, чтобы администратор
-            мог связаться с вами по записи.
-          </p>
+                setDay(newDay);
+                setSelectedTime('');
 
-          <button
-            className="ghost full"
-            onClick={() =>
-              tg()?.requestContact?.(
-                (contact: any) => {
-                  setPhone(
-                    contact?.phone_number || ''
-                  );
-                }
-              )
-            }
-          >
-            📱 Поделиться номером
-          </button>
-
-          {phone && (
-            <p className="success">
-              ✓ Номер получен
-            </p>
-          )}
-
-          <div className="slots">
-            {slots.map(time => (
-              <button
-                key={time}
-                onClick={() => book(time)}
-              >
-                {time}
-              </button>
-            ))}
+                await loadSlots(
+                  selected,
+                  newDay
+                );
+              }}
+            />
           </div>
 
-          {!slots.length && (
-            <p>
-              На эту дату свободных мест нет.
-            </p>
+          <div className="card">
+            <h2>3. Выберите время</h2>
+
+            {slots.length > 0 ? (
+              <div className="slots">
+                {slots.map(time => (
+                  <button
+                    key={time}
+                    className={
+                      selectedTime === time
+                        ? 'selected'
+                        : ''
+                    }
+                    onClick={() =>
+                      chooseTime(time)
+                    }
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p>
+                На эту дату свободных мест нет.
+              </p>
+            )}
+          </div>
+
+          {selectedTime && (
+            <div
+              id="booking-form"
+              className="card"
+            >
+              <h2>4. Ваши данные</h2>
+
+              <p className="muted">
+                Вы выбрали:
+              </p>
+
+              <div className="success">
+                <b>{selected.name}</b>
+                <br />
+                {day} · {selectedTime}
+              </div>
+
+              <input
+                type="text"
+                placeholder="Ваше имя"
+                value={clientName}
+                onChange={e =>
+                  setClientName(e.target.value)
+                }
+              />
+
+              <input
+                type="tel"
+                placeholder="Номер телефона"
+                value={phone}
+                onChange={e =>
+                  setPhone(e.target.value)
+                }
+              />
+
+              <button
+                className="ghost full"
+                type="button"
+                onClick={() =>
+                  tg()?.requestContact?.(
+                    (contact: any) => {
+                      if (contact?.phone_number) {
+                        setPhone(
+                          contact.phone_number
+                        );
+                      }
+                    }
+                  )
+                }
+              >
+                📱 Поделиться номером
+              </button>
+
+              <button
+                className="primary full"
+                disabled={bookingLoading}
+                onClick={submitBooking}
+              >
+                {bookingLoading
+                  ? 'Бронируем...'
+                  : 'Подтвердить запись'}
+              </button>
+            </div>
           )}
-        </div>
+        </>
       )}
     </section>
   );
