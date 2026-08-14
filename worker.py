@@ -30,7 +30,7 @@ async def tick():
                 business=db.get(Business,b.business_id)
                 if business: send(business.owner_telegram_id, f"🔔 Напоминание: запись #{b.id} завтра в {b.start.strftime('%H:%M')}")
                 b.reminder_24_sent=True
-            if timedelta(hours=1, minutes=0) <= delta <= timedelta(hours=3) and not b.reminder_2_sent:
+            if timedelta(minutes=90) <= delta <= timedelta(hours=2, minutes=30) and not b.reminder_2_sent:
                 send(b.client_telegram_id, f"⏰ Ваша запись сегодня в {b.start.strftime('%H:%M')}")
                 b.reminder_2_sent=True
         db.commit()
