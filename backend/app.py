@@ -364,7 +364,7 @@ def availability(business_id: int, service_id: int, day: date):
             raise HTTPException(404, "Not found")
 
         slots = []
-        step = 15
+step = s.duration_min
 
         # Render работает в UTC, поэтому переводим текущее время
         # в часовой пояс Узбекистана.
