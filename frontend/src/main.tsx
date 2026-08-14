@@ -1048,29 +1048,31 @@ function Client({
           <div className="card">
             <h2>3. Выберите время</h2>
 
-            {slots.length > 0 ? (
-              <div className="slots">
-                {slots.map(time => (
-                  <button
-                    key={time}
-                    className={
-                      selectedTime === time
-                        ? 'selected'
-                        : ''
-                    }
-                    onClick={() =>
-                      chooseTime(time)
-                    }
-                  >
-                    {time}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p>
-                На эту дату свободных мест нет.
-              </p>
-            )}
+          {slotsLoading ? (
+  <p className="muted">
+    ⏳ Загружаем свободное время...
+  </p>
+) : slots.length > 0 ? (
+  <div className="slots">
+    {slots.map(time => (
+      <button
+        key={time}
+        className={
+          selectedTime === time
+            ? 'selected'
+            : ''
+        }
+        onClick={() => chooseTime(time)}
+      >
+        {time}
+      </button>
+    ))}
+  </div>
+) : (
+  <p>
+    На эту дату свободных мест нет.
+  </p>
+)}
           </div>
 
           {selectedTime && (
@@ -1108,23 +1110,6 @@ function Client({
                 }
               />
 
-              <button
-                className="ghost full"
-                type="button"
-                onClick={() =>
-                  tg()?.requestContact?.(
-                    (contact: any) => {
-                      if (contact?.phone_number) {
-                        setPhone(
-                          contact.phone_number
-                        );
-                      }
-                    }
-                  )
-                }
-              >
-                📱 Поделиться номером
-              </button>
 
               <button
                 className="primary full"
