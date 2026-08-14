@@ -332,7 +332,101 @@ if(!initData())return <div className="card"><button className="back" onClick={on
  </section>
 }
 
-function BusinessForm({onSaved}:{onSaved:()=>void}){const [f,setF]=useState({name:'',description:'',address:'',latitude:'',longitude:''});const save=async()=>{const r=await fetch(API+'/admin/business',{method:'PUT',headers:headers(),body:JSON.stringify({...f,latitude:f.latitude?Number(f.latitude):null,longitude:f.longitude?Number(f.longitude):null})});if(r.ok)onSaved();};return <div className="card"><h2>Создайте бизнес</h2><p>Эти данные увидят ваши клиенты.</p><input placeholder="Название компании" value={f.name} onChange={e=>setF({...f,name:e.target.value})}/><textarea placeholder="Описание" value={f.description} onChange={e=>setF({...f,description:e.target.value})}/><input placeholder="Адрес" value={f.address} onChange={e=>setF({...f,address:e.target.value})}/><div className="two"><input placeholder="Широта" value={f.latitude} onChange={e=>setF({...f,latitude:e.target.value})}/><input placeholder="Долгота" value={f.longitude} onChange={e=>setF({...f,longitude:e.target.value})}/></div><button className="primary full" onClick={save} disabled={!f.name}>Создать бизнес</button></div>}
+function BusinessForm({onSaved}:{onSaved:()=>void}) {
+  const [name,setName] = useState('');
+  const [loading,setLoading] = useState(false);
+  const [error,setError] = useState('');
+
+  const save = async () => {
+    setError('');
+
+    const businessName = name.trim();
+
+    if (!businessName) {
+      setError('Введите название бизнеса');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const initData = tg()?.initData || '';
+
+      if (!initData) {
+        throw new Error(
+          'Telegram initData отсутствует. Откройте Bookly именно внутри Telegram Mini App.'
+        );
+      }
+
+      const response = await fetch(API + '/admin/business', {
+        method: 'POST',
+        headers: {
+          ...headers(),
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': initData
+        },
+        body: JSON.stringify({
+          name: businessName
+        })
+      });
+
+      const text = await response.text();
+
+      let data:any = null;
+
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          data?.message ||
+          `Ошибка сервера: ${response.status}`
+        );
+      }
+
+      onSaved();
+    } catch (e:any) {
+      console.error('CREATE BUSINESS ERROR:', e);
+      setError(e?.message || 'Не удалось создать бизнес');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h2>Создайте бизнес</h2>
+
+      <input
+        placeholder="Название бизнеса"
+        value={name}
+        disabled={loading}
+        onChange={e=>{
+          setName(e.target.value);
+          setError('');
+        }}
+      />
+
+      {error && (
+        <div className="error" style={{marginTop:10}}>
+          ❌ {error}
+        </div>
+      )}
+
+      <button
+        className="primary full"
+        disabled={loading}
+        onClick={save}
+      >
+        {loading ? 'Создание...' : 'Создать бизнес'}
+      </button>
+    </div>
+  );
+}
 
 function Dashboard({bookings,business}:{bookings:any[],business:any}){const today=new Date().toISOString().slice(0,10);const b=bookings.filter(x=>x.day===today&&x.status==='confirmed');return <><div className="grid3"><Stat n={b.length} t="Сегодня"/><Stat n={bookings.filter(x=>x.status==='confirmed').length} t="Всего записей"/><Stat n={business.subscription_active?'✓':'—'} t="Подписка"/></div><div className="card"><h3>Сегодня</h3>{b.length?b.map(x=><BookingRow x={x} key={x.id}/>):<p>Записей пока нет.</p>}</div><Subscription business={business}/></>}
 function Stat({n,t}:{n:any,t:string}){return <div className="stat"><strong>{n}</strong><span>{t}</span></div>}
