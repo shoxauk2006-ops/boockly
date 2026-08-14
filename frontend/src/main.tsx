@@ -1020,8 +1020,118 @@ function Bookings({
 function BookingRow({x}:{x:any}){return <div className="booking"><div><b>{x.client_name}</b><span>{x.day} · {x.start.slice(0,5)}–{x.end.slice(0,5)}</span><span>📞 {x.client_phone||'номер не передан'}</span></div><em>{x.status}</em></div>}
 function Settings({business,reload}:{business:any,reload:()=>void}){const [f,setF]=useState({name:business.name,description:business.description||'',address:business.address||'',latitude:business.latitude||'',longitude:business.longitude||''});const save=async()=>{await fetch(API+'/admin/business',{method:'PUT',headers:headers(),body:JSON.stringify({...f,latitude:f.latitude?Number(f.latitude):null,longitude:f.longitude?Number(f.longitude):null})});reload()};return <div className="card"><h2>Настройки бизнеса</h2><input value={f.name} onChange={e=>setF({...f,name:e.target.value})}/><textarea value={f.description} onChange={e=>setF({...f,description:e.target.value})}/><input value={f.address} onChange={e=>setF({...f,address:e.target.value})}/><div className="two"><input placeholder="Широта" value={f.latitude} onChange={e=>setF({...f,latitude:e.target.value})}/><input placeholder="Долгота" value={f.longitude} onChange={e=>setF({...f,longitude:e.target.value})}/></div><button className="primary full" onClick={save}>Сохранить</button><div className="share"><b>Ссылка клиента</b><code>{`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`}</code><button onClick={()=>navigator.clipboard?.writeText(`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`)}>Копировать</button></div></div>}
 
-function MyBookings(){const [items,setItems]=useState<any[]>([]);useEffect(()=>{fetch(API+'/my/bookings',{headers:headers()}).then(r=>r.ok?r.json():[]).then(setItems)},[]);return <div className="card"><h2>Мои записи</h2>{items.length?items.map(x=><div className="booking" key={x.id}><div><b>{x.day}</b><span>{x.start.slice(0,5)}–{x.end.slice(0,5)}</span></div><em>{x.status==='confirmed'?'Подтверждено':'Отменено'}</em></div>):<p>У вас пока нет записей.</p>}</div>}
+function MyBookings() {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    setLoading(true);
+
+    fetch(API + "/my/bookings", {
+      headers: headers(),
+    })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        setItems(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setItems([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const cancelBooking = async (id: number) => {
+    const ok = window.confirm("Отменить эту запись?");
+
+    if (!ok) return;
+
+    try {
+      const response = await fetch(API + `/my/bookings/${id}/cancel`, {
+        method: "POST",
+        headers: {
+          ...headers(),
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        alert("Не удалось отменить запись");
+        return;
+      }
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, status: "cancelled" }
+            : item
+        )
+      );
+    } catch {
+      alert("Ошибка соединения");
+    }
+  };
+
+  return (
+    <div className="page">
+      <h1>Мои записи</h1>
+
+      {loading ? (
+        <div className="card">
+          <p>Загрузка...</p>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="card">
+          <p>У вас пока нет записей.</p>
+        </div>
+      ) : (
+        <div>
+          {items.map((item) => (
+            <div className="card" key={item.id}>
+              <h3>{item.business_name || "Запись"}</h3>
+
+              <p>
+                {item.service_name || "Услуга"}
+              </p>
+
+              <p>
+                📅 {item.day}
+              </p>
+
+              <p>
+                🕐 {item.start?.slice(0, 5)} –{" "}
+                {item.end?.slice(0, 5)}
+              </p>
+
+              {item.status === "cancelled" ? (
+                <p style={{ color: "#888" }}>
+                  Запись отменена
+                </p>
+              ) : (
+                <button
+                  onClick={() => cancelBooking(item.id)}
+                  style={{
+                    marginTop: 10,
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: 12,
+                    border: "none",
+                    background: "#e53935",
+                    color: "white",
+                    fontWeight: 600,
+                  }}
+                >
+                  Отменить запись
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 function Client({
   slug,
   onBack
