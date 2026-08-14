@@ -699,6 +699,7 @@ function Client({
 
   const [slots, setSlots] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState('');
+  const [slotsLoading, setSlotsLoading] = useState(false);
 
   const [clientName, setClientName] = useState(
     tg()?.initDataUnsafe?.user?.first_name || ''
