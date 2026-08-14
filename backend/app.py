@@ -73,17 +73,22 @@ class BlockedSlot(Base):
 
 class Booking(Base):
     __tablename__ = "bookings"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
     service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))
-      client_telegram_id: Mapped[int] = mapped_column(BigInteger, index=True)
+
+    client_telegram_id: Mapped[int] = mapped_column(BigInteger, index=True)
     client_name: Mapped[str] = mapped_column(String(120))
     client_phone: Mapped[str] = mapped_column(String(40), default="")
+
     day: Mapped[date] = mapped_column(Date)
     start: Mapped[time] = mapped_column(Time)
     end: Mapped[time] = mapped_column(Time)
+
     status: Mapped[str] = mapped_column(String(20), default="confirmed")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
     reminder_24_sent: Mapped[bool] = mapped_column(Boolean, default=False)
     reminder_2_sent: Mapped[bool] = mapped_column(Boolean, default=False)
 
