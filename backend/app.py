@@ -395,6 +395,23 @@ def create_booking(x:BookingIn,x_telegram_init_data:str=Header(default="")):
         if not is_free(db,x.business_id,x.day,x.start,end):raise HTTPException(409,"This time is no longer available")
         booking=Booking(**x.model_dump(),end=end);db.add(booking);db.commit();db.refresh(booking)
         notify_owner_new_booking(db, booking, s)
+          telegram_api(
+    "sendMessage",
+    {
+        "chat_id": booking.client_telegram_id,
+        "text": (
+            "✅ <b>Вы успешно записаны!</b>\n\n"
+            f"💈 {s.name}\n"
+            f"📅 {booking.day.isoformat()}\n"
+            f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\n"
+            f"📞 {booking.client_phone}\n\n"
+            "Ждём вас!"
+        ),
+        "parse_mode": "HTML"
+    }
+)
+
+notify_owner_new_booking(db, booking, s)
         return booking
 
 @app.post("/bookings/{booking_id}/cancel")
