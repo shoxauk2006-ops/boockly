@@ -365,6 +365,19 @@ def availability(business_id:int,service_id:int,day:date):
             cursor=datetime.combine(day,win_start); endday=datetime.combine(day,win_end)
             while cursor+timedelta(minutes=s.duration_min)<=endday:
                 st=cursor.time();en=(cursor+timedelta(minutes=s.duration_min)).time()
+                while cursor+timedelta(minutes=s.duration_min)<=endday:
+    st=cursor.time()
+    en=(cursor+timedelta(minutes=s.duration_min)).time()
+
+    # Для сегодняшнего дня не показываем уже прошедшее время
+    if day == date.today() and cursor <= datetime.now():
+        cursor += timedelta(minutes=step)
+        continue
+
+    if is_free(db,business_id,day,st,en):
+        slots.append(st.strftime("%H:%M"))
+
+    cursor+=timedelta(minutes=step)
                 if is_free(db,business_id,day,st,en):slots.append(st.strftime("%H:%M"))
                 cursor+=timedelta(minutes=step)
         return {"slots":slots}
