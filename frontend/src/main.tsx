@@ -786,32 +786,38 @@ function Client({
     };
   }, [slug]);
 
-  const loadSlots = async (
-    service: any,
-    selectedDay: string
-  ) => {
-    if (!business) return;
+ const loadSlots = async (
+  service: any,
+  selectedDay: string
+) => {
+  if (!business) return;
 
-    setSlots([]);
-    setSelectedTime('');
+  setSlots([]);
+  setSelectedTime('');
+  setSlotsLoading(true);
 
-    try {
-      const response = await fetch(
-        API +
-          `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
+  try {
+    const response = await fetch(
+      API +
+        `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail || 'Не удалось загрузить свободное время'
       );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setSlots(data?.slots || []);
-      }
-    } catch (e) {
-      console.error('AVAILABILITY ERROR:', e);
-      setSlots([]);
     }
-  };
 
+    setSlots(data?.slots || []);
+  } catch (e) {
+    console.error('AVAILABILITY ERROR:', e);
+    setSlots([]);
+  } finally {
+    setSlotsLoading(false);
+  }
+};
   const chooseService = async (service: any) => {
     setSelected(service);
     setSelectedTime('');
