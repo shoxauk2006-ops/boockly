@@ -387,8 +387,7 @@ def create_booking(x:BookingIn,x_telegram_init_data:str=Header(default="")):
     user=telegram_user(x_telegram_init_data)
     # Client identity always comes from signed Telegram initData.
     x.client_telegram_id=int(user["id"])
-    x.client_name=(user.get("first_name","")+" "+user.get("last_name","")).strip() or "Telegram user"
-    with SessionLocal() as db:
+      with SessionLocal() as db:
         b=db.get(Business,x.business_id);s=db.get(Service,x.service_id)
         if not b or not s or s.business_id!=x.business_id or not s.active:raise HTTPException(404,"Not found")
         if not b.subscription_active:raise HTTPException(403,"Business inactive")
