@@ -340,7 +340,7 @@ def admin_bookings(day:Optional[date]=None,x_telegram_init_data:str=Header(defau
         q=db.query(Booking).filter_by(business_id=b.id)
         if day:q=q.filter_by(day=day)
         return q.order_by(Booking.day,Booking.start).all()
-        @app.post("/admin/bookings")
+@app.post("/admin/bookings")
 def admin_create_booking(
     x: AdminBookingIn,
     x_telegram_init_data: str = Header(default="")
