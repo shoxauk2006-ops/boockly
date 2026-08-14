@@ -683,7 +683,87 @@ function Settings({business,reload}:{business:any,reload:()=>void}){const [f,set
 function MyBookings(){const [items,setItems]=useState<any[]>([]);useEffect(()=>{fetch(API+'/my/bookings',{headers:headers()}).then(r=>r.ok?r.json():[]).then(setItems)},[]);return <div className="card"><h2>Мои записи</h2>{items.length?items.map(x=><div className="booking" key={x.id}><div><b>{x.day}</b><span>{x.start.slice(0,5)}–{x.end.slice(0,5)}</span></div><em>{x.status==='confirmed'?'Подтверждено':'Отменено'}</em></div>):<p>У вас пока нет записей.</p>}</div>}
 
 function Client({slug,onBack}:{slug:string,onBack:()=>void}){const [business,setBusiness]=useState<any>(null);const [services,setServices]=useState<any[]>([]);const [selected,setSelected]=useState<any>(null);const [day,setDay]=useState(new Date().toISOString().slice(0,10));const [slots,setSlots]=useState<string[]>([]);const [phone,setPhone]=useState('');
- useEffect(()=>{fetch(API+`/businesses/${slug}`).then(r=>r.ok?r.json():null).then(d=>{if(d){setBusiness(d.business);setServices(d.services)}})},[slug]);
+ useEffect(()=>{const [business,setBusiness] = useState<any>(null);
+const [services,setServices] = useState<any[]>([]);
+const [loading,setLoading] = useState(true);
+const [error,setError] = useState('');
+
+useEffect(()=>{
+  let cancelled = false;
+
+  const load = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!slug) {
+        throw new Error('Ссылка на бизнес не содержит slug.');
+      }
+
+      const response = await fetch(
+        API + `/businesses/${encodeURIComponent(slug)}`
+      );
+
+      const text = await response.text();
+
+      let data:any = null;
+
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(
+            'Этот бизнес сейчас не активен. Владелец должен активировать подписку Bookly.'
+          );
+        }
+
+        if (response.status === 404) {
+          throw new Error(
+            'Бизнес не найден. Возможно, ссылка устарела или содержит неправильный slug.'
+          );
+        }
+
+        throw new Error(
+          data?.detail ||
+          data?.message ||
+          `Ошибка сервера: ${response.status}`
+        );
+      }
+
+      if (!data?.business) {
+        throw new Error('Сервер не вернул данные бизнеса.');
+      }
+
+      if (!cancelled) {
+        setBusiness(data.business);
+        setServices(data.services || []);
+      }
+
+    } catch (e:any) {
+      console.error('CLIENT LOAD ERROR:', e);
+
+      if (!cancelled) {
+        setBusiness(null);
+        setServices([]);
+        setError(e?.message || 'Не удалось загрузить бизнес');
+      }
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }
+  };
+
+  load();
+
+  return () => {
+    cancelled = true;
+  };
+},[slug]);.then(r=>r.ok?r.json():null).then(d=>{if(d){setBusiness(d.business);setServices(d.services)}})},[slug]);
  const choose=async(s:any)=>{setSelected(s);const r=await fetch(API+`/businesses/${business.id}/availability?service_id=${s.id}&day=${day}`);setSlots((await r.json()).slots||[])};
  const book=async(start:string)=>{const u=tg()?.initDataUnsafe?.user||{};const r=await fetch(API+'/bookings',{method:'POST',headers:headers(),body:JSON.stringify({business_id:business.id,service_id:selected.id,client_phone:phone,day,start})});if(r.ok){alert('✅ Бронирование подтверждено');choose(selected)}else alert((await r.json()).detail||'Не удалось забронировать')};
  if(!business)return <div className="card"><button className="back" onClick={onBack}>← Назад</button><p>Загрузка...</p></div>;
