@@ -676,7 +676,347 @@ function Hours({hours,reload}:{hours:any[],reload:()=>void}){const [f,setF]=useS
 
 function Blocks({blocks,reload}:{blocks:any[],reload:()=>void}){const [f,setF]=useState({day:new Date().toISOString().slice(0,10),start:'13:00',end:'15:00',reason:''});const add=async()=>{await fetch(API+'/admin/blocks',{method:'POST',headers:headers(),body:JSON.stringify(f)});reload()};return <div className="card"><h2>Временные блокировки</h2><p>Если нужно отойти, просто заблокируйте часы — клиент их не увидит.</p><input type="date" value={f.day} onChange={e=>setF({...f,day:e.target.value})}/><div className="two"><input type="time" value={f.start} onChange={e=>setF({...f,start:e.target.value})}/><input type="time" value={f.end} onChange={e=>setF({...f,end:e.target.value})}/></div><input placeholder="Причина (необязательно)" value={f.reason} onChange={e=>setF({...f,reason:e.target.value})}/><button className="primary full" onClick={add}>Заблокировать время</button>{blocks.map(b=><div className="row line" key={b.id}><div><b>{b.day}</b><p>{b.start.slice(0,5)}–{b.end.slice(0,5)} {b.reason&&`· ${b.reason}`}</p></div><button className="danger" onClick={async()=>{await fetch(API+`/admin/blocks/${b.id}`,{method:'DELETE',headers:headers()});reload()}}>×</button></div>)}</div>}
 
-function Bookings({bookings}:{bookings:any[]}){return <div className="card"><h2>Записи</h2>{bookings.length?bookings.map(x=><BookingRow x={x} key={x.id}/>):<p>Пока нет записей.</p>}</div>}
+function Bookings({
+  bookings
+}: {
+  bookings: any[];
+}) {
+  const [showForm, setShowForm] = useState(false);
+
+  const [services, setServices] = useState<any[]>([]);
+  const [serviceId, setServiceId] = useState('');
+
+  const [day, setDay] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+
+  const [slots, setSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!showForm) return;
+
+    fetch(API + '/admin/services', {
+      headers: headers()
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        setServices(data || []);
+
+        if (data?.length && !serviceId) {
+          setServiceId(String(data[0].id));
+        }
+      });
+  }, [showForm]);
+
+  const loadSlots = async (
+    selectedServiceId: string,
+    selectedDay: string
+  ) => {
+    if (!selectedServiceId) return;
+
+    setSlots([]);
+    setSlotsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(
+        API +
+          `/businesses/0/availability?service_id=${selectedServiceId}&day=${selectedDay}`,
+        {
+          headers: headers()
+        }
+      );
+
+      /*
+       * Здесь endpoint /businesses/{business_id}/availability
+       * требует business_id.
+       *
+       * Поэтому ниже получаем бизнес администратора.
+       */
+      const businessResponse = await fetch(
+        API + '/admin/business',
+        {
+          headers: headers()
+        }
+      );
+
+      if (!businessResponse.ok) {
+        throw new Error('Не удалось получить бизнес');
+      }
+
+      const business = await businessResponse.json();
+
+      const availabilityResponse = await fetch(
+        API +
+          `/businesses/${business.id}/availability?service_id=${selectedServiceId}&day=${selectedDay}`
+      );
+
+      const data = await availabilityResponse.json();
+
+      if (!availabilityResponse.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось загрузить свободное время'
+        );
+      }
+
+      setSlots(data?.slots || []);
+
+    } catch (e: any) {
+      console.error('ADMIN AVAILABILITY ERROR:', e);
+      setSlots([]);
+      setError(
+        e?.message ||
+        'Не удалось загрузить свободное время'
+      );
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      showForm &&
+      serviceId &&
+      day
+    ) {
+      loadSlots(
+        serviceId,
+        day
+      );
+    }
+  }, [serviceId, day, showForm]);
+
+  const createBooking = async (
+    start: string
+  ) => {
+    if (!serviceId) {
+      setError('Выберите услугу');
+      return;
+    }
+
+    if (!clientName.trim()) {
+      setError('Введите имя клиента');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+
+    try {
+      const response = await fetch(
+        API + '/admin/bookings',
+        {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({
+            service_id: Number(serviceId),
+            client_name: clientName.trim(),
+            client_phone: clientPhone.trim(),
+            day,
+            start
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось создать запись'
+        );
+      }
+
+      alert('✅ Запись успешно добавлена');
+
+      setClientName('');
+      setClientPhone('');
+      setShowForm(false);
+      setSlots([]);
+
+      window.location.reload();
+
+    } catch (e: any) {
+      console.error(
+        'ADMIN CREATE BOOKING ERROR:',
+        e
+      );
+
+      setError(
+        e?.message ||
+        'Не удалось создать запись'
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+
+      <div className="card">
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 10
+          }}
+        >
+          <h2 style={{ margin: 0 }}>
+            Записи
+          </h2>
+
+          <button
+            className="primary"
+            onClick={() =>
+              setShowForm(!showForm)
+            }
+          >
+            {showForm
+              ? 'Закрыть'
+              : '+ Добавить запись'}
+          </button>
+        </div>
+
+      </div>
+
+      {showForm && (
+        <div className="card">
+
+          <h2>
+            Новая запись
+          </h2>
+
+          <select
+            value={serviceId}
+            onChange={e =>
+              setServiceId(e.target.value)
+            }
+          >
+            <option value="">
+              Выберите услугу
+            </option>
+
+            {services.map(service => (
+              <option
+                key={service.id}
+                value={service.id}
+              >
+                {service.name} · {service.duration_min} мин
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="date"
+            min={
+              new Date()
+                .toISOString()
+                .slice(0, 10)
+            }
+            value={day}
+            onChange={e =>
+              setDay(e.target.value)
+            }
+          />
+
+          <h3>
+            Выберите время
+          </h3>
+
+          {slotsLoading && (
+            <p className="muted">
+              Загружаем свободное время...
+            </p>
+          )}
+
+          {!slotsLoading &&
+            !slots.length && (
+              <p className="muted">
+                Свободного времени нет.
+              </p>
+            )}
+
+          <div className="slots">
+            {slots.map(time => (
+              <button
+                key={time}
+                disabled={saving}
+                onClick={() =>
+                  createBooking(time)
+                }
+              >
+                {time}
+              </button>
+            ))}
+          </div>
+
+          <h3>
+            Данные клиента
+          </h3>
+
+          <input
+            type="text"
+            placeholder="Имя клиента"
+            value={clientName}
+            onChange={e =>
+              setClientName(e.target.value)
+            }
+          />
+
+          <input
+            type="tel"
+            placeholder="Номер телефона"
+            value={clientPhone}
+            onChange={e =>
+              setClientPhone(e.target.value)
+            }
+          />
+
+          {error && (
+            <div
+              className="error"
+              style={{ marginTop: 10 }}
+            >
+              ❌ {error}
+            </div>
+          )}
+
+          <p className="muted">
+            Выберите время выше — после этого запись будет создана.
+          </p>
+
+        </div>
+      )}
+
+      <div className="card">
+        {bookings.length ? (
+          bookings.map(x => (
+            <BookingRow
+              x={x}
+              key={x.id}
+            />
+          ))
+        ) : (
+          <p>
+            Пока нет записей.
+          </p>
+        )}
+      </div>
+
+    </div>
+  );
+}
 function BookingRow({x}:{x:any}){return <div className="booking"><div><b>{x.client_name}</b><span>{x.day} · {x.start.slice(0,5)}–{x.end.slice(0,5)}</span><span>📞 {x.client_phone||'номер не передан'}</span></div><em>{x.status}</em></div>}
 function Settings({business,reload}:{business:any,reload:()=>void}){const [f,setF]=useState({name:business.name,description:business.description||'',address:business.address||'',latitude:business.latitude||'',longitude:business.longitude||''});const save=async()=>{await fetch(API+'/admin/business',{method:'PUT',headers:headers(),body:JSON.stringify({...f,latitude:f.latitude?Number(f.latitude):null,longitude:f.longitude?Number(f.longitude):null})});reload()};return <div className="card"><h2>Настройки бизнеса</h2><input value={f.name} onChange={e=>setF({...f,name:e.target.value})}/><textarea value={f.description} onChange={e=>setF({...f,description:e.target.value})}/><input value={f.address} onChange={e=>setF({...f,address:e.target.value})}/><div className="two"><input placeholder="Широта" value={f.latitude} onChange={e=>setF({...f,latitude:e.target.value})}/><input placeholder="Долгота" value={f.longitude} onChange={e=>setF({...f,longitude:e.target.value})}/></div><button className="primary full" onClick={save}>Сохранить</button><div className="share"><b>Ссылка клиента</b><code>{`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`}</code><button onClick={()=>navigator.clipboard?.writeText(`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`)}>Копировать</button></div></div>}
 
