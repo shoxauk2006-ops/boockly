@@ -75,7 +75,7 @@ class Booking(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
     service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))
-   client_telegram_id: Mapped[int] = mapped_column(BigInteger, index=True)
+      client_telegram_id: Mapped[int] = mapped_column(BigInteger, index=True)
     client_name: Mapped[str] = mapped_column(String(120))
     client_phone: Mapped[str] = mapped_column(String(40), default="")
     day: Mapped[date] = mapped_column(Date)
