@@ -200,6 +200,13 @@ class BookingIn(BaseModel):
     client_phone: str = ""
     day: date
     start: time
+    
+class AdminBookingIn(BaseModel):
+    service_id: int
+    client_name: str = Field(min_length=1, max_length=120)
+    client_phone: str = ""
+    day: date
+    start: time
 
 # ---------- common ----------
 @app.get("/health")
