@@ -901,6 +901,155 @@ def cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default="")):
         telegram_api("sendMessage", {"chat_id":b.owner_telegram_id,"text":f"❌ <b>Запись отменена</b>\n\n👤 {x.client_name}\n📅 {x.day.isoformat()}\n🕐 {x.start.strftime('%H:%M')}–{x.end.strftime('%H:%M')}\n🆔 #{x.id}","parse_mode":"HTML"}) if b else None
         return {"ok":True}
 
+@app.get("/my/saved-businesses")
+def my_saved_businesses(
+    x_telegram_init_data: str = Header(
+        default=""
+    )
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    uid = int(
+        user["id"]
+    )
+
+    with SessionLocal() as db:
+        rows = (
+            db.query(
+                Business
+            )
+            .join(
+                SavedBusiness,
+                SavedBusiness.business_id ==
+                Business.id
+            )
+            .filter(
+                SavedBusiness.telegram_user_id ==
+                uid
+            )
+            .filter(
+                Business.subscription_active ==
+                True
+            )
+            .order_by(
+                SavedBusiness.created_at.desc()
+            )
+            .all()
+        )
+
+        return rows
+
+
+@app.post("/my/saved-businesses/{business_id}")
+def save_business(
+    business_id: int,
+    x_telegram_init_data: str = Header(
+        default=""
+    )
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    uid = int(
+        user["id"]
+    )
+
+    with SessionLocal() as db:
+        business = db.get(
+            Business,
+            business_id
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        if not business.subscription_active:
+            raise HTTPException(
+                403,
+                "Business is inactive"
+            )
+
+        existing = (
+            db.query(
+                SavedBusiness
+            )
+            .filter(
+                SavedBusiness.telegram_user_id ==
+                uid
+            )
+            .filter(
+                SavedBusiness.business_id ==
+                business_id
+            )
+            .first()
+        )
+
+        if existing:
+            return {
+                "ok": True,
+                "saved": True
+            }
+
+        saved = SavedBusiness(
+            telegram_user_id=uid,
+            business_id=business_id
+        )
+
+        db.add(saved)
+        db.commit()
+
+        return {
+            "ok": True,
+            "saved": True
+        }
+
+
+@app.delete("/my/saved-businesses/{business_id}")
+def unsave_business(
+    business_id: int,
+    x_telegram_init_data: str = Header(
+        default=""
+    )
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    uid = int(
+        user["id"]
+    )
+
+    with SessionLocal() as db:
+        saved = (
+            db.query(
+                SavedBusiness
+            )
+            .filter(
+                SavedBusiness.telegram_user_id ==
+                uid
+            )
+            .filter(
+                SavedBusiness.business_id ==
+                business_id
+            )
+            .first()
+        )
+
+        if saved:
+            db.delete(saved)
+            db.commit()
+
+        return {
+            "ok": True,
+            "saved": False
+        }
+
 @app.get("/my/bookings")
 def my_bookings(
     x_telegram_init_data: str = Header(default="")
