@@ -283,11 +283,192 @@ const openClient = (
 </div>
 }
 
-function Home(p:any){return <section>
- <div className="hero"><div className="logo">B</div><h1>Бронирование без звонков</h1><p>Bookly помогает бизнесу принимать записи прямо в Telegram.</p></div>
- <button className="primary full" onClick={p.onAdmin}>Открыть админ-панель</button>
- <div className="card"><h3>Открыть страницу бизнеса</h3><input placeholder="Ссылка / slug бизнеса" value={p.slug} onChange={e=>p.setSlug(e.target.value)}/><button className="full" onClick={p.open}>Открыть</button></div>
- </section>}
+function Home(p: any) {
+  const [savedBusinesses, setSavedBusinesses] =
+    useState<any[]>([]);
+
+  const [savedLoading, setSavedLoading] =
+    useState(true);
+
+  useEffect(() => {
+    const loadSaved =
+      async () => {
+        if (!initData()) {
+          setSavedLoading(false);
+          return;
+        }
+
+        try {
+          const response =
+            await fetch(
+              API +
+                '/my/saved-businesses',
+              {
+                headers:
+                  headers()
+              }
+            );
+
+          if (!response.ok) {
+            setSavedBusinesses([]);
+            return;
+          }
+
+          const data =
+            await response.json();
+
+          setSavedBusinesses(
+            Array.isArray(data)
+              ? data
+              : []
+          );
+
+        } catch {
+          setSavedBusinesses([]);
+        } finally {
+          setSavedLoading(false);
+        }
+      };
+
+    loadSaved();
+  }, []);
+
+  return (
+    <section>
+
+      <div className="hero">
+        <div className="logo">
+          B
+        </div>
+
+        <h1>
+          Бронирование без звонков
+        </h1>
+
+        <p>
+          Bookly помогает бизнесу
+          принимать записи прямо
+          в Telegram.
+        </p>
+      </div>
+
+      <button
+        className="primary full"
+        onClick={p.onAdmin}
+      >
+        Открыть админ-панель
+      </button>
+
+      <div className="card">
+
+        <h3>
+          Открыть страницу бизнеса
+        </h3>
+
+        <input
+          placeholder="Ссылка или slug бизнеса"
+          value={p.slug}
+          onChange={e =>
+            p.setSlug(
+              e.target.value
+            )
+          }
+        />
+
+        <button
+          className="full"
+          onClick={() =>
+            p.open()
+          }
+        >
+          Открыть
+        </button>
+
+      </div>
+
+      <div className="card">
+
+        <h2>
+          ❤️ Сохранённые бизнесы
+        </h2>
+
+        {savedLoading ? (
+          <p className="muted">
+            Загрузка...
+          </p>
+        ) : savedBusinesses.length === 0 ? (
+          <p className="muted">
+            Здесь появятся бизнесы,
+            которые вы сохраните.
+          </p>
+        ) : (
+          <div>
+            {savedBusinesses.map(
+              business => (
+                <div
+                  key={business.id}
+                  className="card row"
+                  style={{
+                    marginBottom: 10
+                  }}
+                >
+
+                  <div>
+                    <b>
+                      {business.name}
+                    </b>
+
+                    {business.address && (
+                      <p
+                        className="muted"
+                        style={{
+                          margin:
+                            '5px 0 0'
+                        }}
+                      >
+                        📍{' '}
+                        {
+                          business.address
+                        }
+                      </p>
+                    )}
+
+                    {business.phone && (
+                      <p
+                        className="muted"
+                        style={{
+                          margin:
+                            '4px 0 0'
+                        }}
+                      >
+                        ☎️{' '}
+                        {business.phone}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    className="primary"
+                    onClick={() =>
+                      p.open(
+                        business.slug
+                      )
+                    }
+                  >
+                    Открыть
+                  </button>
+
+                </div>
+              )
+            )}
+          </div>
+        )}
+
+      </div>
+
+    </section>
+  );
+}
 function Admin({
   onBack,
   initialTab
