@@ -1962,7 +1962,411 @@ function BookingRow({ x }: { x: any }) {
     </div>
   );
 }
-function Settings({business,reload}:{business:any,reload:()=>void}){const [f,setF]=useState({name:business.name,description:business.description||'',address:business.address||'',latitude:business.latitude||'',longitude:business.longitude||''});const save=async()=>{await fetch(API+'/admin/business',{method:'PUT',headers:headers(),body:JSON.stringify({...f,latitude:f.latitude?Number(f.latitude):null,longitude:f.longitude?Number(f.longitude):null})});reload()};return <div className="card"><h2>Настройки бизнеса</h2><input value={f.name} onChange={e=>setF({...f,name:e.target.value})}/><textarea value={f.description} onChange={e=>setF({...f,description:e.target.value})}/><input value={f.address} onChange={e=>setF({...f,address:e.target.value})}/><div className="two"><input placeholder="Широта" value={f.latitude} onChange={e=>setF({...f,latitude:e.target.value})}/><input placeholder="Долгота" value={f.longitude} onChange={e=>setF({...f,longitude:e.target.value})}/></div><button className="primary full" onClick={save}>Сохранить</button><div className="share"><b>Ссылка клиента</b><code>{`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`}</code><button onClick={()=>navigator.clipboard?.writeText(`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`)}>Копировать</button></div></div>}
+function Settings({
+  business,
+  reload
+}: {
+  business: any;
+  reload: () => void;
+}) {
+  const [name, setName] =
+    useState(
+      business?.name || ''
+    );
+
+  const [description, setDescription] =
+    useState(
+      business?.description || ''
+    );
+
+  const [address, setAddress] =
+    useState(
+      business?.address || ''
+    );
+
+  const [phone, setPhone] =
+    useState(
+      business?.phone || ''
+    );
+
+  const [latitude, setLatitude] =
+    useState(
+      business?.latitude ?? ''
+    );
+
+  const [longitude, setLongitude] =
+    useState(
+      business?.longitude ?? ''
+    );
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [qrDataUrl, setQrDataUrl] =
+    useState('');
+
+  const clientLink =
+    `https://t.me/${BOT_USERNAME}?startapp=${business.slug}`;
+
+  useEffect(() => {
+    const generateQR =
+      async () => {
+        try {
+          const url =
+            await QRCode.toDataURL(
+              clientLink,
+              {
+                width: 500,
+                margin: 3,
+                errorCorrectionLevel:
+                  'H'
+              }
+            );
+
+          setQrDataUrl(url);
+        } catch (e) {
+          console.error(
+            'QR ERROR:',
+            e
+          );
+        }
+      };
+
+    generateQR();
+  }, [clientLink]);
+
+  useEffect(() => {
+    setName(
+      business?.name || ''
+    );
+
+    setDescription(
+      business?.description ||
+      ''
+    );
+
+    setAddress(
+      business?.address || ''
+    );
+
+    setPhone(
+      business?.phone || ''
+    );
+
+    setLatitude(
+      business?.latitude ?? ''
+    );
+
+    setLongitude(
+      business?.longitude ?? ''
+    );
+  }, [business]);
+
+  const save = async () => {
+    setSaving(true);
+
+    try {
+      const response =
+        await fetch(
+          API +
+            '/admin/business',
+          {
+            method: 'PUT',
+            headers: headers(),
+            body:
+              JSON.stringify({
+                name:
+                  name.trim(),
+                description:
+                  description.trim(),
+                address:
+                  address.trim(),
+                phone:
+                  phone.trim(),
+                latitude:
+                  latitude === ''
+                    ? null
+                    : Number(
+                        latitude
+                      ),
+                longitude:
+                  longitude === ''
+                    ? null
+                    : Number(
+                        longitude
+                      )
+              })
+          }
+        );
+
+      const data =
+        await response
+          .json()
+          .catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось сохранить настройки'
+        );
+      }
+
+      alert(
+        '✅ Настройки сохранены'
+      );
+
+      reload();
+
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        'Ошибка сохранения'
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const copyLink =
+    async () => {
+      try {
+        await navigator.clipboard.writeText(
+          clientLink
+        );
+
+        alert(
+          '✅ Ссылка скопирована'
+        );
+      } catch {
+        alert(
+          clientLink
+        );
+      }
+    };
+
+  const shareTelegram =
+    () => {
+      const shareUrl =
+        `https://t.me/share/url?url=${encodeURIComponent(
+          clientLink
+        )}&text=${encodeURIComponent(
+          business.name
+        )}`;
+
+      if (
+        tg()?.openTelegramLink
+      ) {
+        tg().openTelegramLink(
+          shareUrl
+        );
+      } else {
+        window.open(
+          shareUrl,
+          '_blank'
+        );
+      }
+    };
+
+  const downloadQR =
+    () => {
+      if (!qrDataUrl) {
+        return;
+      }
+
+      const link =
+        document.createElement(
+          'a'
+        );
+
+      link.href =
+        qrDataUrl;
+
+      link.download =
+        `${business.slug}-bookly-qr.png`;
+
+      link.click();
+    };
+
+  return (
+    <div>
+
+      <div className="card">
+        <h2>
+          Основная информация
+        </h2>
+
+        <input
+          placeholder="Название бизнеса"
+          value={name}
+          onChange={e =>
+            setName(
+              e.target.value
+            )
+          }
+        />
+
+        <textarea
+          placeholder="Описание бизнеса"
+          value={description}
+          onChange={e =>
+            setDescription(
+              e.target.value
+            )
+          }
+        />
+
+        <input
+          type="tel"
+          placeholder="Телефон бизнеса"
+          value={phone}
+          onChange={e =>
+            setPhone(
+              e.target.value
+            )
+          }
+        />
+
+        <input
+          placeholder="Адрес бизнеса"
+          value={address}
+          onChange={e =>
+            setAddress(
+              e.target.value
+            )
+          }
+        />
+
+        <div className="two">
+          <input
+            placeholder="Широта — необязательно"
+            value={latitude}
+            onChange={e =>
+              setLatitude(
+                e.target.value
+              )
+            }
+          />
+
+          <input
+            placeholder="Долгота — необязательно"
+            value={longitude}
+            onChange={e =>
+              setLongitude(
+                e.target.value
+              )
+            }
+          />
+        </div>
+
+        <button
+          className="primary full"
+          disabled={saving}
+          onClick={save}
+        >
+          {saving
+            ? 'Сохранение...'
+            : 'Сохранить настройки'}
+        </button>
+      </div>
+
+      <div className="card">
+        <h2>
+          Ссылка для клиентов
+        </h2>
+
+        <p className="muted">
+          Клиенты открывают эту
+          ссылку и сразу попадают
+          на страницу вашего бизнеса.
+        </p>
+
+        <code
+          style={{
+            display: 'block',
+            padding: 12,
+            borderRadius: 12,
+            wordBreak: 'break-all',
+            background: '#f4f4f4'
+          }}
+        >
+          {clientLink}
+        </code>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            marginTop: 12,
+            flexWrap: 'wrap'
+          }}
+        >
+          <button
+            onClick={
+              copyLink
+            }
+          >
+            Копировать
+          </button>
+
+          <button
+            className="primary"
+            onClick={
+              shareTelegram
+            }
+          >
+            Поделиться в Telegram
+          </button>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>
+          QR-код
+        </h2>
+
+        <p className="muted">
+          Клиент может
+          отсканировать QR-код
+          камерой телефона и
+          открыть страницу бизнеса.
+        </p>
+
+        {qrDataUrl && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent:
+                'center',
+              margin:
+                '18px 0'
+            }}
+          >
+            <img
+              src={qrDataUrl}
+              alt="QR код Bookly"
+              style={{
+                width: 260,
+                height: 260,
+                borderRadius: 12
+              }}
+            />
+          </div>
+        )}
+
+        <button
+          className="primary full"
+          disabled={!qrDataUrl}
+          onClick={
+            downloadQR
+          }
+        >
+          Сохранить QR-код
+        </button>
+      </div>
+
+    </div>
+  );
+}
 
 function MyBookings() {
   const [items, setItems] = useState<any[]>([]);
