@@ -1101,32 +1101,80 @@ def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
         return {"provider":"uzum","amount":9.99,"currency":"USD","status":"not_configured","message":"Uzum merchant credentials are not configured yet."}
 
 @app.post("/payments/webhook/paddle")
-async def paddle_webhook(request: Request):
+async def paddle_webhook(
+    request: Request
+):
     raw = await request.body()
-    signature_header = request.headers.get("Paddle-Signature", "")
+
+    signature_header = request.headers.get(
+        "Paddle-Signature",
+        ""
+    )
+
     if not PADDLE_WEBHOOK_SECRET:
-        raise HTTPException(500, "PADDLE_WEBHOOK_SECRET is not configured")
+        raise HTTPException(
+            500,
+            "PADDLE_WEBHOOK_SECRET is not configured"
+        )
 
-    # Paddle подписывает так: "ts=<timestamp>;h1=<hash>"
-    parts = dict(p.split("=", 1) for p in signature_header.split(";") if "=" in p)
-    ts = parts.get("ts", "")
-    h1 = parts.get("h1", "")
+    # Paddle подписывает так:
+    # ts=<timestamp>;h1=<hash>
+    parts = dict(
+        p.split("=", 1)
+        for p in signature_header.split(";")
+        if "=" in p
+    )
+
+    ts = parts.get(
+        "ts",
+        ""
+    )
+
+    h1 = parts.get(
+        "h1",
+        ""
+    )
+
     if not ts or not h1:
-        raise HTTPException(401, "Invalid Paddle signature header")
+        raise HTTPException(
+            401,
+            "Invalid Paddle signature header"
+        )
 
-    signed_payload = f"{ts}:{raw.decode()}".encode()
+    signed_payload = (
+        f"{ts}:{raw.decode()}"
+    ).encode()
+
     expected_signature = hmac.new(
         PADDLE_WEBHOOK_SECRET.encode(),
         signed_payload,
         hashlib.sha256
     ).hexdigest()
-    if not hmac.compare_digest(expected_signature, h1):
-        raise HTTPException(401, "Invalid webhook signature")
 
-    payload = json.loads(raw.decode() or "{}")
-    event_type = payload.get("event_type", "")
-    data = payload.get("data", {}) or {}
-       custom = data.get(
+    if not hmac.compare_digest(
+        expected_signature,
+        h1
+    ):
+        raise HTTPException(
+            401,
+            "Invalid webhook signature"
+        )
+
+    payload = json.loads(
+        raw.decode() or "{}"
+    )
+
+    event_type = payload.get(
+        "event_type",
+        ""
+    )
+
+    data = payload.get(
+        "data",
+        {}
+    ) or {}
+
+    custom = data.get(
         "custom_data",
         {}
     ) or {}
@@ -1139,15 +1187,39 @@ async def paddle_webhook(request: Request):
         "business_id"
     )
 
-    status = data.get("status", "")
-    subscription_id = str(data.get("id", "") or data.get("subscription_id", ""))
+    status = data.get(
+        "status",
+        ""
+    )
 
-    billing_period = data.get("current_billing_period", {}) or {}
-    next_billed_at = data.get("next_billed_at") or billing_period.get("ends_at")
+    subscription_id = str(
+        data.get("id", "")
+        or
+        data.get(
+            "subscription_id",
+            ""
+        )
+    )
 
-     with SessionLocal() as db:
+    billing_period = data.get(
+        "current_billing_period",
+        {}
+    ) or {}
+
+    next_billed_at = (
+        data.get("next_billed_at")
+        or
+        billing_period.get(
+            "ends_at"
+        )
+    )
+
+    with SessionLocal() as db:
+
         b = None
 
+        # Для новых оплат пытаемся найти
+        # конкретный выбранный бизнес.
         if business_id:
             try:
                 candidate = db.get(
@@ -1169,10 +1241,9 @@ async def paddle_webhook(request: Request):
             ):
                 b = None
 
+        # Совместимость со старыми платежами,
+        # где business_id ещё не передавался.
         if not b and owner_id:
-            # Совместимость со старыми
-            # платежами, где business_id
-            # ещё не передавался.
             b = owner_business(
                 db,
                 int(owner_id)
@@ -1184,34 +1255,70 @@ async def paddle_webhook(request: Request):
             }
 
         b.payment_provider = "paddle"
+
         if subscription_id:
-            b.external_subscription_id = subscription_id
+            b.external_subscription_id = (
+                subscription_id
+            )
+
         b.subscription_status = status
 
         if next_billed_at:
             try:
                 b.subscription_expires_at = (
-                    datetime.fromisoformat(next_billed_at.replace("Z", "+00:00"))
-                    .replace(tzinfo=None)
+                    datetime.fromisoformat(
+                        next_billed_at.replace(
+                            "Z",
+                            "+00:00"
+                        )
+                    ).replace(
+                        tzinfo=None
+                    )
                 )
             except ValueError:
                 pass
 
-        if event_type in {"transaction.completed", "subscription.created", "subscription.updated", "subscription.resumed"}:
-            b.subscription_active = status not in {"canceled", "paused"}
-        elif event_type in {"subscription.canceled", "subscription.paused"}:
+        if event_type in {
+            "transaction.completed",
+            "subscription.created",
+            "subscription.updated",
+            "subscription.resumed"
+        }:
+            b.subscription_active = (
+                status not in {
+                    "canceled",
+                    "paused"
+                }
+            )
+
+        elif event_type in {
+            "subscription.canceled",
+            "subscription.paused"
+        }:
             if b.subscription_expires_at:
-                b.subscription_active = b.subscription_expires_at > datetime.utcnow()
+                b.subscription_active = (
+                    b.subscription_expires_at
+                    > datetime.utcnow()
+                )
             else:
                 b.subscription_active = False
+
         elif event_type == "transaction.payment_failed":
-            if b.subscription_expires_at and b.subscription_expires_at > datetime.utcnow():
+            if (
+                b.subscription_expires_at
+                and
+                b.subscription_expires_at
+                > datetime.utcnow()
+            ):
                 b.subscription_active = True
             else:
                 b.subscription_active = False
 
         db.commit()
-    return {"received": True}
+
+    return {
+        "received": True
+    }
 @app.post("/payments/webhook/{provider}")
 def payment_webhook(provider:str,payload:dict):
     if provider not in {"uzum"}:raise HTTPException(400,"Use the provider-specific webhook")
