@@ -1017,7 +1017,118 @@ function Bookings({
     </div>
   );
 }
-function BookingRow({x}:{x:any}){return <div className="booking"><div><b>{x.client_name}</b><span>{x.day} · {x.start.slice(0,5)}–{x.end.slice(0,5)}</span><span>📞 {x.client_phone||'номер не передан'}</span></div><em>{x.status}</em></div>}
+function BookingRow({ x }: { x: any }) {
+  const [cancelling, setCancelling] = useState(false);
+
+  const cancelBooking = async () => {
+    if (x.status !== 'confirmed') {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Отменить запись клиента ${x.client_name}?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setCancelling(true);
+
+    try {
+      const response = await fetch(
+        API + `/admin/bookings/${x.id}/cancel`,
+        {
+          method: 'POST',
+          headers: headers()
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось отменить запись'
+        );
+      }
+
+      alert('✅ Запись отменена');
+
+      window.location.reload();
+
+    } catch (e: any) {
+      console.error(
+        'ADMIN CANCEL BOOKING ERROR:',
+        e
+      );
+
+      alert(
+        e?.message ||
+        'Не удалось отменить запись'
+      );
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  return (
+    <div className="booking">
+      <div>
+        <b>
+          {x.client_name}
+        </b>
+
+        <span>
+          📅 {x.day}
+        </span>
+
+        <span>
+          🕐 {x.start.slice(0, 5)}–{x.end.slice(0, 5)}
+        </span>
+
+        <span>
+          📞 {x.client_phone || 'номер не передан'}
+        </span>
+
+        {x.service_name && (
+          <span>
+            💈 {x.service_name}
+          </span>
+        )}
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 8
+        }}
+      >
+        <em>
+          {x.status === 'confirmed'
+            ? 'Подтверждено'
+            : x.status === 'cancelled'
+              ? 'Отменено'
+              : x.status}
+        </em>
+
+        {x.status === 'confirmed' && (
+          <button
+            className="danger"
+            disabled={cancelling}
+            onClick={cancelBooking}
+          >
+            {cancelling
+              ? 'Отмена...'
+              : 'Отменить'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 function Settings({business,reload}:{business:any,reload:()=>void}){const [f,setF]=useState({name:business.name,description:business.description||'',address:business.address||'',latitude:business.latitude||'',longitude:business.longitude||''});const save=async()=>{await fetch(API+'/admin/business',{method:'PUT',headers:headers(),body:JSON.stringify({...f,latitude:f.latitude?Number(f.latitude):null,longitude:f.longitude?Number(f.longitude):null})});reload()};return <div className="card"><h2>Настройки бизнеса</h2><input value={f.name} onChange={e=>setF({...f,name:e.target.value})}/><textarea value={f.description} onChange={e=>setF({...f,description:e.target.value})}/><input value={f.address} onChange={e=>setF({...f,address:e.target.value})}/><div className="two"><input placeholder="Широта" value={f.latitude} onChange={e=>setF({...f,latitude:e.target.value})}/><input placeholder="Долгота" value={f.longitude} onChange={e=>setF({...f,longitude:e.target.value})}/></div><button className="primary full" onClick={save}>Сохранить</button><div className="share"><b>Ссылка клиента</b><code>{`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`}</code><button onClick={()=>navigator.clipboard?.writeText(`https://t.me/${BOT_USERNAME}?startapp=${business.slug}`)}>Копировать</button></div></div>}
 
 function MyBookings() {
