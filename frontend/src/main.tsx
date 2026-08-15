@@ -1421,7 +1421,23 @@ function Client({
         {business.address && (
           <p>📍 {business.address}</p>
         )}
+     
       </div>
+      <details className="card">
+     <summary
+    style={{
+      cursor: 'pointer',
+      fontWeight: 600,
+      fontSize: 18
+    }}
+  >
+    📅 Мои записи
+  </summary>
+
+  <div style={{ marginTop: 15 }}>
+    <MyBookings />
+  </div>
+</details>
 
       <h2>1. Выберите услугу</h2>
 
