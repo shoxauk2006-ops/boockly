@@ -1252,15 +1252,31 @@ function Bookings({
 function BookingRow({ x }: { x: any }) {
   const [cancelling, setCancelling] = useState(false);
 
-  const now = new Date();
+  const getNowTashkent = () => {
+    return new Intl.DateTimeFormat(
+      'sv-SE',
+      {
+        timeZone: 'Asia/Tashkent',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }
+    ).format(new Date());
+  };
 
-  const bookingStart = new Date(
-    `${x.day}T${x.start}:00+05:00`
-  );
+  const nowTashkent =
+    getNowTashkent().slice(0, 16);
+
+  const bookingDateTime =
+    `${x.day} ${x.start}`;
 
   const canCancel =
     x.status === 'confirmed' &&
-    bookingStart > now;
+    bookingDateTime > nowTashkent;
 
   const cancelBooking = async () => {
     if (!canCancel) {
@@ -1358,9 +1374,9 @@ function BookingRow({ x }: { x: any }) {
         <em>
           {x.status === 'confirmed'
             ? (
-              bookingStart <= now
-                ? 'Завершено'
-                : 'Подтверждено'
+              canCancel
+                ? 'Подтверждено'
+                : 'Завершено'
             )
             : x.status === 'cancelled'
               ? 'Отменено'
@@ -1371,9 +1387,7 @@ function BookingRow({ x }: { x: any }) {
           <button
             className="danger"
             disabled={cancelling}
-            onClick={
-              cancelBooking
-            }
+            onClick={cancelBooking}
           >
             {cancelling
               ? 'Отмена...'
