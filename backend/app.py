@@ -239,9 +239,39 @@ def notify_owner_new_booking(db, booking, service):
     )
     telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
 
-def owner_business(db, owner_id: int):
-    return db.query(Business).filter_by(owner_telegram_id=owner_id).first()
+def owner_business(
+    db,
+    owner_id: int,
+    business_id: Optional[int] = None
+):
+    selected_id = (
+        business_id
+        if business_id is not None
+        else ACTIVE_BUSINESS_ID.get()
+    )
 
+    query = db.query(Business).filter(
+        Business.owner_telegram_id ==
+        owner_id
+    )
+
+    if selected_id is not None:
+        return (
+            query
+            .filter(
+                Business.id ==
+                selected_id
+            )
+            .first()
+        )
+
+    return (
+        query
+        .order_by(
+            Business.id.asc()
+        )
+        .first()
+    )
 def ensure_owner(db, business_id: int, owner_id: int):
     b = db.get(Business, business_id)
     if not b or b.owner_telegram_id != owner_id:
