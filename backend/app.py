@@ -12,7 +12,18 @@ from urllib.error import URLError
 from fastapi import FastAPI, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, String, Integer, BigInteger, Boolean, Date, Time, DateTime, ForeignKey
+from sqlalchemy import (
+    create_engine,
+    String,
+    Integer,
+    BigInteger,
+    Boolean,
+    Date,
+    Time,
+    DateTime,
+    ForeignKey,
+    Numeric
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
