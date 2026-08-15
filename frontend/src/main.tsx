@@ -13,7 +13,26 @@ const API=import.meta.env.VITE_API_URL||'http://localhost:8000';
 const BOT_USERNAME=import.meta.env.VITE_BOT_USERNAME||'BooklyBot';
 const tg=()=>window.Telegram?.WebApp;
 const initData=()=>tg()?.initData||'';
-const headers=()=>({'Content-Type':'application/json','X-Telegram-Init-Data':initData()});
+const headers = () => {
+  const base: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Telegram-Init-Data': initData()
+  };
+
+  try {
+    const businessId =
+      localStorage.getItem(
+        'bookly_active_business_id'
+      );
+
+    if (businessId) {
+      base['X-Bookly-Business-Id'] =
+        businessId;
+    }
+  } catch {}
+
+  return base;
+};
 const money=(v:number,c='UZS')=>`${new Intl.NumberFormat('ru-RU').format(v)} ${c}`;
 const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
