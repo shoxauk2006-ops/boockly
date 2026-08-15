@@ -39,25 +39,79 @@ class Base(DeclarativeBase): pass
 
 class Business(Base):
     __tablename__ = "businesses"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-  owner_telegram_id: Mapped[int] = mapped_column(
-    BigInteger,
-    index=True
-)
-    name: Mapped[str] = mapped_column(String(120))
-    description: Mapped[str] = mapped_column(String(500), default="")
-    address: Mapped[str] = mapped_column(String(255), default="")
-    phone: Mapped[str] = mapped_column(String(40), default="")
-    latitude: Mapped[Optional[float]] = mapped_column(nullable=True)
-    longitude: Mapped[Optional[float]] = mapped_column(nullable=True)
-    slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
-    subscription_active: Mapped[bool] = mapped_column(Boolean, default=False)
-    subscription_active: Mapped[bool] = mapped_column(Boolean, default=False)
-    subscription_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    subscription_status: Mapped[str] = mapped_column(String(30), default="inactive")
-    payment_provider: Mapped[str] = mapped_column(String(30), default="")
-    external_subscription_id: Mapped[str] = mapped_column(String(120), default="")
-    payment_method_url: Mapped[str] = mapped_column(String(1000), default="")
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
+
+    owner_telegram_id: Mapped[int] = mapped_column(
+        BigInteger,
+        index=True
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(120)
+    )
+
+    description: Mapped[str] = mapped_column(
+        String(500),
+        default=""
+    )
+
+    address: Mapped[str] = mapped_column(
+        String(255),
+        default=""
+    )
+
+    phone: Mapped[str] = mapped_column(
+        String(40),
+        default=""
+    )
+
+    latitude: Mapped[Optional[float]] = mapped_column(
+        nullable=True
+    )
+
+    longitude: Mapped[Optional[float]] = mapped_column(
+        nullable=True
+    )
+
+    slug: Mapped[str] = mapped_column(
+        String(80),
+        unique=True,
+        index=True
+    )
+
+    subscription_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False
+    )
+
+    subscription_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+    subscription_status: Mapped[str] = mapped_column(
+        String(30),
+        default="inactive"
+    )
+
+    payment_provider: Mapped[str] = mapped_column(
+        String(30),
+        default=""
+    )
+
+    external_subscription_id: Mapped[str] = mapped_column(
+        String(120),
+        default=""
+    )
+
+    payment_method_url: Mapped[str] = mapped_column(
+        String(1000),
+        default=""
+    )
 
 class Service(Base):
     __tablename__ = "services"
