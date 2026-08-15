@@ -4,6 +4,7 @@ import hmac
 import hashlib
 import secrets
 from datetime import date, time, datetime, timedelta
+from decimal import Decimal
 from typing import Optional
 from urllib.parse import parse_qsl
 from urllib import request as urllib_request
@@ -60,7 +61,10 @@ class Service(Base):
     business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
     name: Mapped[str] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(String(500), default="")
-    price: Mapped[int] = mapped_column(Integer)
+  price: Mapped[Decimal] = mapped_column(
+    Numeric(18, 3),
+    default=Decimal("0")
+)
     currency: Mapped[str] = mapped_column(String(8), default="UZS")
     duration_min: Mapped[int] = mapped_column(Integer)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
