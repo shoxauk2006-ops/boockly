@@ -1126,8 +1126,18 @@ async def paddle_webhook(request: Request):
     payload = json.loads(raw.decode() or "{}")
     event_type = payload.get("event_type", "")
     data = payload.get("data", {}) or {}
-    custom = data.get("custom_data", {}) or {}
-    owner_id = custom.get("telegram_user_id")
+       custom = data.get(
+        "custom_data",
+        {}
+    ) or {}
+
+    owner_id = custom.get(
+        "telegram_user_id"
+    )
+
+    business_id = custom.get(
+        "business_id"
+    )
 
     status = data.get("status", "")
     subscription_id = str(data.get("id", "") or data.get("subscription_id", ""))
@@ -1135,12 +1145,43 @@ async def paddle_webhook(request: Request):
     billing_period = data.get("current_billing_period", {}) or {}
     next_billed_at = data.get("next_billed_at") or billing_period.get("ends_at")
 
-    with SessionLocal() as db:
+     with SessionLocal() as db:
         b = None
-        if owner_id:
-            b = owner_business(db, int(owner_id))
+
+        if business_id:
+            try:
+                candidate = db.get(
+                    Business,
+                    int(business_id)
+                )
+
+                if (
+                    candidate
+                    and owner_id
+                    and candidate.owner_telegram_id
+                    == int(owner_id)
+                ):
+                    b = candidate
+
+            except (
+                TypeError,
+                ValueError
+            ):
+                b = None
+
+        if not b and owner_id:
+            # Совместимость со старыми
+            # платежами, где business_id
+            # ещё не передавался.
+            b = owner_business(
+                db,
+                int(owner_id)
+            )
+
         if not b:
-            return {"received": True}
+            return {
+                "received": True
+            }
 
         b.payment_provider = "paddle"
         if subscription_id:
