@@ -562,10 +562,12 @@ function checkout(provider:string){
 
 function Services({
   services,
-  reload
+  reload,
+  business
 }: {
   services: any[];
   reload: () => void;
+  business: any;
 }) {
   const [f, setF] = useState({
     name: '',
@@ -577,6 +579,25 @@ function Services({
 
   const [currencySearch, setCurrencySearch] =
     useState('');
+
+  const [businessPhone, setBusinessPhone] =
+    useState(business?.phone || '');
+
+  const [businessAddress, setBusinessAddress] =
+    useState(business?.address || '');
+
+  const [savingBusiness, setSavingBusiness] =
+    useState(false);
+
+  useEffect(() => {
+    setBusinessPhone(
+      business?.phone || ''
+    );
+
+    setBusinessAddress(
+      business?.address || ''
+    );
+  }, [business]);
 
   const getCurrencyCodes = () => {
     const intlAny = Intl as any;
@@ -590,120 +611,26 @@ function Services({
     }
 
     return [
-      'AED',
-      'AFN',
-      'ALL',
-      'AMD',
-      'ARS',
-      'AUD',
-      'AZN',
-      'BAM',
-      'BDT',
-      'BGN',
-      'BHD',
-      'BND',
-      'BOB',
-      'BRL',
-      'BYN',
-      'CAD',
-      'CHF',
-      'CLP',
-      'CNY',
-      'COP',
-      'CRC',
-      'CZK',
-      'DKK',
-      'DOP',
-      'DZD',
-      'EGP',
-      'EUR',
-      'GBP',
-      'GEL',
-      'GHS',
-      'HKD',
-      'HNL',
-      'HRK',
-      'HUF',
-      'IDR',
-      'ILS',
-      'INR',
-      'IQD',
-      'ISK',
-      'JOD',
-      'JPY',
-      'KES',
-      'KGS',
-      'KHR',
-      'KRW',
-      'KWD',
-      'KZT',
-      'LAK',
-      'LBP',
-      'LKR',
-      'MAD',
-      'MDL',
-      'MGA',
-      'MKD',
-      'MMK',
-      'MNT',
-      'MOP',
-      'MRU',
-      'MUR',
-      'MXN',
-      'MYR',
-      'MZN',
-      'NAD',
-      'NGN',
-      'NIO',
-      'NOK',
-      'NPR',
-      'NZD',
-      'OMR',
-      'PAB',
-      'PEN',
-      'PHP',
-      'PKR',
-      'PLN',
-      'PYG',
-      'QAR',
-      'RON',
-      'RSD',
-      'RUB',
-      'SAR',
-      'SEK',
-      'SGD',
-      'SLL',
-      'SOS',
-      'SRD',
-      'STN',
-      'SYP',
-      'THB',
-      'TJS',
-      'TMT',
-      'TND',
-      'TOP',
-      'TRY',
-      'TTD',
-      'TWD',
-      'TZS',
-      'UAH',
-      'UGX',
-      'USD',
-      'UYU',
-      'UZS',
-      'VES',
-      'VND',
-      'XAF',
-      'XCD',
-      'XOF',
-      'XPF',
-      'YER',
-      'ZAR',
-      'ZMW'
+      'AED','AFN','ALL','AMD','ARS','AUD',
+      'AZN','BAM','BDT','BGN','BHD','BND',
+      'BOB','BRL','BYN','CAD','CHF','CLP',
+      'CNY','COP','CRC','CZK','DKK','DZD',
+      'EGP','EUR','GBP','GEL','GHS','HKD',
+      'HNL','HUF','IDR','ILS','INR','IQD',
+      'ISK','JOD','JPY','KES','KGS','KHR',
+      'KRW','KWD','KZT','LAK','LBP','LKR',
+      'MAD','MDL','MGA','MKD','MMK','MNT',
+      'MOP','MRU','MUR','MXN','MYR','MZN',
+      'NAD','NGN','NIO','NOK','NPR','NZD',
+      'OMR','PAB','PEN','PHP','PKR','PLN',
+      'PYG','QAR','RON','RSD','RUB','SAR',
+      'SEK','SGD','SOS','SRD','STN','THB',
+      'TJS','TMT','TND','TOP','TRY','TTD',
+      'TWD','TZS','UAH','UGX','USD','UYU',
+      'UZS','VES','VND','XAF','XCD','XOF',
+      'XPF','YER','ZAR','ZMW'
     ];
   };
-
-  const currencyCodes = getCurrencyCodes();
 
   const getCurrencyName = (
     code: string
@@ -720,14 +647,9 @@ function Services({
           }
         );
 
-        return (
-          names.of(code) ||
-          code
-        );
+        return names.of(code) || code;
       }
-    } catch {
-      // fallback below
-    }
+    } catch {}
 
     return code;
   };
@@ -750,8 +672,7 @@ function Services({
         parts.find(
           part =>
             part.type === 'currency'
-        )?.value ||
-        code
+        )?.value || code
       );
     } catch {
       return code;
@@ -759,7 +680,7 @@ function Services({
   };
 
   const currencyOptions =
-    currencyCodes
+    getCurrencyCodes()
       .map(code => ({
         code,
         name: getCurrencyName(code),
@@ -772,9 +693,7 @@ function Services({
             .trim()
             .toLowerCase();
 
-        if (!q) {
-          return true;
-        }
+        if (!q) return true;
 
         return (
           currency.code
@@ -794,9 +713,93 @@ function Services({
         )
       );
 
+  const selectedCurrency =
+    currencyOptions.find(
+      currency =>
+        currency.code === f.currency
+    );
+
+  useEffect(() => {
+    if (
+      currencySearch.trim() &&
+      selectedCurrency === undefined &&
+      currencyOptions.length > 0
+    ) {
+      setF(prev => ({
+        ...prev,
+        currency:
+          currencyOptions[0].code
+      }));
+    }
+  }, [
+    currencySearch,
+    currencyOptions.length
+  ]);
+
+  const saveBusinessContacts =
+    async () => {
+      setSavingBusiness(true);
+
+      try {
+        const response =
+          await fetch(
+            API + '/admin/business',
+            {
+              method: 'PUT',
+              headers: headers(),
+              body: JSON.stringify({
+                name: business.name,
+                description:
+                  business.description || '',
+                address:
+                  businessAddress.trim(),
+                phone:
+                  businessPhone.trim(),
+                latitude:
+                  business.latitude ?? null,
+                longitude:
+                  business.longitude ?? null
+              })
+            }
+          );
+
+        const data =
+          await response.json().catch(
+            () => null
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+            'Не удалось сохранить контакты'
+          );
+        }
+
+        alert(
+          '✅ Контакты бизнеса сохранены'
+        );
+
+        reload();
+
+      } catch (e: any) {
+        alert(
+          e?.message ||
+          'Не удалось сохранить контакты'
+        );
+      } finally {
+        setSavingBusiness(false);
+      }
+    };
+
   const add = async () => {
     const serviceName =
       f.name.trim();
+
+    const price =
+      Number(f.price);
+
+    const duration =
+      Number(f.duration_min);
 
     if (!serviceName) {
       alert(
@@ -804,9 +807,6 @@ function Services({
       );
       return;
     }
-
-    const price =
-      Number(f.price);
 
     if (
       !Number.isFinite(price) ||
@@ -817,9 +817,6 @@ function Services({
       );
       return;
     }
-
-    const duration =
-      Number(f.duration_min);
 
     if (
       !Number.isInteger(duration) ||
@@ -834,8 +831,7 @@ function Services({
 
     const response =
       await fetch(
-        API +
-          '/admin/services',
+        API + '/admin/services',
         {
           method: 'POST',
           headers: headers(),
@@ -881,31 +877,21 @@ function Services({
   const remove = async (
     id: number
   ) => {
-    const confirmed =
-      window.confirm(
+    if (
+      !window.confirm(
         'Удалить эту услугу?'
-      );
-
-    if (!confirmed) {
+      )
+    ) {
       return;
     }
 
-    const response =
-      await fetch(
-        API +
-          `/admin/services/${id}`,
-        {
-          method: 'DELETE',
-          headers: headers()
-        }
-      );
-
-    if (!response.ok) {
-      alert(
-        'Не удалось удалить услугу'
-      );
-      return;
-    }
+    await fetch(
+      API + `/admin/services/${id}`,
+      {
+        method: 'DELETE',
+        headers: headers()
+      }
+    );
 
     reload();
   };
@@ -914,7 +900,45 @@ function Services({
     <div>
 
       <div className="card">
+        <h2>
+          Контакты бизнеса
+        </h2>
 
+        <input
+          type="tel"
+          placeholder="Номер телефона бизнеса"
+          value={businessPhone}
+          onChange={e =>
+            setBusinessPhone(
+              e.target.value
+            )
+          }
+        />
+
+        <input
+          placeholder="Адрес бизнеса"
+          value={businessAddress}
+          onChange={e =>
+            setBusinessAddress(
+              e.target.value
+            )
+          }
+        />
+
+        <button
+          className="primary full"
+          disabled={savingBusiness}
+          onClick={
+            saveBusinessContacts
+          }
+        >
+          {savingBusiness
+            ? 'Сохранение...'
+            : 'Сохранить контакты'}
+        </button>
+      </div>
+
+      <div className="card">
         <h2>
           Добавить услугу
         </h2>
@@ -933,9 +957,7 @@ function Services({
 
         <input
           placeholder="Описание"
-          value={
-            f.description
-          }
+          value={f.description}
           onChange={e =>
             setF({
               ...f,
@@ -946,7 +968,6 @@ function Services({
         />
 
         <div className="two">
-
           <input
             type="number"
             min="0"
@@ -963,16 +984,13 @@ function Services({
 
           <input
             placeholder="Поиск валюты"
-            value={
-              currencySearch
-            }
+            value={currencySearch}
             onChange={e =>
               setCurrencySearch(
                 e.target.value
               )
             }
           />
-
         </div>
 
         <select
@@ -985,28 +1003,17 @@ function Services({
             })
           }
         >
-          {currencyOptions.length ? (
-            currencyOptions.map(
-              currency => (
-                <option
-                  key={
-                    currency.code
-                  }
-                  value={
-                    currency.code
-                  }
-                >
-                  {currency.code}{' '}
-                  —{' '}
-                  {currency.name}{' '}
-                  ({currency.symbol})
-                </option>
-              )
+          {currencyOptions.map(
+            currency => (
+              <option
+                key={currency.code}
+                value={currency.code}
+              >
+                {currency.code} —{' '}
+                {currency.name} (
+                {currency.symbol})
+              </option>
             )
-          ) : (
-            <option value="UZS">
-              UZS — Uzbekistani so'm
-            </option>
           )}
         </select>
 
@@ -1015,9 +1022,7 @@ function Services({
           min="1"
           max="480"
           placeholder="Длительность в минутах"
-          value={
-            f.duration_min
-          }
+          value={f.duration_min}
           onChange={e =>
             setF({
               ...f,
@@ -1033,63 +1038,46 @@ function Services({
         >
           + Добавить услугу
         </button>
-
       </div>
 
-      {services.map(
-        service => (
-          <div
-            className="card row"
-            key={service.id}
-          >
+      {services.map(service => (
+        <div
+          className="card row"
+          key={service.id}
+        >
+          <div>
+            <b>
+              {service.name}
+            </b>
 
-            <div>
-
-              <b>
-                {service.name}
-              </b>
-
-              {service.description && (
-                <p>
-                  {
-                    service.description
-                  }
-                </p>
-              )}
-
+            {service.description && (
               <p>
-                {money(
-                  service.price,
-                  service.currency
-                )}{' '}
-                ·{' '}
-                {
-                  service.duration_min
-                }{' '}
-                мин
+                {service.description}
               </p>
+            )}
 
-            </div>
-
-            <button
-              className="danger"
-              onClick={() =>
-                remove(
-                  service.id
-                )
-              }
-            >
-              Удалить
-            </button>
-
+            <p>
+              {money(
+                service.price,
+                service.currency
+              )}{' '}
+              · {service.duration_min} мин
+            </p>
           </div>
-        )
-      )}
 
+          <button
+            className="danger"
+            onClick={() =>
+              remove(service.id)
+            }
+          >
+            Удалить
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
-
 function Hours({hours,reload}:{hours:any[],reload:()=>void}){const [f,setF]=useState({weekday:'0',start:'09:00',end:'18:00'});const add=async()=>{await fetch(API+'/admin/hours',{method:'POST',headers:headers(),body:JSON.stringify({...f,weekday:Number(f.weekday)})});reload()};return <div className="card"><h2>Рабочий график</h2><p>Настройте обычные рабочие часы. Потом отдельные часы можно блокировать.</p><div className="two"><select value={f.weekday} onChange={e=>setF({...f,weekday:e.target.value})}>{days.map((x,i)=><option value={i} key={x}>{x}</option>)}</select><span></span></div><div className="two"><input type="time" value={f.start} onChange={e=>setF({...f,start:e.target.value})}/><input type="time" value={f.end} onChange={e=>setF({...f,end:e.target.value})}/></div><button className="primary full" onClick={add}>Добавить интервал</button>{days.map((d,i)=>{const hs=hours.filter(h=>h.weekday===i);return <div className="dayrow" key={d}><b>{d}</b><div>{hs.length?hs.map(h=><span className="tag" key={h.id}>{h.start.slice(0,5)}–{h.end.slice(0,5)} <button onClick={async()=>{await fetch(API+`/admin/hours/${h.id}`,{method:'DELETE',headers:headers()});reload()}}>×</button></span>):<span className="muted">Выходной</span>}</div></div>})}</div>}
 
 function Blocks({blocks,reload}:{blocks:any[],reload:()=>void}){const [f,setF]=useState({day:new Date().toISOString().slice(0,10),start:'13:00',end:'15:00',reason:''});const add=async()=>{await fetch(API+'/admin/blocks',{method:'POST',headers:headers(),body:JSON.stringify(f)});reload()};return <div className="card"><h2>Временные блокировки</h2><p>Если нужно отойти, просто заблокируйте часы — клиент их не увидит.</p><input type="date" value={f.day} onChange={e=>setF({...f,day:e.target.value})}/><div className="two"><input type="time" value={f.start} onChange={e=>setF({...f,start:e.target.value})}/><input type="time" value={f.end} onChange={e=>setF({...f,end:e.target.value})}/></div><input placeholder="Причина (необязательно)" value={f.reason} onChange={e=>setF({...f,reason:e.target.value})}/><button className="primary full" onClick={add}>Заблокировать время</button>{blocks.map(b=><div className="row line" key={b.id}><div><b>{b.day}</b><p>{b.start.slice(0,5)}–{b.end.slice(0,5)} {b.reason&&`· ${b.reason}`}</p></div><button className="danger" onClick={async()=>{await fetch(API+`/admin/blocks/${b.id}`,{method:'DELETE',headers:headers()});reload()}}>×</button></div>)}</div>}
