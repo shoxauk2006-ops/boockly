@@ -353,7 +353,68 @@ def upsert_business(x: BusinessIn, x_telegram_init_data: str = Header(default=""
             for k, v in x.model_dump().items(): setattr(b, k, v)
         db.commit(); db.refresh(b)
         return b
+@app.get("/admin/businesses")
+def admin_businesses(
+    x_telegram_init_data: str = Header(
+        default=""
+    )
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
 
+    owner_id = int(
+        user["id"]
+    )
+
+    with SessionLocal() as db:
+        return (
+            db.query(Business)
+            .filter(
+                Business.owner_telegram_id ==
+                owner_id
+            )
+            .order_by(
+                Business.id.asc()
+            )
+            .all()
+        )
+
+
+@app.post("/admin/businesses")
+def admin_create_business(
+    x: BusinessIn,
+    x_telegram_init_data: str = Header(
+        default=""
+    )
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(
+        user["id"]
+    )
+
+    slug = (
+        secrets.token_urlsafe(8)
+        .replace("-", "")
+        .replace("_", "")
+        .lower()
+    )
+
+    with SessionLocal() as db:
+        business = Business(
+            owner_telegram_id=owner_id,
+            slug=slug,
+            **x.model_dump()
+        )
+
+        db.add(business)
+        db.commit()
+        db.refresh(business)
+
+        return business
 @app.get("/admin/business")
 def admin_business(x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
