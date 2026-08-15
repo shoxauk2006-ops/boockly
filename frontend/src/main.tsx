@@ -580,6 +580,9 @@ function Services({
     duration_min: '30'
   });
 
+  const [editingId, setEditingId] =
+    useState<number | null>(null);
+
   const [currencySearch, setCurrencySearch] =
     useState('');
 
@@ -606,7 +609,8 @@ function Services({
     const intlAny = Intl as any;
 
     if (
-      typeof intlAny.supportedValuesOf === 'function'
+      typeof intlAny.supportedValuesOf ===
+      'function'
     ) {
       return intlAny.supportedValuesOf(
         'currency'
@@ -619,19 +623,19 @@ function Services({
       'BOB','BRL','BYN','CAD','CHF','CLP',
       'CNY','COP','CRC','CZK','DKK','DZD',
       'EGP','EUR','GBP','GEL','GHS','HKD',
-      'HNL','HUF','IDR','ILS','INR','IQD',
-      'ISK','JOD','JPY','KES','KGS','KHR',
-      'KRW','KWD','KZT','LAK','LBP','LKR',
-      'MAD','MDL','MGA','MKD','MMK','MNT',
-      'MOP','MRU','MUR','MXN','MYR','MZN',
-      'NAD','NGN','NIO','NOK','NPR','NZD',
-      'OMR','PAB','PEN','PHP','PKR','PLN',
-      'PYG','QAR','RON','RSD','RUB','SAR',
-      'SEK','SGD','SOS','SRD','STN','THB',
-      'TJS','TMT','TND','TOP','TRY','TTD',
-      'TWD','TZS','UAH','UGX','USD','UYU',
-      'UZS','VES','VND','XAF','XCD','XOF',
-      'XPF','YER','ZAR','ZMW'
+      'HUF','IDR','ILS','INR','IQD','ISK',
+      'JOD','JPY','KES','KGS','KHR','KRW',
+      'KWD','KZT','LAK','LBP','LKR','MAD',
+      'MDL','MGA','MKD','MMK','MNT','MOP',
+      'MRU','MUR','MXN','MYR','MZN','NAD',
+      'NGN','NIO','NOK','NPR','NZD','OMR',
+      'PAB','PEN','PHP','PKR','PLN','PYG',
+      'QAR','RON','RSD','RUB','SAR','SEK',
+      'SGD','SOS','SRD','STN','THB','TJS',
+      'TMT','TND','TOP','TRY','TTD','TWD',
+      'TZS','UAH','UGX','USD','UYU','UZS',
+      'VES','VND','XAF','XCD','XOF','XPF',
+      'YER','ZAR','ZMW'
     ];
   };
 
@@ -643,14 +647,18 @@ function Services({
         (Intl as any).DisplayNames;
 
       if (DisplayNames) {
-        const names = new DisplayNames(
-          ['en'],
-          {
-            type: 'currency'
-          }
-        );
+        const names =
+          new DisplayNames(
+            ['en'],
+            {
+              type: 'currency'
+            }
+          );
 
-        return names.of(code) || code;
+        return (
+          names.of(code) ||
+          code
+        );
       }
     } catch {}
 
@@ -667,7 +675,8 @@ function Services({
           {
             style: 'currency',
             currency: code,
-            currencyDisplay: 'narrowSymbol'
+            currencyDisplay:
+              'narrowSymbol'
           }
         ).formatToParts(1);
 
@@ -675,7 +684,8 @@ function Services({
         parts.find(
           part =>
             part.type === 'currency'
-        )?.value || code
+        )?.value ||
+        code
       );
     } catch {
       return code;
@@ -686,7 +696,8 @@ function Services({
     getCurrencyCodes()
       .map(code => ({
         code,
-        name: getCurrencyName(code),
+        name:
+          getCurrencyName(code),
         symbol:
           getCurrencySymbol(code)
       }))
@@ -716,151 +727,30 @@ function Services({
         )
       );
 
-  const selectedCurrency =
-    currencyOptions.find(
-      currency =>
-        currency.code === f.currency
-    );
-
   useEffect(() => {
     if (
-      currencySearch.trim() &&
-      selectedCurrency === undefined &&
-      currencyOptions.length > 0
+      currencySearch.trim()
     ) {
-      setF(prev => ({
-        ...prev,
-        currency:
-          currencyOptions[0].code
-      }));
-    }
-  }, [
-    currencySearch,
-    currencyOptions.length
-  ]);
-
-  const saveBusinessContacts =
-    async () => {
-      setSavingBusiness(true);
-
-      try {
-        const response =
-          await fetch(
-            API + '/admin/business',
-            {
-              method: 'PUT',
-              headers: headers(),
-              body: JSON.stringify({
-                name: business.name,
-                description:
-                  business.description || '',
-                address:
-                  businessAddress.trim(),
-                phone:
-                  businessPhone.trim(),
-                latitude:
-                  business.latitude ?? null,
-                longitude:
-                  business.longitude ?? null
-              })
-            }
-          );
-
-        const data =
-          await response.json().catch(
-            () => null
-          );
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-            'Не удалось сохранить контакты'
-          );
-        }
-
-        alert(
-          '✅ Контакты бизнеса сохранены'
+      const exactCode =
+        currencyOptions.find(
+          x =>
+            x.code.toLowerCase() ===
+            currencySearch
+              .trim()
+              .toLowerCase()
         );
 
-        reload();
-
-      } catch (e: any) {
-        alert(
-          e?.message ||
-          'Не удалось сохранить контакты'
-        );
-      } finally {
-        setSavingBusiness(false);
+      if (exactCode) {
+        setF(prev => ({
+          ...prev,
+          currency:
+            exactCode.code
+        }));
       }
-    };
-
-  const add = async () => {
-    const serviceName =
-      f.name.trim();
-
-    const price =
-      Number(f.price);
-
-    const duration =
-      Number(f.duration_min);
-
-    if (!serviceName) {
-      alert(
-        'Введите название услуги'
-      );
-      return;
     }
+  }, [currencySearch]);
 
-    if (
-      !Number.isFinite(price) ||
-      price < 0
-    ) {
-      alert(
-        'Введите корректную цену'
-      );
-      return;
-    }
-
-    if (
-      !Number.isInteger(duration) ||
-      duration <= 0 ||
-      duration > 480
-    ) {
-      alert(
-        'Длительность должна быть от 1 до 480 минут'
-      );
-      return;
-    }
-
-    const response =
-      await fetch(
-        API + '/admin/services',
-        {
-          method: 'POST',
-          headers: headers(),
-          body: JSON.stringify({
-            name: serviceName,
-            description:
-              f.description.trim(),
-            price,
-            currency:
-              f.currency,
-            duration_min:
-              duration
-          })
-        }
-      );
-
-    const data =
-      await response
-        .json()
-        .catch(() => null);
-
-    if (!response.ok) {
-      Services
-      return;
-    }
-
+  const resetForm = () => {
     setF({
       name: '',
       description: '',
@@ -870,8 +760,199 @@ function Services({
     });
 
     setCurrencySearch('');
+    setEditingId(null);
+  };
 
-    reload();
+  const saveBusinessContacts =
+    async () => {
+      setSavingBusiness(true);
+
+      try {
+        const response =
+          await fetch(
+            API +
+              '/admin/business',
+            {
+              method: 'PUT',
+              headers: headers(),
+              body: JSON.stringify({
+                name: business.name,
+                description:
+                  business.description ||
+                  '',
+                address:
+                  businessAddress.trim(),
+                phone:
+                  businessPhone.trim(),
+                latitude:
+                  business.latitude ??
+                  null,
+                longitude:
+                  business.longitude ??
+                  null
+              })
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+            'Не удалось сохранить контакты'
+          );
+        }
+
+        alert(
+          '✅ Настройки сохранены'
+        );
+
+        reload();
+
+      } catch (e: any) {
+        alert(
+          e?.message ||
+          'Не удалось сохранить настройки'
+        );
+      } finally {
+        setSavingBusiness(
+          false
+        );
+      }
+    };
+
+  const saveService =
+    async () => {
+      const name =
+        f.name.trim();
+
+      const price =
+        Number(f.price);
+
+      const duration =
+        Number(f.duration_min);
+
+      if (!name) {
+        alert(
+          'Введите название услуги'
+        );
+        return;
+      }
+
+      if (
+        !Number.isFinite(price) ||
+        price < 0
+      ) {
+        alert(
+          'Введите корректную цену'
+        );
+        return;
+      }
+
+      if (
+        !Number.isInteger(
+          duration
+        ) ||
+        duration <= 0 ||
+        duration > 480
+      ) {
+        alert(
+          'Длительность должна быть от 1 до 480 минут'
+        );
+        return;
+      }
+
+      const url = editingId
+        ? API +
+          `/admin/services/${editingId}`
+        : API +
+          '/admin/services';
+
+      const response =
+        await fetch(
+          url,
+          {
+            method: editingId
+              ? 'PATCH'
+              : 'POST',
+            headers: headers(),
+            body:
+              JSON.stringify({
+                name,
+                description:
+                  f.description.trim(),
+                price,
+                currency:
+                  f.currency,
+                duration_min:
+                  duration,
+                active: true
+              })
+          }
+        );
+
+      const data =
+        await response
+          .json()
+          .catch(() => null);
+
+      if (!response.ok) {
+        alert(
+          data?.detail ||
+          'Не удалось сохранить услугу'
+        );
+        return;
+      }
+
+      alert(
+        editingId
+          ? '✅ Услуга изменена'
+          : '✅ Услуга добавлена'
+      );
+
+      resetForm();
+      reload();
+    };
+
+  const editService = (
+    service: any
+  ) => {
+    setEditingId(
+      service.id
+    );
+
+    setF({
+      name:
+        service.name || '',
+      description:
+        service.description ||
+        '',
+      price:
+        String(
+          service.price
+        ),
+      currency:
+        service.currency ||
+        'UZS',
+      duration_min:
+        String(
+          service.duration_min ||
+          30
+        )
+    });
+
+    setCurrencySearch(
+      service.currency ||
+      'UZS'
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   const remove = async (
@@ -885,13 +966,22 @@ function Services({
       return;
     }
 
-    await fetch(
-      API + `/admin/services/${id}`,
-      {
-        method: 'DELETE',
-        headers: headers()
-      }
-    );
+    const response =
+      await fetch(
+        API +
+          `/admin/services/${id}`,
+        {
+          method: 'DELETE',
+          headers: headers()
+        }
+      );
+
+    if (!response.ok) {
+      alert(
+        'Не удалось удалить услугу'
+      );
+      return;
+    }
 
     reload();
   };
@@ -927,7 +1017,9 @@ function Services({
 
         <button
           className="primary full"
-          disabled={savingBusiness}
+          disabled={
+            savingBusiness
+          }
           onClick={
             saveBusinessContacts
           }
@@ -940,7 +1032,9 @@ function Services({
 
       <div className="card">
         <h2>
-          Добавить услугу
+          {editingId
+            ? 'Изменить услугу'
+            : 'Добавить услугу'}
         </h2>
 
         <input
@@ -957,7 +1051,9 @@ function Services({
 
         <input
           placeholder="Описание"
-          value={f.description}
+          value={
+            f.description
+          }
           onChange={e =>
             setF({
               ...f,
@@ -968,9 +1064,11 @@ function Services({
         />
 
         <div className="two">
+
           <input
             type="number"
             min="0"
+            step="0.001"
             placeholder="Цена"
             value={f.price}
             onChange={e =>
@@ -984,13 +1082,16 @@ function Services({
 
           <input
             placeholder="Поиск валюты"
-            value={currencySearch}
+            value={
+              currencySearch
+            }
             onChange={e =>
               setCurrencySearch(
                 e.target.value
               )
             }
           />
+
         </div>
 
         <select
@@ -1006,12 +1107,16 @@ function Services({
           {currencyOptions.map(
             currency => (
               <option
-                key={currency.code}
-                value={currency.code}
+                key={
+                  currency.code
+                }
+                value={
+                  currency.code
+                }
               >
                 {currency.code} —{' '}
-                {currency.name} (
-                {currency.symbol})
+                {currency.name}{' '}
+                ({currency.symbol})
               </option>
             )
           )}
@@ -1022,7 +1127,9 @@ function Services({
           min="1"
           max="480"
           placeholder="Длительность в минутах"
-          value={f.duration_min}
+          value={
+            f.duration_min
+          }
           onChange={e =>
             setF({
               ...f,
@@ -1032,49 +1139,98 @@ function Services({
           }
         />
 
-        <button
-          className="primary full"
-          onClick={add}
-        >
-          + Добавить услугу
-        </button>
-      </div>
-
-      {services.map(service => (
-        <div
-          className="card row"
-          key={service.id}
-        >
-          <div>
-            <b>
-              {service.name}
-            </b>
-
-            {service.description && (
-              <p>
-                {service.description}
-              </p>
-            )}
-
-            <p>
-              {money(
-                service.price,
-                service.currency
-              )}{' '}
-              · {service.duration_min} мин
-            </p>
-          </div>
+        <div className="two">
 
           <button
-            className="danger"
-            onClick={() =>
-              remove(service.id)
+            className="primary full"
+            onClick={
+              saveService
             }
           >
-            Удалить
+            {editingId
+              ? 'Сохранить изменения'
+              : '+ Добавить услугу'}
           </button>
+
+          {editingId && (
+            <button
+              className="full"
+              onClick={
+                resetForm
+              }
+            >
+              Отмена
+            </button>
+          )}
+
         </div>
-      ))}
+      </div>
+
+      {services.map(
+        service => (
+          <div
+            className="card row"
+            key={service.id}
+          >
+
+            <div>
+              <b>
+                {service.name}
+              </b>
+
+              {service.description && (
+                <p>
+                  {
+                    service.description
+                  }
+                </p>
+              )}
+
+              <p>
+                {money(
+                  service.price,
+                  service.currency
+                )}{' '}
+                ·{' '}
+                {
+                  service.duration_min
+                }{' '}
+                мин
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 8
+              }}
+            >
+              <button
+                onClick={() =>
+                  editService(
+                    service
+                  )
+                }
+              >
+                Изменить
+              </button>
+
+              <button
+                className="danger"
+                onClick={() =>
+                  remove(
+                    service.id
+                  )
+                }
+              >
+                Удалить
+              </button>
+            </div>
+
+          </div>
+        )
+      )}
+
     </div>
   );
 }
