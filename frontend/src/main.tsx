@@ -263,8 +263,10 @@ function Admin({
   const [loading, setLoading] =
     useState(true);
 
-  const [showBusinessForm, setShowBusinessForm] =
-    useState(false);
+  const [businessPanel, setBusinessPanel] =
+  useState<'closed' | 'list' | 'create'>(
+    'closed'
+  );
 
   const [newBusinessName, setNewBusinessName] =
     useState('');
