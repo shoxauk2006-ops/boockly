@@ -6,6 +6,7 @@ import secrets
 from datetime import date, time, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
+from contextvars import ContextVar
 from urllib.parse import parse_qsl
 from urllib import request as urllib_request
 from urllib.error import URLError
@@ -39,7 +40,10 @@ class Base(DeclarativeBase): pass
 class Business(Base):
     __tablename__ = "businesses"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    owner_telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
+  owner_telegram_id: Mapped[int] = mapped_column(
+    BigInteger,
+    index=True
+)
     name: Mapped[str] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(String(500), default="")
     address: Mapped[str] = mapped_column(String(255), default="")
