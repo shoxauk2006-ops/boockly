@@ -340,6 +340,61 @@ def admin_bookings(day:Optional[date]=None,x_telegram_init_data:str=Header(defau
         q=db.query(Booking).filter_by(business_id=b.id)
         if day:q=q.filter_by(day=day)
         return q.order_by(Booking.day,Booking.start).all()
+@app.post("/admin/bookings/{booking_id}/cancel")
+def admin_cancel_booking(
+    booking_id: int,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
+
+    with SessionLocal() as db:
+        business = owner_business(
+            db,
+            owner_id
+        )
+
+        booking = db.get(
+            Booking,
+            booking_id
+        )
+
+        if (
+            not business
+            or not booking
+            or booking.business_id != business.id
+        ):
+            raise HTTPException(
+                404,
+                "Booking not found"
+            )
+
+        if booking.status == "cancelled":
+            return {"ok": True}
+
+        booking.status = "cancelled"
+        db.commit()
+
+        if booking.client_telegram_id:
+            telegram_api(
+                "sendMessage",
+                {
+                    "chat_id": booking.client_telegram_id,
+                    "text": (
+                        "❌ <b>Ваша запись отменена</b>\n\n"
+                        f"📅 {booking.day.isoformat()}\n"
+                        f"🕐 {booking.start.strftime('%H:%M')}–"
+                        f"{booking.end.strftime('%H:%M')}\n\n"
+                        "Пожалуйста, свяжитесь с бизнесом, "
+                        "если хотите выбрать другое время."
+                    ),
+                    "parse_mode": "HTML"
+                }
+            )
+
+        return {
+            "ok": True
+        }
 @app.post("/admin/bookings")
 def admin_create_booking(
     x: AdminBookingIn,
