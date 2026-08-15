@@ -571,10 +571,8 @@ function Admin({
         } catch {}
 
         setNewBusinessName('');
-        setShowBusinessForm(
-          false
-        );
-
+        setBusinessPanel('closed');
+        
         setBusiness(data);
 
         const updatedBusinesses =
