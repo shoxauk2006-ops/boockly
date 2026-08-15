@@ -68,10 +68,8 @@ function App(){
    const initializePaddle = () => {
      if (!window.Paddle) return;
 
-     window.Paddle.Environment.set('sandbox');
-
      window.Paddle.Initialize({
-       token
+     token
      });
    };
 
