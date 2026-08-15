@@ -1266,8 +1266,18 @@ function Bookings({
 function BookingRow({ x }: { x: any }) {
   const [cancelling, setCancelling] = useState(false);
 
+  const now = new Date();
+
+  const bookingStart = new Date(
+    `${x.day}T${x.start}:00+05:00`
+  );
+
+  const canCancel =
+    x.status === 'confirmed' &&
+    bookingStart > now;
+
   const cancelBooking = async () => {
-    if (x.status !== 'confirmed') {
+    if (!canCancel) {
       return;
     }
 
@@ -1290,7 +1300,8 @@ function BookingRow({ x }: { x: any }) {
         }
       );
 
-      const data = await response.json().catch(() => null);
+      const data =
+        await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(
@@ -1320,6 +1331,7 @@ function BookingRow({ x }: { x: any }) {
 
   return (
     <div className="booking">
+
       <div>
         <b>
           {x.client_name}
@@ -1330,11 +1342,15 @@ function BookingRow({ x }: { x: any }) {
         </span>
 
         <span>
-          🕐 {x.start.slice(0, 5)}–{x.end.slice(0, 5)}
+          🕐 {x.start.slice(0, 5)}–
+          {x.end.slice(0, 5)}
         </span>
 
         <span>
-          📞 {x.client_phone || 'номер не передан'}
+          📞 {
+            x.client_phone ||
+            'номер не передан'
+          }
         </span>
 
         {x.service_name && (
@@ -1352,26 +1368,35 @@ function BookingRow({ x }: { x: any }) {
           gap: 8
         }}
       >
+
         <em>
           {x.status === 'confirmed'
-            ? 'Подтверждено'
+            ? (
+              bookingStart <= now
+                ? 'Завершено'
+                : 'Подтверждено'
+            )
             : x.status === 'cancelled'
               ? 'Отменено'
               : x.status}
         </em>
 
-        {x.status === 'confirmed' && (
+        {canCancel && (
           <button
             className="danger"
             disabled={cancelling}
-            onClick={cancelBooking}
+            onClick={
+              cancelBooking
+            }
           >
             {cancelling
               ? 'Отмена...'
               : 'Отменить'}
           </button>
         )}
+
       </div>
+
     </div>
   );
 }
