@@ -88,11 +88,47 @@ function App(){
    document.head.appendChild(script);
  },[]);
 
- const openClient=()=>{
-   const slug=clientSlug.trim();
-   if(slug) setMode('client');
- };
+const openClient = () => {
+  let value =
+    clientSlug.trim();
 
+  if (!value) {
+    return;
+  }
+
+  try {
+    const url =
+      new URL(value);
+
+    const startApp =
+      url.searchParams.get(
+        'startapp'
+      );
+
+    if (startApp) {
+      value = startApp;
+    }
+  } catch {
+    // Это уже slug,
+    // оставляем как есть.
+  }
+
+  const match =
+    value.match(
+      /startapp=([^&]+)/i
+    );
+
+  if (match) {
+    value = match[1];
+  }
+
+  value =
+    decodeURIComponent(value)
+      .trim();
+
+  setClientSlug(value);
+  setMode('client');
+};
  return <div className="app">
   <header>
     <div>
