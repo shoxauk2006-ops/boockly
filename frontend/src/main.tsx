@@ -231,7 +231,6 @@ function Home(p:any){return <section>
  <button className="primary full" onClick={p.onAdmin}>Открыть админ-панель</button>
  <div className="card"><h3>Открыть страницу бизнеса</h3><input placeholder="Ссылка / slug бизнеса" value={p.slug} onChange={e=>p.setSlug(e.target.value)}/><button className="full" onClick={p.open}>Открыть</button></div>
  </section>}
-
 function Admin({
   onBack,
   initialTab
@@ -264,9 +263,9 @@ function Admin({
     useState(true);
 
   const [businessPanel, setBusinessPanel] =
-  useState<'closed' | 'list' | 'create'>(
-    'closed'
-  );
+    useState<'closed' | 'list' | 'create'>(
+      'closed'
+    );
 
   const [newBusinessName, setNewBusinessName] =
     useState('');
@@ -274,70 +273,66 @@ function Admin({
   const [creatingBusiness, setCreatingBusiness] =
     useState(false);
 
-  const loadBusinesses =
-    async () => {
-      const response =
-        await fetch(
-          API + '/admin/businesses',
-          {
-            headers: headers()
-          }
-        );
-
-      if (!response.ok) {
-        throw new Error(
-          'Не удалось загрузить бизнесы'
-        );
+  const loadBusinesses = async () => {
+    const response = await fetch(
+      API + '/admin/businesses',
+      {
+        headers: headers()
       }
+    );
 
-      const list =
-        await response.json();
+    if (!response.ok) {
+      throw new Error(
+        'Не удалось загрузить бизнесы'
+      );
+    }
 
-      const normalized =
-        Array.isArray(list)
-          ? list
-          : [];
+    const list =
+      await response.json();
 
-      setBusinesses(normalized);
+    const normalized =
+      Array.isArray(list)
+        ? list
+        : [];
 
-      let selectedId = '';
+    setBusinesses(normalized);
 
+    let selectedId = '';
+
+    try {
+      selectedId =
+        localStorage.getItem(
+          'bookly_active_business_id'
+        ) || '';
+    } catch {}
+
+    let selected =
+      normalized.find(
+        (item: any) =>
+          String(item.id) ===
+          String(selectedId)
+      );
+
+    if (!selected) {
+      selected =
+        normalized[0] || null;
+    }
+
+    if (selected) {
       try {
-        selectedId =
-          localStorage.getItem(
-            'bookly_active_business_id'
-          ) || '';
+        localStorage.setItem(
+          'bookly_active_business_id',
+          String(selected.id)
+        );
       } catch {}
 
-      let selected =
-        normalized.find(
-          (item: any) =>
-            String(item.id) ===
-            String(selectedId)
-        );
+      setBusiness(selected);
+      return selected;
+    }
 
-      if (!selected) {
-        selected =
-          normalized[0] || null;
-      }
-
-      if (selected) {
-        try {
-          localStorage.setItem(
-            'bookly_active_business_id',
-            String(selected.id)
-          );
-        } catch {}
-
-        setBusiness(selected);
-
-        return selected;
-      }
-
-      setBusiness(null);
-
-      return null;
-    };
+    setBusiness(null);
+    return null;
+  };
 
   const loadBusinessData =
     async (
@@ -402,8 +397,7 @@ function Admin({
         'fulfilled'
       ) {
         setServices(
-          servicesResult.value ||
-          []
+          servicesResult.value || []
         );
       }
 
@@ -412,8 +406,7 @@ function Admin({
         'fulfilled'
       ) {
         setHours(
-          hoursResult.value ||
-          []
+          hoursResult.value || []
         );
       }
 
@@ -422,8 +415,7 @@ function Admin({
         'fulfilled'
       ) {
         setBlocks(
-          blocksResult.value ||
-          []
+          blocksResult.value || []
         );
       }
 
@@ -432,48 +424,45 @@ function Admin({
         'fulfilled'
       ) {
         setBookings(
-          bookingsResult.value ||
-          []
+          bookingsResult.value || []
         );
       }
     };
 
-  const load =
-    async () => {
-      if (!initData()) {
-        setLoading(false);
-        return;
-      }
+  const load = async () => {
+    if (!initData()) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const selected =
-          await loadBusinesses();
+    try {
+      const selected =
+        await loadBusinesses();
 
-        setLoading(false);
-
-        if (selected) {
-          await loadBusinessData(
-            selected
-          );
-        }
-
-      } catch (e) {
-        console.error(
-          'Bookly admin load error:',
-          e
+      if (selected) {
+        await loadBusinessData(
+          selected
         );
-
-        setLoading(false);
       }
-    };
+
+      setLoading(false);
+
+    } catch (e) {
+      console.error(
+        'Bookly admin load error:',
+        e
+      );
+
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     load();
 
-    const refresh =
-      () => {
-        load();
-      };
+    const refresh = () => {
+      load();
+    };
 
     window.addEventListener(
       'focus',
@@ -510,6 +499,7 @@ function Admin({
       } catch {}
 
       setBusiness(selected);
+      setBusinessPanel('closed');
       setTab('home');
 
       setLoading(true);
@@ -542,19 +532,16 @@ function Admin({
             {
               method: 'POST',
               headers: headers(),
-              body:
-                JSON.stringify({
-                  name
-                })
+              body: JSON.stringify({
+                name
+              })
             }
           );
 
         const data =
           await response
             .json()
-            .catch(
-              () => null
-            );
+            .catch(() => null);
 
         if (!response.ok) {
           throw new Error(
@@ -571,28 +558,22 @@ function Admin({
         } catch {}
 
         setNewBusinessName('');
-        setBusinessPanel('closed');
-        
         setBusiness(data);
+        setBusinessPanel('closed');
 
-        const updatedBusinesses =
+        const updated =
           await fetch(
-            API +
-              '/admin/businesses',
+            API + '/admin/businesses',
             {
               headers: headers()
             }
           ).then(r =>
-            r.ok
-              ? r.json()
-              : []
+            r.ok ? r.json() : []
           );
 
         setBusinesses(
-          Array.isArray(
-            updatedBusinesses
-          )
-            ? updatedBusinesses
+          Array.isArray(updated)
+            ? updated
             : []
         );
 
@@ -682,16 +663,14 @@ function Admin({
           <button
             className="primary full"
             onClick={() =>
-              setShowBusinessForm(
-                true
-              )
+              setBusinessPanel('create')
             }
           >
             + Добавить бизнес
           </button>
         </div>
 
-        {showBusinessForm && (
+        {businessPanel === 'create' && (
           <div className="card">
             <h2>
               Новый бизнес
@@ -699,9 +678,7 @@ function Admin({
 
             <input
               placeholder="Название бизнеса"
-              value={
-                newBusinessName
-              }
+              value={newBusinessName}
               onChange={e =>
                 setNewBusinessName(
                   e.target.value
@@ -749,16 +726,13 @@ function Admin({
           }}
         >
           <div>
-            <small
-              className="muted"
-            >
+            <small className="muted">
               Текущий бизнес
             </small>
 
             <h2
               style={{
-                margin:
-                  '4px 0'
+                margin: '4px 0'
               }}
             >
               {business.name}
@@ -777,8 +751,10 @@ function Admin({
 
           <button
             onClick={() =>
-              setShowBusinessForm(
-                !showBusinessForm
+              setBusinessPanel(
+                businessPanel === 'list'
+                  ? 'closed'
+                  : 'list'
               )
             }
           >
@@ -787,68 +763,60 @@ function Admin({
         </div>
       </div>
 
-      {showBusinessForm && (
+      {businessPanel === 'list' && (
         <div className="card">
           <h3>
             Мои бизнесы
           </h3>
 
-          {businesses.map(
-            item => (
-              <div
-                key={item.id}
-                style={{
-                  display:
-                    'flex',
-                  justifyContent:
-                    'space-between',
-                  alignItems:
-                    'center',
-                  gap: 10,
-                  padding:
-                    '12px 0',
-                  borderBottom:
-                    '1px solid #eee'
-                }}
-              >
-                <div>
-                  <b>
-                    {item.name}
-                  </b>
+          {businesses.map(item => (
+            <div
+              key={item.id}
+              style={{
+                display: 'flex',
+                justifyContent:
+                  'space-between',
+                alignItems:
+                  'center',
+                gap: 10,
+                padding: '12px 0',
+                borderBottom:
+                  '1px solid #eee'
+              }}
+            >
+              <div>
+                <b>
+                  {item.name}
+                </b>
 
-                  <p
-                    className="muted"
-                    style={{
-                      margin:
-                        '4px 0 0'
-                    }}
-                  >
-                    {item.address ||
-                      'Адрес не указан'}
-                  </p>
-                </div>
-
-                <button
-                  className={
-                    business.id ===
-                    item.id
-                      ? 'primary'
-                      : ''
-                  }
-                  onClick={() =>
-                    selectBusiness(
-                      item
-                    )
-                  }
+                <p
+                  className="muted"
+                  style={{
+                    margin:
+                      '4px 0 0'
+                  }}
                 >
-                  {business.id ===
-                  item.id
-                    ? 'Открыт'
-                    : 'Открыть'}
-                </button>
+                  {item.address ||
+                    'Адрес не указан'}
+                </p>
               </div>
-            )
-          )}
+
+              <button
+                className={
+                  business.id === item.id
+                    ? 'primary'
+                    : ''
+                }
+                onClick={() =>
+                  selectBusiness(item)
+                }
+              >
+                {business.id === item.id
+                  ? 'Открыт'
+                  : 'Открыть'}
+              </button>
+            </div>
+          ))}
 
           <button
             className="primary full"
@@ -856,9 +824,7 @@ function Admin({
               marginTop: 12
             }}
             onClick={() =>
-              setShowBusinessForm(
-                'create'
-              )
+              setBusinessPanel('create')
             }
           >
             + Добавить бизнес
@@ -866,7 +832,7 @@ function Admin({
         </div>
       )}
 
-      {showBusinessForm === 'create' && (
+      {businessPanel === 'create' && (
         <div className="card">
           <h3>
             Создать новый бизнес
@@ -874,9 +840,7 @@ function Admin({
 
           <input
             placeholder="Название бизнеса"
-            value={
-              newBusinessName
-            }
+            value={newBusinessName}
             onChange={e =>
               setNewBusinessName(
                 e.target.value
@@ -993,7 +957,6 @@ function Admin({
           reload={load}
         />
       )}
-
     </section>
   );
 }
