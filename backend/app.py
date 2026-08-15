@@ -592,6 +592,12 @@ def my_bookings(
     user = telegram_user(x_telegram_init_data)
     uid = int(user["id"])
 
+    from zoneinfo import ZoneInfo
+
+    now_tashkent = datetime.now(
+        ZoneInfo("Asia/Tashkent")
+    ).replace(tzinfo=None)
+
     with SessionLocal() as db:
         rows = (
             db.query(
@@ -608,18 +614,30 @@ def my_bookings(
                 Service.id == Booking.service_id
             )
             .filter(
-                Booking.client_telegram_id == uid
+                Booking.client_telegram_id == uid,
+                Booking.status == "confirmed"
             )
             .order_by(
-                Booking.day.desc(),
-                Booking.start.desc()
+                Booking.day,
+                Booking.start
             )
             .limit(50)
             .all()
         )
 
-        return [
-            {
+        result = []
+
+        for booking, business_name, service_name in rows:
+            booking_datetime = datetime.combine(
+                booking.day,
+                booking.start
+            )
+
+            # Не показываем прошедшие записи
+            if booking_datetime <= now_tashkent:
+                continue
+
+            result.append({
                 "id": booking.id,
                 "business_id": booking.business_id,
                 "service_id": booking.service_id,
@@ -630,11 +648,10 @@ def my_bookings(
                 "day": booking.day.isoformat(),
                 "start": booking.start.strftime("%H:%M"),
                 "end": booking.end.strftime("%H:%M"),
-                "status": booking.status,
-            }
-            for booking, business_name, service_name in rows
-        ]
+                "status": booking.status
+            })
 
+        return result
 @app.post("/my/bookings/{booking_id}/cancel")
 def my_cancel_booking(
     booking_id: int,
@@ -647,10 +664,16 @@ def my_cancel_booking(
         booking = db.get(Booking, booking_id)
 
         if not booking:
-            raise HTTPException(404, "Booking not found")
+            raise HTTPException(
+                404,
+                "Booking not found"
+            )
 
         if booking.client_telegram_id != uid:
-            raise HTTPException(403, "Access denied")
+            raise HTTPException(
+                403,
+                "Access denied"
+            )
 
         if booking.status == "cancelled":
             return {"ok": True}
@@ -658,7 +681,10 @@ def my_cancel_booking(
         booking.status = "cancelled"
         db.commit()
 
-        business = db.get(Business, booking.business_id)
+        business = db.get(
+            Business,
+            booking.business_id
+        )
 
         if business and business.owner_telegram_id:
             telegram_api(
@@ -666,16 +692,17 @@ def my_cancel_booking(
                 {
                     "chat_id": business.owner_telegram_id,
                     "text": (
-                        f"❌ <b>Клиент отменил запись</b>\n\n"
+                        "❌ <b>Клиент отменил запись</b>\n\n"
                         f"👤 {booking.client_name}\n"
                         f"📅 {booking.day.isoformat()}\n"
-                        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}"
-                    )
+                        f"🕐 {booking.start.strftime('%H:%M')}–"
+                        f"{booking.end.strftime('%H:%M')}"
+                    ),
+                    "parse_mode": "HTML"
                 }
             )
 
-        return {"ok": True}    
-
+        return {"ok": True}
 @app.post("/admin/bookings/{booking_id}/cancel")
 def admin_cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default="")):
     user=telegram_user(x_telegram_init_data)
