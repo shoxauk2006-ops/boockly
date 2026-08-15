@@ -1162,25 +1162,69 @@ function Subscription({business}:{business:any}){
     </div>
   );
 }
-function checkout(provider:string){
-  if(provider !== 'paddle'){
+function checkout(
+  provider: string,
+  businessId?: number
+) {
+  if (provider !== 'paddle') {
     return;
   }
-  if(!window.Paddle){
-    alert('Paddle ещё загружается. Попробуйте ещё раз.');
+
+  if (!window.Paddle) {
+    alert(
+      'Paddle ещё загружается. Попробуйте ещё раз.'
+    );
     return;
   }
-  const ownerId = tg()?.initDataUnsafe?.user?.id;
-  if(!ownerId){
-    alert('Не удалось определить пользователя Telegram.');
+
+  const ownerId =
+    tg()?.initDataUnsafe?.user?.id;
+
+  if (!ownerId) {
+    alert(
+      'Не удалось определить пользователя Telegram.'
+    );
     return;
   }
+
+  let selectedBusinessId =
+    businessId;
+
+  if (!selectedBusinessId) {
+    try {
+      const saved =
+        localStorage.getItem(
+          'bookly_active_business_id'
+        );
+
+      if (saved) {
+        selectedBusinessId =
+          Number(saved);
+      }
+    } catch {}
+  }
+
+  if (!selectedBusinessId) {
+    alert(
+      'Не удалось определить выбранный бизнес.'
+    );
+    return;
+  }
+
   window.Paddle.Checkout.open({
     items: [
-      { priceId: 'pri_01kzwxx7zeytn8sqxfvpt0a8ys', quantity: 1 }
+      {
+        priceId:
+          'pri_01kzwxx7zeytn8sqxfvpt0a8ys',
+        quantity: 1
+      }
     ],
     customData: {
-      telegram_user_id: String(ownerId)
+      telegram_user_id:
+        String(ownerId),
+
+      business_id:
+        String(selectedBusinessId)
     }
   });
 }
