@@ -88,9 +88,14 @@ function App(){
    document.head.appendChild(script);
  },[]);
 
-const openClient = () => {
+const openClient = (
+  input?: string
+) => {
   let value =
-    clientSlug.trim();
+    (
+      input ??
+      clientSlug
+    ).trim();
 
   if (!value) {
     return;
@@ -109,9 +114,25 @@ const openClient = () => {
       value = startApp;
     }
   } catch {
-    // Это уже slug,
-    // оставляем как есть.
+    // Это уже slug.
   }
+
+  const match =
+    value.match(
+      /startapp=([^&]+)/i
+    );
+
+  if (match) {
+    value = match[1];
+  }
+
+  value =
+    decodeURIComponent(value)
+      .trim();
+
+  setClientSlug(value);
+  setMode('client');
+};
 
   const match =
     value.match(
