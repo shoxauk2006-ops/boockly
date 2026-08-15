@@ -571,77 +571,457 @@ function Services({
     duration_min: '30'
   });
 
-  const add = async () => {
-    const r = await fetch(API + '/admin/services', {
-      method: 'POST',
-      headers: headers(),
-      body: JSON.stringify({
-        ...f,
-        price: Number(f.price),
-        duration_min: Number(f.duration_min)
-      })
-    });
+  const [currencySearch, setCurrencySearch] =
+    useState('');
 
-    if (r.ok) {
-      setF({
-        name: '',
-        description: '',
-        price: '',
-        currency: 'UZS',
-        duration_min: '30'
-      });
+  const getCurrencyCodes = () => {
+    const intlAny = Intl as any;
 
-      reload();
+    if (
+      typeof intlAny.supportedValuesOf === 'function'
+    ) {
+      return intlAny.supportedValuesOf(
+        'currency'
+      );
+    }
+
+    return [
+      'AED',
+      'AFN',
+      'ALL',
+      'AMD',
+      'ARS',
+      'AUD',
+      'AZN',
+      'BAM',
+      'BDT',
+      'BGN',
+      'BHD',
+      'BND',
+      'BOB',
+      'BRL',
+      'BYN',
+      'CAD',
+      'CHF',
+      'CLP',
+      'CNY',
+      'COP',
+      'CRC',
+      'CZK',
+      'DKK',
+      'DOP',
+      'DZD',
+      'EGP',
+      'EUR',
+      'GBP',
+      'GEL',
+      'GHS',
+      'HKD',
+      'HNL',
+      'HRK',
+      'HUF',
+      'IDR',
+      'ILS',
+      'INR',
+      'IQD',
+      'ISK',
+      'JOD',
+      'JPY',
+      'KES',
+      'KGS',
+      'KHR',
+      'KRW',
+      'KWD',
+      'KZT',
+      'LAK',
+      'LBP',
+      'LKR',
+      'MAD',
+      'MDL',
+      'MGA',
+      'MKD',
+      'MMK',
+      'MNT',
+      'MOP',
+      'MRU',
+      'MUR',
+      'MXN',
+      'MYR',
+      'MZN',
+      'NAD',
+      'NGN',
+      'NIO',
+      'NOK',
+      'NPR',
+      'NZD',
+      'OMR',
+      'PAB',
+      'PEN',
+      'PHP',
+      'PKR',
+      'PLN',
+      'PYG',
+      'QAR',
+      'RON',
+      'RSD',
+      'RUB',
+      'SAR',
+      'SEK',
+      'SGD',
+      'SLL',
+      'SOS',
+      'SRD',
+      'STN',
+      'SYP',
+      'THB',
+      'TJS',
+      'TMT',
+      'TND',
+      'TOP',
+      'TRY',
+      'TTD',
+      'TWD',
+      'TZS',
+      'UAH',
+      'UGX',
+      'USD',
+      'UYU',
+      'UZS',
+      'VES',
+      'VND',
+      'XAF',
+      'XCD',
+      'XOF',
+      'XPF',
+      'YER',
+      'ZAR',
+      'ZMW'
+    ];
+  };
+
+  const currencyCodes = getCurrencyCodes();
+
+  const getCurrencyName = (
+    code: string
+  ) => {
+    try {
+      const DisplayNames =
+        (Intl as any).DisplayNames;
+
+      if (DisplayNames) {
+        const names = new DisplayNames(
+          ['en'],
+          {
+            type: 'currency'
+          }
+        );
+
+        return (
+          names.of(code) ||
+          code
+        );
+      }
+    } catch {
+      // fallback below
+    }
+
+    return code;
+  };
+
+  const getCurrencySymbol = (
+    code: string
+  ) => {
+    try {
+      const parts =
+        new Intl.NumberFormat(
+          'en',
+          {
+            style: 'currency',
+            currency: code,
+            currencyDisplay: 'narrowSymbol'
+          }
+        ).formatToParts(1);
+
+      return (
+        parts.find(
+          part =>
+            part.type === 'currency'
+        )?.value ||
+        code
+      );
+    } catch {
+      return code;
     }
   };
 
-  const remove = async (id: number) => {
-    await fetch(API + `/admin/services/${id}`, {
-      method: 'DELETE',
-      headers: headers()
+  const currencyOptions =
+    currencyCodes
+      .map(code => ({
+        code,
+        name: getCurrencyName(code),
+        symbol:
+          getCurrencySymbol(code)
+      }))
+      .filter(currency => {
+        const q =
+          currencySearch
+            .trim()
+            .toLowerCase();
+
+        if (!q) {
+          return true;
+        }
+
+        return (
+          currency.code
+            .toLowerCase()
+            .includes(q) ||
+          currency.name
+            .toLowerCase()
+            .includes(q) ||
+          currency.symbol
+            .toLowerCase()
+            .includes(q)
+        );
+      })
+      .sort((a, b) =>
+        a.name.localeCompare(
+          b.name
+        )
+      );
+
+  const add = async () => {
+    const serviceName =
+      f.name.trim();
+
+    if (!serviceName) {
+      alert(
+        'Введите название услуги'
+      );
+      return;
+    }
+
+    const price =
+      Number(f.price);
+
+    if (
+      !Number.isFinite(price) ||
+      price < 0
+    ) {
+      alert(
+        'Введите корректную цену'
+      );
+      return;
+    }
+
+    const duration =
+      Number(f.duration_min);
+
+    if (
+      !Number.isInteger(duration) ||
+      duration <= 0 ||
+      duration > 480
+    ) {
+      alert(
+        'Длительность должна быть от 1 до 480 минут'
+      );
+      return;
+    }
+
+    const response =
+      await fetch(
+        API +
+          '/admin/services',
+        {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({
+            name: serviceName,
+            description:
+              f.description.trim(),
+            price,
+            currency:
+              f.currency,
+            duration_min:
+              duration
+          })
+        }
+      );
+
+    const data =
+      await response
+        .json()
+        .catch(() => null);
+
+    if (!response.ok) {
+      alert(
+        data?.detail ||
+        'Не удалось добавить услугу'
+      );
+      return;
+    }
+
+    setF({
+      name: '',
+      description: '',
+      price: '',
+      currency: 'UZS',
+      duration_min: '30'
     });
+
+    setCurrencySearch('');
+
+    reload();
+  };
+
+  const remove = async (
+    id: number
+  ) => {
+    const confirmed =
+      window.confirm(
+        'Удалить эту услугу?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const response =
+      await fetch(
+        API +
+          `/admin/services/${id}`,
+        {
+          method: 'DELETE',
+          headers: headers()
+        }
+      );
+
+    if (!response.ok) {
+      alert(
+        'Не удалось удалить услугу'
+      );
+      return;
+    }
 
     reload();
   };
 
   return (
     <div>
+
       <div className="card">
-        <h2>Добавить услугу</h2>
+
+        <h2>
+          Добавить услугу
+        </h2>
 
         <input
           placeholder="Название"
           value={f.name}
-          onChange={e => setF({ ...f, name: e.target.value })}
+          onChange={e =>
+            setF({
+              ...f,
+              name:
+                e.target.value
+            })
+          }
         />
 
         <input
           placeholder="Описание"
-          value={f.description}
+          value={
+            f.description
+          }
           onChange={e =>
-            setF({ ...f, description: e.target.value })
+            setF({
+              ...f,
+              description:
+                e.target.value
+            })
           }
         />
 
         <div className="two">
+
           <input
             type="number"
+            min="0"
             placeholder="Цена"
             value={f.price}
             onChange={e =>
-              setF({ ...f, price: e.target.value })
+              setF({
+                ...f,
+                price:
+                  e.target.value
+              })
             }
           />
 
           <input
-            type="number"
-            placeholder="Минуты"
-            value={f.duration_min}
+            placeholder="Поиск валюты"
+            value={
+              currencySearch
+            }
             onChange={e =>
-              setF({ ...f, duration_min: e.target.value })
+              setCurrencySearch(
+                e.target.value
+              )
             }
           />
+
         </div>
+
+        <select
+          value={f.currency}
+          onChange={e =>
+            setF({
+              ...f,
+              currency:
+                e.target.value
+            })
+          }
+        >
+          {currencyOptions.length ? (
+            currencyOptions.map(
+              currency => (
+                <option
+                  key={
+                    currency.code
+                  }
+                  value={
+                    currency.code
+                  }
+                >
+                  {currency.code}{' '}
+                  —{' '}
+                  {currency.name}{' '}
+                  ({currency.symbol})
+                </option>
+              )
+            )
+          ) : (
+            <option value="UZS">
+              UZS — Uzbekistani so'm
+            </option>
+          )}
+        </select>
+
+        <input
+          type="number"
+          min="1"
+          max="480"
+          placeholder="Длительность в минутах"
+          value={
+            f.duration_min
+          }
+          onChange={e =>
+            setF({
+              ...f,
+              duration_min:
+                e.target.value
+            })
+          }
+        />
 
         <button
           className="primary full"
@@ -649,25 +1029,59 @@ function Services({
         >
           + Добавить услугу
         </button>
+
       </div>
 
-      {services.map(s => (
-        <div className="card row" key={s.id}>
-          <div>
-            <b>{s.name}</b>
-            <p>
-              {money(s.price, s.currency)} · {s.duration_min} мин
-            </p>
-          </div>
-
-          <button
-            className="danger"
-            onClick={() => remove(s.id)}
+      {services.map(
+        service => (
+          <div
+            className="card row"
+            key={service.id}
           >
-            Удалить
-          </button>
-        </div>
-      ))}
+
+            <div>
+
+              <b>
+                {service.name}
+              </b>
+
+              {service.description && (
+                <p>
+                  {
+                    service.description
+                  }
+                </p>
+              )}
+
+              <p>
+                {money(
+                  service.price,
+                  service.currency
+                )}{' '}
+                ·{' '}
+                {
+                  service.duration_min
+                }{' '}
+                мин
+              </p>
+
+            </div>
+
+            <button
+              className="danger"
+              onClick={() =>
+                remove(
+                  service.id
+                )
+              }
+            >
+              Удалить
+            </button>
+
+          </div>
+        )
+      )}
+
     </div>
   );
 }
