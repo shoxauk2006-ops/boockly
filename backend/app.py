@@ -113,6 +113,29 @@ class Business(Base):
         default=""
     )
 
+class SavedBusiness(Base):
+    __tablename__ = "saved_businesses"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
+
+    telegram_user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        index=True
+    )
+
+    business_id: Mapped[int] = mapped_column(
+        ForeignKey("businesses.id"),
+        index=True
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow
+    )
+    
 class Service(Base):
     __tablename__ = "services"
 
