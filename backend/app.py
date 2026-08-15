@@ -611,25 +611,27 @@ def create_booking(
             s
         )
 
-        # Уведомление клиенту
-      telegram_api(
-    "sendMessage",
-    {
-        "chat_id": booking.client_telegram_id,
-        "text": (
-            "✅ <b>Вы успешно записаны!</b>\n\n"
-            f"💈 {s.name}\n"
-            f"📅 {booking.day.isoformat()}\n"
-            f"🕐 {booking.start.strftime('%H:%M')}–"
-            f"{booking.end.strftime('%H:%M')}\n"
-            f"📞 Ваш номер: {booking.client_phone}\n"
-            f"☎️ Связаться: {b.phone or 'номер не указан'}\n"
-            f"📍 {b.address or 'Адрес не указан'}\n\n"
-            "Ждём вас!"
-        ),
-        "parse_mode": "HTML"
-    }
-)
+          # Уведомление клиенту
+        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": booking.client_telegram_id,
+                "text": (
+                    "✅ <b>Вы успешно записаны!</b>\n\n"
+                    f"💈 {s.name}\n"
+                    f"📅 {booking.day.isoformat()}\n"
+                    f"🕐 {booking.start.strftime('%H:%M')}–"
+                    f"{booking.end.strftime('%H:%M')}\n"
+                    f"📞 Ваш номер: {booking.client_phone}\n"
+                    f"☎️ Связаться: {b.phone or 'номер не указан'}\n"
+                    f"📍 {b.address or 'Адрес не указан'}\n\n"
+                    "Ждём вас!"
+                ),
+                "parse_mode": "HTML"
+            }
+        )
+
+        return booking
 
         return booking
 @app.post("/bookings/{booking_id}/cancel")
