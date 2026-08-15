@@ -1154,14 +1154,11 @@ function Client({
   const [clientName, setClientName] = useState(
     tg()?.initDataUnsafe?.user?.first_name || ''
   );
-
   const [phone, setPhone] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
-
-  const [showMyBookings, setShowMyBookings] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -1172,9 +1169,7 @@ function Client({
 
       try {
         if (!slug) {
-          throw new Error(
-            'Ссылка на бизнес не содержит slug.'
-          );
+          throw new Error('Ссылка на бизнес не содержит slug.');
         }
 
         const response = await fetch(
@@ -1212,9 +1207,7 @@ function Client({
         }
 
         if (!data?.business) {
-          throw new Error(
-            'Сервер не вернул данные бизнеса.'
-          );
+          throw new Error('Сервер не вернул данные бизнеса.');
         }
 
         if (!cancelled) {
@@ -1222,18 +1215,12 @@ function Client({
           setServices(data.services || []);
         }
       } catch (e: any) {
-        console.error(
-          'CLIENT LOAD ERROR:',
-          e
-        );
+        console.error('CLIENT LOAD ERROR:', e);
 
         if (!cancelled) {
           setBusiness(null);
           setServices([]);
-          setError(
-            e?.message ||
-            'Не удалось загрузить бизнес'
-          );
+          setError(e?.message || 'Не удалось загрузить бизнес');
         }
       } finally {
         if (!cancelled) {
@@ -1249,61 +1236,48 @@ function Client({
     };
   }, [slug]);
 
-  const loadSlots = async (
-    service: any,
-    selectedDay: string
-  ) => {
-    if (!business) return;
+ const loadSlots = async (
+  service: any,
+  selectedDay: string
+) => {
+  if (!business) return;
 
-    setSlots([]);
-    setSelectedTime('');
-    setSlotsLoading(true);
+  setSlots([]);
+  setSelectedTime('');
+  setSlotsLoading(true);
 
-    try {
-      const response = await fetch(
-        API +
-          `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
+  try {
+    const response = await fetch(
+      API +
+        `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail || 'Не удалось загрузить свободное время'
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail ||
-          'Не удалось загрузить свободное время'
-        );
-      }
-
-      setSlots(data?.slots || []);
-    } catch (e) {
-      console.error(
-        'AVAILABILITY ERROR:',
-        e
-      );
-
-      setSlots([]);
-    } finally {
-      setSlotsLoading(false);
     }
-  };
 
-  const chooseService = async (
-    service: any
-  ) => {
+    setSlots(data?.slots || []);
+  } catch (e) {
+    console.error('AVAILABILITY ERROR:', e);
+    setSlots([]);
+  } finally {
+    setSlotsLoading(false);
+  }
+};
+  const chooseService = async (service: any) => {
     setSelected(service);
     setSelectedTime('');
-
-    await loadSlots(
-      service,
-      day
-    );
+    await loadSlots(service, day);
   };
 
-  const chooseTime = (
-    time: string
-  ) => {
+  const chooseTime = (time: string) => {
     setSelectedTime(time);
 
+    // Прокручиваем к форме данных клиента
     setTimeout(() => {
       document
         .getElementById('booking-form')
@@ -1315,11 +1289,7 @@ function Client({
   };
 
   const submitBooking = async () => {
-    if (
-      !business ||
-      !selected ||
-      !selectedTime
-    ) {
+    if (!business || !selected || !selectedTime) {
       return;
     }
 
@@ -1339,21 +1309,18 @@ function Client({
     setBookingLoading(true);
 
     try {
-      const response = await fetch(
-        API + '/bookings',
-        {
-          method: 'POST',
-          headers: headers(),
-          body: JSON.stringify({
-            business_id: business.id,
-            service_id: selected.id,
-            client_name: name,
-            client_phone: clientPhone,
-            day,
-            start: selectedTime
-          })
-        }
-      );
+      const response = await fetch(API + '/bookings', {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          business_id: business.id,
+          service_id: selected.id,
+          client_name: name,
+          client_phone: clientPhone,
+          day,
+          start: selectedTime
+        })
+      });
 
       const data = await response.json();
 
@@ -1365,22 +1332,15 @@ function Client({
         return;
       }
 
-      alert(
-        '✅ Запись успешно создана!'
-      );
+      alert('✅ Запись успешно создана!');
 
+      // Сбрасываем выбранное время и обновляем свободные слоты
       setSelectedTime('');
 
-      await loadSlots(
-        selected,
-        day
-      );
+      await loadSlots(selected, day);
 
     } catch (e) {
-      console.error(
-        'BOOKING ERROR:',
-        e
-      );
+      console.error('BOOKING ERROR:', e);
 
       alert(
         'Не удалось выполнить бронирование. Попробуйте ещё раз.'
@@ -1411,9 +1371,7 @@ function Client({
           ← Назад
         </button>
 
-        <h2>
-          Не удалось открыть страницу
-        </h2>
+        <h2>Не удалось открыть страницу</h2>
 
         <p className="error">
           ❌ {error}
@@ -1421,9 +1379,7 @@ function Client({
 
         <button
           className="primary full"
-          onClick={() =>
-            window.location.reload()
-          }
+          onClick={() => window.location.reload()}
         >
           Повторить
         </button>
@@ -1441,27 +1397,8 @@ function Client({
           ← Назад
         </button>
 
-        <p>
-          Бизнес не найден.
-        </p>
+        <p>Бизнес не найден.</p>
       </div>
-    );
-  }
-
-  if (showMyBookings) {
-    return (
-      <section>
-        <button
-          className="back"
-          onClick={() =>
-            setShowMyBookings(false)
-          }
-        >
-          ← Вернуться к бизнесу
-        </button>
-
-        <MyBookings />
-      </section>
     );
   }
 
@@ -1478,30 +1415,15 @@ function Client({
         <h1>{business.name}</h1>
 
         {business.description && (
-          <p>
-            {business.description}
-          </p>
+          <p>{business.description}</p>
         )}
 
         {business.address && (
-          <p>
-            📍 {business.address}
-          </p>
+          <p>📍 {business.address}</p>
         )}
       </div>
 
-      <button
-        className="primary full"
-        onClick={() =>
-          setShowMyBookings(true)
-        }
-      >
-        📅 Мои записи
-      </button>
-
-      <h2>
-        1. Выберите услугу
-      </h2>
+      <h2>1. Выберите услугу</h2>
 
       {services.length === 0 ? (
         <div className="card">
@@ -1520,14 +1442,10 @@ function Client({
             key={service.id}
           >
             <div>
-              <b>
-                {service.name}
-              </b>
+              <b>{service.name}</b>
 
               {service.description && (
-                <p>
-                  {service.description}
-                </p>
+                <p>{service.description}</p>
               )}
 
               <p>
@@ -1553,9 +1471,7 @@ function Client({
       {selected && (
         <>
           <div className="card">
-            <h2>
-              2. Выберите дату
-            </h2>
+            <h2>2. Выберите дату</h2>
 
             <input
               type="date"
@@ -1566,8 +1482,7 @@ function Client({
               }
               value={day}
               onChange={async e => {
-                const newDay =
-                  e.target.value;
+                const newDay = e.target.value;
 
                 setDay(newDay);
                 setSelectedTime('');
@@ -1581,37 +1496,33 @@ function Client({
           </div>
 
           <div className="card">
-            <h2>
-              3. Выберите время
-            </h2>
+            <h2>3. Выберите время</h2>
 
-            {slotsLoading ? (
-              <p className="muted">
-                ⏳ Загружаем свободное время...
-              </p>
-            ) : slots.length > 0 ? (
-              <div className="slots">
-                {slots.map(time => (
-                  <button
-                    key={time}
-                    className={
-                      selectedTime === time
-                        ? 'selected'
-                        : ''
-                    }
-                    onClick={() =>
-                      chooseTime(time)
-                    }
-                  >
-                    {time}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p>
-                На эту дату свободных мест нет.
-              </p>
-            )}
+          {slotsLoading ? (
+  <p className="muted">
+    ⏳ Загружаем свободное время...
+  </p>
+) : slots.length > 0 ? (
+  <div className="slots">
+    {slots.map(time => (
+      <button
+        key={time}
+        className={
+          selectedTime === time
+            ? 'selected'
+            : ''
+        }
+        onClick={() => chooseTime(time)}
+      >
+        {time}
+      </button>
+    ))}
+  </div>
+) : (
+  <p>
+    На эту дату свободных мест нет.
+  </p>
+)}
           </div>
 
           {selectedTime && (
@@ -1619,18 +1530,14 @@ function Client({
               id="booking-form"
               className="card"
             >
-              <h2>
-                4. Ваши данные
-              </h2>
+              <h2>4. Ваши данные</h2>
 
               <p className="muted">
                 Вы выбрали:
               </p>
 
               <div className="success">
-                <b>
-                  {selected.name}
-                </b>
+                <b>{selected.name}</b>
                 <br />
                 {day} · {selectedTime}
               </div>
@@ -1640,9 +1547,7 @@ function Client({
                 placeholder="Ваше имя"
                 value={clientName}
                 onChange={e =>
-                  setClientName(
-                    e.target.value
-                  )
+                  setClientName(e.target.value)
                 }
               />
 
@@ -1651,18 +1556,15 @@ function Client({
                 placeholder="Номер телефона"
                 value={phone}
                 onChange={e =>
-                  setPhone(
-                    e.target.value
-                  )
+                  setPhone(e.target.value)
                 }
               />
+
 
               <button
                 className="primary full"
                 disabled={bookingLoading}
-                onClick={
-                  submitBooking
-                }
+                onClick={submitBooking}
               >
                 {bookingLoading
                   ? 'Бронируем...'
@@ -1675,3 +1577,5 @@ function Client({
     </section>
   );
 }
+
+createRoot(document.getElementById('root')!).render(<App/>);
