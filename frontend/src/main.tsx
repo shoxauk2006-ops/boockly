@@ -825,10 +825,8 @@ function Bookings({
           headers: headers(),
           body: JSON.stringify({
             service_id: Number(serviceId),
-            client_name:
-              clientName.trim(),
-            client_phone:
-              clientPhone.trim(),
+            client_name: clientName.trim(),
+            client_phone: clientPhone.trim(),
             day,
             start
           })
@@ -907,7 +905,7 @@ function Bookings({
 
   const filteredBookings =
     bookings
-      .filter((booking) => {
+      .filter(booking => {
         const bookingDateTime =
           `${booking.day} ${booking.start}`;
 
@@ -921,10 +919,7 @@ function Bookings({
         if (filter === 'upcoming') {
           return (
             bookingDateTime >=
-            nowTashkent.slice(
-              0,
-              16
-            )
+            nowTashkent.slice(0, 16)
           );
         }
 
@@ -953,14 +948,11 @@ function Bookings({
     <div>
 
       <div className="card">
-
         <div
           style={{
             display: 'flex',
-            justifyContent:
-              'space-between',
-            alignItems:
-              'center',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             gap: 10
           }}
         >
@@ -975,9 +967,7 @@ function Bookings({
           <button
             className="primary"
             onClick={() =>
-              setShowForm(
-                !showForm
-              )
+              setShowForm(!showForm)
             }
           >
             {showForm
@@ -985,7 +975,6 @@ function Bookings({
               : '+ Добавить запись'}
           </button>
         </div>
-
       </div>
 
       <div className="card">
@@ -998,103 +987,110 @@ function Bookings({
             paddingBottom: 5
           }}
         >
+          <button
+            style={{
+              background:
+                filter === 'today'
+                  ? '#111'
+                  : '#eee',
+              color:
+                filter === 'today'
+                  ? '#fff'
+                  : '#222',
+              fontWeight:
+                filter === 'today'
+                  ? 700
+                  : 500,
+              border:
+                filter === 'today'
+                  ? '2px solid #111'
+                  : '2px solid transparent'
+            }}
+            onClick={() =>
+              setFilter('today')
+            }
+          >
+            Сегодня
+          </button>
 
-         <div
-  style={{
-    display: 'flex',
-    gap: 8,
-    overflowX: 'auto',
-    paddingBottom: 5
-  }}
->
-  <button
-    style={{
-      background: filter === 'today'
-        ? '#111'
-        : '#eee',
-      color: filter === 'today'
-        ? '#fff'
-        : '#222',
-      fontWeight: filter === 'today'
-        ? 700
-        : 500,
-      border: filter === 'today'
-        ? '2px solid #111'
-        : '2px solid transparent'
-    }}
-    onClick={() =>
-      setFilter('today')
-    }
-  >
-    Сегодня
-  </button>
+          <button
+            style={{
+              background:
+                filter === 'upcoming'
+                  ? '#111'
+                  : '#eee',
+              color:
+                filter === 'upcoming'
+                  ? '#fff'
+                  : '#222',
+              fontWeight:
+                filter === 'upcoming'
+                  ? 700
+                  : 500,
+              border:
+                filter === 'upcoming'
+                  ? '2px solid #111'
+                  : '2px solid transparent'
+            }}
+            onClick={() =>
+              setFilter('upcoming')
+            }
+          >
+            Предстоящие
+          </button>
 
-  <button
-    style={{
-      background: filter === 'upcoming'
-        ? '#111'
-        : '#eee',
-      color: filter === 'upcoming'
-        ? '#fff'
-        : '#222',
-      fontWeight: filter === 'upcoming'
-        ? 700
-        : 500,
-      border: filter === 'upcoming'
-        ? '2px solid #111'
-        : '2px solid transparent'
-    }}
-    onClick={() =>
-      setFilter('upcoming')
-    }
-  >
-    Предстоящие
-  </button>
+          <button
+            style={{
+              background:
+                filter === 'date'
+                  ? '#111'
+                  : '#eee',
+              color:
+                filter === 'date'
+                  ? '#fff'
+                  : '#222',
+              fontWeight:
+                filter === 'date'
+                  ? 700
+                  : 500,
+              border:
+                filter === 'date'
+                  ? '2px solid #111'
+                  : '2px solid transparent'
+            }}
+            onClick={() =>
+              setFilter('date')
+            }
+          >
+            Дата
+          </button>
 
-  <button
-    style={{
-      background: filter === 'date'
-        ? '#111'
-        : '#eee',
-      color: filter === 'date'
-        ? '#fff'
-        : '#222',
-      fontWeight: filter === 'date'
-        ? 700
-        : 500,
-      border: filter === 'date'
-        ? '2px solid #111'
-        : '2px solid transparent'
-    }}
-    onClick={() =>
-      setFilter('date')
-    }
-  >
-    Дата
-  </button>
-
-  <button
-    style={{
-      background: filter === 'all'
-        ? '#111'
-        : '#eee',
-      color: filter === 'all'
-        ? '#fff'
-        : '#222',
-      fontWeight: filter === 'all'
-        ? 700
-        : 500,
-      border: filter === 'all'
-        ? '2px solid #111'
-        : '2px solid transparent'
-    }}
-    onClick={() =>
-      setFilter('all')
-    }
-  >
-    Все
-  </button>
-</div>
+          <button
+            style={{
+              background:
+                filter === 'all'
+                  ? '#111'
+                  : '#eee',
+              color:
+                filter === 'all'
+                  ? '#fff'
+                  : '#222',
+              fontWeight:
+                filter === 'all'
+                  ? 700
+                  : 500,
+              border:
+                filter === 'all'
+                  ? '2px solid #111'
+                  : '2px solid transparent'
+            }}
+            onClick={() =>
+              setFilter('all')
+            }
+          >
+            Все
+          </button>
+        </div>
 
         {filter === 'date' && (
           <input
@@ -1110,7 +1106,6 @@ function Bookings({
             }}
           />
         )}
-
       </div>
 
       {showForm && (
@@ -1132,25 +1127,24 @@ function Bookings({
               Выберите услугу
             </option>
 
-            {services.map(
-              service => (
-                <option
-                  key={service.id}
-                  value={service.id}
-                >
-                  {service.name} ·{' '}
-                  {service.duration_min}{' '}
-                  мин
-                </option>
-              )
-            )}
+            {services.map(service => (
+              <option
+                key={service.id}
+                value={service.id}
+              >
+                {service.name} ·{' '}
+                {service.duration_min} мин
+              </option>
+            ))}
           </select>
 
           <input
             type="date"
-            min={new Date()
-              .toISOString()
-              .slice(0, 10)}
+            min={
+              new Date()
+                .toISOString()
+                .slice(0, 10)
+            }
             value={day}
             onChange={e =>
               setDay(
@@ -1177,21 +1171,17 @@ function Bookings({
             )}
 
           <div className="slots">
-
             {slots.map(time => (
               <button
                 key={time}
                 disabled={saving}
                 onClick={() =>
-                  createBooking(
-                    time
-                  )
+                  createBooking(time)
                 }
               >
                 {time}
               </button>
             ))}
-
           </div>
 
           <h3>
@@ -1233,15 +1223,13 @@ function Bookings({
 
           <p className="muted">
             Выберите время выше —
-            после этого запись
-            будет создана.
+            после этого запись будет создана.
           </p>
 
         </div>
       )}
 
       <div className="card">
-
         {filteredBookings.length ? (
           filteredBookings.map(
             booking => (
@@ -1253,11 +1241,9 @@ function Bookings({
           )
         ) : (
           <p>
-            Записей в выбранном
-            разделе нет.
+            Записей в выбранном разделе нет.
           </p>
         )}
-
       </div>
 
     </div>
