@@ -1440,7 +1440,7 @@ function checkout(
     items: [
       {
         priceId:
-          'pri_01kzwxx7zeytn8sqxfvpt0a8ys',
+          'pri_01kzxgbt08rm3pk2p5eaywgbsy',
         quantity: 1
       }
     ],
