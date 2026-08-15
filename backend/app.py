@@ -31,6 +31,7 @@ class Business(Base):
     name: Mapped[str] = mapped_column(String(120))
     description: Mapped[str] = mapped_column(String(500), default="")
     address: Mapped[str] = mapped_column(String(255), default="")
+    phone: Mapped[str] = mapped_column(String(40), default="")
     latitude: Mapped[Optional[float]] = mapped_column(nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(nullable=True)
     slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
@@ -169,6 +170,7 @@ class BusinessIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     description: str = ""
     address: str = ""
+    phone: str = ""
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
@@ -610,22 +612,24 @@ def create_booking(
         )
 
         # Уведомление клиенту
-        telegram_api(
-            "sendMessage",
-            {
-                "chat_id": booking.client_telegram_id,
-                "text": (
-                    "✅ <b>Вы успешно записаны!</b>\n\n"
-                    f"💈 {s.name}\n"
-                    f"📅 {booking.day.isoformat()}\n"
-                    f"🕐 {booking.start.strftime('%H:%M')}–"
-                    f"{booking.end.strftime('%H:%M')}\n"
-                    f"📞 {booking.client_phone}\n\n"
-                    "Ждём вас!"
-                ),
-                "parse_mode": "HTML"
-            }
-        )
+      telegram_api(
+    "sendMessage",
+    {
+        "chat_id": booking.client_telegram_id,
+        "text": (
+            "✅ <b>Вы успешно записаны!</b>\n\n"
+            f"💈 {s.name}\n"
+            f"📅 {booking.day.isoformat()}\n"
+            f"🕐 {booking.start.strftime('%H:%M')}–"
+            f"{booking.end.strftime('%H:%M')}\n"
+            f"📞 Ваш номер: {booking.client_phone}\n"
+            f"☎️ Связаться: {b.phone or 'номер не указан'}\n"
+            f"📍 {b.address or 'Адрес не указан'}\n\n"
+            "Ждём вас!"
+        ),
+        "parse_mode": "HTML"
+    }
+)
 
         return booking
 @app.post("/bookings/{booking_id}/cancel")
