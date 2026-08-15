@@ -323,7 +323,11 @@ if(!initData())return <div className="card"><button className="back" onClick={on
    <div className="business-head"><div><h1>{business.name}</h1><p>{business.address||'Адрес не указан'}</p></div><span className={business.subscription_active?'pill ok':'pill'}>{business.subscription_active?'Активен':'Не активирован'}</span></div>
    <nav className="tabs">{[['home','Главная'],['services','Услуги'],['hours','График'],['blocks','Блокировки'],['bookings','Записи'],['settings','Настройки']].map(([k,v])=><button className={tab===k?'active':''} onClick={()=>setTab(k)} key={k}>{v}</button>)}</nav>
    {tab==='home'&&<Dashboard bookings={bookings} business={business}/>} 
-   {tab==='services'&&<Services services={services} reload={load}/>} 
+   {tab==='services'&&<Services
+  services={services}
+  reload={load}
+  business={business}
+/>
    {tab==='hours'&&<Hours hours={hours} reload={load}/>} 
    {tab==='blocks'&&<Blocks blocks={blocks} reload={load}/>} 
    {tab==='bookings'&&<Bookings bookings={bookings}/>} 
