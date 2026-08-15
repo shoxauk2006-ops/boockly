@@ -1128,7 +1128,12 @@ function Subscription({business}:{business:any}){
         </p>
 <button
   className="primary full"
-  onClick={()=>checkout('paddle')}
+ onClick={() =>
+  checkout(
+    'paddle',
+    business.id
+  )
+}
 >
   Оплатить $9.99 / месяц
 </button>
