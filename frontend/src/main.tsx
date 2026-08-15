@@ -856,10 +856,7 @@ function Services({
         .catch(() => null);
 
     if (!response.ok) {
-      alert(
-        data?.detail ||
-        'Не удалось добавить услугу'
-      );
+      Services
       return;
     }
 
