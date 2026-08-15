@@ -999,61 +999,102 @@ function Bookings({
           }}
         >
 
-          <button
-            className={
-              filter === 'today'
-                ? 'primary'
-                : ''
-            }
-            onClick={() =>
-              setFilter('today')
-            }
-          >
-            Сегодня
-          </button>
+         <div
+  style={{
+    display: 'flex',
+    gap: 8,
+    overflowX: 'auto',
+    paddingBottom: 5
+  }}
+>
+  <button
+    style={{
+      background: filter === 'today'
+        ? '#111'
+        : '#eee',
+      color: filter === 'today'
+        ? '#fff'
+        : '#222',
+      fontWeight: filter === 'today'
+        ? 700
+        : 500,
+      border: filter === 'today'
+        ? '2px solid #111'
+        : '2px solid transparent'
+    }}
+    onClick={() =>
+      setFilter('today')
+    }
+  >
+    Сегодня
+  </button>
 
-          <button
-            className={
-              filter === 'upcoming'
-                ? 'primary'
-                : ''
-            }
-            onClick={() =>
-              setFilter(
-                'upcoming'
-              )
-            }
-          >
-            Предстоящие
-          </button>
+  <button
+    style={{
+      background: filter === 'upcoming'
+        ? '#111'
+        : '#eee',
+      color: filter === 'upcoming'
+        ? '#fff'
+        : '#222',
+      fontWeight: filter === 'upcoming'
+        ? 700
+        : 500,
+      border: filter === 'upcoming'
+        ? '2px solid #111'
+        : '2px solid transparent'
+    }}
+    onClick={() =>
+      setFilter('upcoming')
+    }
+  >
+    Предстоящие
+  </button>
 
-          <button
-            className={
-              filter === 'date'
-                ? 'primary'
-                : ''
-            }
-            onClick={() =>
-              setFilter('date')
-            }
-          >
-            Дата
-          </button>
+  <button
+    style={{
+      background: filter === 'date'
+        ? '#111'
+        : '#eee',
+      color: filter === 'date'
+        ? '#fff'
+        : '#222',
+      fontWeight: filter === 'date'
+        ? 700
+        : 500,
+      border: filter === 'date'
+        ? '2px solid #111'
+        : '2px solid transparent'
+    }}
+    onClick={() =>
+      setFilter('date')
+    }
+  >
+    Дата
+  </button>
 
-          <button
-            className={
-              filter === 'all'
-                ? 'primary'
-                : ''
-            }
-            onClick={() =>
-              setFilter('all')
-            }
-          >
-            Все
-          </button>
-
-        </div>
+  <button
+    style={{
+      background: filter === 'all'
+        ? '#111'
+        : '#eee',
+      color: filter === 'all'
+        ? '#fff'
+        : '#222',
+      fontWeight: filter === 'all'
+        ? 700
+        : 500,
+      border: filter === 'all'
+        ? '2px solid #111'
+        : '2px solid transparent'
+    }}
+    onClick={() =>
+      setFilter('all')
+    }
+  >
+    Все
+  </button>
+</div>
 
         {filter === 'date' && (
           <input
