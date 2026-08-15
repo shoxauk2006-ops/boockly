@@ -114,25 +114,9 @@ const openClient = (
       value = startApp;
     }
   } catch {
-    // Это уже slug.
+    // Если это уже slug,
+    // оставляем его как есть.
   }
-
-  const match =
-    value.match(
-      /startapp=([^&]+)/i
-    );
-
-  if (match) {
-    value = match[1];
-  }
-
-  value =
-    decodeURIComponent(value)
-      .trim();
-
-  setClientSlug(value);
-  setMode('client');
-};
 
   const match =
     value.match(
