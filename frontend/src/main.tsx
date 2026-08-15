@@ -235,127 +235,767 @@ function Home(p:any){return <section>
 function Admin({
   onBack,
   initialTab
-}:{
-  onBack:()=>void;
-  initialTab:string;
-}){
- const [tab,setTab]=useState('home'); 
- useEffect(()=>{
-  setTab(initialTab);
-},[initialTab]);
- const [business,setBusiness]=useState<any>(null);
- const [services,setServices]=useState<any[]>([]);const [hours,setHours]=useState<any[]>([]);const [blocks,setBlocks]=useState<any[]>([]);const [bookings,setBookings]=useState<any[]>([]); const [loading,setLoading]=useState(true);
+}: {
+  onBack: () => void;
+  initialTab: string;
+}) {
+  const [tab, setTab] =
+    useState(initialTab);
 
-const load = async () => {
-  if (!initData()) {
-    setLoading(false);
-    return;
-  }
+  const [businesses, setBusinesses] =
+    useState<any[]>([]);
 
-  try {
-    // Сначала получаем существующий бизнес
-    const businessResponse = await fetch(API + '/admin/business', {
-      headers: headers()
-    });
+  const [business, setBusiness] =
+    useState<any>(null);
 
-    if (!businessResponse.ok) {
-      throw new Error(`Business request failed: ${businessResponse.status}`);
-    }
+  const [services, setServices] =
+    useState<any[]>([]);
 
-    const b = await businessResponse.json();
+  const [hours, setHours] =
+    useState<any[]>([]);
 
-    // Сразу сохраняем бизнес и убираем экран загрузки
-    setBusiness(b);
-    setLoading(false);
+  const [blocks, setBlocks] =
+    useState<any[]>([]);
 
-    // Остальные данные загружаем отдельно
-    const results = await Promise.allSettled([
-      fetch(API + '/admin/services', {
-        headers: headers()
-      }).then(r => r.ok ? r.json() : []),
+  const [bookings, setBookings] =
+    useState<any[]>([]);
 
-      fetch(API + '/admin/hours', {
-        headers: headers()
-      }).then(r => r.ok ? r.json() : []),
+  const [loading, setLoading] =
+    useState(true);
 
-      fetch(API + '/admin/blocks', {
-        headers: headers()
-      }).then(r => r.ok ? r.json() : []),
+  const [showBusinessForm, setShowBusinessForm] =
+    useState(false);
 
-      fetch(API + '/admin/bookings', {
-        headers: headers()
-      }).then(r => r.ok ? r.json() : [])
-    ]);
+  const [newBusinessName, setNewBusinessName] =
+    useState('');
 
-    const [servicesResult, hoursResult, blocksResult, bookingsResult] = results;
+  const [creatingBusiness, setCreatingBusiness] =
+    useState(false);
 
-    if (servicesResult.status === 'fulfilled') {
-      setServices(servicesResult.value || []);
-    }
+  const loadBusinesses =
+    async () => {
+      const response =
+        await fetch(
+          API + '/admin/businesses',
+          {
+            headers: headers()
+          }
+        );
 
-    if (hoursResult.status === 'fulfilled') {
-      setHours(hoursResult.value || []);
-    }
+      if (!response.ok) {
+        throw new Error(
+          'Не удалось загрузить бизнесы'
+        );
+      }
 
-    if (blocksResult.status === 'fulfilled') {
-      setBlocks(blocksResult.value || []);
-    }
+      const list =
+        await response.json();
 
-    if (bookingsResult.status === 'fulfilled') {
-      setBookings(bookingsResult.value || []);
-    }
+      const normalized =
+        Array.isArray(list)
+          ? list
+          : [];
 
-  } catch (e) {
-    console.error('Bookly load error:', e);
-    setLoading(false);
-  }
-};
+      setBusinesses(normalized);
 
-useEffect(() => {
-  load();
+      let selectedId = '';
 
-  const refreshOnReturn = () => {
+      try {
+        selectedId =
+          localStorage.getItem(
+            'bookly_active_business_id'
+          ) || '';
+      } catch {}
+
+      let selected =
+        normalized.find(
+          (item: any) =>
+            String(item.id) ===
+            String(selectedId)
+        );
+
+      if (!selected) {
+        selected =
+          normalized[0] || null;
+      }
+
+      if (selected) {
+        try {
+          localStorage.setItem(
+            'bookly_active_business_id',
+            String(selected.id)
+          );
+        } catch {}
+
+        setBusiness(selected);
+
+        return selected;
+      }
+
+      setBusiness(null);
+
+      return null;
+    };
+
+  const loadBusinessData =
+    async (
+      selectedBusiness: any
+    ) => {
+      if (!selectedBusiness) {
+        setServices([]);
+        setHours([]);
+        setBlocks([]);
+        setBookings([]);
+        return;
+      }
+
+      const results =
+        await Promise.allSettled([
+          fetch(
+            API + '/admin/services',
+            {
+              headers: headers()
+            }
+          ).then(r =>
+            r.ok ? r.json() : []
+          ),
+
+          fetch(
+            API + '/admin/hours',
+            {
+              headers: headers()
+            }
+          ).then(r =>
+            r.ok ? r.json() : []
+          ),
+
+          fetch(
+            API + '/admin/blocks',
+            {
+              headers: headers()
+            }
+          ).then(r =>
+            r.ok ? r.json() : []
+          ),
+
+          fetch(
+            API + '/admin/bookings',
+            {
+              headers: headers()
+            }
+          ).then(r =>
+            r.ok ? r.json() : []
+          )
+        ]);
+
+      const [
+        servicesResult,
+        hoursResult,
+        blocksResult,
+        bookingsResult
+      ] = results;
+
+      if (
+        servicesResult.status ===
+        'fulfilled'
+      ) {
+        setServices(
+          servicesResult.value ||
+          []
+        );
+      }
+
+      if (
+        hoursResult.status ===
+        'fulfilled'
+      ) {
+        setHours(
+          hoursResult.value ||
+          []
+        );
+      }
+
+      if (
+        blocksResult.status ===
+        'fulfilled'
+      ) {
+        setBlocks(
+          blocksResult.value ||
+          []
+        );
+      }
+
+      if (
+        bookingsResult.status ===
+        'fulfilled'
+      ) {
+        setBookings(
+          bookingsResult.value ||
+          []
+        );
+      }
+    };
+
+  const load =
+    async () => {
+      if (!initData()) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const selected =
+          await loadBusinesses();
+
+        setLoading(false);
+
+        if (selected) {
+          await loadBusinessData(
+            selected
+          );
+        }
+
+      } catch (e) {
+        console.error(
+          'Bookly admin load error:',
+          e
+        );
+
+        setLoading(false);
+      }
+    };
+
+  useEffect(() => {
     load();
-  };
 
-  window.addEventListener('focus', refreshOnReturn);
-  document.addEventListener('visibilitychange', refreshOnReturn);
+    const refresh =
+      () => {
+        load();
+      };
 
-  return () => {
-    window.removeEventListener('focus', refreshOnReturn);
-    document.removeEventListener('visibilitychange', refreshOnReturn);
-  };
-}, []);
+    window.addEventListener(
+      'focus',
+      refresh
+    );
 
-if(loading){
-  return <div className="loading-screen">
-    <div className="loading-logo">B</div>
-    <h2>Bookly</h2>
-    <div className="loading-spinner"></div>
-    <p>Загрузка...</p>
-  </div>;
-}
+    document.addEventListener(
+      'visibilitychange',
+      refresh
+    );
 
-if(!initData())return <div className="card"><button className="back" onClick={onBack}>← Назад</button><h2>Откройте Bookly из Telegram</h2><p>Админ-панель работает внутри Telegram Mini App.</p></div>;
- return <section><button className="back" onClick={onBack}>← Назад</button>
-  {!business&&<BusinessForm onSaved={load}/>} 
-  {business&&<>
-   <div className="business-head"><div><h1>{business.name}</h1><p>{business.address||'Адрес не указан'}</p></div><span className={business.subscription_active?'pill ok':'pill'}>{business.subscription_active?'Активен':'Не активирован'}</span></div>
-   <nav className="tabs">{[['home','Главная'],['services','Услуги'],['hours','График'],['blocks','Блокировки'],['bookings','Записи'],['settings','Настройки']].map(([k,v])=><button className={tab===k?'active':''} onClick={()=>setTab(k)} key={k}>{v}</button>)}</nav>
-   {tab==='home'&&<Dashboard bookings={bookings} business={business}/>} 
-   {tab==='services'&&(
-    <Services
-    services={services}
-    reload={load}
-    business={business}
-  />
-)}
-   {tab==='hours'&&<Hours hours={hours} reload={load}/>} 
-   {tab==='blocks'&&<Blocks blocks={blocks} reload={load}/>} 
-   {tab==='bookings'&&<Bookings bookings={bookings}/>} 
-   {tab==='settings'&&<Settings business={business} reload={load}/>} 
-  </>}
- </section>
+    return () => {
+      window.removeEventListener(
+        'focus',
+        refresh
+      );
+
+      document.removeEventListener(
+        'visibilitychange',
+        refresh
+      );
+    };
+  }, []);
+
+  const selectBusiness =
+    async (
+      selected: any
+    ) => {
+      try {
+        localStorage.setItem(
+          'bookly_active_business_id',
+          String(selected.id)
+        );
+      } catch {}
+
+      setBusiness(selected);
+      setTab('home');
+
+      setLoading(true);
+
+      await loadBusinessData(
+        selected
+      );
+
+      setLoading(false);
+    };
+
+  const createBusiness =
+    async () => {
+      const name =
+        newBusinessName.trim();
+
+      if (!name) {
+        alert(
+          'Введите название бизнеса'
+        );
+        return;
+      }
+
+      setCreatingBusiness(true);
+
+      try {
+        const response =
+          await fetch(
+            API + '/admin/businesses',
+            {
+              method: 'POST',
+              headers: headers(),
+              body:
+                JSON.stringify({
+                  name
+                })
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(
+              () => null
+            );
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+            'Не удалось создать бизнес'
+          );
+        }
+
+        try {
+          localStorage.setItem(
+            'bookly_active_business_id',
+            String(data.id)
+          );
+        } catch {}
+
+        setNewBusinessName('');
+        setShowBusinessForm(
+          false
+        );
+
+        setBusiness(data);
+
+        const updatedBusinesses =
+          await fetch(
+            API +
+              '/admin/businesses',
+            {
+              headers: headers()
+            }
+          ).then(r =>
+            r.ok
+              ? r.json()
+              : []
+          );
+
+        setBusinesses(
+          Array.isArray(
+            updatedBusinesses
+          )
+            ? updatedBusinesses
+            : []
+        );
+
+        await loadBusinessData(
+          data
+        );
+
+        setTab('home');
+
+        alert(
+          '✅ Новый бизнес создан'
+        );
+
+      } catch (e: any) {
+        alert(
+          e?.message ||
+          'Не удалось создать бизнес'
+        );
+      } finally {
+        setCreatingBusiness(
+          false
+        );
+      }
+    };
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-logo">
+          B
+        </div>
+
+        <h2>
+          Bookly
+        </h2>
+
+        <div className="loading-spinner"></div>
+
+        <p>
+          Загрузка...
+        </p>
+      </div>
+    );
+  }
+
+  if (!initData()) {
+    return (
+      <div className="card">
+        <button
+          className="back"
+          onClick={onBack}
+        >
+          ← Назад
+        </button>
+
+        <h2>
+          Откройте Bookly из Telegram
+        </h2>
+
+        <p>
+          Админ-панель работает
+          внутри Telegram Mini App.
+        </p>
+      </div>
+    );
+  }
+
+  if (!business) {
+    return (
+      <section>
+        <button
+          className="back"
+          onClick={onBack}
+        >
+          ← Назад
+        </button>
+
+        <div className="card">
+          <h2>
+            Мои бизнесы
+          </h2>
+
+          <p>
+            У вас пока нет бизнеса.
+          </p>
+
+          <button
+            className="primary full"
+            onClick={() =>
+              setShowBusinessForm(
+                true
+              )
+            }
+          >
+            + Добавить бизнес
+          </button>
+        </div>
+
+        {showBusinessForm && (
+          <div className="card">
+            <h2>
+              Новый бизнес
+            </h2>
+
+            <input
+              placeholder="Название бизнеса"
+              value={
+                newBusinessName
+              }
+              onChange={e =>
+                setNewBusinessName(
+                  e.target.value
+                )
+              }
+            />
+
+            <button
+              className="primary full"
+              disabled={
+                creatingBusiness
+              }
+              onClick={
+                createBusiness
+              }
+            >
+              {creatingBusiness
+                ? 'Создание...'
+                : 'Создать бизнес'}
+            </button>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <button
+        className="back"
+        onClick={onBack}
+      >
+        ← Назад
+      </button>
+
+      <div className="card">
+        <div
+          style={{
+            display: 'flex',
+            justifyContent:
+              'space-between',
+            alignItems:
+              'center',
+            gap: 12
+          }}
+        >
+          <div>
+            <small
+              className="muted"
+            >
+              Текущий бизнес
+            </small>
+
+            <h2
+              style={{
+                margin:
+                  '4px 0'
+              }}
+            >
+              {business.name}
+            </h2>
+
+            <p
+              className="muted"
+              style={{
+                margin: 0
+              }}
+            >
+              {business.address ||
+                'Адрес не указан'}
+            </p>
+          </div>
+
+          <button
+            onClick={() =>
+              setShowBusinessForm(
+                !showBusinessForm
+              )
+            }
+          >
+            ⚙️
+          </button>
+        </div>
+      </div>
+
+      {showBusinessForm && (
+        <div className="card">
+          <h3>
+            Мои бизнесы
+          </h3>
+
+          {businesses.map(
+            item => (
+              <div
+                key={item.id}
+                style={{
+                  display:
+                    'flex',
+                  justifyContent:
+                    'space-between',
+                  alignItems:
+                    'center',
+                  gap: 10,
+                  padding:
+                    '12px 0',
+                  borderBottom:
+                    '1px solid #eee'
+                }}
+              >
+                <div>
+                  <b>
+                    {item.name}
+                  </b>
+
+                  <p
+                    className="muted"
+                    style={{
+                      margin:
+                        '4px 0 0'
+                    }}
+                  >
+                    {item.address ||
+                      'Адрес не указан'}
+                  </p>
+                </div>
+
+                <button
+                  className={
+                    business.id ===
+                    item.id
+                      ? 'primary'
+                      : ''
+                  }
+                  onClick={() =>
+                    selectBusiness(
+                      item
+                    )
+                  }
+                >
+                  {business.id ===
+                  item.id
+                    ? 'Открыт'
+                    : 'Открыть'}
+                </button>
+              </div>
+            )
+          )}
+
+          <button
+            className="primary full"
+            style={{
+              marginTop: 12
+            }}
+            onClick={() =>
+              setShowBusinessForm(
+                'create'
+              )
+            }
+          >
+            + Добавить бизнес
+          </button>
+        </div>
+      )}
+
+      {showBusinessForm === 'create' && (
+        <div className="card">
+          <h3>
+            Создать новый бизнес
+          </h3>
+
+          <input
+            placeholder="Название бизнеса"
+            value={
+              newBusinessName
+            }
+            onChange={e =>
+              setNewBusinessName(
+                e.target.value
+              )
+            }
+          />
+
+          <button
+            className="primary full"
+            disabled={
+              creatingBusiness
+            }
+            onClick={
+              createBusiness
+            }
+          >
+            {creatingBusiness
+              ? 'Создание...'
+              : 'Создать бизнес'}
+          </button>
+        </div>
+      )}
+
+      <div className="business-head">
+        <div>
+          <h1>
+            {business.name}
+          </h1>
+
+          <p>
+            {business.address ||
+              'Адрес не указан'}
+          </p>
+        </div>
+
+        <span
+          className={
+            business.subscription_active
+              ? 'pill ok'
+              : 'pill'
+          }
+        >
+          {business.subscription_active
+            ? 'Активен'
+            : 'Не активирован'}
+        </span>
+      </div>
+
+      <nav className="tabs">
+        {[
+          ['home', 'Главная'],
+          ['services', 'Услуги'],
+          ['hours', 'График'],
+          ['blocks', 'Блокировки'],
+          ['bookings', 'Записи'],
+          ['settings', 'Настройки']
+        ].map(
+          ([key, label]) => (
+            <button
+              className={
+                tab === key
+                  ? 'active'
+                  : ''
+              }
+              onClick={() =>
+                setTab(key)
+              }
+              key={key}
+            >
+              {label}
+            </button>
+          )
+        )}
+      </nav>
+
+      {tab === 'home' && (
+        <Dashboard
+          bookings={bookings}
+          business={business}
+        />
+      )}
+
+      {tab === 'services' && (
+        <Services
+          services={services}
+          reload={load}
+          business={business}
+        />
+      )}
+
+      {tab === 'hours' && (
+        <Hours
+          hours={hours}
+          reload={load}
+        />
+      )}
+
+      {tab === 'blocks' && (
+        <Blocks
+          blocks={blocks}
+          reload={load}
+        />
+      )}
+
+      {tab === 'bookings' && (
+        <Bookings
+          bookings={bookings}
+        />
+      )}
+
+      {tab === 'settings' && (
+        <Settings
+          business={business}
+          reload={load}
+        />
+      )}
+
+    </section>
+  );
 }
 
 function BusinessForm({onSaved}:{onSaved:()=>void}) {
