@@ -140,6 +140,44 @@ class Booking(Base):
 
 Base.metadata.create_all(engine)
 app = FastAPI(title="Bookly API", version="0.2.0")
+ACTIVE_BUSINESS_ID: ContextVar[Optional[int]] = ContextVar(
+    "ACTIVE_BUSINESS_ID",
+    default=None
+)
+
+
+@app.middleware("http")
+async def capture_active_business(
+    request: Request,
+    call_next
+):
+    raw_business_id = request.headers.get(
+        "X-Bookly-Business-Id"
+    )
+
+    business_id = None
+
+    if raw_business_id:
+        try:
+            business_id = int(
+                raw_business_id
+            )
+        except ValueError:
+            business_id = None
+
+    token = ACTIVE_BUSINESS_ID.set(
+        business_id
+    )
+
+    try:
+        response = await call_next(
+            request
+        )
+        return response
+    finally:
+        ACTIVE_BUSINESS_ID.reset(
+            token
+        )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 
 # ---------- Telegram Mini App authentication ----------
