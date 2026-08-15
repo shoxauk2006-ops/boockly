@@ -699,6 +699,14 @@ function Bookings({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const [filter, setFilter] = useState<
+    'today' | 'upcoming' | 'date' | 'all'
+  >('today');
+
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+
   useEffect(() => {
     if (!showForm) return;
 
@@ -726,20 +734,6 @@ function Bookings({
     setError('');
 
     try {
-      const response = await fetch(
-        API +
-          `/businesses/0/availability?service_id=${selectedServiceId}&day=${selectedDay}`,
-        {
-          headers: headers()
-        }
-      );
-
-      /*
-       * Здесь endpoint /businesses/{business_id}/availability
-       * требует business_id.
-       *
-       * Поэтому ниже получаем бизнес администратора.
-       */
       const businessResponse = await fetch(
         API + '/admin/business',
         {
@@ -748,17 +742,21 @@ function Bookings({
       );
 
       if (!businessResponse.ok) {
-        throw new Error('Не удалось получить бизнес');
+        throw new Error(
+          'Не удалось получить бизнес'
+        );
       }
 
-      const business = await businessResponse.json();
+      const business =
+        await businessResponse.json();
 
       const availabilityResponse = await fetch(
         API +
           `/businesses/${business.id}/availability?service_id=${selectedServiceId}&day=${selectedDay}`
       );
 
-      const data = await availabilityResponse.json();
+      const data =
+        await availabilityResponse.json();
 
       if (!availabilityResponse.ok) {
         throw new Error(
@@ -770,8 +768,13 @@ function Bookings({
       setSlots(data?.slots || []);
 
     } catch (e: any) {
-      console.error('ADMIN AVAILABILITY ERROR:', e);
+      console.error(
+        'ADMIN AVAILABILITY ERROR:',
+        e
+      );
+
       setSlots([]);
+
       setError(
         e?.message ||
         'Не удалось загрузить свободное время'
@@ -792,7 +795,11 @@ function Bookings({
         day
       );
     }
-  }, [serviceId, day, showForm]);
+  }, [
+    serviceId,
+    day,
+    showForm
+  ]);
 
   const createBooking = async (
     start: string
@@ -818,15 +825,18 @@ function Bookings({
           headers: headers(),
           body: JSON.stringify({
             service_id: Number(serviceId),
-            client_name: clientName.trim(),
-            client_phone: clientPhone.trim(),
+            client_name:
+              clientName.trim(),
+            client_phone:
+              clientPhone.trim(),
             day,
             start
           })
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -835,7 +845,9 @@ function Bookings({
         );
       }
 
-      alert('✅ Запись успешно добавлена');
+      alert(
+        '✅ Запись успешно добавлена'
+      );
 
       setClientName('');
       setClientPhone('');
@@ -859,6 +871,84 @@ function Bookings({
     }
   };
 
+  const getTodayTashkent = () => {
+    return new Intl.DateTimeFormat(
+      'en-CA',
+      {
+        timeZone: 'Asia/Tashkent',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }
+    ).format(new Date());
+  };
+
+  const getNowTashkent = () => {
+    return new Intl.DateTimeFormat(
+      'sv-SE',
+      {
+        timeZone: 'Asia/Tashkent',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }
+    ).format(new Date());
+  };
+
+  const todayTashkent =
+    getTodayTashkent();
+
+  const nowTashkent =
+    getNowTashkent();
+
+  const filteredBookings =
+    bookings
+      .filter((booking) => {
+        const bookingDateTime =
+          `${booking.day} ${booking.start}`;
+
+        if (filter === 'today') {
+          return (
+            booking.day ===
+            todayTashkent
+          );
+        }
+
+        if (filter === 'upcoming') {
+          return (
+            bookingDateTime >=
+            nowTashkent.slice(
+              0,
+              16
+            )
+          );
+        }
+
+        if (filter === 'date') {
+          return (
+            booking.day ===
+            selectedDate
+          );
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const first =
+          `${a.day} ${a.start}`;
+
+        const second =
+          `${b.day} ${b.start}`;
+
+        return first.localeCompare(
+          second
+        );
+      });
+
   return (
     <div>
 
@@ -867,19 +957,27 @@ function Bookings({
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            justifyContent:
+              'space-between',
+            alignItems:
+              'center',
             gap: 10
           }}
         >
-          <h2 style={{ margin: 0 }}>
+          <h2
+            style={{
+              margin: 0
+            }}
+          >
             Записи
           </h2>
 
           <button
             className="primary"
             onClick={() =>
-              setShowForm(!showForm)
+              setShowForm(
+                !showForm
+              )
             }
           >
             {showForm
@@ -887,6 +985,90 @@ function Bookings({
               : '+ Добавить запись'}
           </button>
         </div>
+
+      </div>
+
+      <div className="card">
+
+        <div
+          style={{
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            paddingBottom: 5
+          }}
+        >
+
+          <button
+            className={
+              filter === 'today'
+                ? 'primary'
+                : ''
+            }
+            onClick={() =>
+              setFilter('today')
+            }
+          >
+            Сегодня
+          </button>
+
+          <button
+            className={
+              filter === 'upcoming'
+                ? 'primary'
+                : ''
+            }
+            onClick={() =>
+              setFilter(
+                'upcoming'
+              )
+            }
+          >
+            Предстоящие
+          </button>
+
+          <button
+            className={
+              filter === 'date'
+                ? 'primary'
+                : ''
+            }
+            onClick={() =>
+              setFilter('date')
+            }
+          >
+            Дата
+          </button>
+
+          <button
+            className={
+              filter === 'all'
+                ? 'primary'
+                : ''
+            }
+            onClick={() =>
+              setFilter('all')
+            }
+          >
+            Все
+          </button>
+
+        </div>
+
+        {filter === 'date' && (
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={e =>
+              setSelectedDate(
+                e.target.value
+              )
+            }
+            style={{
+              marginTop: 12
+            }}
+          />
+        )}
 
       </div>
 
@@ -900,33 +1082,39 @@ function Bookings({
           <select
             value={serviceId}
             onChange={e =>
-              setServiceId(e.target.value)
+              setServiceId(
+                e.target.value
+              )
             }
           >
             <option value="">
               Выберите услугу
             </option>
 
-            {services.map(service => (
-              <option
-                key={service.id}
-                value={service.id}
-              >
-                {service.name} · {service.duration_min} мин
-              </option>
-            ))}
+            {services.map(
+              service => (
+                <option
+                  key={service.id}
+                  value={service.id}
+                >
+                  {service.name} ·{' '}
+                  {service.duration_min}{' '}
+                  мин
+                </option>
+              )
+            )}
           </select>
 
           <input
             type="date"
-            min={
-              new Date()
-                .toISOString()
-                .slice(0, 10)
-            }
+            min={new Date()
+              .toISOString()
+              .slice(0, 10)}
             value={day}
             onChange={e =>
-              setDay(e.target.value)
+              setDay(
+                e.target.value
+              )
             }
           />
 
@@ -948,17 +1136,21 @@ function Bookings({
             )}
 
           <div className="slots">
+
             {slots.map(time => (
               <button
                 key={time}
                 disabled={saving}
                 onClick={() =>
-                  createBooking(time)
+                  createBooking(
+                    time
+                  )
                 }
               >
                 {time}
               </button>
             ))}
+
           </div>
 
           <h3>
@@ -970,7 +1162,9 @@ function Bookings({
             placeholder="Имя клиента"
             value={clientName}
             onChange={e =>
-              setClientName(e.target.value)
+              setClientName(
+                e.target.value
+              )
             }
           />
 
@@ -979,39 +1173,50 @@ function Bookings({
             placeholder="Номер телефона"
             value={clientPhone}
             onChange={e =>
-              setClientPhone(e.target.value)
+              setClientPhone(
+                e.target.value
+              )
             }
           />
 
           {error && (
             <div
               className="error"
-              style={{ marginTop: 10 }}
+              style={{
+                marginTop: 10
+              }}
             >
               ❌ {error}
             </div>
           )}
 
           <p className="muted">
-            Выберите время выше — после этого запись будет создана.
+            Выберите время выше —
+            после этого запись
+            будет создана.
           </p>
 
         </div>
       )}
 
       <div className="card">
-        {bookings.length ? (
-          bookings.map(x => (
-            <BookingRow
-              x={x}
-              key={x.id}
-            />
-          ))
+
+        {filteredBookings.length ? (
+          filteredBookings.map(
+            booking => (
+              <BookingRow
+                x={booking}
+                key={booking.id}
+              />
+            )
+          )
         ) : (
           <p>
-            Пока нет записей.
+            Записей в выбранном
+            разделе нет.
           </p>
         )}
+
       </div>
 
     </div>
