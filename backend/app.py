@@ -192,7 +192,11 @@ class BusinessIn(BaseModel):
 class ServiceIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     description: str = ""
-    price: int = Field(ge=0)
+    price: Decimal = Field(
+    ge=Decimal("0"),
+    decimal_places=3,
+    max_digits=18
+)
     currency: str = "UZS"
     duration_min: int = Field(gt=0, le=480)
     active: bool = True
