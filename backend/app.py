@@ -57,18 +57,44 @@ class Business(Base):
 
 class Service(Base):
     __tablename__ = "services"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
-    name: Mapped[str] = mapped_column(String(120))
-    description: Mapped[str] = mapped_column(String(500), default="")
-  price: Mapped[Decimal] = mapped_column(
-    Numeric(18, 3),
-    default=Decimal("0")
-)
-    currency: Mapped[str] = mapped_column(String(8), default="UZS")
-    duration_min: Mapped[int] = mapped_column(Integer)
-    active: Mapped[bool] = mapped_column(Boolean, default=True)
 
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
+
+    business_id: Mapped[int] = mapped_column(
+        ForeignKey("businesses.id"),
+        index=True
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(120)
+    )
+
+    description: Mapped[str] = mapped_column(
+        String(500),
+        default=""
+    )
+
+    price: Mapped[Decimal] = mapped_column(
+        Numeric(18, 3),
+        default=Decimal("0")
+    )
+
+    currency: Mapped[str] = mapped_column(
+        String(8),
+        default="UZS"
+    )
+
+    duration_min: Mapped[int] = mapped_column(
+        Integer
+    )
+
+    active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True
+    )
 class WorkingHour(Base):
     __tablename__ = "working_hours"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
