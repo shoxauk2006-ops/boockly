@@ -3396,95 +3396,161 @@ function Client({
   slug: string;
   onBack: () => void;
 }) {
-  const [business, setBusiness] = useState<any>(null);
-  const [services, setServices] = useState<any[]>([]);
-  const [selected, setSelected] = useState<any>(null);
+  const [business, setBusiness] =
+    useState<any>(null);
 
-  const [day, setDay] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
+  const [services, setServices] =
+    useState<any[]>([]);
 
-  const [slots, setSlots] = useState<string[]>([]);
-  const [selectedTime, setSelectedTime] = useState('');
-  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selected, setSelected] =
+    useState<any>(null);
 
-  const [clientName, setClientName] = useState(
-    tg()?.initDataUnsafe?.user?.first_name || ''
-  );
-  const [phone, setPhone] = useState('');
+  const [day, setDay] =
+    useState(
+      new Date()
+        .toISOString()
+        .slice(0, 10)
+    );
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [bookingLoading, setBookingLoading] = useState(false);
+  const [slots, setSlots] =
+    useState<string[]>([]);
+
+  const [selectedTime, setSelectedTime] =
+    useState('');
+
+  const [slotsLoading, setSlotsLoading] =
+    useState(false);
+
+  const [clientName, setClientName] =
+    useState(
+      tg()?.initDataUnsafe?.user
+        ?.first_name || ''
+    );
+
+  const [phone, setPhone] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState('');
+
+  const [bookingLoading, setBookingLoading] =
+    useState(false);
+
+  const [isSaved, setIsSaved] =
+    useState(false);
+
+  const [savingBusiness, setSavingBusiness] =
+    useState(false);
+
+  const [savedBusinesses, setSavedBusinesses] =
+    useState<any[]>([]);
 
   useEffect(() => {
     let cancelled = false;
 
-    const load = async () => {
-      setLoading(true);
-      setError('');
-
-      try {
-        if (!slug) {
-          throw new Error('Ссылка на бизнес не содержит slug.');
-        }
-
-        const response = await fetch(
-          API + `/businesses/${encodeURIComponent(slug)}`
-        );
-
-        const text = await response.text();
-
-        let data: any = null;
+    const load =
+      async () => {
+        setLoading(true);
+        setError('');
 
         try {
-          data = text ? JSON.parse(text) : null;
-        } catch {
-          data = null;
-        }
-
-        if (!response.ok) {
-          if (response.status === 403) {
+          if (!slug) {
             throw new Error(
-              'Этот бизнес сейчас не активен. Владелец должен активировать подписку Bookly.'
+              'Ссылка на бизнес не содержит slug.'
             );
           }
 
-          if (response.status === 404) {
+          const response =
+            await fetch(
+              API +
+                `/businesses/${encodeURIComponent(
+                  slug
+                )}`
+            );
+
+          const text =
+            await response.text();
+
+          let data: any = null;
+
+          try {
+            data = text
+              ? JSON.parse(text)
+              : null;
+          } catch {
+            data = null;
+          }
+
+          if (!response.ok) {
+            if (
+              response.status ===
+              403
+            ) {
+              throw new Error(
+                'Этот бизнес сейчас не активен.'
+              );
+            }
+
+            if (
+              response.status ===
+              404
+            ) {
+              throw new Error(
+                'Бизнес не найден. Возможно, ссылка устарела или содержит неправильный slug.'
+              );
+            }
+
             throw new Error(
-              'Бизнес не найден. Возможно, ссылка устарела или содержит неправильный slug.'
+              data?.detail ||
+              data?.message ||
+              `Ошибка сервера: ${response.status}`
             );
           }
 
-          throw new Error(
-            data?.detail ||
-            data?.message ||
-            `Ошибка сервера: ${response.status}`
+          if (
+            !data?.business
+          ) {
+            throw new Error(
+              'Сервер не вернул данные бизнеса.'
+            );
+          }
+
+          if (!cancelled) {
+            setBusiness(
+              data.business
+            );
+
+            setServices(
+              data.services || []
+            );
+          }
+
+        } catch (
+          e: any
+        ) {
+          console.error(
+            'CLIENT LOAD ERROR:',
+            e
           );
-        }
 
-        if (!data?.business) {
-          throw new Error('Сервер не вернул данные бизнеса.');
-        }
+          if (!cancelled) {
+            setBusiness(null);
+            setServices([]);
+            setError(
+              e?.message ||
+              'Не удалось загрузить бизнес'
+            );
+          }
 
-        if (!cancelled) {
-          setBusiness(data.business);
-          setServices(data.services || []);
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
         }
-      } catch (e: any) {
-        console.error('CLIENT LOAD ERROR:', e);
-
-        if (!cancelled) {
-          setBusiness(null);
-          setServices([]);
-          setError(e?.message || 'Не удалось загрузить бизнес');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
+      };
 
     load();
 
@@ -3493,127 +3559,349 @@ function Client({
     };
   }, [slug]);
 
- const loadSlots = async (
-  service: any,
-  selectedDay: string
-) => {
-  if (!business) return;
+  useEffect(() => {
+    const loadSaved =
+      async () => {
+        if (
+          !initData() ||
+          !business
+        ) {
+          return;
+        }
 
-  setSlots([]);
-  setSelectedTime('');
-  setSlotsLoading(true);
+        try {
+          const response =
+            await fetch(
+              API +
+                '/my/saved-businesses',
+              {
+                headers:
+                  headers()
+              }
+            );
 
-  try {
-    const response = await fetch(
-      API +
-        `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
-    );
+          if (!response.ok) {
+            return;
+          }
 
-    const data = await response.json();
+          const data =
+            await response.json();
 
-    if (!response.ok) {
-      throw new Error(
-        data?.detail || 'Не удалось загрузить свободное время'
-      );
-    }
+          const list =
+            Array.isArray(data)
+              ? data
+              : [];
 
-    setSlots(data?.slots || []);
-  } catch (e) {
-    console.error('AVAILABILITY ERROR:', e);
-    setSlots([]);
-  } finally {
-    setSlotsLoading(false);
-  }
-};
-  const chooseService = async (service: any) => {
-    setSelected(service);
-    setSelectedTime('');
-    await loadSlots(service, day);
-  };
+          setSavedBusinesses(
+            list
+          );
 
-  const chooseTime = (time: string) => {
-    setSelectedTime(time);
+          setIsSaved(
+            list.some(
+              (item: any) =>
+                item.id ===
+                business.id
+            )
+          );
 
-    // Прокручиваем к форме данных клиента
-    setTimeout(() => {
-      document
-        .getElementById('booking-form')
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-    }, 50);
-  };
+        } catch {
+          setSavedBusinesses([]);
+        }
+      };
 
-  const submitBooking = async () => {
-    if (!business || !selected || !selectedTime) {
-      return;
-    }
+    loadSaved();
+  }, [business]);
 
-    const name = clientName.trim();
-    const clientPhone = phone.trim();
+  const toggleSave =
+    async () => {
+      if (!business) {
+        return;
+      }
 
-    if (!name) {
-      alert('Введите ваше имя.');
-      return;
-    }
-
-    if (!clientPhone) {
-      alert('Введите номер телефона.');
-      return;
-    }
-
-    setBookingLoading(true);
-
-    try {
-      const response = await fetch(API + '/bookings', {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify({
-          business_id: business.id,
-          service_id: selected.id,
-          client_name: name,
-          client_phone: clientPhone,
-          day,
-          start: selectedTime
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (!initData()) {
         alert(
-          data?.detail ||
-          'Не удалось забронировать время.'
+          'Откройте Bookly через Telegram, чтобы сохранять бизнесы.'
         );
         return;
       }
 
-      alert('✅ Запись успешно создана!');
-
-      // Сбрасываем выбранное время и обновляем свободные слоты
-      setSelectedTime('');
-
-      await loadSlots(selected, day);
-
-    } catch (e) {
-      console.error('BOOKING ERROR:', e);
-
-      alert(
-        'Не удалось выполнить бронирование. Попробуйте ещё раз.'
+      setSavingBusiness(
+        true
       );
-    } finally {
-      setBookingLoading(false);
-    }
-  };
+
+      try {
+        const response =
+          await fetch(
+            API +
+              `/my/saved-businesses/${business.id}`,
+            {
+              method:
+                isSaved
+                  ? 'DELETE'
+                  : 'POST',
+              headers:
+                headers()
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(
+              () => null
+            );
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+            'Не удалось изменить сохранённые бизнесы'
+          );
+        }
+
+        setIsSaved(
+          !isSaved
+        );
+
+      } catch (
+        e: any
+      ) {
+        alert(
+          e?.message ||
+          'Ошибка сохранения'
+        );
+      } finally {
+        setSavingBusiness(
+          false
+        );
+      }
+    };
+
+  const loadSlots =
+    async (
+      service: any,
+      selectedDay: string
+    ) => {
+      if (!business) {
+        return;
+      }
+
+      setSlots([]);
+      setSelectedTime('');
+      setSlotsLoading(
+        true
+      );
+
+      try {
+        const response =
+          await fetch(
+            API +
+              `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+            'Не удалось загрузить свободное время'
+          );
+        }
+
+        setSlots(
+          data?.slots || []
+        );
+
+      } catch (
+        e
+      ) {
+        console.error(
+          'AVAILABILITY ERROR:',
+          e
+        );
+
+        setSlots([]);
+
+      } finally {
+        setSlotsLoading(
+          false
+        );
+      }
+    };
+
+  const chooseService =
+    async (
+      service: any
+    ) => {
+      setSelected(
+        service
+      );
+
+      setSelectedTime(
+        ''
+      );
+
+      await loadSlots(
+        service,
+        day
+      );
+    };
+
+  const chooseTime =
+    (
+      time: string
+    ) => {
+      setSelectedTime(
+        time
+      );
+
+      setTimeout(
+        () => {
+          document
+            .getElementById(
+              'booking-form'
+            )
+            ?.scrollIntoView({
+              behavior:
+                'smooth',
+              block:
+                'start'
+            });
+        },
+        50
+      );
+    };
+
+  const submitBooking =
+    async () => {
+      if (
+        !business ||
+        !selected ||
+        !selectedTime
+      ) {
+        return;
+      }
+
+      const name =
+        clientName.trim();
+
+      const clientPhone =
+        phone.trim();
+
+      if (!name) {
+        alert(
+          'Введите ваше имя.'
+        );
+        return;
+      }
+
+      if (!clientPhone) {
+        alert(
+          'Введите номер телефона.'
+        );
+        return;
+      }
+
+      setBookingLoading(
+        true
+      );
+
+      try {
+        const response =
+          await fetch(
+            API + '/bookings',
+            {
+              method:
+                'POST',
+              headers:
+                headers(),
+              body:
+                JSON.stringify({
+                  business_id:
+                    business.id,
+                  service_id:
+                    selected.id,
+                  client_name:
+                    name,
+                  client_phone:
+                    clientPhone,
+                  day,
+                  start:
+                    selectedTime
+                })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          alert(
+            data?.detail ||
+            'Не удалось забронировать время.'
+          );
+          return;
+        }
+
+        alert(
+          '✅ Запись успешно создана!'
+        );
+
+        setSelectedTime(
+          ''
+        );
+
+        await loadSlots(
+          selected,
+          day
+        );
+
+      } catch (
+        e
+      ) {
+        console.error(
+          'BOOKING ERROR:',
+          e
+        );
+
+        alert(
+          'Не удалось выполнить бронирование. Попробуйте ещё раз.'
+        );
+
+      } finally {
+        setBookingLoading(
+          false
+        );
+      }
+    };
+
+  const mapUrl =
+    business &&
+    business.latitude != null &&
+    business.longitude != null
+      ? `https://www.google.com/maps/search/?api=1&query=${business.latitude},${business.longitude}`
+      : business?.address
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            business.address
+          )}`
+        : '';
 
   if (loading) {
     return (
       <div className="loading-screen">
-        <div className="loading-logo">B</div>
-        <h2>Bookly</h2>
+        <div className="loading-logo">
+          B
+        </div>
+
+        <h2>
+          Bookly
+        </h2>
+
         <div className="loading-spinner"></div>
-        <p>Загрузка бизнеса...</p>
+
+        <p>
+          Загрузка бизнеса...
+        </p>
       </div>
     );
   }
@@ -3628,7 +3916,9 @@ function Client({
           ← Назад
         </button>
 
-        <h2>Не удалось открыть страницу</h2>
+        <h2>
+          Не удалось открыть страницу
+        </h2>
 
         <p className="error">
           ❌ {error}
@@ -3636,7 +3926,9 @@ function Client({
 
         <button
           className="primary full"
-          onClick={() => window.location.reload()}
+          onClick={() =>
+            window.location.reload()
+          }
         >
           Повторить
         </button>
@@ -3654,13 +3946,16 @@ function Client({
           ← Назад
         </button>
 
-        <p>Бизнес не найден.</p>
+        <p>
+          Бизнес не найден.
+        </p>
       </div>
     );
   }
 
   return (
     <section>
+
       <button
         className="back"
         onClick={onBack}
@@ -3668,83 +3963,313 @@ function Client({
         ← Назад
       </button>
 
-      <div className="client-hero">
-        <h1>{business.name}</h1>
+      <div className="card">
 
-        {business.description && (
-          <p>{business.description}</p>
+        <div
+          style={{
+            display:
+              'flex',
+            justifyContent:
+              'space-between',
+            alignItems:
+              'flex-start',
+            gap: 12
+          }}
+        >
+
+          <div>
+            <h1
+              style={{
+                marginTop: 0,
+                marginBottom: 8
+              }}
+            >
+              {business.name}
+            </h1>
+
+            {business.description && (
+              <p>
+                {
+                  business.description
+                }
+              </p>
+            )}
+          </div>
+
+          <button
+            disabled={
+              savingBusiness
+            }
+            onClick={
+              toggleSave
+            }
+            style={{
+              fontSize: 24,
+              background:
+                'transparent',
+              border:
+                'none',
+              padding: 4
+            }}
+            title={
+              isSaved
+                ? 'Удалить из сохранённых'
+                : 'Сохранить бизнес'
+            }
+          >
+            {isSaved
+              ? '❤️'
+              : '🤍'}
+          </button>
+
+        </div>
+
+        {business.phone && (
+          <p>
+            ☎️{' '}
+            <a
+              href={
+                `tel:${business.phone}`
+              }
+            >
+              {
+                business.phone
+              }
+            </a>
+          </p>
         )}
 
         {business.address && (
-          <p>📍 {business.address}</p>
+          <p>
+            📍{' '}
+            {mapUrl ? (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {
+                  business.address
+                }
+              </a>
+            ) : (
+              business.address
+            )}
+          </p>
         )}
-     
+
+        {mapUrl && (
+          <button
+            className="full"
+            onClick={() => {
+              if (
+                tg()?.openLink
+              ) {
+                tg().openLink(
+                  mapUrl
+                );
+              } else {
+                window.open(
+                  mapUrl,
+                  '_blank'
+                );
+              }
+            }}
+          >
+            📍 Открыть локацию
+          </button>
+        )}
+
+        <p
+          className="muted"
+          style={{
+            marginBottom: 0
+          }}
+        >
+          Выберите услугу
+          ниже, чтобы записаться.
+        </p>
+
       </div>
+
       <details className="card">
-     <summary
-    style={{
-      cursor: 'pointer',
-      fontWeight: 600,
-      fontSize: 18
-    }}
-  >
-    📅 Мои записи
-  </summary>
+        <summary
+          style={{
+            cursor:
+              'pointer',
+            fontWeight:
+              600,
+            fontSize:
+              18
+          }}
+        >
+          📅 Мои записи
+        </summary>
 
-  <div style={{ marginTop: 15 }}>
-    <MyBookings />
-  </div>
-</details>
+        <div
+          style={{
+            marginTop: 15
+          }}
+        >
+          <MyBookings />
+        </div>
+      </details>
 
-      <h2>1. Выберите услугу</h2>
+      <details className="card">
+        <summary
+          style={{
+            cursor:
+              'pointer',
+            fontWeight:
+              600,
+            fontSize:
+              18
+          }}
+        >
+          ❤️ Сохранённые бизнесы
+        </summary>
 
-      {services.length === 0 ? (
+        <div
+          style={{
+            marginTop: 15
+          }}
+        >
+          {savedBusinesses.length ===
+          0 ? (
+            <p className="muted">
+              Пока нет сохранённых
+              бизнесов.
+            </p>
+          ) : (
+            savedBusinesses.map(
+              item => (
+                <div
+                  key={
+                    item.id
+                  }
+                  className="card row"
+                >
+                  <div>
+                    <b>
+                      {
+                        item.name
+                      }
+                    </b>
+
+                    {item.address && (
+                      <p
+                        className="muted"
+                        style={{
+                          margin:
+                            '4px 0 0'
+                        }}
+                      >
+                        📍{' '}
+                        {
+                          item.address
+                        }
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    className="primary"
+                    onClick={() =>
+                      window.location.href =
+                        `?startapp=${encodeURIComponent(
+                          item.slug
+                        )}`
+                    }
+                  >
+                    Открыть
+                  </button>
+                </div>
+              )
+            )
+          )}
+        </div>
+      </details>
+
+      <h2>
+        Услуги
+      </h2>
+
+      {services.length ===
+      0 ? (
         <div className="card">
           <p>
-            У этого бизнеса пока нет доступных услуг.
+            У этого бизнеса
+            пока нет доступных
+            услуг.
           </p>
         </div>
       ) : (
-        services.map(service => (
-          <div
-            className={`card row ${
-              selected?.id === service.id
-                ? 'selected'
-                : ''
-            }`}
-            key={service.id}
-          >
-            <div>
-              <b>{service.name}</b>
-
-              {service.description && (
-                <p>{service.description}</p>
-              )}
-
-              <p>
-                {money(
-                  service.price,
-                  service.currency
-                )}{' '}
-                · {service.duration_min} мин
-              </p>
-            </div>
-
-            <button
-              onClick={() =>
-                chooseService(service)
+        services.map(
+          service => (
+            <div
+              className={
+                `card row ${
+                  selected?.id ===
+                  service.id
+                    ? 'selected'
+                    : ''
+                }`
+              }
+              key={
+                service.id
               }
             >
-              Выбрать
-            </button>
-          </div>
-        ))
+
+              <div>
+                <b>
+                  {
+                    service.name
+                  }
+                </b>
+
+                {service.description && (
+                  <p>
+                    {
+                      service.description
+                    }
+                  </p>
+                )}
+
+                <p>
+                  {money(
+                    service.price,
+                    service.currency
+                  )}{' '}
+                  ·{' '}
+                  {
+                    service.duration_min
+                  }{' '}
+                  мин
+                </p>
+              </div>
+
+              <button
+                onClick={() =>
+                  chooseService(
+                    service
+                  )
+                }
+              >
+                Выбрать
+              </button>
+
+            </div>
+          )
+        )
       )}
 
       {selected && (
         <>
+
           <div className="card">
-            <h2>2. Выберите дату</h2>
+            <h2>
+              Дата
+            </h2>
 
             <input
               type="date"
@@ -3755,10 +4280,16 @@ function Client({
               }
               value={day}
               onChange={async e => {
-                const newDay = e.target.value;
+                const newDay =
+                  e.target.value;
 
-                setDay(newDay);
-                setSelectedTime('');
+                setDay(
+                  newDay
+                );
+
+                setSelectedTime(
+                  ''
+                );
 
                 await loadSlots(
                   selected,
@@ -3769,33 +4300,46 @@ function Client({
           </div>
 
           <div className="card">
-            <h2>3. Выберите время</h2>
+            <h2>
+              Время
+            </h2>
 
-          {slotsLoading ? (
-  <p className="muted">
-    ⏳ Загружаем свободное время...
-  </p>
-) : slots.length > 0 ? (
-  <div className="slots">
-    {slots.map(time => (
-      <button
-        key={time}
-        className={
-          selectedTime === time
-            ? 'selected'
-            : ''
-        }
-        onClick={() => chooseTime(time)}
-      >
-        {time}
-      </button>
-    ))}
-  </div>
-) : (
-  <p>
-    На эту дату свободных мест нет.
-  </p>
-)}
+            {slotsLoading ? (
+              <p className="muted">
+                ⏳ Загружаем свободное время...
+              </p>
+            ) : slots.length >
+              0 ? (
+              <div className="slots">
+                {slots.map(
+                  time => (
+                    <button
+                      key={
+                        time
+                      }
+                      className={
+                        selectedTime ===
+                        time
+                          ? 'selected'
+                          : ''
+                      }
+                      onClick={() =>
+                        chooseTime(
+                          time
+                        )
+                      }
+                    >
+                      {time}
+                    </button>
+                  )
+                )}
+              </div>
+            ) : (
+              <p>
+                На эту дату
+                свободных мест нет.
+              </p>
+            )}
           </div>
 
           {selectedTime && (
@@ -3803,24 +4347,37 @@ function Client({
               id="booking-form"
               className="card"
             >
-              <h2>4. Ваши данные</h2>
 
-              <p className="muted">
-                Вы выбрали:
-              </p>
+              <h2>
+                Ваши данные
+              </h2>
 
               <div className="success">
-                <b>{selected.name}</b>
+                <b>
+                  {
+                    selected.name
+                  }
+                </b>
+
                 <br />
-                {day} · {selectedTime}
+
+                {day}
+                {' · '}
+                {
+                  selectedTime
+                }
               </div>
 
               <input
                 type="text"
                 placeholder="Ваше имя"
-                value={clientName}
+                value={
+                  clientName
+                }
                 onChange={e =>
-                  setClientName(e.target.value)
+                  setClientName(
+                    e.target.value
+                  )
                 }
               />
 
@@ -3829,24 +4386,32 @@ function Client({
                 placeholder="Номер телефона"
                 value={phone}
                 onChange={e =>
-                  setPhone(e.target.value)
+                  setPhone(
+                    e.target.value
+                  )
                 }
               />
 
-
               <button
                 className="primary full"
-                disabled={bookingLoading}
-                onClick={submitBooking}
+                disabled={
+                  bookingLoading
+                }
+                onClick={
+                  submitBooking
+                }
               >
                 {bookingLoading
                   ? 'Бронируем...'
                   : 'Подтвердить запись'}
               </button>
+
             </div>
           )}
+
         </>
       )}
+
     </section>
   );
 }
