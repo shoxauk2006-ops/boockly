@@ -586,10 +586,54 @@ def cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default="")):
         return {"ok":True}
 
 @app.get("/my/bookings")
-def my_bookings(x_telegram_init_data:str=Header(default="")):
-    user=telegram_user(x_telegram_init_data);uid=int(user["id"])
+def my_bookings(
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+    uid = int(user["id"])
+
     with SessionLocal() as db:
-        return db.query(Booking).filter_by(client_telegram_id=uid).order_by(Booking.day.desc(),Booking.start.desc()).limit(50).all()
+        rows = (
+            db.query(
+                Booking,
+                Business.name.label("business_name"),
+                Service.name.label("service_name")
+            )
+            .join(
+                Business,
+                Business.id == Booking.business_id
+            )
+            .join(
+                Service,
+                Service.id == Booking.service_id
+            )
+            .filter(
+                Booking.client_telegram_id == uid
+            )
+            .order_by(
+                Booking.day.desc(),
+                Booking.start.desc()
+            )
+            .limit(50)
+            .all()
+        )
+
+        return [
+            {
+                "id": booking.id,
+                "business_id": booking.business_id,
+                "service_id": booking.service_id,
+                "business_name": business_name,
+                "service_name": service_name,
+                "client_name": booking.client_name,
+                "client_phone": booking.client_phone,
+                "day": booking.day.isoformat(),
+                "start": booking.start.strftime("%H:%M"),
+                "end": booking.end.strftime("%H:%M"),
+                "status": booking.status,
+            }
+            for booking, business_name, service_name in rows
+        ]
 
 @app.post("/my/bookings/{booking_id}/cancel")
 def my_cancel_booking(
