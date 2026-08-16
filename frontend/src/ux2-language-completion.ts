@@ -1,3 +1,4 @@
+import './ux2-language-completion.css';
 import { Language, SUPPORTED_LANGUAGES, translations, detectLanguage, setStoredLanguage, applyLanguageDirection } from './i18n';
 
 type Row = Record<Language,string>;
@@ -15,7 +16,7 @@ const EXTRA: Record<string,Row> = {
   'Рабочие часы': {ru:'Рабочие часы',en:'Working hours',uz:'Ish vaqti',tr:'Çalışma saatleri',ar:'ساعات العمل'},
   'Закрытые интервалы': {ru:'Закрытые интервалы',en:'Blocked intervals',uz:'Bloklangan vaqtlar',tr:'Engellenen aralıklar',ar:'الفترات المغلقة'},
   'Информация и контакты': {ru:'Информация и контакты',en:'Information and contacts',uz:'Ma’lumot va kontaktlar',tr:'Bilgi ve iletişim',ar:'المعلومات وبيانات الاتصال'},
-  'Ваши бронирования': {ru:'Ваши бронирования',en:'Your bookings',uz:'Bronlaringiz',tr:'Randevularınız',ar:'حجozatlaringiz'},
+  'Ваши бронирования': {ru:'Ваши бронирования',en:'Your bookings',uz:'Bronlaringiz',tr:'Randevularınız',ar:'حجوزатlaringiz'},
   'Ваши сохранённые места': {ru:'Ваши сохранённые места',en:'Your saved places',uz:'Saqlangan joylaringiz',tr:'Kaydettiğiniz yerler',ar:'أماكنك المحفوظة'},
   'Bookly Pro': {ru:'Bookly Pro',en:'Bookly Pro',uz:'Bookly Pro',tr:'Bookly Pro',ar:'Bookly Pro'},
   'Название': {ru:'Название',en:'Name',uz:'Nomi',tr:'Ad',ar:'الاسم'},
