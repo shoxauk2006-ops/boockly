@@ -186,7 +186,7 @@ const openClient = (
         <div className="side-menu-head">
           <div>
             <b>Bookly</b>
-            <small>Меню</small>
+         <small>{t('nav.more')}</small>
           </div>
 
           <button
@@ -204,42 +204,43 @@ const openClient = (
               setAdminTab('home');
               setMenuOpen(false);
             }}>
-              🏠 Главная
+              🏠 {t('nav.home')}
             </button>
 
             <button onClick={()=>{
               setAdminTab('services');
               setMenuOpen(false);
             }}>
-              🛠 Услуги
+              🛠 {t('nav.services')}
             </button>
 
             <button onClick={()=>{
               setAdminTab('hours');
               setMenuOpen(false);
             }}>
-              🕐 График
+              {t('nav.schedule')}
             </button>
 
             <button onClick={()=>{
               setAdminTab('blocks');
               setMenuOpen(false);
             }}>
-              🚫 Блокировки
+              {t('nav.blocks')}
             </button>
 
             <button onClick={()=>{
               setAdminTab('bookings');
               setMenuOpen(false);
             }}>
-              📅 Записи
+            {t('nav.bookings')}
+            
             </button>
 
             <button onClick={()=>{
               setAdminTab('settings');
               setMenuOpen(false);
             }}>
-              ⚙️ Настройки
+              {t('nav.settings')}
             </button>
 
           </nav>
@@ -251,14 +252,14 @@ const openClient = (
               setAdminTab('home');
               setMenuOpen(false);
             }}>
-              👨‍💼 Админ-панель
+              👨‍💼 {t('nav.admin')}
             </button>
 
             <button onClick={()=>{
               setMode('home');
               setMenuOpen(false);
             }}>
-              🏠 Главная
+              🏠 {t('nav.home')}
             </button>
 
           </nav>
