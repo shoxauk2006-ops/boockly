@@ -284,10 +284,9 @@ const openClient = (
 
   {mode==='admin' &&
     <Admin
-  onBack={()=>setMode('home')}
-  initialTab={adminTab}
-  t={t}
-/>
+      onBack={()=>setMode('home')}
+      initialTab={adminTab}
+    />
   }
 
   {mode==='client' &&
@@ -391,11 +390,9 @@ function Home(p: any) {
         />
 
         <button
-  className="primary"
+  className="full"
   onClick={() =>
-    p.open(
-      business.slug
-    )
+    p.open()
   }
 >
   {p.t('common.open')}
@@ -471,7 +468,7 @@ function Home(p: any) {
     )
   }
 >
-  {p.t('common.open')}
+  {t('common.open')}
 </button>
 
                 </div>
@@ -487,12 +484,10 @@ function Home(p: any) {
 }
 function Admin({
   onBack,
-  initialTab,
-  t
+  initialTab
 }: {
   onBack: () => void;
   initialTab: string;
-  t: (key: string, fallback?: string) => string;
 }) {
   const [tab, setTab] =
     useState(initialTab);
@@ -855,19 +850,21 @@ function Admin({
       }
     };
 
-   if (loading) {
+  if (loading) {
     return (
       <div className="loading-screen">
         <div className="loading-logo">
           B
         </div>
 
-        <h2>Bookly</h2>
+        <h2>
+          Bookly
+        </h2>
 
         <div className="loading-spinner"></div>
 
         <p>
-          {t('common.loading')}
+          Загрузка...
         </p>
       </div>
     );
@@ -880,7 +877,7 @@ function Admin({
           className="back"
           onClick={onBack}
         >
-          ← {t('common.back')}
+          ← Назад
         </button>
 
         <h2>
@@ -902,12 +899,12 @@ function Admin({
           className="back"
           onClick={onBack}
         >
-          ← {t('common.back')}
+          ← Назад
         </button>
 
         <div className="card">
           <h2>
-            {t('nav.businesses')}
+            Мои бизнесы
           </h2>
 
           <p>
@@ -920,14 +917,14 @@ function Admin({
               setBusinessPanel('create')
             }
           >
-            + {t('owner.addBusiness')}
+            + Добавить бизнес
           </button>
         </div>
 
         {businessPanel === 'create' && (
           <div className="card">
             <h2>
-              {t('owner.addBusiness')}
+              Новый бизнес
             </h2>
 
             <input
@@ -942,8 +939,12 @@ function Admin({
 
             <button
               className="primary full"
-              disabled={creatingBusiness}
-              onClick={createBusiness}
+              disabled={
+                creatingBusiness
+              }
+              onClick={
+                createBusiness
+              }
             >
               {creatingBusiness
                 ? 'Создание...'
@@ -961,21 +962,23 @@ function Admin({
         className="back"
         onClick={onBack}
       >
-        ← {t('common.back')}
+        ← Назад
       </button>
 
       <div className="card">
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            justifyContent:
+              'space-between',
+            alignItems:
+              'center',
             gap: 12
           }}
         >
           <div>
             <small className="muted">
-              {t('owner.currentBusiness')}
+              Текущий бизнес
             </small>
 
             <h2
@@ -993,7 +996,7 @@ function Admin({
               }}
             >
               {business.address ||
-                t('settings.address')}
+                'Адрес не указан'}
             </p>
           </div>
 
@@ -1014,7 +1017,7 @@ function Admin({
       {businessPanel === 'list' && (
         <div className="card">
           <h3>
-            {t('nav.businesses')}
+            Мои бизнесы
           </h3>
 
           {businesses.map(item => (
@@ -1022,24 +1025,30 @@ function Admin({
               key={item.id}
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                justifyContent:
+                  'space-between',
+                alignItems:
+                  'center',
                 gap: 10,
                 padding: '12px 0',
-                borderBottom: '1px solid #eee'
+                borderBottom:
+                  '1px solid #eee'
               }}
             >
               <div>
-                <b>{item.name}</b>
+                <b>
+                  {item.name}
+                </b>
 
                 <p
                   className="muted"
                   style={{
-                    margin: '4px 0 0'
+                    margin:
+                      '4px 0 0'
                   }}
                 >
                   {item.address ||
-                    t('settings.address')}
+                    'Адрес не указан'}
                 </p>
               </div>
 
@@ -1055,7 +1064,7 @@ function Admin({
               >
                 {business.id === item.id
                   ? 'Открыт'
-                  : t('common.open')}
+                  : 'Открыть'}
               </button>
             </div>
           ))}
@@ -1069,7 +1078,7 @@ function Admin({
               setBusinessPanel('create')
             }
           >
-            + {t('owner.addBusiness')}
+            + Добавить бизнес
           </button>
         </div>
       )}
@@ -1077,7 +1086,7 @@ function Admin({
       {businessPanel === 'create' && (
         <div className="card">
           <h3>
-            {t('owner.addBusiness')}
+            Создать новый бизнес
           </h3>
 
           <input
@@ -1092,8 +1101,12 @@ function Admin({
 
           <button
             className="primary full"
-            disabled={creatingBusiness}
-            onClick={createBusiness}
+            disabled={
+              creatingBusiness
+            }
+            onClick={
+              createBusiness
+            }
           >
             {creatingBusiness
               ? 'Создание...'
@@ -1101,15 +1114,16 @@ function Admin({
           </button>
         </div>
       )}
+
+      <div className="business-head">
         <div>
           <h1>
             {business.name}
           </h1>
 
           <p>
-           {business.address ||
-  t('settings.address')
-}
+            {business.address ||
+              'Адрес не указан'}
           </p>
         </div>
 
