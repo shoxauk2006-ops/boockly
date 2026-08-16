@@ -1,4 +1,12 @@
 import React,{useEffect,useMemo,useState} from 'react';
+import {
+  Language,
+  SUPPORTED_LANGUAGES,
+  createTranslator,
+  getStoredLanguage,
+  setStoredLanguage,
+  applyLanguageDirection,
+} from './i18n';
 import {createRoot} from 'react-dom/client';
 import QRCode from 'qrcode';
 import './style.css';
@@ -37,6 +45,18 @@ const money=(v:number,c='UZS')=>`${new Intl.NumberFormat('ru-RU').format(v)} ${c
 const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
 function App(){
+    const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
+  const t = useMemo(() => createTranslator(language), [language]);
+
+  const changeLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    setStoredLanguage(nextLanguage);
+    applyLanguageDirection(nextLanguage);
+  };
+
+  useEffect(() => {
+    applyLanguageDirection(language);
+  }, [language]);
   const [mode,setMode]=useState<'home'|'admin'|'client'>('home');
   const [clientSlug,setClientSlug]=useState('');
   const [menuOpen,setMenuOpen]=useState(false);
