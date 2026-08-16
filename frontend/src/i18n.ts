@@ -1,0 +1,353 @@
+export type Language = 'ru' | 'en' | 'uz' | 'tr' | 'ar';
+
+export const SUPPORTED_LANGUAGES: Array<{
+  code: Language;
+  label: string;
+  nativeLabel: string;
+  dir: 'ltr' | 'rtl';
+}> = [
+  { code: 'ru', label: 'Russian', nativeLabel: 'Русский', dir: 'ltr' },
+  { code: 'en', label: 'English', nativeLabel: 'English', dir: 'ltr' },
+  { code: 'uz', label: 'Uzbek', nativeLabel: "O‘zbek", dir: 'ltr' },
+  { code: 'tr', label: 'Turkish', nativeLabel: 'Türkçe', dir: 'ltr' },
+  { code: 'ar', label: 'Arabic', nativeLabel: 'العربية', dir: 'rtl' },
+];
+
+type TranslationMap = Record<string, string>;
+
+const ru: TranslationMap = {
+  'app.name': 'Bookly',
+  'nav.home': 'Главная',
+  'nav.bookings': 'Записи',
+  'nav.saved': 'Сохранённые',
+  'nav.profile': 'Профиль',
+  'nav.services': 'Услуги',
+  'nav.more': 'Ещё',
+  'nav.schedule': 'График',
+  'nav.blocks': 'Блокировки',
+  'nav.businesses': 'Мои бизнесы',
+  'nav.settings': 'Настройки',
+  'nav.subscription': 'Подписка',
+  'nav.admin': 'Админ-панель',
+  'common.back': 'Назад',
+  'common.open': 'Открыть',
+  'common.save': 'Сохранить',
+  'common.cancel': 'Отмена',
+  'common.delete': 'Удалить',
+  'common.edit': 'Изменить',
+  'common.close': 'Закрыть',
+  'common.loading': 'Загрузка...',
+  'language.title': 'Язык',
+  'language.russian': 'Русский',
+  'language.english': 'English',
+  'language.uzbek': 'O‘zbek',
+  'language.turkish': 'Türkçe',
+  'language.arabic': 'العربية',
+  'client.saveBusiness': 'Сохранить бизнес',
+  'client.savedBusiness': 'Сохранено',
+  'client.location': 'Открыть локацию',
+  'client.services': 'Услуги',
+  'client.chooseService': 'Выбрать',
+  'client.chooseDate': 'Выберите дату',
+  'client.chooseTime': 'Выберите время',
+  'client.yourData': 'Ваши данные',
+  'client.name': 'Ваше имя',
+  'client.phone': 'Номер телефона',
+  'client.confirmBooking': 'Подтвердить запись',
+  'client.myBookings': 'Мои записи',
+  'client.savedBusinesses': 'Сохранённые бизнесы',
+  'owner.today': 'Сегодня',
+  'owner.upcoming': 'Предстоящие',
+  'owner.past': 'Прошедшие',
+  'owner.addBooking': 'Новая запись',
+  'owner.addBusiness': 'Добавить бизнес',
+  'owner.currentBusiness': 'Текущий бизнес',
+  'settings.businessInfo': 'Информация о бизнесе',
+  'settings.phone': 'Телефон бизнеса',
+  'settings.address': 'Адрес бизнеса',
+  'settings.description': 'Описание бизнеса',
+  'settings.share': 'Поделиться',
+  'settings.copyLink': 'Копировать ссылку',
+  'settings.qr': 'QR-код',
+  'settings.downloadQr': 'Сохранить QR-код',
+  'settings.language': 'Язык',
+};
+
+const en: TranslationMap = {
+  'app.name': 'Bookly',
+  'nav.home': 'Home',
+  'nav.bookings': 'Bookings',
+  'nav.saved': 'Saved',
+  'nav.profile': 'Profile',
+  'nav.services': 'Services',
+  'nav.more': 'More',
+  'nav.schedule': 'Schedule',
+  'nav.blocks': 'Blocked times',
+  'nav.businesses': 'My businesses',
+  'nav.settings': 'Settings',
+  'nav.subscription': 'Subscription',
+  'nav.admin': 'Admin panel',
+  'common.back': 'Back',
+  'common.open': 'Open',
+  'common.save': 'Save',
+  'common.cancel': 'Cancel',
+  'common.delete': 'Delete',
+  'common.edit': 'Edit',
+  'common.close': 'Close',
+  'common.loading': 'Loading...',
+  'language.title': 'Language',
+  'language.russian': 'Русский',
+  'language.english': 'English',
+  'language.uzbek': 'O‘zbek',
+  'language.turkish': 'Türkçe',
+  'language.arabic': 'العربية',
+  'client.saveBusiness': 'Save business',
+  'client.savedBusiness': 'Saved',
+  'client.location': 'Open location',
+  'client.services': 'Services',
+  'client.chooseService': 'Choose',
+  'client.chooseDate': 'Choose a date',
+  'client.chooseTime': 'Choose a time',
+  'client.yourData': 'Your details',
+  'client.name': 'Your name',
+  'client.phone': 'Phone number',
+  'client.confirmBooking': 'Confirm booking',
+  'client.myBookings': 'My bookings',
+  'client.savedBusinesses': 'Saved businesses',
+  'owner.today': 'Today',
+  'owner.upcoming': 'Upcoming',
+  'owner.past': 'Past',
+  'owner.addBooking': 'New booking',
+  'owner.addBusiness': 'Add business',
+  'owner.currentBusiness': 'Current business',
+  'settings.businessInfo': 'Business information',
+  'settings.phone': 'Business phone',
+  'settings.address': 'Business address',
+  'settings.description': 'Business description',
+  'settings.share': 'Share',
+  'settings.copyLink': 'Copy link',
+  'settings.qr': 'QR code',
+  'settings.downloadQr': 'Save QR code',
+  'settings.language': 'Language',
+};
+
+const uz: TranslationMap = {
+  ...en,
+  'nav.home': 'Bosh sahifa',
+  'nav.bookings': 'Bronlar',
+  'nav.saved': 'Saqlanganlar',
+  'nav.profile': 'Profil',
+  'nav.services': 'Xizmatlar',
+  'nav.more': 'Yana',
+  'nav.schedule': 'Jadval',
+  'nav.blocks': 'Bloklangan vaqtlar',
+  'nav.businesses': 'Mening bizneslarim',
+  'nav.settings': 'Sozlamalar',
+  'nav.subscription': 'Obuna',
+  'nav.admin': 'Admin panel',
+  'common.back': 'Orqaga',
+  'common.open': 'Ochish',
+  'common.save': 'Saqlash',
+  'common.cancel': 'Bekor qilish',
+  'common.delete': 'O‘chirish',
+  'common.edit': 'Tahrirlash',
+  'common.close': 'Yopish',
+  'common.loading': 'Yuklanmoqda...',
+  'language.title': 'Til',
+  'client.saveBusiness': 'Biznesni saqlash',
+  'client.savedBusiness': 'Saqlandi',
+  'client.location': 'Joylashuvni ochish',
+  'client.services': 'Xizmatlar',
+  'client.chooseService': 'Tanlash',
+  'client.chooseDate': 'Sanani tanlang',
+  'client.chooseTime': 'Vaqtni tanlang',
+  'client.yourData': 'Ma’lumotlaringiz',
+  'client.name': 'Ismingiz',
+  'client.phone': 'Telefon raqami',
+  'client.confirmBooking': 'Bronni tasdiqlash',
+  'client.myBookings': 'Mening bronlarim',
+  'client.savedBusinesses': 'Saqlangan bizneslar',
+  'owner.today': 'Bugun',
+  'owner.upcoming': 'Kelgusi',
+  'owner.past': 'O‘tgan',
+  'owner.addBooking': 'Yangi bron',
+  'owner.addBusiness': 'Biznes qo‘shish',
+  'owner.currentBusiness': 'Joriy biznes',
+  'settings.businessInfo': 'Biznes ma’lumotlari',
+  'settings.phone': 'Biznes telefoni',
+  'settings.address': 'Biznes manzili',
+  'settings.description': 'Biznes tavsifi',
+  'settings.share': 'Ulashish',
+  'settings.copyLink': 'Havolani nusxalash',
+  'settings.qr': 'QR-kod',
+  'settings.downloadQr': 'QR-kodni saqlash',
+  'settings.language': 'Til',
+};
+
+const tr: TranslationMap = {
+  ...en,
+  'nav.home': 'Ana sayfa',
+  'nav.bookings': 'Randevular',
+  'nav.saved': 'Kaydedilenler',
+  'nav.profile': 'Profil',
+  'nav.services': 'Hizmetler',
+  'nav.more': 'Daha fazla',
+  'nav.schedule': 'Çalışma saatleri',
+  'nav.blocks': 'Engellenen saatler',
+  'nav.businesses': 'İşletmelerim',
+  'nav.settings': 'Ayarlar',
+  'nav.subscription': 'Abonelik',
+  'nav.admin': 'Yönetim paneli',
+  'common.back': 'Geri',
+  'common.open': 'Aç',
+  'common.save': 'Kaydet',
+  'common.cancel': 'İptal',
+  'common.delete': 'Sil',
+  'common.edit': 'Düzenle',
+  'common.close': 'Kapat',
+  'common.loading': 'Yükleniyor...',
+  'language.title': 'Dil',
+  'client.saveBusiness': 'İşletmeyi kaydet',
+  'client.savedBusiness': 'Kaydedildi',
+  'client.location': 'Konumu aç',
+  'client.services': 'Hizmetler',
+  'client.chooseService': 'Seç',
+  'client.chooseDate': 'Tarih seçin',
+  'client.chooseTime': 'Saat seçin',
+  'client.yourData': 'Bilgileriniz',
+  'client.name': 'Adınız',
+  'client.phone': 'Telefon numarası',
+  'client.confirmBooking': 'Randevuyu onayla',
+  'client.myBookings': 'Randevularım',
+  'client.savedBusinesses': 'Kaydedilen işletmeler',
+  'owner.today': 'Bugün',
+  'owner.upcoming': 'Yaklaşan',
+  'owner.past': 'Geçmiş',
+  'owner.addBooking': 'Yeni randevu',
+  'owner.addBusiness': 'İşletme ekle',
+  'owner.currentBusiness': 'Mevcut işletme',
+  'settings.businessInfo': 'İşletme bilgileri',
+  'settings.phone': 'İşletme telefonu',
+  'settings.address': 'İşletme adresi',
+  'settings.description': 'İşletme açıklaması',
+  'settings.share': 'Paylaş',
+  'settings.copyLink': 'Bağlantıyı kopyala',
+  'settings.qr': 'QR kodu',
+  'settings.downloadQr': 'QR kodunu kaydet',
+  'settings.language': 'Dil',
+};
+
+const ar: TranslationMap = {
+  ...en,
+  'nav.home': 'الرئيسية',
+  'nav.bookings': 'الحجوزات',
+  'nav.saved': 'المحفوظات',
+  'nav.profile': 'الملف الشخصي',
+  'nav.services': 'الخدمات',
+  'nav.more': 'المزيد',
+  'nav.schedule': 'الجدول',
+  'nav.blocks': 'الأوقات المحجوزة',
+  'nav.businesses': 'أعمالي',
+  'nav.settings': 'الإعدادات',
+  'nav.subscription': 'الاشتراك',
+  'nav.admin': 'لوحة الإدارة',
+  'common.back': 'رجوع',
+  'common.open': 'فتح',
+  'common.save': 'حفظ',
+  'common.cancel': 'إلغاء',
+  'common.delete': 'حذف',
+  'common.edit': 'تعديل',
+  'common.close': 'إغلاق',
+  'common.loading': 'جارٍ التحميل...',
+  'language.title': 'اللغة',
+  'client.saveBusiness': 'حفظ النشاط التجاري',
+  'client.savedBusiness': 'تم الحفظ',
+  'client.location': 'فتح الموقع',
+  'client.services': 'الخدمات',
+  'client.chooseService': 'اختيار',
+  'client.chooseDate': 'اختر التاريخ',
+  'client.chooseTime': 'اختر الوقت',
+  'client.yourData': 'بياناتك',
+  'client.name': 'اسمك',
+  'client.phone': 'رقم الهاتف',
+  'client.confirmBooking': 'تأكيد الحجز',
+  'client.myBookings': 'حجوزاتي',
+  'client.savedBusinesses': 'الأنشطة المحفوظة',
+  'owner.today': 'اليوم',
+  'owner.upcoming': 'القادمة',
+  'owner.past': 'السابقة',
+  'owner.addBooking': 'حجز جديد',
+  'owner.addBusiness': 'إضافة نشاط',
+  'owner.currentBusiness': 'النشاط الحالي',
+  'settings.businessInfo': 'معلومات النشاط',
+  'settings.phone': 'هاتف النشاط',
+  'settings.address': 'عنوان النشاط',
+  'settings.description': 'وصف النشاط',
+  'settings.share': 'مشاركة',
+  'settings.copyLink': 'نسخ الرابط',
+  'settings.qr': 'رمز QR',
+  'settings.downloadQr': 'حفظ رمز QR',
+  'settings.language': 'اللغة',
+};
+
+export const translations: Record<Language, TranslationMap> = {
+  ru,
+  en,
+  uz,
+  tr,
+  ar,
+};
+
+export const DEFAULT_LANGUAGE: Language = 'en';
+export const LANGUAGE_STORAGE_KEY = 'bookly_language';
+
+export function getStoredLanguage(): Language {
+  try {
+    const value = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language | null;
+    if (value && SUPPORTED_LANGUAGES.some(item => item.code === value)) {
+      return value;
+    }
+  } catch {}
+
+  return DEFAULT_LANGUAGE;
+}
+
+export function detectLanguage(): Language {
+  const stored = getStoredLanguage();
+  if (stored) return stored;
+
+  const browser = (navigator.language || '').toLowerCase();
+
+  if (browser.startsWith('ru')) return 'ru';
+  if (browser.startsWith('uz')) return 'uz';
+  if (browser.startsWith('tr')) return 'tr';
+  if (browser.startsWith('ar')) return 'ar';
+
+  return 'en';
+}
+
+export function setStoredLanguage(language: Language): void {
+  try {
+    localStorage.setItem(
+      LANGUAGE_STORAGE_KEY,
+      language
+    );
+  } catch {}
+}
+
+export function createTranslator(language: Language) {
+  const map = translations[language] || translations.en;
+
+  return (key: string, fallback?: string) =>
+    map[key] ?? translations.en[key] ?? fallback ?? key;
+}
+
+export function applyLanguageDirection(language: Language): void {
+  const item = SUPPORTED_LANGUAGES.find(
+    entry => entry.code === language
+  );
+
+  document.documentElement.lang = language;
+  document.documentElement.dir =
+    item?.dir || 'ltr';
+}
