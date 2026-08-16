@@ -357,31 +357,29 @@ function Home(p: any) {
         </div>
 
         <h1>
-          Бронирование без звонков
-        </h1>
+  {t('home.title')}
+</h1>>
 
         <p>
-          Bookly помогает бизнесу
-          принимать записи прямо
-          в Telegram.
-        </p>
+   {t('home.description')}
+</p>
       </div>
 
       <button
-        className="primary full"
-        onClick={p.onAdmin}
-      >
-        Открыть админ-панель
-      </button>
+  className="primary full"
+  onClick={p.onAdmin}
+>
+  {t('home.openAdmin')}
+</button>
 
       <div className="card">
 
         <h3>
-          Открыть страницу бизнеса
-        </h3>
+  {t('home.openBusiness')}
+</h3>
 
         <input
-          placeholder="Ссылка или slug бизнеса"
+          placeholder={t('home.slugPlaceholder')}
           value={p.slug}
           onChange={e =>
             p.setSlug(
@@ -391,31 +389,30 @@ function Home(p: any) {
         />
 
         <button
-          className="full"
-          onClick={() =>
-            p.open()
-          }
-        >
-          Открыть
-        </button>
+  className="full"
+  onClick={() =>
+    p.open()
+  }
+>
+  {t('common.open')}
+</button>
 
       </div>
 
       <div className="card">
 
         <h2>
-          ❤️ Сохранённые бизнесы
-        </h2>
+  ❤️ {t('client.savedBusinesses')}
+</h2>
 
         {savedLoading ? (
           <p className="muted">
-            Загрузка...
-          </p>
+  {t('common.loading')}
+</p>
         ) : savedBusinesses.length === 0 ? (
           <p className="muted">
-            Здесь появятся бизнесы,
-            которые вы сохраните.
-          </p>
+  {t('home.emptySaved')}
+</p>
         ) : (
           <div>
             {savedBusinesses.map(
@@ -463,15 +460,15 @@ function Home(p: any) {
                   </div>
 
                   <button
-                    className="primary"
-                    onClick={() =>
-                      p.open(
-                        business.slug
-                      )
-                    }
-                  >
-                    Открыть
-                  </button>
+  className="primary"
+  onClick={() =>
+    p.open(
+      business.slug
+    )
+  }
+>
+  {t('common.open')}
+</button>
 
                 </div>
               )
