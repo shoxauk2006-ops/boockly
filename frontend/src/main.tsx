@@ -494,9 +494,6 @@ function Admin({
   initialTab: string;
   t: (key: string, fallback?: string) => string;
 }) {
-  onBack: () => void;
-  initialTab: string;
-}) {
   const [tab, setTab] =
     useState(initialTab);
 
