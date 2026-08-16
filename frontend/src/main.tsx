@@ -153,14 +153,26 @@ const openClient = (
   setMode('client');
 };
  return <div className="app">
-  <header>
-    <div>
-      <b>Bookly</b>
-      <small>Booking inside Telegram</small>
-    </div>
+ <header>
+  <div>
+    <b>Bookly</b>
+    <small>Booking inside Telegram</small>
+  </div>
 
-   
-  </header>
+  <select
+    value={language}
+    onChange={(e) =>
+      changeLanguage(e.target.value as Language)
+    }
+    className="language-select"
+  >
+    {SUPPORTED_LANGUAGES.map((item) => (
+      <option key={item.code} value={item.code}>
+        {item.nativeLabel}
+      </option>
+    ))}
+  </select>
+</header>
 
   {menuOpen && (
     <>
