@@ -872,7 +872,7 @@ function Admin({
         <div className="loading-spinner"></div>
 
         <p>
-          Загрузка...
+          {t('common.loading')}
         </p>
       </div>
     );
@@ -885,7 +885,7 @@ function Admin({
           className="back"
           onClick={onBack}
         >
-         '← Назад' → t('common.back')
+          ← {t('common.back')}
         </button>
 
         <h2>
@@ -907,12 +907,12 @@ function Admin({
           className="back"
           onClick={onBack}
         >
-          '← Назад' → t('common.back')
+          ← {t('common.back')}
         </button>
 
         <div className="card">
           <h2>
-          'Мои бизнесы' → t('nav.businesses')
+            {t('nav.businesses')}
           </h2>
 
           <p>
@@ -925,14 +925,14 @@ function Admin({
               setBusinessPanel('create')
             }
           >
-            '+ Добавить бизнес' → '+ ' + t('owner.addBusiness')
+            + {t('owner.addBusiness')}
           </button>
         </div>
 
         {businessPanel === 'create' && (
           <div className="card">
             <h2>
-              'Новый бизнес' → t('owner.addBusiness')
+              {t('owner.addBusiness')}
             </h2>
 
             <input
@@ -947,12 +947,8 @@ function Admin({
 
             <button
               className="primary full"
-              disabled={
-                creatingBusiness
-              }
-              onClick={
-                createBusiness
-              }
+              disabled={creatingBusiness}
+              onClick={createBusiness}
             >
               {creatingBusiness
                 ? 'Создание...'
@@ -970,23 +966,21 @@ function Admin({
         className="back"
         onClick={onBack}
       >
-        '← Назад' → t('common.back')
+        ← {t('common.back')}
       </button>
 
       <div className="card">
         <div
           style={{
             display: 'flex',
-            justifyContent:
-              'space-between',
-            alignItems:
-              'center',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             gap: 12
           }}
         >
           <div>
             <small className="muted">
-              'Текущий бизнес' → t('owner.currentBusiness')
+              {t('owner.currentBusiness')}
             </small>
 
             <h2
@@ -1004,7 +998,7 @@ function Admin({
               }}
             >
               {business.address ||
-                'Адрес не указан' → t('settings.address')
+                t('settings.address')}
             </p>
           </div>
 
@@ -1025,7 +1019,7 @@ function Admin({
       {businessPanel === 'list' && (
         <div className="card">
           <h3>
-            'Мои бизнесы' → t('nav.businesses')
+            {t('nav.businesses')}
           </h3>
 
           {businesses.map(item => (
@@ -1033,14 +1027,11 @@ function Admin({
               key={item.id}
               style={{
                 display: 'flex',
-                justifyContent:
-                  'space-between',
-                alignItems:
-                  'center',
+                justifyContent: 'space-between',
+                alignItems: 'center',
                 gap: 10,
                 padding: '12px 0',
-                borderBottom:
-                  '1px solid #eee'
+                borderBottom: '1px solid #eee'
               }}
             >
               <div>
@@ -1051,12 +1042,11 @@ function Admin({
                 <p
                   className="muted"
                   style={{
-                    margin:
-                      '4px 0 0'
+                    margin: '4px 0 0'
                   }}
                 >
                   {item.address ||
-                    'Адрес не указан' → t('settings.address')
+                    t('settings.address')}
                 </p>
               </div>
 
@@ -1072,7 +1062,7 @@ function Admin({
               >
                 {business.id === item.id
                   ? 'Открыт'
-                  : 'Открыть'}
+                  : t('common.open')}
               </button>
             </div>
           ))}
@@ -1086,7 +1076,7 @@ function Admin({
               setBusinessPanel('create')
             }
           >
-            '+ Добавить бизнес' → '+ ' + t('owner.addBusiness')
+            + {t('owner.addBusiness')}
           </button>
         </div>
       )}
@@ -1094,7 +1084,7 @@ function Admin({
       {businessPanel === 'create' && (
         <div className="card">
           <h3>
-            'Новый бизнес' → t('owner.addBusiness')
+            {t('owner.addBusiness')}
           </h3>
 
           <input
@@ -1109,21 +1099,15 @@ function Admin({
 
           <button
             className="primary full"
-            disabled={
-              creatingBusiness
-            }
-            onClick={
-              createBusiness
-            }
+            disabled={creatingBusiness}
+            onClick={createBusiness}
           >
             {creatingBusiness
               ? 'Создание...'
-              : 'Новый бизнес' → t('owner.addBusiness')
+              : 'Создать бизнес'}
           </button>
         </div>
       )}
-
-      <div className="business-head">
         <div>
           <h1>
             {business.name}
