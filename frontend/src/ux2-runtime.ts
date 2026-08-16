@@ -1,3 +1,4 @@
+import './ux2.css';
 import {
   Language,
   SUPPORTED_LANGUAGES,
