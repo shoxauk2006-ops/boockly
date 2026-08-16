@@ -395,7 +395,7 @@ function Home(p: any) {
     p.open()
   }
 >
- {p.t('common.open')}
+  {p.t('common.open')}
 </button>
 
       </div>
