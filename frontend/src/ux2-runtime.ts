@@ -32,6 +32,7 @@ const T: Record<string, TextSet> = {
   'Длительность': {ru:'Длительность',en:'Duration',uz:'Davomiyligi',tr:'Süre',ar:'المدة'},
   'мин': {ru:'мин',en:'min',uz:'daq',tr:'dk',ar:'دقيقة'},
   'Активен': {ru:'Активен',en:'Active',uz:'Faol',tr:'Aktif',ar:'نشط'},
+  'Не активирован': {ru:'Не активирован',en:'Inactive',uz:'Faol emas',tr:'Aktif değil',ar:'غير نشط'},
   'Подписка': {ru:'Подписка',en:'Subscription',uz:'Obuna',tr:'Abonelik',ar:'الاشتراك'},
   'Всего записей': {ru:'Всего записей',en:'Total bookings',uz:'Jami bronlar',tr:'Toplam randevu',ar:'إجمالي الحجوزات'},
   'Записи': {ru:'Записи',en:'Bookings',uz:'Bronlar',tr:'Randevular',ar:'الحجوزات'},
@@ -75,6 +76,14 @@ const T: Record<string, TextSet> = {
   'Закрыть': {ru:'Закрыть',en:'Close',uz:'Yopish',tr:'Kapat',ar:'إغلاق'},
   'Текущий бизнес': {ru:'Текущий бизнес',en:'Current business',uz:'Joriy biznes',tr:'Mevcut işletme',ar:'النشاط الحالي'},
   'Мои бизнесы': {ru:'Мои бизнесы',en:'My businesses',uz:'Mening bizneslarim',tr:'İşletmelerim',ar:'أعمالي'},
+  'Меню': {ru:'Меню',en:'Menu',uz:'Menyu',tr:'Menü',ar:'القائمة'},
+  'Управление услугами': {ru:'Управление услугами',en:'Manage services',uz:'Xizmatlarni boshqarish',tr:'Hizmetleri yönet',ar:'إدارة الخدمات'},
+  'Рабочие часы': {ru:'Рабочие часы',en:'Working hours',uz:'Ish vaqti',tr:'Çalışma saatleri',ar:'ساعات العمل'},
+  'Закрытые интервалы': {ru:'Закрытые интервалы',en:'Blocked intervals',uz:'Bloklangan vaqtlar',tr:'Engellenen aralıklar',ar:'الفترات المغلقة'},
+  'Информация и контакты': {ru:'Информация и контакты',en:'Information and contacts',uz:'Ma’lumot va kontaktlar',tr:'Bilgi ve iletişim',ar:'المعلومات وبيانات الاتصال'},
+  'Ваши бронирования': {ru:'Ваши бронирования',en:'Your bookings',uz:'Bronlaringiz',tr:'Randevularınız',ar:'حجوزاتك'},
+  'Ваши сохранённые места': {ru:'Ваши сохранённые места',en:'Your saved places',uz:'Saqlangan joylaringiz',tr:'Kaydettiğiniz yerler',ar:'أماكنك المحفوظة'},
+  'Bookly Pro': {ru:'Bookly Pro',en:'Bookly Pro',uz:'Bookly Pro',tr:'Bookly Pro',ar:'Bookly Pro'},
 };
 
 const normalize=(v:string)=>v.replace(/\s+/g,' ').trim();
@@ -83,12 +92,41 @@ Object.entries(T).forEach(([source,values])=>Object.entries(values).forEach(([la
 const localized=(source:string)=>T[source]?.[language]||source;
 const translateText=(value:string)=>{const n=normalize(value);if(!n)return value;const source=reverse.get(`${language}|${n}`)||(T[n]?n:'');return source?localized(source):value;};
 
+const originalText = new WeakMap<Node,string>();
+const originalAttributes = new WeakMap<Element,Record<string,string>>();
+
 const translateDom=()=>{
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);const nodes:Node[]=[];let node:Node|null;
   while((node=walker.nextNode()))nodes.push(node);
-  nodes.forEach((textNode)=>{const parent=textNode.parentElement;if(!parent||parent.closest('[data-bookly-ignore-i18n]'))return;if(parent.tagName==='SCRIPT'||parent.tagName==='STYLE')return;const raw=textNode.nodeValue||'';const value=normalize(raw);if(!value)return;const next=translateText(value);if(next===value)return;const i=raw.indexOf(value);textNode.nodeValue=i>=0?`${raw.slice(0,i)}${next}${raw.slice(i+value.length)}`:next;});
-  document.querySelectorAll('input,textarea,select,option,[title],[aria-label]').forEach((node)=>{const el=node as HTMLElement;if(el.closest('[data-bookly-ignore-i18n]'))return;const field=el as HTMLInputElement|HTMLTextAreaElement;const p=field.getAttribute('placeholder');if(p)field.setAttribute('placeholder',translateText(p));const title=el.getAttribute('title');if(title)el.setAttribute('title',translateText(title));const aria=el.getAttribute('aria-label');if(aria)el.setAttribute('aria-label',translateText(aria));});
-  document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';document.body.dir=language==='ar'?'rtl':'ltr';
+  nodes.forEach((textNode)=>{
+    const parent=textNode.parentElement;
+    if(!parent||parent.closest('[data-bookly-ignore-i18n]'))return;
+    if(parent.tagName==='SCRIPT'||parent.tagName==='STYLE')return;
+    const raw=textNode.nodeValue||'';
+    if(!originalText.has(textNode)) originalText.set(textNode,normalize(raw));
+    const source=originalText.get(textNode)||'';
+    if(!source)return;
+    const next=translateText(source);
+    const prefix=raw.slice(0,Math.max(0,raw.indexOf(normalize(raw))));
+    textNode.nodeValue=prefix+next;
+  });
+
+  document.querySelectorAll('input,textarea,select,option,[title],[aria-label]').forEach((node)=>{
+    const el=node as HTMLElement;
+    if(el.closest('[data-bookly-ignore-i18n]'))return;
+    const saved=originalAttributes.get(el)||{};
+    ['placeholder','title','aria-label'].forEach((name)=>{
+      const value=el.getAttribute(name);
+      if(value!==null && saved[name]===undefined) saved[name]=value;
+      const source=saved[name];
+      if(source!==undefined) el.setAttribute(name,translateText(source));
+    });
+    originalAttributes.set(el,saved);
+  });
+
+  document.documentElement.lang=language;
+  document.documentElement.dir=language==='ar'?'rtl':'ltr';
+  document.body.dir=language==='ar'?'rtl':'ltr';
 };
 
 type Mode='client'|'owner'|'home';
@@ -97,10 +135,10 @@ const candidates=(source:string)=>Object.values(T[source]||{});
 const findTab=(source:string)=>{const c=candidates(source);return(Array.from(document.querySelectorAll('.tabs button'))as HTMLButtonElement[]).find((b)=>c.includes(normalize(b.textContent||'')));};
 const openDetails=(source:string)=>{const c=candidates(source);const s=Array.from(document.querySelectorAll('summary')).find((x)=>c.some((v)=>String(x.textContent||'').includes(v)))as HTMLElement|undefined;if(!s)return;const d=s.parentElement as HTMLDetailsElement|null;if(d)d.open=true;s.scrollIntoView({behavior:'smooth',block:'start'});};
 
-const createProfile=()=>{document.getElementById('bookly-ux2-profile')?.remove();const mode=getMode();const overlay=document.createElement('div');overlay.id='bookly-ux2-profile';overlay.className='ux2-overlay';overlay.dataset.booklyIgnoreI18n='true';const card=document.createElement('div');card.className='ux2-profile-card ux2-profile-card-full';card.dir=language==='ar'?'rtl':'ltr';const title=document.createElement('h2');title.textContent=mode==='owner'?localized('Настройки'):localized('Мои записи');card.appendChild(title);const rows:Array<[string,string,()=>void]>=mode==='owner'?[['Записи','Предстоящие',()=>findTab('Записи')?.click()],['Услуги','Управление услугами',()=>findTab('Услуги')?.click()],['График','Рабочие часы',()=>findTab('График')?.click()],['Блокировки','Закрытые интервалы',()=>findTab('Блокировки')?.click()],['Настройки','Информация и контакты',()=>findTab('Настройки')?.click()],['Подписка','Bookly Pro',()=>openDetails('Подписка')]]:[['Мои записи','Ваши бронирования',()=>openDetails('Мои записи')],['Сохранённые бизнесы','Ваши сохранённые места',()=>openDetails('Сохранённые бизнесы')]];rows.forEach(([key,sub,onClick])=>{const r=document.createElement('button');r.type='button';r.className='ux2-profile-row';r.innerHTML=`<span class="ux2-profile-row-copy"><strong>${localized(key)}</strong><small>${sub}</small></span><span class="ux2-profile-row-arrow">›</span>`;r.onclick=()=>{overlay.remove();onClick();};card.appendChild(r);});const close=document.createElement('button');close.type='button';close.className='ux2-close';close.textContent='×';close.onclick=()=>overlay.remove();card.appendChild(close);overlay.appendChild(card);overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};document.body.appendChild(overlay);};
+const createProfile=()=>{document.getElementById('bookly-ux2-profile')?.remove();const mode=getMode();const overlay=document.createElement('div');overlay.id='bookly-ux2-profile';overlay.className='ux2-overlay';overlay.dataset.booklyIgnoreI18n='true';const card=document.createElement('div');card.className='ux2-profile-card ux2-profile-card-full';card.dir=language==='ar'?'rtl':'ltr';const title=document.createElement('h2');title.textContent=mode==='owner'?localized('Настройки'):localized('Мои записи');card.appendChild(title);const rows:Array<[string,string,()=>void]>=mode==='owner'?[['Записи','Предстоящие',()=>findTab('Записи')?.click()],['Услуги','Управление услугами',()=>findTab('Услуги')?.click()],['График','Рабочие часы',()=>findTab('График')?.click()],['Блокировки','Закрытые интервалы',()=>findTab('Блокировки')?.click()],['Настройки','Информация и контакты',()=>findTab('Настройки')?.click()],['Подписка','Bookly Pro',()=>openDetails('Подписка')]]:[['Мои записи','Ваши бронирования',()=>openDetails('Мои записи')],['Сохранённые бизнесы','Ваши сохранённые места',()=>openDetails('Сохранённые бизнесы')]];rows.forEach(([key,sub,onClick])=>{const r=document.createElement('button');r.type='button';r.className='ux2-profile-row';r.innerHTML=`<span class="ux2-profile-row-copy"><strong>${localized(key)}</strong><small>${localized(sub)}</small></span><span class="ux2-profile-row-arrow">›</span>`;r.onclick=()=>{overlay.remove();onClick();};card.appendChild(r);});const close=document.createElement('button');close.type='button';close.className='ux2-close';close.textContent='×';close.onclick=()=>overlay.remove();card.appendChild(close);overlay.appendChild(card);overlay.onclick=(e)=>{if(e.target===overlay)overlay.remove();};document.body.appendChild(overlay);};
 
 let pickerOpen=false;
-const renderPicker=()=>{document.getElementById('bookly-ux2-language-picker')?.remove();const root=document.createElement('div');root.id='bookly-ux2-language-picker';root.className='ux2-topbar';root.dataset.booklyIgnoreI18n='true';const wrap=document.createElement('div');wrap.className='ux2-language-picker-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='ux2-language-trigger';trigger.innerHTML=`<span class="ux2-language-globe">◎</span><span>${SUPPORTED_LANGUAGES.find((x)=>x.code===language)?.nativeLabel||language}</span><span class="ux2-language-chevron">⌄</span>`;trigger.onclick=()=>{pickerOpen=!pickerOpen;renderPicker();};wrap.appendChild(trigger);if(pickerOpen){const panel=document.createElement('div');panel.className='ux2-language-picker-card';panel.dir=language==='ar'?'rtl':'ltr';SUPPORTED_LANGUAGES.forEach((item)=>{const b=document.createElement('button');b.type='button';b.className=`ux2-language-option${item.code===language?' active':''}`;b.dir=item.dir;b.innerHTML=`<span>${item.nativeLabel}</span><span>${item.code===language?'✓':''}</span>`;b.onclick=()=>{language=item.code;setStoredLanguage(language);applyLanguageDirection(language);pickerOpen=false;translateDom();renderPicker();renderRuntime(true);};panel.appendChild(b);});wrap.appendChild(panel);}root.appendChild(wrap);document.body.appendChild(root);};
+const renderPicker=()=>{document.getElementById('bookly-ux2-language-picker')?.remove();const root=document.createElement('div');root.id='bookly-ux2-language-picker';root.className='ux2-topbar';root.dataset.booklyIgnoreI18n='true';const wrap=document.createElement('div');wrap.className='ux2-language-picker-wrap';const trigger=document.createElement('button');trigger.type='button';trigger.className='ux2-language-trigger';trigger.innerHTML=`<span class="ux2-language-globe">◎</span><span>${SUPPORTED_LANGUAGES.find((x)=>x.code===language)?.nativeLabel||language}</span><span class="ux2-language-chevron">⌄</span>`;trigger.onclick=()=>{pickerOpen=!pickerOpen;renderPicker();};wrap.appendChild(trigger);if(pickerOpen){const panel=document.createElement('div');panel.className='ux2-language-picker-card';panel.dir=language==='ar'?'rtl':'ltr';SUPPORTED_LANGUAGES.forEach((item)=>{const b=document.createElement('button');b.type='button';b.className=`ux2-language-option${item.code===language?' active':''}`;b.dir=item.dir;b.innerHTML=`<span>${item.nativeLabel}</span><span>${item.code===language?'✓':''}</span>`;b.onclick=()=>{language=item.code;setStoredLanguage(language);applyLanguageDirection(language);pickerOpen=false;signature='';translateDom();renderPicker();renderRuntime(true);};panel.appendChild(b);});wrap.appendChild(panel);}root.appendChild(wrap);document.body.appendChild(root);};
 
 const navigate=(action:string)=>{const mode=getMode();if(action==='profile'){createProfile();return;}if(mode==='client'){if(action==='bookings'){openDetails('Мои записи');return;}if(action==='saved'){openDetails('Сохранённые бизнесы');return;}if(action==='home'){scrollTo({top:0,behavior:'smooth'});return;}}if(mode==='owner'){if(action==='bookings'){findTab('Записи')?.click();return;}if(action==='services'){findTab('Услуги')?.click();return;}if(action==='home'){scrollTo({top:0,behavior:'smooth'});return;}}};
 
