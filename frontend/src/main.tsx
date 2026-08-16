@@ -390,9 +390,11 @@ function Home(p: any) {
         />
 
         <button
-  className="full"
+  className="primary"
   onClick={() =>
-    p.open()
+    p.open(
+      business.slug
+    )
   }
 >
   {p.t('common.open')}
