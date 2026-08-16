@@ -278,6 +278,7 @@ const openClient = (
       slug={clientSlug}
       setSlug={setClientSlug}
       open={openClient}
+      t={t}
     />
   }
 
@@ -357,11 +358,11 @@ function Home(p: any) {
         </div>
 
         <h1>
-  {t('home.title')}
-</h1>>
+  {p.t('home.title')}
+</h1>
 
         <p>
-   {t('home.description')}
+   {p.t('home.description')}
 </p>
       </div>
 
@@ -369,17 +370,17 @@ function Home(p: any) {
   className="primary full"
   onClick={p.onAdmin}
 >
-  {t('home.openAdmin')}
+  {p.t('home.openAdmin')}
 </button>
 
       <div className="card">
 
         <h3>
-  {t('home.openBusiness')}
+  {p.t('home.openBusiness')}
 </h3>
 
         <input
-          placeholder={t('home.slugPlaceholder')}
+          placeholder={p.t('home.slugPlaceholder')}
           value={p.slug}
           onChange={e =>
             p.setSlug(
@@ -394,7 +395,7 @@ function Home(p: any) {
     p.open()
   }
 >
-  {t('common.open')}
+  {p.t('common.open')}
 </button>
 
       </div>
@@ -402,16 +403,16 @@ function Home(p: any) {
       <div className="card">
 
         <h2>
-  ❤️ {t('client.savedBusinesses')}
+  ❤️ {p.t('client.savedBusinesses')}
 </h2>
 
         {savedLoading ? (
           <p className="muted">
-  {t('common.loading')}
+  {p.t('common.loading')}
 </p>
         ) : savedBusinesses.length === 0 ? (
           <p className="muted">
-  {t('home.emptySaved')}
+  {p.t('home.emptySaved')}
 </p>
         ) : (
           <div>
