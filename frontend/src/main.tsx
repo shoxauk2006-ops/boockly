@@ -1107,8 +1107,9 @@ function Admin({
           </h1>
 
           <p>
-            {business.address ||
-              'Адрес не указан'  t('settings.address')
+           {business.address ||
+  t('settings.address')
+}
           </p>
         </div>
 
