@@ -1,6 +1,8 @@
 import './ux2.css';
 import { Language, SUPPORTED_LANGUAGES, detectLanguage, setStoredLanguage, applyLanguageDirection } from './i18n';
 
+let language: Language = detectLanguage();
+
 type TextSet = Record<Language, string>;
 const T: Record<string, TextSet> = {
   'Booking inside Telegram': {ru:'Бронирование в Telegram',en:'Booking inside Telegram',uz:'Telegram ichida bron qilish',tr:'Telegram içinde rezervasyon',ar:'الحجز داخل تيليجرام'},
@@ -103,12 +105,18 @@ const translateDom=()=>{
     if(!parent||parent.closest('[data-bookly-ignore-i18n]'))return;
     if(parent.tagName==='SCRIPT'||parent.tagName==='STYLE')return;
     const raw=textNode.nodeValue||'';
-    if(!originalText.has(textNode)) originalText.set(textNode,normalize(raw));
+    const rawNormalized=normalize(raw);
+    const saved=originalText.get(textNode);
+    if(saved===undefined || (rawNormalized!==saved && rawNormalized!==normalize(translateText(saved)))) {
+      originalText.set(textNode,rawNormalized);
+    }
     const source=originalText.get(textNode)||'';
     if(!source)return;
     const next=translateText(source);
-    const prefix=raw.slice(0,Math.max(0,raw.indexOf(normalize(raw))));
-    textNode.nodeValue=prefix+next;
+    const index=raw.indexOf(rawNormalized);
+    const prefix=index>=0?raw.slice(0,index):'';
+    const suffix=index>=0?raw.slice(index+rawNormalized.length):'';
+    textNode.nodeValue=prefix+next+suffix;
   });
 
   document.querySelectorAll('input,textarea,select,option,[title],[aria-label]').forEach((node)=>{
