@@ -297,18 +297,13 @@ const navigateBottom = (action: string) => {
   }
 
   if (mode === 'owner') {
-    const allLabels = [
-      'Главная','Home','Ana sayfa','Bosh sahifa','الرئيسية',
-      'Услуги','Services','Hizmetler','Xizmatlar','الخدمات',
-      'Записи','Bookings','Randevular','Bronlar','الحجوزات',
-    ];
-    if (action === 'bookings') { findTabButton(allLabels)?.click(); const btn = findTabButton(['Записи','Bookings','Randevular','Bronlar','الحجوزات']); btn?.click(); return; }
-    if (action === 'services') { findTabButton(['Услуги','Services','Hizmetler','Xizmatlar','الخدمات'])?.click(); return; }
-    if (action === 'home') { findTabButton(['Главная','Home','Ana sayfa','Bosh sahifa','الرئيسية'])?.click(); return; }
-    if (action === 'schedule') { findTabButton(['График','Schedule','Jadval','Çalışma saatleri','الجدول'])?.click(); return; }
-    if (action === 'blocks') { findTabButton(['Блокировки','Blocked times','Bloklangan vaqtlar','Engellenen saatler','الأوقات المحجوزة'])?.click(); return; }
-    if (action === 'settings') { findTabButton(['Настройки','Settings','Sozlamalar','Ayarlar','الإعدادات'])?.click(); return; }
-    if (action === 'subscription') { openDetailsByText(['Подписка','Subscription','Obuna','Abonelik','الاشتراك']); return; }
+    if (action === 'bookings') { findTabButton(['Записи', 'Bookings', 'Randevular', 'Bronlar', 'الحجوزات'])?.click(); return; }
+    if (action === 'services') { findTabButton(['Услуги', 'Services', 'Hizmetler', 'Xizmatlar', 'الخدمات'])?.click(); return; }
+    if (action === 'home') { findTabButton(['Главная', 'Home', 'Ana sayfa', 'Bosh sahifa', 'الرئيسية'])?.click(); return; }
+    if (action === 'schedule') { findTabButton(['График', 'Schedule', 'Jadval', 'Çalışma saatleri', 'الجدول'])?.click(); return; }
+    if (action === 'blocks') { findTabButton(['Блокировки', 'Blocked times', 'Bloklangan vaqtlar', 'Engellenen saatler', 'الأوقات المحجوزة'])?.click(); return; }
+    if (action === 'settings') { findTabButton(['Настройки', 'Settings', 'Sozlamalar', 'Ayarlar', 'الإعدادات'])?.click(); return; }
+    if (action === 'subscription') { openDetailsByText(['Подписка', 'Subscription', 'Obuna', 'Abonelik', 'الاشتراك']); return; }
     if (action === 'businesses') {
       const text = Array.from(document.querySelectorAll('*')).find((node) => normalize(node.textContent || '') === 'Текущий бизнес') as HTMLElement | undefined;
       const card = text?.closest('.card') || text?.parentElement;
@@ -320,7 +315,6 @@ const navigateBottom = (action: string) => {
 let lastMode: Mode = 'home';
 let lastRenderSignature = '';
 let navClickBound = false;
-let translating = false;
 
 const renderRuntime = (force = false) => {
   const mode = getMode();
@@ -373,8 +367,7 @@ const renderRuntime = (force = false) => {
 };
 
 const observer = new MutationObserver(() => {
-  if (translating) return;
-  window.requestAnimationFrame(() => renderRuntime(false));
+  if (!translating) window.requestAnimationFrame(() => renderRuntime(false));
 });
 observer.observe(document.body, { childList: true, subtree: true });
 window.setTimeout(() => renderRuntime(true), 150);
