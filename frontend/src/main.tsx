@@ -284,9 +284,10 @@ const openClient = (
 
   {mode==='admin' &&
     <Admin
-      onBack={()=>setMode('home')}
-      initialTab={adminTab}
-    />
+  onBack={()=>setMode('home')}
+  initialTab={adminTab}
+  t={t}
+/>
   }
 
   {mode==='client' &&
@@ -486,8 +487,13 @@ function Home(p: any) {
 }
 function Admin({
   onBack,
-  initialTab
+  initialTab,
+  t
 }: {
+  onBack: () => void;
+  initialTab: string;
+  t: (key: string, fallback?: string) => string;
+}) {
   onBack: () => void;
   initialTab: string;
 }) {
@@ -879,7 +885,7 @@ function Admin({
           className="back"
           onClick={onBack}
         >
-          ← Назад
+         '← Назад' → t('common.back')
         </button>
 
         <h2>
@@ -901,12 +907,12 @@ function Admin({
           className="back"
           onClick={onBack}
         >
-          ← Назад
+          '← Назад' → t('common.back')
         </button>
 
         <div className="card">
           <h2>
-            Мои бизнесы
+          'Мои бизнесы' → t('nav.businesses')
           </h2>
 
           <p>
@@ -919,14 +925,14 @@ function Admin({
               setBusinessPanel('create')
             }
           >
-            + Добавить бизнес
+            '+ Добавить бизнес' → '+ ' + t('owner.addBusiness')
           </button>
         </div>
 
         {businessPanel === 'create' && (
           <div className="card">
             <h2>
-              Новый бизнес
+              'Новый бизнес' → t('owner.addBusiness')
             </h2>
 
             <input
@@ -964,7 +970,7 @@ function Admin({
         className="back"
         onClick={onBack}
       >
-        ← Назад
+        '← Назад' → t('common.back')
       </button>
 
       <div className="card">
@@ -980,7 +986,7 @@ function Admin({
         >
           <div>
             <small className="muted">
-              Текущий бизнес
+              'Текущий бизнес' → t('owner.currentBusiness')
             </small>
 
             <h2
@@ -998,7 +1004,7 @@ function Admin({
               }}
             >
               {business.address ||
-                'Адрес не указан'}
+                'Адрес не указан' → t('settings.address')
             </p>
           </div>
 
@@ -1019,7 +1025,7 @@ function Admin({
       {businessPanel === 'list' && (
         <div className="card">
           <h3>
-            Мои бизнесы
+            'Мои бизнесы' → t('nav.businesses')
           </h3>
 
           {businesses.map(item => (
@@ -1050,7 +1056,7 @@ function Admin({
                   }}
                 >
                   {item.address ||
-                    'Адрес не указан'}
+                    'Адрес не указан' → t('settings.address')
                 </p>
               </div>
 
@@ -1080,7 +1086,7 @@ function Admin({
               setBusinessPanel('create')
             }
           >
-            + Добавить бизнес
+            '+ Добавить бизнес' → '+ ' + t('owner.addBusiness')
           </button>
         </div>
       )}
@@ -1088,7 +1094,7 @@ function Admin({
       {businessPanel === 'create' && (
         <div className="card">
           <h3>
-            Создать новый бизнес
+            'Новый бизнес' → t('owner.addBusiness')
           </h3>
 
           <input
@@ -1112,7 +1118,7 @@ function Admin({
           >
             {creatingBusiness
               ? 'Создание...'
-              : 'Создать бизнес'}
+              : 'Новый бизнес' → t('owner.addBusiness')
           </button>
         </div>
       )}
@@ -1125,7 +1131,7 @@ function Admin({
 
           <p>
             {business.address ||
-              'Адрес не указан'}
+              'Адрес не указан' → t('settings.address')
           </p>
         </div>
 
