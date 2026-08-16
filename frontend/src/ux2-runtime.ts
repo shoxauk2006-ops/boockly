@@ -14,32 +14,66 @@ applyLanguageDirection(language);
 type Mode = 'client' | 'owner' | 'home';
 
 const getMode = (): Mode => {
-  if (document.querySelector('.client-hero')) return 'client';
   if (document.querySelector('.business-head')) return 'owner';
+
+  const startParam =
+    window.Telegram?.WebApp?.initDataUnsafe?.start_param ||
+    new URLSearchParams(window.location.search).get('startapp') ||
+    '';
+
+  if (
+    startParam ||
+    document.querySelector('[id="booking-form"]') ||
+    document.querySelector('summary')?.textContent?.includes('Мои записи') ||
+    document.querySelector('summary')?.textContent?.includes('My bookings')
+  ) {
+    return 'client';
+  }
+
   return 'home';
 };
 
-const buttonByText = (text: string) => {
-  return Array.from(document.querySelectorAll('button')).find(
-    (button) => button.textContent?.includes(text)
+const tabButtonByText = (text: string) => {
+  const buttons = Array.from(
+    document.querySelectorAll('.tabs button')
+  );
+
+  return buttons.find(
+    (button) =>
+      button.textContent?.trim() === text
   ) as HTMLButtonElement | undefined;
 };
 
-const openDetailsByText = (text: string) => {
-  const summary = Array.from(document.querySelectorAll('summary')).find(
-    (item) => item.textContent?.includes(text)
-  ) as HTMLElement | undefined;
+const openDetailsByText = (texts: string[]) => {
+  const summary = Array.from(
+    document.querySelectorAll('summary')
+  ).find((item) => {
+    const value = item.textContent || '';
+    return texts.some((text) => value.includes(text));
+  }) as HTMLElement | undefined;
 
   if (summary) {
-    const details = summary.parentElement as HTMLDetailsElement;
-    if (details) details.open = true;
-    summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const details =
+      summary.parentElement as HTMLDetailsElement;
+
+    if (details) {
+      details.open = true;
+    }
+
+    summary.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
   }
 };
 
 const createProfileOverlay = () => {
-  const existing = document.getElementById('bookly-ux2-profile');
-  if (existing) existing.remove();
+  const existing =
+    document.getElementById('bookly-ux2-profile');
+
+  if (existing) {
+    existing.remove();
+  }
 
   const t = createTranslator(language);
 
@@ -71,9 +105,15 @@ const createProfileOverlay = () => {
 
   SUPPORTED_LANGUAGES.forEach((item) => {
     const option = document.createElement('button');
-    option.className = `ux2-language-option${item.code === language ? ' active' : ''}`;
+    option.className =
+      `ux2-language-option${
+        item.code === language ? ' active' : ''
+      }`;
     option.dir = item.dir;
-    option.innerHTML = `<span>${item.nativeLabel}</span><span>${item.code === language ? '✓' : ''}</span>`;
+    option.innerHTML =
+      `<span>${item.nativeLabel}</span><span>${
+        item.code === language ? '✓' : ''
+      }</span>`;
 
     option.onclick = () => {
       language = item.code;
@@ -90,7 +130,9 @@ const createProfileOverlay = () => {
   overlay.appendChild(card);
 
   overlay.onclick = (event) => {
-    if (event.target === overlay) overlay.remove();
+    if (event.target === overlay) {
+      overlay.remove();
+    }
   };
 
   document.body.appendChild(overlay);
@@ -106,34 +148,67 @@ const navigateBottom = (action: string) => {
 
   if (mode === 'client') {
     if (action === 'bookings') {
-      openDetailsByText('📅 Мои записи');
+      openDetailsByText([
+        '📅 Мои записи',
+        'Мои записи',
+        '📅 My bookings',
+        'My bookings',
+        'حجوزاتي',
+      ]);
       return;
     }
 
     if (action === 'saved') {
-      openDetailsByText('❤️ Сохранённые бизнесы');
+      openDetailsByText([
+        '❤️ Сохранённые бизнесы',
+        'Сохранённые бизнесы',
+        '❤️ Saved businesses',
+        'Saved businesses',
+        'الأنشطة المحفوظة',
+      ]);
       return;
     }
 
     if (action === 'home') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
       return;
     }
   }
 
   if (mode === 'owner') {
     if (action === 'bookings') {
-      buttonByText('Записи')?.click();
+      const button = tabButtonByText('Записи') ||
+        tabButtonByText('Bookings') ||
+        tabButtonByText('Randevular') ||
+        tabButtonByText('Bronlar') ||
+        tabButtonByText('الحجوزات');
+
+      button?.click();
       return;
     }
 
     if (action === 'services') {
-      buttonByText('Услуги')?.click();
+      const button = tabButtonByText('Услуги') ||
+        tabButtonByText('Services') ||
+        tabButtonByText('Hizmetler') ||
+        tabButtonByText('Xizmatlar') ||
+        tabButtonByText('الخدمات');
+
+      button?.click();
       return;
     }
 
     if (action === 'home') {
-      buttonByText('Главная')?.click();
+      const button = tabButtonByText('Главная') ||
+        tabButtonByText('Home') ||
+        tabButtonByText('Ana sayfa') ||
+        tabButtonByText('Bosh sahifa') ||
+        tabButtonByText('الرئيسية');
+
+      button?.click();
     }
   }
 };
@@ -144,15 +219,21 @@ const renderRuntime = () => {
   const mode = getMode();
 
   if (mode === 'home') {
-    document.getElementById('bookly-ux2-nav')?.remove();
+    document
+      .getElementById('bookly-ux2-nav')
+      ?.remove();
     return;
   }
 
-  let nav = document.getElementById('bookly-ux2-nav');
+  let nav = document.getElementById(
+    'bookly-ux2-nav'
+  );
+
   if (!nav) {
     nav = document.createElement('nav');
     nav.id = 'bookly-ux2-nav';
-    nav.className = 'bookly-bottom-nav ux2-bottom-nav';
+    nav.className =
+      'bookly-bottom-nav ux2-bottom-nav';
     document.body.appendChild(nav);
   }
 
@@ -160,42 +241,99 @@ const renderRuntime = () => {
 
   const t = createTranslator(language);
 
-  const items = mode === 'client'
-    ? [
-        ['home', '⌂', t('nav.home')],
-        ['saved', '♡', t('nav.saved')],
-        ['bookings', '◷', t('nav.bookings')],
-        ['profile', '◯', t('nav.profile')],
-      ]
-    : [
-        ['home', '⌂', t('nav.home')],
-        ['bookings', '◷', t('nav.bookings')],
-        ['services', '✦', t('nav.services')],
-        ['profile', '◯', t('nav.profile')],
-      ];
+  const items =
+    mode === 'client'
+      ? [
+          [
+            'home',
+            '⌂',
+            t('nav.home'),
+          ],
+          [
+            'saved',
+            '♡',
+            t('nav.saved'),
+          ],
+          [
+            'bookings',
+            '◷',
+            t('nav.bookings'),
+          ],
+          [
+            'profile',
+            '◯',
+            t('nav.profile'),
+          ],
+        ]
+      : [
+          [
+            'home',
+            '⌂',
+            t('nav.home'),
+          ],
+          [
+            'bookings',
+            '◷',
+            t('nav.bookings'),
+          ],
+          [
+            'services',
+            '✦',
+            t('nav.services'),
+          ],
+          [
+            'profile',
+            '◯',
+            t('nav.profile'),
+          ],
+        ];
 
-  items.forEach(([action, icon, label]) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.innerHTML = `<span>${icon}</span>${label}`;
-    button.onclick = () => navigateBottom(action);
-    nav!.appendChild(button);
-  });
+  items.forEach(
+    ([action, icon, label]) => {
+      const button =
+        document.createElement('button');
+
+      button.type = 'button';
+      button.dataset.action = action;
+      button.innerHTML =
+        `<span>${icon}</span>${label}`;
+      button.onclick = () =>
+        navigateBottom(action);
+
+      nav!.appendChild(button);
+    }
+  );
 
   if (mode !== lastMode) {
-    window.scrollTo({ top: 0, behavior: 'auto' });
+    window.scrollTo({
+      top: 0,
+      behavior: 'auto',
+    });
+
     lastMode = mode;
   }
 };
 
 const observer = new MutationObserver(() => {
-  window.requestAnimationFrame(renderRuntime);
+  window.requestAnimationFrame(
+    renderRuntime
+  );
 });
 
-observer.observe(document.body, {
-  childList: true,
-  subtree: true,
-});
+observer.observe(
+  document.body,
+  {
+    childList: true,
+    subtree: true,
+  }
+);
 
-window.setTimeout(renderRuntime, 150);
-window.setInterval(renderRuntime, 1000);
+window.setTimeout(
+  renderRuntime,
+  150
+);
+
+window.setInterval(
+  renderRuntime,
+  1000
+);
