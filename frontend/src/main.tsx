@@ -858,16 +858,14 @@ function Admin({
       }
     };
 
-  if (loading) {
+   if (loading) {
     return (
       <div className="loading-screen">
         <div className="loading-logo">
           B
         </div>
 
-        <h2>
-          Bookly
-        </h2>
+        <h2>Bookly</h2>
 
         <div className="loading-spinner"></div>
 
@@ -1035,9 +1033,7 @@ function Admin({
               }}
             >
               <div>
-                <b>
-                  {item.name}
-                </b>
+                <b>{item.name}</b>
 
                 <p
                   className="muted"
