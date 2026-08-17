@@ -1,4 +1,4 @@
-name: Force selected app language for Telegram notifications
+name: Finalize Telegram notification language
 
 on:
   push:
@@ -9,66 +9,69 @@ permissions:
   contents: write
 
 jobs:
-  patch:
+  fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Patch language context and notification sender
+      - name: Fix final Telegram sender
+        shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          p = Path('frontend/src/main.tsx')
-          s = p.read_text(encoding='utf-8')
-          if "'X-Bookly-Language': getStoredLanguage()" not in s:
-              old = "    'X-Telegram-Init-Data': initData()\n"
-              new = "    'X-Telegram-Init-Data': initData(),\n    'X-Bookly-Language': getStoredLanguage()\n"
-              if old not in s:
-                  raise SystemExit('frontend header target not found')
-              s = s.replace(old, new, 1)
-              p.write_text(s, encoding='utf-8')
-
           p = Path('backend/app.py')
           s = p.read_text(encoding='utf-8')
 
-          marker = 'BOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)\n'
-          if 'BOOKLY_REQUEST_USER_ID' not in s:
-              if marker not in s:
-                  raise SystemExit('language context marker not found')
-              s = s.replace(
-                  marker,
-                  marker + 'BOOKLY_REQUEST_USER_ID: ContextVar[Optional[int]] = ContextVar("BOOKLY_REQUEST_USER_ID", default=None)\n',
-                  1,
+          start = s.rfind('def telegram_api(method: str, payload: dict):')
+          end = s.find('\n\ndef notify_owner_new_booking', start)
+          if start == -1 or end == -1:
+              raise SystemExit('final telegram_api block not found')
+
+          new_block = '''def telegram_api(method: str, payload: dict):
+              """Telegram Bot API helper. Outgoing user-facing messages use the language selected in Bookly."""
+              if not BOT_TOKEN:
+                  return None
+
+              if method == "sendMessage" and isinstance(payload, dict) and payload.get("chat_id"):
+                  payload = dict(payload)
+                  chat_id = int(payload["chat_id"])
+                  request_lang = BOOKLY_REQUEST_LANGUAGE.get()
+                  request_user_id = BOOKLY_REQUEST_USER_ID.get()
+                  effective_lang = (
+                      request_lang
+                      if request_lang and request_user_id == chat_id
+                      else _bookly_user_language(chat_id)
+                  )
+                  payload["text"] = _bookly_localize_outgoing_text(
+                      str(payload.get("text", "")),
+                      effective_lang
+                  )
+
+              data = json.dumps(payload).encode("utf-8")
+              req = urllib_request.Request(
+                  f"https://api.telegram.org/bot{BOT_TOKEN}/{method}",
+                  data=data,
+                  headers={"Content-Type": "application/json"},
+                  method="POST",
               )
+              try:
+                  with urllib_request.urlopen(req, timeout=8) as response:
+                      return json.loads(response.read().decode("utf-8"))
+              except (URLError, TimeoutError, ValueError):
+                  return None
+'''
 
-          old = '''def telegram_user(x_init_data: str) -> dict:\n    user = validate_init_data(x_init_data)\n    _bookly_remember_language(user, BOOKLY_REQUEST_LANGUAGE.get())\n    return user\n'''
-          new = '''def telegram_user(x_init_data: str) -> dict:\n    user = validate_init_data(x_init_data)\n    try:\n        request_user_id_token = BOOKLY_REQUEST_USER_ID.set(int(user.get("id")))\n    except (TypeError, ValueError):\n        request_user_id_token = None\n    _bookly_remember_language(user, BOOKLY_REQUEST_LANGUAGE.get())\n    return user\n'''
-          if old not in s:
-              raise SystemExit('telegram_user current target not found')
-          s = s.replace(old, new, 1)
-
-          old = '''        BOOKLY_REQUEST_LANGUAGE.reset(language_token)\n'''
-          new = '''        BOOKLY_REQUEST_LANGUAGE.reset(language_token)\n        try:\n            BOOKLY_REQUEST_USER_ID.set(None)\n        except Exception:\n            pass\n'''
-          if old not in s:
-              raise SystemExit('language reset target not found')
-          s = s.replace(old, new, 1)
-
-          marker = '_BOOKLY_RAW_TELEGRAM_API = telegram_api\n'
-          old_line = '        payload["text"] = _bookly_localize_outgoing_text(str(payload.get("text", "")), _bookly_user_language(int(payload["chat_id"])))\n'
-          new_line = '        chat_id = int(payload["chat_id"])\n        request_lang = BOOKLY_REQUEST_LANGUAGE.get()\n        request_user_id = BOOKLY_REQUEST_USER_ID.get()\n        effective_lang = request_lang if request_lang and request_user_id == chat_id else _bookly_user_language(chat_id)\n        payload["text"] = _bookly_localize_outgoing_text(str(payload.get("text", "")), effective_lang)\n'
-          if old_line not in s:
-              raise SystemExit('notification wrapper target not found')
-          s = s.replace(old_line, new_line, 1)
-
+          s = s[:start] + new_block.rstrip('\n') + s[end:]
           p.write_text(s, encoding='utf-8')
           PY
 
-      - name: Commit and push
+      - name: Remove temporary workflow
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/src/main.tsx backend/app.py .github/workflows/notification-language-fix.yml
-          git commit -m "fix: force selected language for current Telegram notification"
+          rm -f .github/workflows/notification-language-fix.yml
+          git add backend/app.py .github/workflows/notification-language-fix.yml
+          git commit -m "fix: use Bookly interface language for notifications"
           git push
