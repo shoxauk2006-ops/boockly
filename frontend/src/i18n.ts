@@ -85,6 +85,23 @@ const ru: TranslationMap = {
   'client.cancelBookingConfirm': 'Отменить эту запись?',
   'client.cancelBookingError': 'Не удалось отменить запись',
   'client.connectionError': 'Ошибка соединения',
+  'days.mon': 'Пн',
+'days.tue': 'Вт',
+'days.wed': 'Ср',
+'days.thu': 'Чт',
+'days.fri': 'Пт',
+'days.sat': 'Сб',
+'days.sun': 'Вс',
+'owner.businessesLoadError': 'Не удалось загрузить бизнесы',
+'owner.enterBusinessName': 'Введите название бизнеса',
+'owner.creatingBusiness': 'Создание...',
+'owner.createBusiness': 'Создать бизнес',
+'owner.opened': 'Открыт',
+'owner.telegramOnlyTitle': 'Откройте Bookly из Telegram',
+'owner.telegramOnlyDescription': 'Админ-панель работает внутри Telegram Mini App.',
+'owner.paddleLoading': 'Paddle ещё загружается. Попробуйте ещё раз.',
+'owner.telegramUserError': 'Не удалось определить пользователя Telegram.',
+'owner.selectedBusinessError': 'Не удалось определить выбранный бизнес.',
   'owner.businessContacts': 'Контакты бизнеса',
   'owner.phonePlaceholder': 'Номер телефона бизнеса',
   'owner.addressPlaceholder': 'Адрес бизнеса',
@@ -267,6 +284,24 @@ const en: TranslationMap = {
   'home.openBusiness': 'Open business page',
   'home.slugPlaceholder': 'Business link or slug',
   'home.emptySaved': 'Businesses you save will appear here.',
+  'days.mon'
+'days.tue'
+'days.wed'
+'days.thu'
+'days.fri'
+'days.sat'
+'days.sun'
+
+'owner.businessesLoadError'
+'owner.enterBusinessName'
+'owner.creatingBusiness'
+'owner.createBusiness'
+'owner.opened'
+'owner.telegramOnlyTitle'
+'owner.telegramOnlyDescription'
+'owner.paddleLoading'
+'owner.telegramUserError'
+'owner.selectedBusinessError'
   'owner.today': 'Today',
   'owner.upcoming': 'Upcoming',
   'owner.past': 'Past',
@@ -449,6 +484,23 @@ const uz: TranslationMap = {
   'home.slugPlaceholder': 'Biznes havolasi yoki slug',
   'home.emptySaved': 'Siz saqlagan bizneslar shu yerda ko‘rinadi.',
 
+'days.mon': 'Du',
+'days.tue': 'Se',
+'days.wed': 'Cho',
+'days.thu': 'Pa',
+'days.fri': 'Ju',
+'days.sat': 'Sha',
+'days.sun': 'Yak',
+'owner.businessesLoadError': 'Bizneslarni yuklab bo‘lmadi',
+'owner.enterBusinessName': 'Biznes nomini kiriting',
+'owner.creatingBusiness': 'Yaratilmoqda...',
+'owner.createBusiness': 'Biznes yaratish',
+'owner.opened': 'Ochiq',
+'owner.telegramOnlyTitle': 'Bookly’ni Telegram orqali oching',
+'owner.telegramOnlyDescription': 'Admin panel Telegram Mini App ichida ishlaydi.',
+'owner.paddleLoading': 'Paddle hali yuklanmoqda. Qaytadan urinib ko‘ring.',
+'owner.telegramUserError': 'Telegram foydalanuvchisini aniqlab bo‘lmadi.',
+'owner.selectedBusinessError': 'Tanlangan biznesni aniqlab bo‘lmadi.',
   'owner.today': 'Bugun',
   'owner.upcoming': 'Kelgusi',
   'owner.past': 'O‘tgan',
@@ -633,6 +685,23 @@ const tr: TranslationMap = {
   'home.slugPlaceholder': 'İşletme bağlantısı veya slug',
   'home.emptySaved': 'Kaydettiğiniz işletmeler burada görünecek.',
 
+'days.mon': 'Pzt',
+'days.tue': 'Sal',
+'days.wed': 'Çar',
+'days.thu': 'Per',
+'days.fri': 'Cum',
+'days.sat': 'Cmt',
+'days.sun': 'Paz',
+'owner.businessesLoadError': 'İşletmeler yüklenemedi',
+'owner.enterBusinessName': 'İşletme adını girin',
+'owner.creatingBusiness': 'Oluşturuluyor...',
+'owner.createBusiness': 'İşletme oluştur',
+'owner.opened': 'Açık',
+'owner.telegramOnlyTitle': 'Bookly’yi Telegram üzerinden açın',
+'owner.telegramOnlyDescription': 'Yönetim paneli Telegram Mini App içinde çalışır.',
+'owner.paddleLoading': 'Paddle hâlâ yükleniyor. Lütfen tekrar deneyin.',
+'owner.telegramUserError': 'Telegram kullanıcısı belirlenemedi.',
+'owner.selectedBusinessError': 'Seçili işletme belirlenemedi.',
   'owner.today': 'Bugün',
   'owner.upcoming': 'Yaklaşan',
   'owner.past': 'Geçmiş',
@@ -816,6 +885,23 @@ const ar: TranslationMap = {
   'home.slugPlaceholder': 'رابط النشاط التجاري أو slug',
   'home.emptySaved': 'ستظهر هنا الأنشطة التجارية التي تحفظها.',
 
+'days.mon': 'الإثنين',
+'days.tue': 'الثلاثاء',
+'days.wed': 'الأربعاء',
+'days.thu': 'الخميس',
+'days.fri': 'الجمعة',
+'days.sat': 'السبت',
+'days.sun': 'الأحد',
+'owner.businessesLoadError': 'تعذر تحميل الأنشطة التجارية',
+'owner.enterBusinessName': 'أدخل اسم النشاط التجاري',
+'owner.creatingBusiness': 'جارٍ الإنشاء...',
+'owner.createBusiness': 'إنشاء نشاط تجاري',
+'owner.opened': 'مفتوح',
+'owner.telegramOnlyTitle': 'افتح Bookly من Telegram',
+'owner.telegramOnlyDescription': 'تعمل لوحة الإدارة داخل Telegram Mini App.',
+'owner.paddleLoading': 'لا يزال Paddle قيد التحميل. حاول مرة أخرى.',
+'owner.telegramUserError': 'تعذر تحديد مستخدم Telegram.',
+'owner.selectedBusinessError': 'تعذر تحديد النشاط التجاري المحدد.',
   'owner.today': 'اليوم',
   'owner.upcoming': 'القادمة',
   'owner.past': 'السابقة',
