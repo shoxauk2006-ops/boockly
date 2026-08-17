@@ -35,6 +35,8 @@ engine = create_engine(DB_URL, connect_args={"check_same_thread": False} if DB_U
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
+BOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)
+
 class Base(DeclarativeBase): pass
 
 class Business(Base):
@@ -232,12 +234,12 @@ def _bookly_normalize_language(value: str | None) -> str:
     return "en"
 
 
-def _bookly_remember_language(user: dict) -> None:
+def _bookly_remember_language(user: dict, preferred_language: str | None = None) -> None:
     try:
         uid = int(user.get("id"))
     except (TypeError, ValueError):
         return
-    lang = _bookly_normalize_language(user.get("language_code"))
+    lang = _bookly_normalize_language(preferred_language or user.get("language_code"))
     try:
         with SessionLocal() as db:
             row = db.get(TelegramUserLanguage, uid)
@@ -359,6 +361,9 @@ async def capture_active_business(
     raw_business_id = request.headers.get(
         "X-Bookly-Business-Id"
     )
+    raw_language = request.headers.get("X-Bookly-Language")
+    language_token = BOOKLY_REQUEST_LANGUAGE.set(_bookly_normalize_language(raw_language) if raw_language else None)
+
 
     business_id = None
 
@@ -383,6 +388,7 @@ async def capture_active_business(
         ACTIVE_BUSINESS_ID.reset(
             token
         )
+        BOOKLY_REQUEST_LANGUAGE.reset(language_token)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 
 # ---------- Telegram Mini App authentication ----------
@@ -408,7 +414,9 @@ def validate_init_data(init_data: str) -> dict:
         raise HTTPException(401, f"Invalid Telegram initData: {exc}")
 
 def telegram_user(x_init_data: str) -> dict:
-    return validate_init_data(x_init_data)
+    user = validate_init_data(x_init_data)
+    _bookly_remember_language(user, BOOKLY_REQUEST_LANGUAGE.get())
+    return user
 
 
 def telegram_api(method: str, payload: dict):
@@ -443,6 +451,69 @@ def notify_owner_new_booking(db, booking, service):
         f"🆔 #{booking.id}"
     )
     telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
+
+_BOOKLY_FINAL_NOTIFICATION_WRAPPER = True
+
+def _bookly_localize_outgoing_text(text: str, lang: str) -> str:
+    d = {
+        "ru": {
+            "new": "Новая запись в Bookly", "booked": "Вы успешно записаны!", "cancel_client": "Ваша запись отменена",
+            "cancel_business": "Ваша запись отменена бизнесом.", "cancel_owner": "Клиент отменил запись",
+            "hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "waiting": "Ждём вас!",
+            "phone": "номер не передан", "phone_label": "Ваш номер:", "contact_label": "Связаться:", "address": "Адрес не указан"
+        },
+        "en": {
+            "new": "New booking in Bookly", "booked": "You are successfully booked!", "cancel_client": "Your booking has been cancelled",
+            "cancel_business": "Your booking was cancelled by the business.", "cancel_owner": "Client cancelled the booking",
+            "hint": "Please contact the business if you want to choose another time.", "waiting": "We look forward to seeing you!",
+            "phone": "phone not provided", "phone_label": "Your number:", "contact_label": "Contact:", "address": "Address not provided"
+        },
+        "uz": {
+            "new": "Bookly’da yangi bron", "booked": "Siz muvaffaqiyatli bron qilindingiz!", "cancel_client": "Broningiz bekor qilindi",
+            "cancel_business": "Bron biznes tomonidan bekor qilindi.", "cancel_owner": "Mijoz bronni bekor qildi",
+            "hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.", "waiting": "Sizni kutamiz!",
+            "phone": "telefon berilmagan", "phone_label": "Raqamingiz:", "contact_label": "Bog‘lanish:", "address": "Manzil ko‘rsatilmagan"
+        },
+        "tr": {
+            "new": "Bookly’da yeni rezervasyon", "booked": "Rezervasyonunuz başarıyla oluşturuldu!", "cancel_client": "Rezervasyonunuz iptal edildi",
+            "cancel_business": "Rezervasyon işletme tarafından iptal edildi.", "cancel_owner": "Müşteri rezervasyonu iptal etti",
+            "hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.", "waiting": "Sizi bekliyoruz!",
+            "phone": "telefon verilmedi", "phone_label": "Numaranız:", "contact_label": "İletişim:", "address": "Adres belirtilmedi"
+        },
+        "ar": {
+            "new": "حجز جديد في Bookly", "booked": "تم حجز موعدك بنجاح!", "cancel_client": "تم إلغاء حجزك",
+            "cancel_business": "تم إلغاء الحجز من قبل النشاط.", "cancel_owner": "ألغى العميل الحجز",
+            "hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.", "waiting": "ننتظركم!",
+            "phone": "رقم الهاتف غير متوفر", "phone_label": "رقمك:", "contact_label": "للتواصل:", "address": "العنوان غير متوفر"
+        },
+    }[_bookly_normalize_language(lang)]
+
+    replacements = [
+        ("Новая запись в Bookly", d["new"]),
+        ("Вы успешно записаны!", d["booked"]),
+        ("Ваша запись отменена бизнесом.", d["cancel_business"]),
+        ("Ваша запись отменена", d["cancel_client"]),
+        ("Клиент отменил запись", d["cancel_owner"]),
+        ("Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", d["hint"]),
+        ("Ждём вас!", d["waiting"]),
+        ("номер не передан", d["phone"]),
+        ("номер не указан", d["phone"]),
+        ("Ваш номер:", d["phone_label"]),
+        ("Связаться:", d["contact_label"]),
+        ("Адрес не указан", d["address"]),
+    ]
+    for old, new in replacements:
+        text = text.replace(old, new)
+    return text
+
+_BOOKLY_RAW_TELEGRAM_API = telegram_api
+
+def telegram_api(method: str, payload: dict):
+    if method == "sendMessage" and isinstance(payload, dict) and payload.get("chat_id"):
+        payload = dict(payload)
+        payload["text"] = _bookly_localize_outgoing_text(str(payload.get("text", "")), _bookly_user_language(int(payload["chat_id"])))
+    return _BOOKLY_RAW_TELEGRAM_API(method, payload)
+
 
 def owner_business(
     db,

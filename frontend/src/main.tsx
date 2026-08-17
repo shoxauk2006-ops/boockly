@@ -24,7 +24,8 @@ const initData=()=>tg()?.initData||'';
 const headers = () => {
   const base: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Telegram-Init-Data': initData()
+    'X-Telegram-Init-Data': initData(),
+    'X-Bookly-Language': getStoredLanguage()
   };
 
   try {
