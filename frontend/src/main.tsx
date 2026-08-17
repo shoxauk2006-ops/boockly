@@ -1902,11 +1902,11 @@ function Services({
         Number(f.duration_min);
 
       if (!name) {
-        alert(
-          t('owner.invalidServiceName'))
-        );
-        return;
-      }
+  alert(
+    t('owner.invalidServiceName')
+  );
+  return;
+}
 
       if (
         !Number.isFinite(price) ||
