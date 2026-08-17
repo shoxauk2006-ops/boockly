@@ -1166,10 +1166,11 @@ return (
 
       {tab === 'services' && (
         <Services
-          services={services}
-          reload={load}
-          business={business}
-        />
+  services={services}
+  reload={load}
+  business={business}
+  t={t}
+/>
       )}
 
       {tab === 'hours' && (
@@ -1636,19 +1637,14 @@ function checkout(
 function Services({
   services,
   reload,
-  business
+  business,
+  t
 }: {
   services: any[];
   reload: () => void;
   business: any;
+  t: (key: string, fallback?: string) => string;
 }) {
-  const [f, setF] = useState({
-    name: '',
-    description: '',
-    price: '',
-    currency: 'UZS',
-    duration_min: '30'
-  });
 
   const [editingId, setEditingId] =
     useState<number | null>(null);
@@ -1906,8 +1902,7 @@ function Services({
         Number(f.duration_min);
 
       if (!name) {
-        alert(
-          'Введите название услуги'
+        alert(t('owner.invalidServiceName'))
         );
         return;
       }
@@ -2061,12 +2056,12 @@ function Services({
 
       <div className="card">
         <h2>
-          Контакты бизнеса
+          {t('owner.businessContacts')}
         </h2>
 
         <input
           type="tel"
-          placeholder="Номер телефона бизнеса"
+          placeholder={t('owner.phonePlaceholder')}
           value={businessPhone}
           onChange={e =>
             setBusinessPhone(
@@ -2076,7 +2071,7 @@ function Services({
         />
 
         <input
-          placeholder="Адрес бизнеса"
+          placeholder={t('owner.addressPlaceholder')}
           value={businessAddress}
           onChange={e =>
             setBusinessAddress(
@@ -2095,20 +2090,20 @@ function Services({
           }
         >
           {savingBusiness
-            ? 'Сохранение...'
-            : 'Сохранить контакты'}
+            ? t('owner.saving')
+            : t('owner.saveContacts'
         </button>
       </div>
 
       <div className="card">
         <h2>
           {editingId
-            ? 'Изменить услугу'
-            : 'Добавить услугу'}
+            ? t('owner.editService')
+            : t('owner.addService')
         </h2>
 
         <input
-          placeholder="Название"
+          placeholder={t('owner.serviceName')}
           value={f.name}
           onChange={e =>
             setF({
@@ -2120,7 +2115,7 @@ function Services({
         />
 
         <input
-          placeholder="Описание"
+          placeholder={t('owner.serviceDescription')}
           value={
             f.description
           }
@@ -2139,7 +2134,7 @@ function Services({
             type="number"
             min="0"
             step="0.001"
-            placeholder="Цена"
+            placeholder={t('owner.price')}
             value={f.price}
             onChange={e =>
               setF({
@@ -2151,7 +2146,7 @@ function Services({
           />
 
           <input
-            placeholder="Поиск валюты"
+            placeholder={t('owner.searchCurrency')}
             value={
               currencySearch
             }
@@ -2196,7 +2191,7 @@ function Services({
           type="number"
           min="1"
           max="480"
-          placeholder="Длительность в минутах"
+          placeholder={t('owner.duration')}
           value={
             f.duration_min
           }
@@ -2218,8 +2213,8 @@ function Services({
             }
           >
             {editingId
-              ? 'Сохранить изменения'
-              : '+ Добавить услугу'}
+              ? t('owner.saveChanges')
+              : t('owner.addServiceButton')
           </button>
 
           {editingId && (
@@ -2229,7 +2224,7 @@ function Services({
                 resetForm
               }
             >
-              Отмена
+              t('common.cancel'
             </button>
           )}
 
@@ -2282,7 +2277,7 @@ function Services({
                   )
                 }
               >
-                Изменить
+                t('owner.edit')
               </button>
 
               <button
@@ -2293,7 +2288,7 @@ function Services({
                   )
                 }
               >
-                Удалить
+                t('owner.delete')
               </button>
             </div>
 
@@ -2765,7 +2760,7 @@ function Bookings({
                 value={service.id}
               >
                 {service.name} ·{' '}
-                {service.duration_min} мин
+                {service.duration_min} {t('owner.minutes')}
               </option>
             ))}
           </select>
