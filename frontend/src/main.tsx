@@ -4212,12 +4212,11 @@ function Client({
   const [selected, setSelected] =
     useState<any>(null);
 
-  const [day, setDay] =
-    useState(
-      new Date()
-        .toISOString()
-        .slice(0, 10)
-    );
+  const [day, setDay] = useState(
+    new Date()
+      .toISOString()
+      .slice(0, 10)
+  );
 
   const [slots, setSlots] =
     useState<string[]>([]);
@@ -4258,429 +4257,356 @@ function Client({
   useEffect(() => {
     let cancelled = false;
 
-    const load =
-      async () => {
-        setLoading(true);
-        setError('');
+    const load = async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        if (!slug) {
+          throw new Error(
+            t('client.slugError')
+          );
+        }
+
+        const response = await fetch(
+          API +
+            `/businesses/${encodeURIComponent(slug)}`
+        );
+
+        const text =
+          await response.text();
+
+        let data: any = null;
 
         try {
-          if (!slug) {
+          data = text
+            ? JSON.parse(text)
+            : null;
+        } catch {
+          data = null;
+        }
+
+        if (!response.ok) {
+          if (response.status === 403) {
             throw new Error(
-              'Ссылка на бизнес не содержит slug.'
+              t('client.businessInactive')
             );
           }
 
-          const response =
-            await fetch(
-              API +
-                `/businesses/${encodeURIComponent(
-                  slug
-                )}`
-            );
-
-          const text =
-            await response.text();
-
-          let data: any = null;
-
-          try {
-            data = text
-              ? JSON.parse(text)
-              : null;
-          } catch {
-            data = null;
-          }
-
-          if (!response.ok) {
-            if (
-              response.status ===
-              403
-            ) {
-              throw new Error(
-                'Этот бизнес сейчас не активен.'
-              );
-            }
-
-            if (
-              response.status ===
-              404
-            ) {
-              throw new Error(
-                'Бизнес не найден. Возможно, ссылка устарела или содержит неправильный slug.'
-              );
-            }
-
+          if (response.status === 404) {
             throw new Error(
-              data?.detail ||
-              data?.message ||
-              `Ошибка сервера: ${response.status}`
+              t('client.businessNotFound')
             );
           }
 
-          if (
-            !data?.business
-          ) {
-            throw new Error(
-              'Сервер не вернул данные бизнеса.'
-            );
-          }
+          throw new Error(
+            data?.detail ||
+            data?.message ||
+            `${t('client.serverError')} ${response.status}`
+          );
+        }
 
-          if (!cancelled) {
-            setBusiness(
-              data.business
-            );
+        if (!data?.business) {
+          throw new Error(
+            t('client.businessDataError')
+          );
+        }
 
-            setServices(
-              data.services || []
-            );
-          }
-
-        } catch (
-          e: any
-        ) {
-          console.error(
-            'CLIENT LOAD ERROR:',
-            e
+        if (!cancelled) {
+          setBusiness(
+            data.business
           );
 
-          if (!cancelled) {
-            setBusiness(null);
-            setServices([]);
-            setError(
-              e?.message ||
-              'Не удалось загрузить бизнес'
-            );
-          }
-
-        } finally {
-          if (!cancelled) {
-            setLoading(false);
-          }
+          setServices(
+            data.services || []
+          );
         }
-      };
+      } catch (e: any) {
+        console.error(
+          'CLIENT LOAD ERROR:',
+          e
+        );
+
+        if (!cancelled) {
+          setBusiness(null);
+          setServices([]);
+          setError(
+            e?.message ||
+            t('client.businessLoadError')
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
 
     load();
 
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, t]);
 
   useEffect(() => {
-    const loadSaved =
-      async () => {
-        if (
-          !initData() ||
-          !business
-        ) {
+    const loadSaved = async () => {
+      if (
+        !initData() ||
+        !business
+      ) {
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            API +
+              '/my/saved-businesses',
+            {
+              headers: headers()
+            }
+          );
+
+        if (!response.ok) {
           return;
         }
 
-        try {
-          const response =
-            await fetch(
-              API +
-                '/my/saved-businesses',
-              {
-                headers:
-                  headers()
-              }
-            );
+        const data =
+          await response.json();
 
-          if (!response.ok) {
-            return;
-          }
+        const list =
+          Array.isArray(data)
+            ? data
+            : [];
 
-          const data =
-            await response.json();
+        setSavedBusinesses(list);
 
-          const list =
-            Array.isArray(data)
-              ? data
-              : [];
-
-          setSavedBusinesses(
-            list
-          );
-
-          setIsSaved(
-            list.some(
-              (item: any) =>
-                item.id ===
-                business.id
-            )
-          );
-
-        } catch {
-          setSavedBusinesses([]);
-        }
-      };
+        setIsSaved(
+          list.some(
+            (item: any) =>
+              item.id === business.id
+          )
+        );
+      } catch {
+        setSavedBusinesses([]);
+      }
+    };
 
     loadSaved();
   }, [business]);
 
-  const toggleSave =
-    async () => {
-      if (!business) {
-        return;
-      }
+  const toggleSave = async () => {
+    if (!business) {
+      return;
+    }
 
-      if (!initData()) {
-        alert(
-          'Откройте Bookly через Telegram, чтобы сохранять бизнесы.'
-        );
-        return;
-      }
-
-      setSavingBusiness(
-        true
+    if (!initData()) {
+      alert(
+        t('client.saveLoginRequired')
       );
+      return;
+    }
 
-      try {
-        const response =
-          await fetch(
-            API +
-              `/my/saved-businesses/${business.id}`,
-            {
-              method:
-                isSaved
-                  ? 'DELETE'
-                  : 'POST',
-              headers:
-                headers()
-            }
-          );
+    setSavingBusiness(true);
 
-        const data =
-          await response
-            .json()
-            .catch(
-              () => null
-            );
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-            'Не удалось изменить сохранённые бизнесы'
-          );
-        }
-
-        setIsSaved(
-          !isSaved
+    try {
+      const response =
+        await fetch(
+          API +
+            `/my/saved-businesses/${business.id}`,
+          {
+            method:
+              isSaved
+                ? 'DELETE'
+                : 'POST',
+            headers: headers()
+          }
         );
 
-      } catch (
-        e: any
-      ) {
-        alert(
-          e?.message ||
-          'Ошибка сохранения'
-        );
-      } finally {
-        setSavingBusiness(
-          false
+      const data =
+        await response
+          .json()
+          .catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          t('client.saveBusinessError')
         );
       }
-    };
 
-  const loadSlots =
-    async (
-      service: any,
-      selectedDay: string
-    ) => {
-      if (!business) {
-        return;
+      setIsSaved(!isSaved);
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        t('client.saveBusinessError')
+      );
+    } finally {
+      setSavingBusiness(false);
+    }
+  };
+
+  const loadSlots = async (
+    service: any,
+    selectedDay: string
+  ) => {
+    if (!business) {
+      return;
+    }
+
+    setSlots([]);
+    setSelectedTime('');
+    setSlotsLoading(true);
+
+    try {
+      const response =
+        await fetch(
+          API +
+            `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          t('client.availabilityError')
+        );
       }
+
+      setSlots(
+        data?.slots || []
+      );
+    } catch (e) {
+      console.error(
+        'AVAILABILITY ERROR:',
+        e
+      );
 
       setSlots([]);
-      setSelectedTime('');
-      setSlotsLoading(
-        true
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const chooseService = async (
+    service: any
+  ) => {
+    setSelected(service);
+    setSelectedTime('');
+
+    await loadSlots(
+      service,
+      day
+    );
+  };
+
+  const chooseTime = (
+    time: string
+  ) => {
+    setSelectedTime(time);
+
+    setTimeout(() => {
+      document
+        .getElementById(
+          'booking-form'
+        )
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+    }, 50);
+  };
+
+  const submitBooking = async () => {
+    if (
+      !business ||
+      !selected ||
+      !selectedTime
+    ) {
+      return;
+    }
+
+    const name =
+      clientName.trim();
+
+    const clientPhone =
+      phone.trim();
+
+    if (!name) {
+      alert(
+        t('client.enterName')
       );
+      return;
+    }
 
-      try {
-        const response =
-          await fetch(
-            API +
-              `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
-          );
+    if (!clientPhone) {
+      alert(
+        t('client.enterPhone')
+      );
+      return;
+    }
 
-        const data =
-          await response.json();
+    setBookingLoading(true);
 
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-            'Не удалось загрузить свободное время'
-          );
-        }
-
-        setSlots(
-          data?.slots || []
+    try {
+      const response =
+        await fetch(
+          API + '/bookings',
+          {
+            method: 'POST',
+            headers: headers(),
+            body: JSON.stringify({
+              business_id:
+                business.id,
+              service_id:
+                selected.id,
+              client_name: name,
+              client_phone:
+                clientPhone,
+              day,
+              start:
+                selectedTime
+            })
+          }
         );
 
-      } catch (
-        e
-      ) {
-        console.error(
-          'AVAILABILITY ERROR:',
-          e
-        );
+      const data =
+        await response.json();
 
-        setSlots([]);
-
-      } finally {
-        setSlotsLoading(
-          false
+      if (!response.ok) {
+        alert(
+          data?.detail ||
+          t('client.bookingError')
         );
+        return;
       }
-    };
 
-  const chooseService =
-    async (
-      service: any
-    ) => {
-      setSelected(
-        service
+      alert(
+        t('client.bookingSuccess')
       );
 
-      setSelectedTime(
-        ''
-      );
+      setSelectedTime('');
 
       await loadSlots(
-        service,
+        selected,
         day
       );
-    };
-
-  const chooseTime =
-    (
-      time: string
-    ) => {
-      setSelectedTime(
-        time
-      );
-
-      setTimeout(
-        () => {
-          document
-            .getElementById(
-              'booking-form'
-            )
-            ?.scrollIntoView({
-              behavior:
-                'smooth',
-              block:
-                'start'
-            });
-        },
-        50
-      );
-    };
-
-  const submitBooking =
-    async () => {
-      if (
-        !business ||
-        !selected ||
-        !selectedTime
-      ) {
-        return;
-      }
-
-      const name =
-        clientName.trim();
-
-      const clientPhone =
-        phone.trim();
-
-      if (!name) {
-        alert(
-          'Введите ваше имя.'
-        );
-        return;
-      }
-
-      if (!clientPhone) {
-        alert(
-          'Введите номер телефона.'
-        );
-        return;
-      }
-
-      setBookingLoading(
-        true
-      );
-
-      try {
-        const response =
-          await fetch(
-            API + '/bookings',
-            {
-              method:
-                'POST',
-              headers:
-                headers(),
-              body:
-                JSON.stringify({
-                  business_id:
-                    business.id,
-                  service_id:
-                    selected.id,
-                  client_name:
-                    name,
-                  client_phone:
-                    clientPhone,
-                  day,
-                  start:
-                    selectedTime
-                })
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (!response.ok) {
-          alert(
-            data?.detail ||
-            'Не удалось забронировать время.'
-          );
-          return;
-        }
-
-        alert(
-          '✅ Запись успешно создана!'
-        );
-
-        setSelectedTime(
-          ''
-        );
-
-        await loadSlots(
-          selected,
-          day
-        );
-
-      } catch (
+    } catch (e) {
+      console.error(
+        'BOOKING ERROR:',
         e
-      ) {
-        console.error(
-          'BOOKING ERROR:',
-          e
-        );
+      );
 
-        alert(
-          'Не удалось выполнить бронирование. Попробуйте ещё раз.'
-        );
-
-      } finally {
-        setBookingLoading(
-          false
-        );
-      }
-    };
+      alert(
+        t('client.bookingRetry')
+      );
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   const mapUrl =
     business &&
@@ -4707,7 +4633,7 @@ function Client({
         <div className="loading-spinner"></div>
 
         <p>
-          Загрузка бизнеса...
+          {t('client.loadingBusiness')}
         </p>
       </div>
     );
@@ -4720,11 +4646,11 @@ function Client({
           className="back"
           onClick={onBack}
         >
-          ← Назад
+          ← {t('common.back')}
         </button>
 
         <h2>
-          Не удалось открыть страницу
+          {t('client.openError')}
         </h2>
 
         <p className="error">
@@ -4737,7 +4663,7 @@ function Client({
             window.location.reload()
           }
         >
-          Повторить
+          {t('client.retry')}
         </button>
       </div>
     );
@@ -4750,11 +4676,11 @@ function Client({
           className="back"
           onClick={onBack}
         >
-          ← Назад
+          ← {t('common.back')}
         </button>
 
         <p>
-          Бизнес не найден.
+          {t('client.businessNotFound')}
         </p>
       </div>
     );
@@ -4767,15 +4693,14 @@ function Client({
         className="back"
         onClick={onBack}
       >
-        ← Назад
+        ← {t('common.back')}
       </button>
 
       <div className="card">
 
         <div
           style={{
-            display:
-              'flex',
+            display: 'flex',
             justifyContent:
               'space-between',
             alignItems:
@@ -4783,7 +4708,6 @@ function Client({
             gap: 12
           }}
         >
-
           <div>
             <h1
               style={{
@@ -4814,21 +4738,19 @@ function Client({
               fontSize: 24,
               background:
                 'transparent',
-              border:
-                'none',
+              border: 'none',
               padding: 4
             }}
             title={
               isSaved
-                ? 'Удалить из сохранённых'
-                : 'Сохранить бизнес'
+                ? t('client.removeSaved')
+                : t('client.saveBusiness')
             }
           >
             {isSaved
               ? '❤️'
               : '🤍'}
           </button>
-
         </div>
 
         {business.phone && (
@@ -4839,9 +4761,7 @@ function Client({
                 `tel:${business.phone}`
               }
             >
-              {
-                business.phone
-              }
+              {business.phone}
             </a>
           </p>
         )}
@@ -4855,9 +4775,7 @@ function Client({
                 target="_blank"
                 rel="noreferrer"
               >
-                {
-                  business.address
-                }
+                {business.address}
               </a>
             ) : (
               business.address
@@ -4869,9 +4787,7 @@ function Client({
           <button
             className="full"
             onClick={() => {
-              if (
-                tg()?.openLink
-              ) {
+              if (tg()?.openLink) {
                 tg().openLink(
                   mapUrl
                 );
@@ -4883,7 +4799,7 @@ function Client({
               }
             }}
           >
-            📍 Открыть локацию
+            📍 {t('client.location')}
           </button>
         )}
 
@@ -4893,24 +4809,19 @@ function Client({
             marginBottom: 0
           }}
         >
-          Выберите услугу
-          ниже, чтобы записаться.
+          {t('client.chooseServiceHint')}
         </p>
-
       </div>
 
       <details className="card">
         <summary
           style={{
-            cursor:
-              'pointer',
-            fontWeight:
-              600,
-            fontSize:
-              18
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 18
           }}
         >
-          📅 Мои записи
+          📅 {t('client.myBookings')}
         </summary>
 
         <div
@@ -4925,15 +4836,12 @@ function Client({
       <details className="card">
         <summary
           style={{
-            cursor:
-              'pointer',
-            fontWeight:
-              600,
-            fontSize:
-              18
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 18
           }}
         >
-          ❤️ Сохранённые бизнесы
+          ❤️ {t('client.savedBusinesses')}
         </summary>
 
         <div
@@ -4941,26 +4849,20 @@ function Client({
             marginTop: 15
           }}
         >
-          {savedBusinesses.length ===
-          0 ? (
+          {savedBusinesses.length === 0 ? (
             <p className="muted">
-              Пока нет сохранённых
-              бизнесов.
+              {t('client.noSavedBusinesses')}
             </p>
           ) : (
             savedBusinesses.map(
               item => (
                 <div
-                  key={
-                    item.id
-                  }
+                  key={item.id}
                   className="card row"
                 >
                   <div>
                     <b>
-                      {
-                        item.name
-                      }
+                      {item.name}
                     </b>
 
                     {item.address && (
@@ -4972,9 +4874,7 @@ function Client({
                         }}
                       >
                         📍{' '}
-                        {
-                          item.address
-                        }
+                        {item.address}
                       </p>
                     )}
                   </div>
@@ -4988,7 +4888,7 @@ function Client({
                         )}`
                     }
                   >
-                    Открыть
+                    {t('common.open')}
                   </button>
                 </div>
               )
@@ -4998,16 +4898,13 @@ function Client({
       </details>
 
       <h2>
-        Услуги
+        {t('client.services')}
       </h2>
 
-      {services.length ===
-      0 ? (
+      {services.length === 0 ? (
         <div className="card">
           <p>
-            У этого бизнеса
-            пока нет доступных
-            услуг.
+            {t('client.noServices')}
           </p>
         </div>
       ) : (
@@ -5022,16 +4919,11 @@ function Client({
                     : ''
                 }`
               }
-              key={
-                service.id
-              }
+              key={service.id}
             >
-
               <div>
                 <b>
-                  {
-                    service.name
-                  }
+                  {service.name}
                 </b>
 
                 {service.description && (
@@ -5051,7 +4943,7 @@ function Client({
                   {
                     service.duration_min
                   }{' '}
-                  мин
+                  {t('owner.minutes')}
                 </p>
               </div>
 
@@ -5062,9 +4954,8 @@ function Client({
                   )
                 }
               >
-                Выбрать
+                {t('client.chooseService')}
               </button>
-
             </div>
           )
         )
@@ -5075,7 +4966,7 @@ function Client({
 
           <div className="card">
             <h2>
-              Дата
+              {t('client.chooseDate')}
             </h2>
 
             <input
@@ -5090,13 +4981,8 @@ function Client({
                 const newDay =
                   e.target.value;
 
-                setDay(
-                  newDay
-                );
-
-                setSelectedTime(
-                  ''
-                );
+                setDay(newDay);
+                setSelectedTime('');
 
                 await loadSlots(
                   selected,
@@ -5108,22 +4994,19 @@ function Client({
 
           <div className="card">
             <h2>
-              Время
+              {t('client.chooseTime')}
             </h2>
 
             {slotsLoading ? (
               <p className="muted">
-                ⏳ Загружаем свободное время...
+                {t('owner.loadingSlots')}
               </p>
-            ) : slots.length >
-              0 ? (
+            ) : slots.length > 0 ? (
               <div className="slots">
                 {slots.map(
                   time => (
                     <button
-                      key={
-                        time
-                      }
+                      key={time}
                       className={
                         selectedTime ===
                         time
@@ -5143,8 +5026,7 @@ function Client({
               </div>
             ) : (
               <p>
-                На эту дату
-                свободных мест нет.
+                {t('client.noSlots')}
               </p>
             )}
           </div>
@@ -5154,33 +5036,28 @@ function Client({
               id="booking-form"
               className="card"
             >
-
               <h2>
-                Ваши данные
+                {t('client.yourData')}
               </h2>
 
               <div className="success">
                 <b>
-                  {
-                    selected.name
-                  }
+                  {selected.name}
                 </b>
 
                 <br />
 
                 {day}
                 {' · '}
-                {
-                  selectedTime
-                }
+                {selectedTime}
               </div>
 
               <input
                 type="text"
-                placeholder="Ваше имя"
-                value={
-                  clientName
+                placeholder={
+                  t('client.name')
                 }
+                value={clientName}
                 onChange={e =>
                   setClientName(
                     e.target.value
@@ -5190,7 +5067,9 @@ function Client({
 
               <input
                 type="tel"
-                placeholder="Номер телефона"
+                placeholder={
+                  t('client.phone')
+                }
                 value={phone}
                 onChange={e =>
                   setPhone(
@@ -5209,10 +5088,9 @@ function Client({
                 }
               >
                 {bookingLoading
-                  ? 'Бронируем...'
-                  : 'Подтвердить запись'}
+                  ? t('client.bookingLoading')
+                  : t('client.confirmBooking')}
               </button>
-
             </div>
           )}
 
@@ -5222,5 +5100,11 @@ function Client({
     </section>
   );
 }
+
+createRoot(
+  document.getElementById('root')!
+).render(
+  <App />
+);
 
 createRoot(document.getElementById('root')!).render(<App/>);
