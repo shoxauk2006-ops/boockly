@@ -3999,18 +3999,34 @@ function Settings({
 }
 
 function MyBookings() {
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] =
+    useState<any[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const t = createTranslator(
+    getStoredLanguage()
+  );
 
   useEffect(() => {
     setLoading(true);
 
-    fetch(API + "/my/bookings", {
-      headers: headers(),
-    })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        setItems(Array.isArray(data) ? data : []);
+    fetch(
+      API + '/my/bookings',
+      {
+        headers: headers()
+      }
+    )
+      .then(r =>
+        r.ok ? r.json() : []
+      )
+      .then(data => {
+        setItems(
+          Array.isArray(data)
+            ? data
+            : []
+        );
       })
       .catch(() => {
         setItems([]);
@@ -4020,57 +4036,104 @@ function MyBookings() {
       });
   }, []);
 
-  const cancelBooking = async (id: number) => {
-    const ok = window.confirm("Отменить эту запись?");
+  const cancelBooking =
+    async (id: number) => {
+      const ok =
+        window.confirm(
+          t(
+            'client.cancelBookingConfirm'
+          )
+        );
 
-    if (!ok) return;
+      if (!ok) return;
 
-    try {
-      const response = await fetch(API + `/my/bookings/${id}/cancel`, {
-        method: "POST",
-        headers: {
-          ...headers(),
-          "Content-Type": "application/json",
-        },
-      });
+      try {
+        const response =
+          await fetch(
+            API +
+              `/my/bookings/${id}/cancel`,
+            {
+              method: 'POST',
+              headers: {
+                ...headers(),
+                'Content-Type':
+                  'application/json'
+              }
+            }
+          );
 
-      if (!response.ok) {
-        alert("Не удалось отменить запись");
-        return;
+        if (!response.ok) {
+          alert(
+            t(
+              'client.cancelBookingError'
+            )
+          );
+          return;
+        }
+
+        setItems(prev =>
+          prev.map(item =>
+            item.id === id
+              ? {
+                  ...item,
+                  status:
+                    'cancelled'
+                }
+              : item
+          )
+        );
+
+      } catch {
+        alert(
+          t(
+            'client.connectionError'
+          )
+        );
       }
-
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === id
-            ? { ...item, status: "cancelled" }
-            : item
-        )
-      );
-    } catch {
-      alert("Ошибка соединения");
-    }
-  };
+    };
 
   return (
     <div className="page">
-      <h1>Мои записи</h1>
+
+      <h1>
+        {t(
+          'client.myBookings'
+        )}
+      </h1>
 
       {loading ? (
         <div className="card">
-          <p>Загрузка...</p>
+          <p>
+            {t(
+              'common.loading'
+            )}
+          </p>
         </div>
       ) : items.length === 0 ? (
         <div className="card">
-          <p>У вас пока нет записей.</p>
+          <p>
+            {t(
+              'client.noBookings'
+            )}
+          </p>
         </div>
       ) : (
         <div>
-          {items.map((item) => (
-            <div className="card" key={item.id}>
-              <h3>{item.business_name || "Запись"}</h3>
+          {items.map(item => (
+            <div
+              className="card"
+              key={item.id}
+            >
+              <h3>
+                {item.business_name ||
+                  t('app.name')}
+              </h3>
 
               <p>
-                {item.service_name || "Услуга"}
+                {item.service_name ||
+                  t(
+                    'nav.services'
+                  )}
               </p>
 
               <p>
@@ -4078,29 +4141,49 @@ function MyBookings() {
               </p>
 
               <p>
-                🕐 {item.start?.slice(0, 5)} –{" "}
-                {item.end?.slice(0, 5)}
+                🕐{' '}
+                {item.start?.slice(
+                  0,
+                  5
+                )}
+                {' – '}
+                {item.end?.slice(
+                  0,
+                  5
+                )}
               </p>
 
-              {item.status === "cancelled" ? (
-                <p style={{ color: "#888" }}>
-                  Запись отменена
+              {item.status ===
+              'cancelled' ? (
+                <p
+                  className="muted"
+                >
+                  {t(
+                    'client.bookingCancelled'
+                  )}
                 </p>
               ) : (
                 <button
-                  onClick={() => cancelBooking(item.id)}
+                  onClick={() =>
+                    cancelBooking(
+                      item.id
+                    )
+                  }
                   style={{
                     marginTop: 10,
-                    width: "100%",
-                    padding: "12px",
+                    width: '100%',
+                    padding: '12px',
                     borderRadius: 12,
-                    border: "none",
-                    background: "#e53935",
-                    color: "white",
-                    fontWeight: 600,
+                    border: 'none',
+                    background:
+                      '#e53935',
+                    color: 'white',
+                    fontWeight: 600
                   }}
                 >
-                  Отменить запись
+                  {t(
+                    'client.cancelBooking'
+                  )}
                 </button>
               )}
             </div>
