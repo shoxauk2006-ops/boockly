@@ -1902,7 +1902,8 @@ function Services({
         Number(f.duration_min);
 
       if (!name) {
-        alert(t('owner.invalidServiceName'))
+        alert(
+          t('owner.invalidServiceName'))
         );
         return;
       }
