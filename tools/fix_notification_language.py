@@ -5,12 +5,12 @@ s = p.read_text(encoding='utf-8')
 
 needle = 'def telegram_api(method: str, payload: dict):\n'
 start = s.rfind(needle)
-end = s.find('\n\ndef notify_owner_new_booking', start)
+end = s.find('\n\ndef owner_business', start)
 if start < 0 or end < 0:
-    raise SystemExit('Final telegram_api function not found')
+    raise SystemExit('Final telegram_api wrapper not found')
 
 new_func = '''def telegram_api(method: str, payload: dict):
-    """Telegram Bot API helper with Bookly-selected notification language."""
+    """Telegram Bot API helper using the language selected in Bookly."""
     if not BOT_TOKEN:
         return None
 
@@ -44,4 +44,4 @@ new_func = '''def telegram_api(method: str, payload: dict):
 '''
 
 p.write_text(s[:start] + new_func.rstrip('\n') + s[end:], encoding='utf-8')
-print('patched', p)
+print('patched final telegram_api')
