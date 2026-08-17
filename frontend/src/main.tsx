@@ -41,8 +41,31 @@ const headers = () => {
 
   return base;
 };
-const money=(v:number,c='UZS')=>`${new Intl.NumberFormat('ru-RU').format(v)} ${c}`;
-const days=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const LOCALE_MAP: Record<Language, string> = {
+  ru: 'ru-RU',
+  en: 'en-US',
+  uz: 'uz-UZ',
+  tr: 'tr-TR',
+  ar: 'ar-SA'
+};
+
+const getLocale = () =>
+  LOCALE_MAP[getStoredLanguage()] || 'en-US';
+
+const money = (v: number, c = 'UZS') =>
+  `${new Intl.NumberFormat(getLocale()).format(v)} ${c}`;
+
+const localizedDays = (
+  t: (key: string, fallback?: string) => string
+) => [
+  t('days.mon'),
+  t('days.tue'),
+  t('days.wed'),
+  t('days.thu'),
+  t('days.fri'),
+  t('days.sat'),
+  t('days.sun')
+];
 
 function App(){
     const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
@@ -156,7 +179,7 @@ const openClient = (
  <header>
   <div>
     <b>Bookly</b>
-    <small>Booking inside Telegram</small>
+    <small>{t('app.tagline')}</small>
   </div>
 
   <select
@@ -1236,7 +1259,7 @@ function Admin({
   );
 }
 
-function BusinessForm({onSaved}:{onSaved:()=>void}) {
+function BusinessForm({onSaved, t}:{onSaved:()=>void; t:(key:string,fallback?:string)=>string}) {
   const [name,setName] = useState('');
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState('');
@@ -1247,7 +1270,7 @@ function BusinessForm({onSaved}:{onSaved:()=>void}) {
     const businessName = name.trim();
 
     if (!businessName) {
-      setError('Введите название бизнеса');
+      setError(t('owner.enterBusinessName'));
       return;
     }
 
@@ -1258,7 +1281,7 @@ function BusinessForm({onSaved}:{onSaved:()=>void}) {
 
       if (!initData) {
         throw new Error(
-          'Telegram initData отсутствует. Откройте Bookly именно внутри Telegram Mini App.'
+          t('owner.telegramInitDataMissing')
         );
       }
 
@@ -1288,14 +1311,14 @@ function BusinessForm({onSaved}:{onSaved:()=>void}) {
         throw new Error(
           data?.detail ||
           data?.message ||
-          `Ошибка сервера: ${response.status}`
+          `${t('owner.serverError')} ${response.status}`
         );
       }
 
       onSaved();
     } catch (e:any) {
       console.error('CREATE BUSINESS ERROR:', e);
-      setError(e?.message || 'Не удалось создать бизнес');
+      setError(e?.message || t('owner.createBusinessError'));
     } finally {
       setLoading(false);
     }
@@ -1303,10 +1326,10 @@ function BusinessForm({onSaved}:{onSaved:()=>void}) {
 
   return (
     <div className="card">
-      <h2>Создайте бизнес</h2>
+      <h2>{t('owner.createBusiness')}</h2>
 
       <input
-        placeholder="Название бизнеса"
+        placeholder={t('owner.enterBusinessName')}
         value={name}
         disabled={loading}
         onChange={e=>{
@@ -1326,7 +1349,7 @@ function BusinessForm({onSaved}:{onSaved:()=>void}) {
         disabled={loading}
         onClick={save}
       >
-        {loading ? 'Создание...' : 'Создать бизнес'}
+        {loading ? t('owner.creatingBusiness') : t('owner.createBusiness')}
       </button>
     </div>
   );
@@ -1446,7 +1469,7 @@ function Subscription({
 
             <p>
               <b>
-                $9.99 / месяц
+                {t('owner.monthlyPrice')}
               </b>
             </p>
           </div>
@@ -1495,7 +1518,7 @@ function Subscription({
               {new Date(
                 business.subscription_expires_at
               ).toLocaleDateString(
-                'ru-RU'
+                getLocale()
               )}
             </p>
           )}
@@ -1523,7 +1546,7 @@ function Subscription({
 
             <p>
               <b>
-                $9.99 / месяц
+                {t('owner.monthlyPrice')}
               </b>
             </p>
           </div>
@@ -1568,7 +1591,7 @@ function Subscription({
 
           <p>
             <b>
-              $9.99 / месяц
+              {t('owner.monthlyPrice')}
             </b>
           </p>
         </div>
@@ -1605,14 +1628,13 @@ function checkout(
   provider: string,
   businessId?: number
 ) {
+  const t = createTranslator(getStoredLanguage());
   if (provider !== 'paddle') {
     return;
   }
 
   if (!window.Paddle) {
-    alert(
-      'Paddle ещё загружается. Попробуйте ещё раз.'
-    );
+    alert(t('owner.paddleLoading'));
     return;
   }
 
@@ -1620,9 +1642,7 @@ function checkout(
     tg()?.initDataUnsafe?.user?.id;
 
   if (!ownerId) {
-    alert(
-      'Не удалось определить пользователя Telegram.'
-    );
+    alert(t('owner.telegramUserError'));
     return;
   }
 
@@ -1644,9 +1664,7 @@ function checkout(
   }
 
   if (!selectedBusinessId) {
-    alert(
-      'Не удалось определить выбранный бизнес.'
-    );
+    alert(t('owner.selectedBusinessError'));
     return;
   }
 
@@ -2437,6 +2455,8 @@ function Hours({
   reload: () => void;
   t: (key: string, fallback?: string) => string;
 }) {
+  const days = localizedDays(t);
+
   const [f, setF] = useState({
     weekday: '0',
     start: '09:00',
@@ -3984,7 +4004,7 @@ function Settings({
 
         <div className="two">
           <input
-            placeholder="Latitude — optional"
+            placeholder={t('settings.latitudeOptional')}
             value={latitude}
             onChange={e =>
               setLatitude(
@@ -3994,7 +4014,7 @@ function Settings({
           />
 
           <input
-            placeholder="Longitude — optional"
+            placeholder={t('settings.longitudeOptional')}
             value={longitude}
             onChange={e =>
               setLongitude(
@@ -4122,16 +4142,12 @@ function Settings({
   );
 }
 
-function MyBookings() {
+function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {
   const [items, setItems] =
     useState<any[]>([]);
 
   const [loading, setLoading] =
     useState(true);
-
-  const t = createTranslator(
-    getStoredLanguage()
-  );
 
   useEffect(() => {
     setLoading(true);
@@ -4952,7 +4968,7 @@ function Client({
             marginTop: 15
           }}
         >
-          <MyBookings />
+          <MyBookings t={t} />
         </div>
       </details>
 

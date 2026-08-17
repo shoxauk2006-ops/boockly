@@ -17,6 +17,7 @@ type TranslationMap = Record<string, string>;
 
 const ru: TranslationMap = {
   'app.name': 'Bookly',
+  'app.tagline': 'Бронирование внутри Telegram',
   'nav.home': 'Главная',
   'nav.bookings': 'Записи',
   'nav.saved': 'Сохранённые',
@@ -109,6 +110,9 @@ const ru: TranslationMap = {
   'owner.saving': 'Сохранение...',
   'owner.editService': 'Изменить услугу',
   'owner.createBusinessError': 'Не удалось создать бизнес',
+  'owner.telegramInitDataMissing': 'Telegram initData отсутствует. Откройте Bookly внутри Telegram Mini App.',
+  'owner.serverError': 'Ошибка сервера:',
+  'owner.monthlyPrice': '$9.99 / месяц',
 'owner.businessCreated': 'Новый бизнес создан',
 'owner.noBusiness': 'У вас пока нет бизнеса',
   'owner.addService': 'Добавить услугу',
@@ -209,10 +213,13 @@ const ru: TranslationMap = {
   'settings.qr': 'QR-код',
   'settings.downloadQr': 'Сохранить QR-код',
   'settings.language': 'Язык',
+  'settings.latitudeOptional': 'Широта — необязательно',
+  'settings.longitudeOptional': 'Долгота — необязательно',
 };
 
 const en: TranslationMap = {
   'app.name': 'Bookly',
+  'app.tagline': 'Booking inside Telegram',
   'nav.home': 'Home',
   'nav.bookings': 'Bookings',
   'nav.saved': 'Saved',
@@ -296,6 +303,9 @@ const en: TranslationMap = {
 'days.sat': 'Sat',
 'days.sun': 'Sun',
 'owner.createBusinessError': 'Failed to create business',
+'owner.telegramInitDataMissing': 'Telegram initData is missing. Open Bookly inside the Telegram Mini App.',
+'owner.serverError': 'Server error:',
+'owner.monthlyPrice': '$9.99 / month',
 'owner.businessCreated': 'New business created',
 'owner.noBusiness': 'You do not have a business yet',
 'owner.businessesLoadError': 'Failed to load businesses',
@@ -406,10 +416,14 @@ const en: TranslationMap = {
   'settings.qr': 'QR code',
   'settings.downloadQr': 'Save QR code',
   'settings.language': 'Language',
+  'settings.latitudeOptional': 'Latitude — optional',
+  'settings.longitudeOptional': 'Longitude — optional',
 };
 
 const uz: TranslationMap = {
   ...en,
+
+  'app.tagline': 'Telegram ichida bron qilish',
 
   'nav.home': 'Bosh sahifa',
   'nav.bookings': 'Bronlar',
@@ -503,6 +517,9 @@ const uz: TranslationMap = {
 'owner.createBusiness': 'Biznes yaratish',
 'owner.opened': 'Ochiq',
   'owner.createBusinessError': 'Biznesni yaratib bo‘lmadi',
+'owner.telegramInitDataMissing': 'Telegram initData mavjud emas. Bookly’ni Telegram Mini App ichida oching.',
+'owner.serverError': 'Server xatosi:',
+'owner.monthlyPrice': '$9.99 / oyiga',
 'owner.businessCreated': 'Yangi biznes yaratildi',
 'owner.noBusiness': 'Sizda hali biznes yo‘q',
 'owner.telegramOnlyTitle': 'Bookly’ni Telegram orqali oching',
@@ -609,11 +626,15 @@ const uz: TranslationMap = {
   'settings.copyLink': 'Havolani nusxalash',
   'settings.qr': 'QR-kod',
   'settings.downloadQr': 'QR-kodni saqlash',
-  'settings.language': 'Til'
+  'settings.language': 'Til',
+  'settings.latitudeOptional': 'Kenglik — ixtiyoriy',
+  'settings.longitudeOptional': 'Uzunlik — ixtiyoriy'
 };
 
 const tr: TranslationMap = {
   ...en,
+
+  'app.tagline': 'Telegram içinde rezervasyon',
 
   'nav.home': 'Ana sayfa',
   'nav.bookings': 'Randevular',
@@ -714,6 +735,9 @@ const tr: TranslationMap = {
   'owner.today': 'Bugün',
   'owner.upcoming': 'Yaklaşan',
   'owner.createBusinessError': 'İşletme oluşturulamadı',
+'owner.telegramInitDataMissing': 'Telegram initData bulunamadı. Bookly’yi Telegram Mini App içinde açın.',
+'owner.serverError': 'Sunucu hatası:',
+'owner.monthlyPrice': '$9.99 / ay',
 'owner.businessCreated': 'Yeni işletme oluşturuldu',
 'owner.noBusiness': 'Henüz bir işletmeniz yok',
   'owner.past': 'Geçmiş',
@@ -812,11 +836,15 @@ const tr: TranslationMap = {
   'settings.copyLink': 'Bağlantıyı kopyala',
   'settings.qr': 'QR kodu',
   'settings.downloadQr': 'QR kodunu kaydet',
-  'settings.language': 'Dil'
+  'settings.language': 'Dil',
+  'settings.latitudeOptional': 'Enlem — isteğe bağlı',
+  'settings.longitudeOptional': 'Boylam — isteğe bağlı'
 };
 
 const ar: TranslationMap = {
   ...en,
+
+  'app.tagline': 'الحجز داخل Telegram',
 
   'nav.home': 'الرئيسية',
   'nav.bookings': 'الحجوزات',
@@ -906,6 +934,9 @@ const ar: TranslationMap = {
 'days.sun': 'الأحد',
 'owner.businessesLoadError': 'تعذر تحميل الأنشطة التجارية',
   'owner.createBusinessError': 'تعذر إنشاء النشاط التجاري',
+'owner.telegramInitDataMissing': 'بيانات Telegram initData غير موجودة. افتح Bookly داخل Telegram Mini App.',
+'owner.serverError': 'خطأ في الخادم:',
+'owner.monthlyPrice': '$9.99 / شهرياً',
 'owner.businessCreated': 'تم إنشاء نشاط تجاري جديد',
 'owner.noBusiness': 'ليس لديك نشاط تجاري بعد',
 'owner.enterBusinessName': 'أدخل اسم النشاط التجاري',
@@ -1015,7 +1046,9 @@ const ar: TranslationMap = {
   'settings.copyLink': 'نسخ الرابط',
   'settings.qr': 'رمز QR',
   'settings.downloadQr': 'حفظ رمز QR',
-  'settings.language': 'اللغة'
+  'settings.language': 'اللغة',
+  'settings.latitudeOptional': 'خط العرض — اختياري',
+  'settings.longitudeOptional': 'خط الطول — اختياري'
 };
 export const translations: Record<Language, TranslationMap> = {
   ru,
