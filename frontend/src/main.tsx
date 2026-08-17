@@ -3594,10 +3594,9 @@ function Settings({
   reload: () => void;
   t: (key: string, fallback?: string) => string;
 }) {
-  const [name, setName] =
-    useState(
-      business?.name || ''
-    );
+  const [name, setName] = useState(
+    business?.name || ''
+  );
 
   const [description, setDescription] =
     useState(
@@ -3634,28 +3633,26 @@ function Settings({
     `https://t.me/${BOT_USERNAME}?startapp=${business.slug}`;
 
   useEffect(() => {
-    const generateQR =
-      async () => {
-        try {
-          const url =
-            await QRCode.toDataURL(
-              clientLink,
-              {
-                width: 500,
-                margin: 3,
-                errorCorrectionLevel:
-                  'H'
-              }
-            );
-
-          setQrDataUrl(url);
-        } catch (e) {
-          console.error(
-            'QR ERROR:',
-            e
+    const generateQR = async () => {
+      try {
+        const url =
+          await QRCode.toDataURL(
+            clientLink,
+            {
+              width: 500,
+              margin: 3,
+              errorCorrectionLevel: 'H'
+            }
           );
-        }
-      };
+
+        setQrDataUrl(url);
+      } catch (e) {
+        console.error(
+          'QR ERROR:',
+          e
+        );
+      }
+    };
 
     generateQR();
   }, [clientLink]);
@@ -3666,8 +3663,7 @@ function Settings({
     );
 
     setDescription(
-      business?.description ||
-      ''
+      business?.description || ''
     );
 
     setAddress(
@@ -3693,34 +3689,27 @@ function Settings({
     try {
       const response =
         await fetch(
-          API +
-            '/admin/business',
+          API + '/admin/business',
           {
             method: 'PUT',
             headers: headers(),
-            body:
-              JSON.stringify({
-                name:
-                  name.trim(),
-                description:
-                  description.trim(),
-                address:
-                  address.trim(),
-                phone:
-                  phone.trim(),
-                latitude:
-                  latitude === ''
-                    ? null
-                    : Number(
-                        latitude
-                      ),
-                longitude:
-                  longitude === ''
-                    ? null
-                    : Number(
-                        longitude
-                      )
-              })
+            body: JSON.stringify({
+              name: name.trim(),
+              description:
+                description.trim(),
+              address:
+                address.trim(),
+              phone:
+                phone.trim(),
+              latitude:
+                latitude === ''
+                  ? null
+                  : Number(latitude),
+              longitude:
+                longitude === ''
+                  ? null
+                  : Number(longitude)
+            })
           }
         );
 
@@ -3732,12 +3721,16 @@ function Settings({
       if (!response.ok) {
         throw new Error(
           data?.detail ||
-          'Не удалось сохранить настройки'
+          t(
+            'owner.saveContactsError'
+          )
         );
       }
 
       alert(
-        '✅ Настройки сохранены'
+        t(
+          'owner.contactsSaved'
+        )
       );
 
       reload();
@@ -3745,83 +3738,81 @@ function Settings({
     } catch (e: any) {
       alert(
         e?.message ||
-        'Ошибка сохранения'
+        t(
+          'owner.saveContactsError'
+        )
       );
     } finally {
       setSaving(false);
     }
   };
 
-  const copyLink =
-    async () => {
-      try {
-        await navigator.clipboard.writeText(
-          clientLink
-        );
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        clientLink
+      );
 
-        alert(
-          '✅ Ссылка скопирована'
-        );
-      } catch {
-        alert(
-          clientLink
-        );
-      }
-    };
+      alert(
+        t(
+          'settings.copyLink'
+        )
+      );
+    } catch {
+      alert(clientLink);
+    }
+  };
 
-  const shareTelegram =
-    () => {
-      const shareUrl =
-        `https://t.me/share/url?url=${encodeURIComponent(
-          clientLink
-        )}&text=${encodeURIComponent(
-          business.name
-        )}`;
+  const shareTelegram = () => {
+    const shareUrl =
+      `https://t.me/share/url?url=${encodeURIComponent(
+        clientLink
+      )}&text=${encodeURIComponent(
+        business.name
+      )}`;
 
-      if (
-        tg()?.openTelegramLink
-      ) {
-        tg().openTelegramLink(
-          shareUrl
-        );
-      } else {
-        window.open(
-          shareUrl,
-          '_blank'
-        );
-      }
-    };
+    if (tg()?.openTelegramLink) {
+      tg().openTelegramLink(
+        shareUrl
+      );
+    } else {
+      window.open(
+        shareUrl,
+        '_blank'
+      );
+    }
+  };
 
-  const downloadQR =
-    () => {
-      if (!qrDataUrl) {
-        return;
-      }
+  const downloadQR = () => {
+    if (!qrDataUrl) {
+      return;
+    }
 
-      const link =
-        document.createElement(
-          'a'
-        );
+    const link =
+      document.createElement('a');
 
-      link.href =
-        qrDataUrl;
+    link.href = qrDataUrl;
 
-      link.download =
-        `${business.slug}-bookly-qr.png`;
+    link.download =
+      `${business.slug}-bookly-qr.png`;
 
-      link.click();
-    };
+    link.click();
+  };
 
   return (
     <div>
 
       <div className="card">
         <h2>
-          Основная информация
+          {t(
+            'settings.businessInfo'
+          )}
         </h2>
 
         <input
-          placeholder="Название бизнеса"
+          placeholder={t(
+            'owner.serviceName'
+          )}
           value={name}
           onChange={e =>
             setName(
@@ -3831,7 +3822,9 @@ function Settings({
         />
 
         <textarea
-          placeholder="Описание бизнеса"
+          placeholder={t(
+            'settings.description'
+          )}
           value={description}
           onChange={e =>
             setDescription(
@@ -3842,7 +3835,9 @@ function Settings({
 
         <input
           type="tel"
-          placeholder="Телефон бизнеса"
+          placeholder={t(
+            'settings.phone'
+          )}
           value={phone}
           onChange={e =>
             setPhone(
@@ -3852,7 +3847,9 @@ function Settings({
         />
 
         <input
-          placeholder="Адрес бизнеса"
+          placeholder={t(
+            'settings.address'
+          )}
           value={address}
           onChange={e =>
             setAddress(
@@ -3863,7 +3860,7 @@ function Settings({
 
         <div className="two">
           <input
-            placeholder="Широта — необязательно"
+            placeholder="Latitude — optional"
             value={latitude}
             onChange={e =>
               setLatitude(
@@ -3873,7 +3870,7 @@ function Settings({
           />
 
           <input
-            placeholder="Долгота — необязательно"
+            placeholder="Longitude — optional"
             value={longitude}
             onChange={e =>
               setLongitude(
@@ -3889,20 +3886,22 @@ function Settings({
           onClick={save}
         >
           {saving
-            ? 'Сохранение...'
-            : 'Сохранить настройки'}
+            ? t('owner.saving')
+            : t('common.save')}
         </button>
       </div>
 
       <div className="card">
         <h2>
-          Ссылка для клиентов
+          {t(
+            'settings.share'
+          )}
         </h2>
 
         <p className="muted">
-          Клиенты открывают эту
-          ссылку и сразу попадают
-          на страницу вашего бизнеса.
+          {t(
+            'home.emptySaved'
+          )}
         </p>
 
         <code
@@ -3926,11 +3925,11 @@ function Settings({
           }}
         >
           <button
-            onClick={
-              copyLink
-            }
+            onClick={copyLink}
           >
-            Копировать
+            {t(
+              'settings.copyLink'
+            )}
           </button>
 
           <button
@@ -3939,21 +3938,24 @@ function Settings({
               shareTelegram
             }
           >
-            Поделиться в Telegram
+            {t(
+              'settings.share'
+            )}
           </button>
         </div>
       </div>
 
       <div className="card">
         <h2>
-          QR-код
+          {t(
+            'settings.qr'
+          )}
         </h2>
 
         <p className="muted">
-          Клиент может
-          отсканировать QR-код
-          камерой телефона и
-          открыть страницу бизнеса.
+          {t(
+            'settings.downloadQr'
+          )}
         </p>
 
         {qrDataUrl && (
@@ -3962,13 +3964,12 @@ function Settings({
               display: 'flex',
               justifyContent:
                 'center',
-              margin:
-                '18px 0'
+              margin: '18px 0'
             }}
           >
             <img
               src={qrDataUrl}
-              alt="QR код Bookly"
+              alt="Bookly QR"
               style={{
                 width: 260,
                 height: 260,
@@ -3980,12 +3981,16 @@ function Settings({
 
         <button
           className="primary full"
-          disabled={!qrDataUrl}
+          disabled={
+            !qrDataUrl
+          }
           onClick={
             downloadQR
           }
         >
-          Сохранить QR-код
+          {t(
+            'settings.downloadQr'
+          )}
         </button>
       </div>
 
