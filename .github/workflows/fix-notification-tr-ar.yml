@@ -1,0 +1,55 @@
+name: Fix Turkish Arabic notification language
+
+on:
+  push:
+    paths:
+      - 'backend/app.py'
+      - '.github/workflows/fix-notification-tr-ar.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch notification language routing
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''        request_lang = BOOKLY_REQUEST_LANGUAGE.get()\n        request_user_id = BOOKLY_REQUEST_USER_ID.get()\n        effective_lang = (\n            request_lang\n            if request_lang and request_user_id == chat_id\n            else _bookly_user_language(chat_id)\n        )\n'''
+
+          new = '''        request_lang = BOOKLY_REQUEST_LANGUAGE.get()\n        effective_lang = (\n            _bookly_normalize_language(request_lang)\n            if request_lang\n            else _bookly_user_language(chat_id)\n        )\n'''
+
+          if old not in s:
+              raise SystemExit('target language routing block not found')
+          s = s.replace(old, new, 1)
+
+          old_api = '''    try:\n        with urllib_request.urlopen(req, timeout=8) as response:\n            return json.loads(response.read().decode("utf-8"))\n    except (URLError, TimeoutError, ValueError):\n        return None\n'''
+
+          new_api = '''    try:\n        with urllib_request.urlopen(req, timeout=8) as response:\n            body = response.read().decode("utf-8")\n            result = json.loads(body)\n            if not result.get("ok", True):\n                print("TELEGRAM API ERROR:", result)\n            return result\n    except Exception as exc:\n        print("TELEGRAM SEND ERROR:", repr(exc))\n        return None\n'''
+
+          if old_api not in s:
+              raise SystemExit('telegram api block not found')
+          # Only replace the final wrapped helper block, after the selected-language wrapper.
+          idx = s.rfind(old_api)
+          if idx < 0:
+              raise SystemExit('final telegram api block not found')
+          s = s[:idx] + new_api + s[idx + len(old_api):]
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/fix-notification-tr-ar.yml
+          git add backend/app.py .github/workflows/fix-notification-tr-ar.yml
+          git commit -m "fix: force current Bookly language for Telegram notifications"
+          git push
