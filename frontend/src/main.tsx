@@ -2092,7 +2092,7 @@ function Services({
         >
           {savingBusiness
             ? t('owner.saving')
-            : t('owner.saveContacts'
+            : t('owner.saveContacts')}
         </button>
       </div>
 
@@ -2100,7 +2100,7 @@ function Services({
         <h2>
           {editingId
             ? t('owner.editService')
-            : t('owner.addService')
+            : t('owner.addService')}
         </h2>
 
         <input
