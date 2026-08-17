@@ -1694,6 +1694,13 @@ function Services({
 
   const [savingBusiness, setSavingBusiness] =
     useState(false);
+  const [f, setF] = useState({
+  name: '',
+  description: '',
+  price: '',
+  currency: 'UZS',
+  duration_min: '30'
+});
 
   useEffect(() => {
     setBusinessPhone(
