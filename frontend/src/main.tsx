@@ -284,9 +284,10 @@ const openClient = (
 
   {mode==='admin' &&
     <Admin
-      onBack={()=>setMode('home')}
-      initialTab={adminTab}
-    />
+  onBack={()=>setMode('home')}
+  initialTab={adminTab}
+  t={t}
+/>
   }
 
   {mode==='client' &&
@@ -484,10 +485,12 @@ function Home(p: any) {
 }
 function Admin({
   onBack,
-  initialTab
+  initialTab,
+  t
 }: {
   onBack: () => void;
   initialTab: string;
+  t: (key: string, fallback?: string) => string;
 }) {
   const [tab, setTab] =
     useState(initialTab);
