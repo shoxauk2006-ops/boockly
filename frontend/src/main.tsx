@@ -854,243 +854,81 @@ function Admin({
     };
 
   if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-logo">
-          B
-        </div>
-
-        <h2>
-          Bookly
-        </h2>
-
-        <div className="loading-spinner"></div>
-
-        <p>
-          Загрузка...
-        </p>
+  return (
+    <div className="loading-screen">
+      <div className="loading-logo">
+        B
       </div>
-    );
-  }
 
-  if (!initData()) {
-    return (
-      <div className="card">
-        <button
-          className="back"
-          onClick={onBack}
-        >
-          ← Назад
-        </button>
+      <h2>
+        Bookly
+      </h2>
 
-        <h2>
-          Откройте Bookly из Telegram
-        </h2>
+      <div className="loading-spinner"></div>
 
-        <p>
-          Админ-панель работает
-          внутри Telegram Mini App.
-        </p>
-      </div>
-    );
-  }
+      <p>
+        {t('common.loading')}
+      </p>
+    </div>
+  );
+}
 
-  if (!business) {
-    return (
-      <section>
-        <button
-          className="back"
-          onClick={onBack}
-        >
-          ← Назад
-        </button>
+if (!initData()) {
+  return (
+    <div className="card">
+      <button
+        className="back"
+        onClick={onBack}
+      >
+        ← {t('common.back')}
+      </button>
 
-        <div className="card">
-          <h2>
-            Мои бизнесы
-          </h2>
+      <h2>
+        Откройте Bookly из Telegram
+      </h2>
 
-          <p>
-            У вас пока нет бизнеса.
-          </p>
+      <p>
+        Админ-панель работает
+        внутри Telegram Mini App.
+      </p>
+    </div>
+  );
+}
 
-          <button
-            className="primary full"
-            onClick={() =>
-              setBusinessPanel('create')
-            }
-          >
-            + Добавить бизнес
-          </button>
-        </div>
-
-        {businessPanel === 'create' && (
-          <div className="card">
-            <h2>
-              Новый бизнес
-            </h2>
-
-            <input
-              placeholder="Название бизнеса"
-              value={newBusinessName}
-              onChange={e =>
-                setNewBusinessName(
-                  e.target.value
-                )
-              }
-            />
-
-            <button
-              className="primary full"
-              disabled={
-                creatingBusiness
-              }
-              onClick={
-                createBusiness
-              }
-            >
-              {creatingBusiness
-                ? 'Создание...'
-                : 'Создать бизнес'}
-            </button>
-          </div>
-        )}
-      </section>
-    );
-  }
-
+if (!business) {
   return (
     <section>
       <button
         className="back"
         onClick={onBack}
       >
-        ← Назад
+        ← {t('common.back')}
       </button>
 
       <div className="card">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent:
-              'space-between',
-            alignItems:
-              'center',
-            gap: 12
-          }}
+        <h2>
+          {t('nav.businesses')}
+        </h2>
+
+        <p>
+          У вас пока нет бизнеса.
+        </p>
+
+        <button
+          className="primary full"
+          onClick={() =>
+            setBusinessPanel('create')
+          }
         >
-          <div>
-            <small className="muted">
-              Текущий бизнес
-            </small>
-
-            <h2
-              style={{
-                margin: '4px 0'
-              }}
-            >
-              {business.name}
-            </h2>
-
-            <p
-              className="muted"
-              style={{
-                margin: 0
-              }}
-            >
-              {business.address ||
-                'Адрес не указан'}
-            </p>
-          </div>
-
-          <button
-            onClick={() =>
-              setBusinessPanel(
-                businessPanel === 'list'
-                  ? 'closed'
-                  : 'list'
-              )
-            }
-          >
-            ⚙️
-          </button>
-        </div>
+          + {t('owner.addBusiness')}
+        </button>
       </div>
-
-      {businessPanel === 'list' && (
-        <div className="card">
-          <h3>
-            Мои бизнесы
-          </h3>
-
-          {businesses.map(item => (
-            <div
-              key={item.id}
-              style={{
-                display: 'flex',
-                justifyContent:
-                  'space-between',
-                alignItems:
-                  'center',
-                gap: 10,
-                padding: '12px 0',
-                borderBottom:
-                  '1px solid #eee'
-              }}
-            >
-              <div>
-                <b>
-                  {item.name}
-                </b>
-
-                <p
-                  className="muted"
-                  style={{
-                    margin:
-                      '4px 0 0'
-                  }}
-                >
-                  {item.address ||
-                    'Адрес не указан'}
-                </p>
-              </div>
-
-              <button
-                className={
-                  business.id === item.id
-                    ? 'primary'
-                    : ''
-                }
-                onClick={() =>
-                  selectBusiness(item)
-                }
-              >
-                {business.id === item.id
-                  ? 'Открыт'
-                  : 'Открыть'}
-              </button>
-            </div>
-          ))}
-
-          <button
-            className="primary full"
-            style={{
-              marginTop: 12
-            }}
-            onClick={() =>
-              setBusinessPanel('create')
-            }
-          >
-            + Добавить бизнес
-          </button>
-        </div>
-      )}
 
       {businessPanel === 'create' && (
         <div className="card">
-          <h3>
-            Создать новый бизнес
-          </h3>
+          <h2>
+            {t('owner.addBusiness')}
+          </h2>
 
           <input
             placeholder="Название бизнеса"
@@ -1104,12 +942,8 @@ function Admin({
 
           <button
             className="primary full"
-            disabled={
-              creatingBusiness
-            }
-            onClick={
-              createBusiness
-            }
+            disabled={creatingBusiness}
+            onClick={createBusiness}
           >
             {creatingBusiness
               ? 'Создание...'
@@ -1117,33 +951,185 @@ function Admin({
           </button>
         </div>
       )}
+    </section>
+  );
+}
 
-      <div className="business-head">
+return (
+  <section>
+    <button
+      className="back"
+      onClick={onBack}
+    >
+      ← {t('common.back')}
+    </button>
+
+    <div className="card">
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 12
+        }}
+      >
         <div>
-          <h1>
-            {business.name}
-          </h1>
+          <small className="muted">
+            {t('owner.currentBusiness')}
+          </small>
 
-          <p>
+          <h2
+            style={{
+              margin: '4px 0'
+            }}
+          >
+            {business.name}
+          </h2>
+
+          <p
+            className="muted"
+            style={{
+              margin: 0
+            }}
+          >
             {business.address ||
-              'Адрес не указан'}
+              t('settings.address')}
           </p>
         </div>
 
-        <span
-          className={
-            business.subscription_active
-              ? 'pill ok'
-              : 'pill'
+        <button
+          onClick={() =>
+            setBusinessPanel(
+              businessPanel === 'list'
+                ? 'closed'
+                : 'list'
+            )
           }
         >
-          {business.subscription_active
-            ? 'Активен'
-            : 'Не активирован'}
-        </span>
+          ⚙️
+        </button>
+      </div>
+    </div>
+
+    {businessPanel === 'list' && (
+      <div className="card">
+        <h3>
+          {t('nav.businesses')}
+        </h3>
+
+        {businesses.map(item => (
+          <div
+            key={item.id}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 10,
+              padding: '12px 0',
+              borderBottom: '1px solid #eee'
+            }}
+          >
+            <div>
+              <b>
+                {item.name}
+              </b>
+
+              <p
+                className="muted"
+                style={{
+                  margin: '4px 0 0'
+                }}
+              >
+                {item.address ||
+                  t('settings.address')}
+              </p>
+            </div>
+
+            <button
+              className={
+                business.id === item.id
+                  ? 'primary'
+                  : ''
+              }
+              onClick={() =>
+                selectBusiness(item)
+              }
+            >
+              {business.id === item.id
+                ? 'Открыт'
+                : t('common.open')}
+            </button>
+          </div>
+        ))}
+
+        <button
+          className="primary full"
+          style={{
+            marginTop: 12
+          }}
+          onClick={() =>
+            setBusinessPanel('create')
+          }
+        >
+          + {t('owner.addBusiness')}
+        </button>
+      </div>
+    )}
+
+    {businessPanel === 'create' && (
+      <div className="card">
+        <h3>
+          {t('owner.addBusiness')}
+        </h3>
+
+        <input
+          placeholder="Название бизнеса"
+          value={newBusinessName}
+          onChange={e =>
+            setNewBusinessName(
+              e.target.value
+            )
+          }
+        />
+
+        <button
+          className="primary full"
+          disabled={creatingBusiness}
+          onClick={createBusiness}
+        >
+          {creatingBusiness
+            ? 'Создание...'
+            : 'Создать бизнес'}
+        </button>
+      </div>
+    )}
+
+    <div className="business-head">
+      <div>
+        <h1>
+          {business.name}
+        </h1>
+
+        <p>
+          {business.address ||
+            t('settings.address')}
+        </p>
       </div>
 
-      <nav className="tabs">
+      <span
+        className={
+          business.subscription_active
+            ? 'pill ok'
+            : 'pill'
+        }
+      >
+        {business.subscription_active
+          ? 'Активен'
+          : 'Не активирован'}
+      </span>
+    </div>
+
+    <nav className="tabs">
         {[
           ['home', 'Главная'],
           ['services', 'Услуги'],
