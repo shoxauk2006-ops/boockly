@@ -2302,9 +2302,305 @@ function Services({
     </div>
   );
 }
-function Hours({hours,reload}:{hours:any[],reload:()=>void}){const [f,setF]=useState({weekday:'0',start:'09:00',end:'18:00'});const add=async()=>{await fetch(API+'/admin/hours',{method:'POST',headers:headers(),body:JSON.stringify({...f,weekday:Number(f.weekday)})});reload()};return <div className="card"><h2>Рабочий график</h2><p>Настройте обычные рабочие часы. Потом отдельные часы можно блокировать.</p><div className="two"><select value={f.weekday} onChange={e=>setF({...f,weekday:e.target.value})}>{days.map((x,i)=><option value={i} key={x}>{x}</option>)}</select><span></span></div><div className="two"><input type="time" value={f.start} onChange={e=>setF({...f,start:e.target.value})}/><input type="time" value={f.end} onChange={e=>setF({...f,end:e.target.value})}/></div><button className="primary full" onClick={add}>Добавить интервал</button>{days.map((d,i)=>{const hs=hours.filter(h=>h.weekday===i);return <div className="dayrow" key={d}><b>{d}</b><div>{hs.length?hs.map(h=><span className="tag" key={h.id}>{h.start.slice(0,5)}–{h.end.slice(0,5)} <button onClick={async()=>{await fetch(API+`/admin/hours/${h.id}`,{method:'DELETE',headers:headers()});reload()}}>×</button></span>):<span className="muted">Выходной</span>}</div></div>})}</div>}
+function Hours({
+  hours,
+  reload,
+  t
+}: {
+  hours: any[];
+  reload: () => void;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const [f, setF] = useState({
+    weekday: '0',
+    start: '09:00',
+    end: '18:00'
+  });
 
-function Blocks({blocks,reload}:{blocks:any[],reload:()=>void}){const [f,setF]=useState({day:new Date().toISOString().slice(0,10),start:'13:00',end:'15:00',reason:''});const add=async()=>{await fetch(API+'/admin/blocks',{method:'POST',headers:headers(),body:JSON.stringify(f)});reload()};return <div className="card"><h2>Временные блокировки</h2><p>Если нужно отойти, просто заблокируйте часы — клиент их не увидит.</p><input type="date" value={f.day} onChange={e=>setF({...f,day:e.target.value})}/><div className="two"><input type="time" value={f.start} onChange={e=>setF({...f,start:e.target.value})}/><input type="time" value={f.end} onChange={e=>setF({...f,end:e.target.value})}/></div><input placeholder="Причина (необязательно)" value={f.reason} onChange={e=>setF({...f,reason:e.target.value})}/><button className="primary full" onClick={add}>Заблокировать время</button>{blocks.map(b=><div className="row line" key={b.id}><div><b>{b.day}</b><p>{b.start.slice(0,5)}–{b.end.slice(0,5)} {b.reason&&`· ${b.reason}`}</p></div><button className="danger" onClick={async()=>{await fetch(API+`/admin/blocks/${b.id}`,{method:'DELETE',headers:headers()});reload()}}>×</button></div>)}</div>}
+  const add = async () => {
+    await fetch(
+      API + '/admin/hours',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          ...f,
+          weekday: Number(f.weekday)
+        })
+      }
+    );
+
+    reload();
+  };
+
+  return (
+    <div className="card">
+      <h2>
+        {t('owner.workSchedule')}
+      </h2>
+
+      <p>
+        {t('owner.scheduleDescription')}
+      </p>
+
+      <div className="two">
+        <select
+          value={f.weekday}
+          onChange={e =>
+            setF({
+              ...f,
+              weekday: e.target.value
+            })
+          }
+        >
+          {days.map(
+            (x, i) => (
+              <option
+                value={i}
+                key={x}
+              >
+                {x}
+              </option>
+            )
+          )}
+        </select>
+
+        <span />
+      </div>
+
+      <div className="two">
+        <input
+          type="time"
+          value={f.start}
+          onChange={e =>
+            setF({
+              ...f,
+              start: e.target.value
+            })
+          }
+        />
+
+        <input
+          type="time"
+          value={f.end}
+          onChange={e =>
+            setF({
+              ...f,
+              end: e.target.value
+            })
+          }
+        />
+      </div>
+
+      <button
+        className="primary full"
+        onClick={add}
+      >
+        {t('owner.addInterval')}
+      </button>
+
+      {days.map(
+        (d, i) => {
+          const hs =
+            hours.filter(
+              h =>
+                h.weekday === i
+            );
+
+          return (
+            <div
+              className="dayrow"
+              key={d}
+            >
+              <b>{d}</b>
+
+              <div>
+                {hs.length ? (
+                  hs.map(
+                    h => (
+                      <span
+                        className="tag"
+                        key={h.id}
+                      >
+                        {h.start.slice(0, 5)}
+                        –
+                        {h.end.slice(0, 5)}
+
+                        <button
+                          onClick={async () => {
+                            await fetch(
+                              API +
+                                `/admin/hours/${h.id}`,
+                              {
+                                method:
+                                  'DELETE',
+                                headers:
+                                  headers()
+                              }
+                            );
+
+                            reload();
+                          }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )
+                  )
+                ) : (
+                  <span className="muted">
+                    {t('owner.dayOff')}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        }
+      )}
+    </div>
+  );
+}
+
+function Blocks({
+  blocks,
+  reload,
+  t
+}: {
+  blocks: any[];
+  reload: () => void;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const [f, setF] = useState({
+    day: new Date()
+      .toISOString()
+      .slice(0, 10),
+    start: '13:00',
+    end: '15:00',
+    reason: ''
+  });
+
+  const add = async () => {
+    await fetch(
+      API + '/admin/blocks',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(f)
+      }
+    );
+
+    reload();
+  };
+
+  return (
+    <div className="card">
+      <h2>
+        {t('owner.timeBlocks')}
+      </h2>
+
+      <p>
+        {t('owner.blocksDescription')}
+      </p>
+
+      <input
+        type="date"
+        value={f.day}
+        onChange={e =>
+          setF({
+            ...f,
+            day: e.target.value
+          })
+        }
+      />
+
+      <div className="two">
+        <input
+          type="time"
+          value={f.start}
+          onChange={e =>
+            setF({
+              ...f,
+              start: e.target.value
+            })
+          }
+        />
+
+        <input
+          type="time"
+          value={f.end}
+          onChange={e =>
+            setF({
+              ...f,
+              end: e.target.value
+            })
+          }
+        />
+      </div>
+
+      <input
+        placeholder={t('owner.reasonOptional')}
+        value={f.reason}
+        onChange={e =>
+          setF({
+            ...f,
+            reason: e.target.value
+          })
+        }
+      />
+
+      <button
+        className="primary full"
+        onClick={add}
+      >
+        {t('owner.blockTime')}
+      </button>
+
+      {blocks.map(
+        b => (
+          <div
+            className="row line"
+            key={b.id}
+          >
+            <div>
+              <b>
+                {b.day}
+              </b>
+
+              <p>
+                {b.start.slice(0, 5)}
+                –
+                {b.end.slice(0, 5)}
+
+                {b.reason &&
+                  ` · ${b.reason}`}
+              </p>
+            </div>
+
+            <button
+              className="danger"
+              onClick={async () => {
+                await fetch(
+                  API +
+                    `/admin/blocks/${b.id}`,
+                  {
+                    method:
+                      'DELETE',
+                    headers:
+                      headers()
+                  }
+                );
+
+                reload();
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
 
 function Bookings({
   bookings
