@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/fix-notification-language.yml'
+      - 'tools/fix_notification_language.py'
 
 permissions:
   contents: write
