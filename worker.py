@@ -27,15 +27,18 @@ async def tick():
             delta=when-now
             if timedelta(hours=23, minutes=0) <= delta <= timedelta(hours=25) and not b.reminder_24_sent:
                 lang = _bookly_user_language(b.client_telegram_id)
-                send(b.client_telegram_id, f"🔔 {_bookly_t(lang, "reminder24")}\n\n📅 {b.day.isoformat()}\n🕐 {b.start.strftime('%H:%M')}–{b.end.strftime('%H:%M')}")
+                reminder_text = _bookly_t(lang, "reminder24")
+                send(b.client_telegram_id, f"🔔 {reminder_text}\n\n📅 {b.day.isoformat()}\n🕐 {b.start.strftime('%H:%M')}–{b.end.strftime('%H:%M')}")
                 business=db.get(Business,b.business_id)
                 if business:
                     lang = _bookly_user_language(business.owner_telegram_id)
-                    send(business.owner_telegram_id, f"🔔 {_bookly_t(lang, "owner_reminder24")} #{b.id} {b.start.strftime('%H:%M')}")
+                    owner_reminder_text = _bookly_t(lang, "owner_reminder24")
+                    send(business.owner_telegram_id, f"🔔 {owner_reminder_text} #{b.id} {b.start.strftime('%H:%M')}")
                 b.reminder_24_sent=True
             if timedelta(minutes=90) <= delta <= timedelta(hours=2, minutes=30) and not b.reminder_2_sent:
                 lang = _bookly_user_language(b.client_telegram_id)
-                send(b.client_telegram_id, f"⏰ {_bookly_t(lang, "reminder2")} {b.start.strftime('%H:%M')}")
+                reminder_text = _bookly_t(lang, "reminder2")
+                send(b.client_telegram_id, f"⏰ {reminder_text} {b.start.strftime('%H:%M')}")
                 b.reminder_2_sent=True
         db.commit()
 
