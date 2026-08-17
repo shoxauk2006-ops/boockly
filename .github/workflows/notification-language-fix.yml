@@ -1,4 +1,4 @@
-name: Sync app language with Telegram notifications
+name: Apply selected app language to Telegram notifications
 
 on:
   push:
@@ -9,137 +9,80 @@ permissions:
   contents: write
 
 jobs:
-  fix:
+  patch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Patch language sync and notification localization
-        shell: bash
+      - name: Patch frontend and backend
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          main = Path('frontend/src/main.tsx')
-          s = main.read_text(encoding='utf-8')
+          # Frontend: send the currently selected Bookly language with every API request.
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text(encoding='utf-8')
           old = "    'X-Telegram-Init-Data': initData()\n"
           new = "    'X-Telegram-Init-Data': initData(),\n    'X-Bookly-Language': getStoredLanguage()\n"
-          if old in s and "X-Bookly-Language" not in s:
+          if 'X-Bookly-Language' not in s:
+              if old not in s:
+                  raise SystemExit('frontend header target not found')
               s = s.replace(old, new, 1)
-              main.write_text(s, encoding='utf-8')
+              p.write_text(s, encoding='utf-8')
 
-          backend = Path('backend/app.py')
-          s = backend.read_text(encoding='utf-8')
+          # Backend: keep an explicit language selected in Bookly, instead of replacing it
+          # with Telegram's native language_code on every request.
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
 
           marker = 'BOT_TOKEN = os.getenv("BOT_TOKEN", "")\n'
           if 'BOOKLY_REQUEST_LANGUAGE' not in s:
-              s = s.replace(marker, marker + '\nBOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)\n', 1)
+              s = s.replace(
+                  marker,
+                  marker + '\nBOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)\n',
+                  1,
+              )
 
-          old_user = '''def telegram_user(x_init_data: str) -> dict:\n    return validate_init_data(x_init_data)\n'''
-          new_user = '''def telegram_user(x_init_data: str) -> dict:\n    user = validate_init_data(x_init_data)\n    preferred = BOOKLY_REQUEST_LANGUAGE.get()\n    _bookly_remember_language(user, preferred)\n    return user\n'''
-          idx = s.rfind(old_user)
-          if idx == -1:
-              raise SystemExit('telegram_user target not found')
-          s = s[:idx] + new_user + s[idx + len(old_user):]
+          old = '''def _bookly_remember_language(user: dict) -> None:\n    try:\n        uid = int(user.get("id"))\n    except (TypeError, ValueError):\n        return\n    lang = _bookly_normalize_language(user.get("language_code"))\n'''
+          new = '''def _bookly_remember_language(user: dict, preferred_language: str | None = None) -> None:\n    try:\n        uid = int(user.get("id"))\n    except (TypeError, ValueError):\n        return\n    lang = _bookly_normalize_language(preferred_language or user.get("language_code"))\n'''
+          if old in s:
+              s = s.replace(old, new, 1)
 
-          old_remember = '''def _bookly_remember_language(user: dict) -> None:\n    try:\n        uid = int(user.get("id"))\n    except (TypeError, ValueError):\n        return\n    lang = _bookly_normalize_language(user.get("language_code"))\n'''
-          new_remember = '''def _bookly_remember_language(user: dict, preferred_language: str | None = None) -> None:\n    try:\n        uid = int(user.get("id"))\n    except (TypeError, ValueError):\n        return\n    lang = _bookly_normalize_language(preferred_language or user.get("language_code"))\n'''
-          if old_remember not in s:
-              raise SystemExit('remember_language target not found')
-          s = s.replace(old_remember, new_remember, 1)
+          old = '''def telegram_user(x_init_data: str) -> dict:\n    return validate_init_data(x_init_data)\n'''
+          new = '''def telegram_user(x_init_data: str) -> dict:\n    user = validate_init_data(x_init_data)\n    _bookly_remember_language(user, BOOKLY_REQUEST_LANGUAGE.get())\n    return user\n'''
+          pos = s.rfind(old)
+          if pos == -1:
+              raise SystemExit('backend telegram_user target not found')
+          s = s[:pos] + new + s[pos + len(old):]
 
-          middleware_marker = '''    raw_business_id = request.headers.get(\n        "X-Bookly-Business-Id"\n    )\n'''
-          middleware_add = '''    raw_language = request.headers.get("X-Bookly-Language")\n    language_token = BOOKLY_REQUEST_LANGUAGE.set(_bookly_normalize_language(raw_language) if raw_language else None)\n\n'''
-          if 'X-Bookly-Language' not in s:
-              s = s.replace(middleware_marker, middleware_marker + '\n' + middleware_add, 1)
-              s = s.replace('''    finally:\n        ACTIVE_BUSINESS_ID.reset(\n            token\n        )\n''', '''    finally:\n        ACTIVE_BUSINESS_ID.reset(\n            token\n        )\n        BOOKLY_REQUEST_LANGUAGE.reset(language_token)\n''', 1)
+          marker = '''    raw_business_id = request.headers.get(\n        "X-Bookly-Business-Id"\n    )\n'''
+          if 'raw_language = request.headers.get("X-Bookly-Language")' not in s:
+              add = '''    raw_language = request.headers.get("X-Bookly-Language")\n    language_token = BOOKLY_REQUEST_LANGUAGE.set(_bookly_normalize_language(raw_language) if raw_language else None)\n\n'''
+              s = s.replace(marker, marker + add, 1)
+              finally_old = '''    finally:\n        ACTIVE_BUSINESS_ID.reset(\n            token\n        )\n'''
+              finally_new = '''    finally:\n        ACTIVE_BUSINESS_ID.reset(\n            token\n        )\n        BOOKLY_REQUEST_LANGUAGE.reset(language_token)\n'''
+              if finally_old not in s:
+                  raise SystemExit('middleware finally target not found')
+              s = s.replace(finally_old, finally_new, 1)
 
-          owner_marker = 'def owner_business(\n'
-          if 'def _bookly_send_telegram_raw' not in s:
-              injected = r'''def _bookly_localize_notification(text: str, lang: str) -> str:
-    lang = _bookly_normalize_language(lang)
-    replacements = {
-        "ru": {
-            "new": "Новая запись в Bookly", "booked": "Вы успешно записаны!", "client_cancel": "Ваша запись отменена", "business_cancel": "Ваша запись отменена бизнесом.", "owner_cancel": "Клиент отменил запись", "contact_hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "waiting": "Ждём вас!", "phone": "номер не передан", "phone_label": "Ваш номер:", "contact_label": "Связаться:", "address": "Адрес не указан"
-        },
-        "en": {
-            "new": "New booking in Bookly", "booked": "You are successfully booked!", "client_cancel": "Your booking has been cancelled", "business_cancel": "Your booking was cancelled by the business.", "owner_cancel": "Client cancelled the booking", "contact_hint": "Please contact the business if you want to choose another time.", "waiting": "We look forward to seeing you!", "phone": "phone not provided", "phone_label": "Your number:", "contact_label": "Contact:", "address": "Address not provided"
-        },
-        "uz": {
-            "new": "Bookly’da yangi bron", "booked": "Siz muvaffaqiyatli bron qilindingiz!", "client_cancel": "Broningiz bekor qilindi", "business_cancel": "Bron biznes tomonidan bekor qilindi.", "owner_cancel": "Mijoz bronni bekor qildi", "contact_hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.", "waiting": "Sizni kutamiz!", "phone": "telefon berilmagan", "phone_label": "Raqamingiz:", "contact_label": "Bog‘lanish:", "address": "Manzil ko‘rsatilmagan"
-        },
-        "tr": {
-            "new": "Bookly’da yeni rezervasyon", "booked": "Rezervasyonunuz başarıyla oluşturuldu!", "client_cancel": "Rezervasyonunuz iptal edildi", "business_cancel": "Rezervasyon işletme tarafından iptal edildi.", "owner_cancel": "Müşteri rezervasyonu iptal etti", "contact_hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.", "waiting": "Sizi bekliyoruz!", "phone": "telefon verilmedi", "phone_label": "Numaranız:", "contact_label": "İletişim:", "address": "Adres belirtilmedi"
-        },
-        "ar": {
-            "new": "حجز جديد في Bookly", "booked": "تم حجز موعدك بنجاح!", "client_cancel": "تم إلغاء حجزك", "business_cancel": "تم إلغاء الحجز من قبل النشاط.", "owner_cancel": "ألغى العميل الحجز", "contact_hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.", "waiting": "ننتظركم!", "phone": "رقم الهاتف غير متوفر", "phone_label": "رقمك:", "contact_label": "للتواصل:", "address": "العنوان غير متوفر"
-        },
-    }[lang]
-    replacements = [
-        ("Новая запись в Bookly", "new"), ("Вы успешно записаны!", "booked"),
-        ("Ваша запись отменена", "client_cancel"), ("Ваша запись отменена бизнесом.", "business_cancel"),
-        ("Клиент отменил запись", "owner_cancel"),
-        ("Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "contact_hint"),
-        ("Ждём вас!", "waiting"), ("номер не передан", "phone"), ("номер не указан", "phone"),
-        ("Ваш номер:", "phone_label"), ("Связаться:", "contact_label"), ("Адрес не указан", "address"),
-    ]
-    for old, key in replacements:
-        text = text.replace(old, replacements_map[key] if False else d[key])
-    return text
+          # Final wrapper: translate all fixed Russian notification copy at the last point
+          # before it is sent to Telegram. This covers existing routes without changing their logic.
+          if '_BOOKLY_FINAL_NOTIFICATION_WRAPPER' not in s:
+              marker = 'def owner_business(\n'
+              block = '''_BOOKLY_FINAL_NOTIFICATION_WRAPPER = True\n\ndef _bookly_localize_outgoing_text(text: str, lang: str) -> str:\n    d = {\n        "ru": {\n            "new": "Новая запись в Bookly", "booked": "Вы успешно записаны!", "cancel_client": "Ваша запись отменена",\n            "cancel_business": "Ваша запись отменена бизнесом.", "cancel_owner": "Клиент отменил запись",\n            "hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "waiting": "Ждём вас!",\n            "phone": "номер не передан", "phone_label": "Ваш номер:", "contact_label": "Связаться:", "address": "Адрес не указан"\n        },\n        "en": {\n            "new": "New booking in Bookly", "booked": "You are successfully booked!", "cancel_client": "Your booking has been cancelled",\n            "cancel_business": "Your booking was cancelled by the business.", "cancel_owner": "Client cancelled the booking",\n            "hint": "Please contact the business if you want to choose another time.", "waiting": "We look forward to seeing you!",\n            "phone": "phone not provided", "phone_label": "Your number:", "contact_label": "Contact:", "address": "Address not provided"\n        },\n        "uz": {\n            "new": "Bookly’da yangi bron", "booked": "Siz muvaffaqiyatli bron qilindingiz!", "cancel_client": "Broningiz bekor qilindi",\n            "cancel_business": "Bron biznes tomonidan bekor qilindi.", "cancel_owner": "Mijoz bronni bekor qildi",\n            "hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.", "waiting": "Sizni kutamiz!",\n            "phone": "telefon berilmagan", "phone_label": "Raqamingiz:", "contact_label": "Bog‘lanish:", "address": "Manzil ko‘rsatilmagan"\n        },\n        "tr": {\n            "new": "Bookly’da yeni rezervasyon", "booked": "Rezervasyonunuz başarıyla oluşturuldu!", "cancel_client": "Rezervasyonunuz iptal edildi",\n            "cancel_business": "Rezervasyon işletme tarafından iptal edildi.", "cancel_owner": "Müşteri rezervasyonu iptal etti",\n            "hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.", "waiting": "Sizi bekliyoruz!",\n            "phone": "telefon verilmedi", "phone_label": "Numaranız:", "contact_label": "İletişim:", "address": "Adres belirtilmedi"\n        },\n        "ar": {\n            "new": "حجز جديد في Bookly", "booked": "تم حجز موعدك بنجاح!", "cancel_client": "تم إلغاء حجزك",\n            "cancel_business": "تم إلغاء الحجز من قبل النشاط.", "cancel_owner": "ألغى العميل الحجز",\n            "hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.", "waiting": "ننتظركم!",\n            "phone": "رقم الهاتف غير متوفر", "phone_label": "رقمك:", "contact_label": "للتواصل:", "address": "العنوان غير متوفر"\n        },\n    }[_bookly_normalize_language(lang)]\n\n    replacements = [\n        ("Новая запись в Bookly", d["new"]),\n        ("Вы успешно записаны!", d["booked"]),\n        ("Ваша запись отменена бизнесом.", d["cancel_business"]),\n        ("Ваша запись отменена", d["cancel_client"]),\n        ("Клиент отменил запись", d["cancel_owner"]),\n        ("Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", d["hint"]),\n        ("Ждём вас!", d["waiting"]),\n        ("номер не передан", d["phone"]),\n        ("номер не указан", d["phone"]),\n        ("Ваш номер:", d["phone_label"]),\n        ("Связаться:", d["contact_label"]),\n        ("Адрес не указан", d["address"]),\n    ]\n    for old, new in replacements:\n        text = text.replace(old, new)\n    return text\n\n_BOOKLY_RAW_TELEGRAM_API = telegram_api\n\ndef telegram_api(method: str, payload: dict):\n    if method == "sendMessage" and isinstance(payload, dict) and payload.get("chat_id"):\n        payload = dict(payload)\n        payload["text"] = _bookly_localize_outgoing_text(str(payload.get("text", "")), _bookly_user_language(int(payload["chat_id"])))\n    return _BOOKLY_RAW_TELEGRAM_API(method, payload)\n\n\n'''
+              if marker not in s:
+                  raise SystemExit('owner_business insertion target not found')
+              s = s.replace(marker, block + marker, 1)
 
-
-def _bookly_localize_text(text: str, lang: str) -> str:
-    d = {
-        "ru": {"new":"Новая запись в Bookly","booked":"Вы успешно записаны!","client_cancel":"Ваша запись отменена","business_cancel":"Ваша запись отменена бизнесом.","owner_cancel":"Клиент отменил запись","contact_hint":"Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.","waiting":"Ждём вас!","phone":"номер не передан","phone_label":"Ваш номер:","contact_label":"Связаться:","address":"Адрес не указан"},
-        "en": {"new":"New booking in Bookly","booked":"You are successfully booked!","client_cancel":"Your booking has been cancelled","business_cancel":"Your booking was cancelled by the business.","owner_cancel":"Client cancelled the booking","contact_hint":"Please contact the business if you want to choose another time.","waiting":"We look forward to seeing you!","phone":"phone not provided","phone_label":"Your number:","contact_label":"Contact:","address":"Address not provided"},
-        "uz": {"new":"Bookly’da yangi bron","booked":"Siz muvaffaqiyatli bron qilindingiz!","client_cancel":"Broningiz bekor qilindi","business_cancel":"Bron biznes tomonidan bekor qilindi.","owner_cancel":"Mijoz bronni bekor qildi","contact_hint":"Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.","waiting":"Sizni kutamiz!","phone":"telefon berilmagan","phone_label":"Raqamingiz:","contact_label":"Bog‘lanish:","address":"Manzil ko‘rsatilmagan"},
-        "tr": {"new":"Bookly’da yeni rezervasyon","booked":"Rezervasyonunuz başarıyla oluşturuldu!","client_cancel":"Rezervasyonunuz iptal edildi","business_cancel":"Rezervasyon işletme tarafından iptal edildi.","owner_cancel":"Müşteri rezervasyonu iptal etti","contact_hint":"Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.","waiting":"Sizi bekliyoruz!","phone":"telefon verilmedi","phone_label":"Numaranız:","contact_label":"İletişim:","address":"Adres belirtilmedi"},
-        "ar": {"new":"حجز جديد في Bookly","booked":"تم حجز موعدك بنجاح!","client_cancel":"تم إلغاء حجزك","business_cancel":"تم إلغاء الحجز من قبل النشاط.","owner_cancel":"ألغى العميل الحجز","contact_hint":"يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.","waiting":"ننتظركم!","phone":"رقم الهاتف غير متوفر","phone_label":"رقمك:","contact_label":"للتواصل:","address":"العنوان غير متوفر"},
-    }[_bookly_normalize_language(lang)]
-    for old, key in [
-        ("Новая запись в Bookly","new"),("Вы успешно записаны!","booked"),("Ваша запись отменена бизнесом.","business_cancel"),("Ваша запись отменена","client_cancel"),("Клиент отменил запись","owner_cancel"),("Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.","contact_hint"),("Ждём вас!","waiting"),("номер не передан","phone"),("номер не указан","phone"),("Ваш номер:","phone_label"),("Связаться:","contact_label"),("Адрес не указан","address")
-    ]:
-        text = text.replace(old, d[key])
-    return text
-
-
-_BASE_TELEGRAM_API_FINAL = telegram_api
-
-def telegram_api(method: str, payload: dict):
-    if method == "sendMessage" and isinstance(payload, dict) and payload.get("chat_id"):
-        chat_id = int(payload["chat_id"])
-        payload = dict(payload)
-        payload["text"] = _bookly_localize_text(str(payload.get("text", "")), _bookly_user_language(chat_id))
-    return _BASE_TELEGRAM_API_FINAL(method, payload)
-
-
-def notify_owner_new_booking(db, booking, service):
-    business = db.get(Business, booking.business_id)
-    if not business:
-        return
-    lang = _bookly_user_language(business.owner_telegram_id)
-    d = _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)]
-    text=(f"🔔 <b>{d['new']}</b>\n\n" f"👤 {booking.client_name}\n" f"📞 {booking.client_phone or d['phone_missing']}\n" f"💈 {service.name}\n" f"📅 {booking.day.isoformat()}\n" f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\n" f"🆔 #{booking.id}")
-    telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
-
-
-'''
-              s = s.replace(owner_marker, injected + owner_marker, 1)
-
-          # Remove the obsolete one-shot workflow and marker file if present; this workflow removes itself too.
-          for p in ['NOTIFICATION_LOCALIZATION_TRIGGER.md']:
-              q = Path(p)
-              if q.exists(): q.unlink()
-          wf = Path('.github/workflows/notification-language-fix.yml')
-          if wf.exists(): wf.unlink()
-
-          backend.write_text(s, encoding='utf-8')
+          p.write_text(s, encoding='utf-8')
           PY
 
-      - name: Commit final fix
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/src/main.tsx backend/app.py .github/workflows/notification-language-fix.yml NOTIFICATION_LOCALIZATION_TRIGGER.md
-          git commit -m "fix: use selected app language for Telegram notifications" || exit 0
+          git add frontend/src/main.tsx backend/app.py .github/workflows/notification-language-fix.yml
+          git rm -f .github/workflows/localize-telegram-notifications.yml NOTIFICATION_LOCALIZATION_TRIGGER.md 2>/dev/null || true
+          git commit -m "fix: use selected app language for Telegram notifications"
           git push
