@@ -36,6 +36,7 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
 BOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)
+BOOKLY_REQUEST_USER_ID: ContextVar[Optional[int]] = ContextVar("BOOKLY_REQUEST_USER_ID", default=None)
 
 class Base(DeclarativeBase): pass
 
@@ -389,6 +390,10 @@ async def capture_active_business(
             token
         )
         BOOKLY_REQUEST_LANGUAGE.reset(language_token)
+        try:
+            BOOKLY_REQUEST_USER_ID.set(None)
+        except Exception:
+            pass
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
 
 # ---------- Telegram Mini App authentication ----------
@@ -415,6 +420,10 @@ def validate_init_data(init_data: str) -> dict:
 
 def telegram_user(x_init_data: str) -> dict:
     user = validate_init_data(x_init_data)
+    try:
+        request_user_id_token = BOOKLY_REQUEST_USER_ID.set(int(user.get("id")))
+    except (TypeError, ValueError):
+        request_user_id_token = None
     _bookly_remember_language(user, BOOKLY_REQUEST_LANGUAGE.get())
     return user
 
@@ -511,7 +520,11 @@ _BOOKLY_RAW_TELEGRAM_API = telegram_api
 def telegram_api(method: str, payload: dict):
     if method == "sendMessage" and isinstance(payload, dict) and payload.get("chat_id"):
         payload = dict(payload)
-        payload["text"] = _bookly_localize_outgoing_text(str(payload.get("text", "")), _bookly_user_language(int(payload["chat_id"])))
+        chat_id = int(payload["chat_id"])
+        request_lang = BOOKLY_REQUEST_LANGUAGE.get()
+        request_user_id = BOOKLY_REQUEST_USER_ID.get()
+        effective_lang = request_lang if request_lang and request_user_id == chat_id else _bookly_user_language(chat_id)
+        payload["text"] = _bookly_localize_outgoing_text(str(payload.get("text", "")), effective_lang)
     return _BOOKLY_RAW_TELEGRAM_API(method, payload)
 
 
