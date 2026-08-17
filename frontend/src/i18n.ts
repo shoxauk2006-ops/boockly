@@ -66,7 +66,7 @@ const ru: TranslationMap = {
   'client.noSavedBusinesses': 'Пока нет сохранённых бизнесов.',
   'client.noServices': 'У этого бизнеса пока нет доступных услуг.',
   'client.noSlots': 'На эту дату свободных мест нет.',
-  'client.bookingLoading': 'Бронируем...'
+  'client.bookingLoading': 'Бронируем...',
   'client.savedBusiness': 'Сохранено',
   'client.location': 'Открыть локацию',
   'client.services': 'Услуги',
