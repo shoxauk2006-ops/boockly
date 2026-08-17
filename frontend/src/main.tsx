@@ -1365,6 +1365,7 @@ function Dashboard({
               <BookingRow
                 x={x}
                 key={x.id}
+                t={t}
               />
             )
           )
