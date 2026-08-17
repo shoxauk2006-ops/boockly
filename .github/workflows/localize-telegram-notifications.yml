@@ -1,0 +1,70 @@
+name: Localize Telegram notifications
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  localize:
+    if: ${{ !contains(github.event.head_commit.message, '[notification-localization]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply notification localization
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          app = Path('backend/app.py')
+          text = app.read_text(encoding='utf-8')
+
+          # Add a lightweight per-Telegram-user language table without touching the existing DB schema.
+          if 'class TelegramUserLanguage(Base):' not in text:
+              anchor = 'Base.metadata.create_all(engine)'
+              block = '''\n\nclass TelegramUserLanguage(Base):\n    __tablename__ = "telegram_user_languages"\n    telegram_user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)\n    language: Mapped[str] = mapped_column(String(8), default="en")\n\n\ndef _bookly_normalize_language(value: str | None) -> str:\n    value = (value or "").lower().replace("_", "-")\n    if value.startswith("ru"): return "ru"\n    if value.startswith("uz"): return "uz"\n    if value.startswith("tr"): return "tr"\n    if value.startswith("ar"): return "ar"\n    return "en"\n\n\ndef _bookly_remember_language(user: dict) -> None:\n    try:\n        uid = int(user.get("id"))\n    except (TypeError, ValueError):\n        return\n    lang = _bookly_normalize_language(user.get("language_code"))\n    try:\n        with SessionLocal() as db:\n            row = db.get(TelegramUserLanguage, uid)\n            if row is None:\n                row = TelegramUserLanguage(telegram_user_id=uid, language=lang)\n                db.add(row)\n            else:\n                row.language = lang\n            db.commit()\n    except Exception:\n        pass\n\n\ndef _bookly_user_language(telegram_user_id: int) -> str:\n    try:\n        with SessionLocal() as db:\n            row = db.get(TelegramUserLanguage, int(telegram_user_id))\n            return _bookly_normalize_language(row.language if row else "en")\n    except Exception:\n        return "en"\n\n\n_BOOKLY_NOTIFY_TEXT = {\n  "ru": {\n    "new": "Новая запись в Bookly", "phone_missing": "номер не передан", "cancelled_client": "Ваша запись отменена", "cancelled_business": "Запись отменена бизнесом", "client_booked": "Вы успешно записаны!", "contact_hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "waiting": "Ждём вас!", "client_cancelled": "Клиент отменил запись", "reminder24": "Напоминание о записи в Bookly", "reminder2": "Ваша запись сегодня в", "owner_reminder24": "Напоминание: запись",\n  },\n  "en": {\n    "new": "New booking in Bookly", "phone_missing": "phone not provided", "cancelled_client": "Your booking has been cancelled", "cancelled_business": "Your booking was cancelled by the business", "client_booked": "You are successfully booked!", "contact_hint": "Please contact the business if you want to choose another time.", "waiting": "We look forward to seeing you!", "client_cancelled": "Client cancelled the booking", "reminder24": "Bookly booking reminder", "reminder2": "Your booking is today at", "owner_reminder24": "Reminder: booking",\n  },\n  "uz": {\n    "new": "Bookly’da yangi bron", "phone_missing": "telefon berilmagan", "cancelled_client": "Broningiz bekor qilindi", "cancelled_business": "Bron biznes tomonidan bekor qilindi", "client_booked": "Siz muvaffaqiyatli bron qilindingiz!", "contact_hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.", "waiting": "Sizni kutamiz!", "client_cancelled": "Mijoz bronni bekor qildi", "reminder24": "Bookly bron eslatmasi", "reminder2": "Bugungi broningiz vaqti", "owner_reminder24": "Eslatma: bron",\n  },\n  "tr": {\n    "new": "Bookly’da yeni rezervasyon", "phone_missing": "telefon verilmedi", "cancelled_client": "Rezervasyonunuz iptal edildi", "cancelled_business": "Rezervasyon işletme tarafından iptal edildi", "client_booked": "Rezervasyonunuz başarıyla oluşturuldu!", "contact_hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.", "waiting": "Sizi bekliyoruz!", "client_cancelled": "Müşteri rezervasyonu iptal etti", "reminder24": "Bookly rezervasyon hatırlatması", "reminder2": "Bugünkü rezervasyon saatiniz", "owner_reminder24": "Hatırlatma: rezervasyon",\n  },\n  "ar": {\n    "new": "حجز جديد في Bookly", "phone_missing": "رقم الهاتف غير متوفر", "cancelled_client": "تم إلغاء حجزك", "cancelled_business": "تم إلغاء الحجز من قبل النشاط", "client_booked": "تم حجز موعدك بنجاح!", "contact_hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.", "waiting": "ننتظركم!", "client_cancelled": "ألغى العميل الحجز", "reminder24": "تذكير بحجز Bookly", "reminder2": "موعد حجزك اليوم في", "owner_reminder24": "تذكير: الحجز",\n  },\n}\n\n\ndef _bookly_t(lang: str, key: str) -> str:\n    return _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)][key]\n\n\n_BASE_TELEGRAM_USER = telegram_user\n\ndef telegram_user(x_init_data: str) -> dict:\n    user = _BASE_TELEGRAM_USER(x_init_data)\n    _bookly_remember_language(user)\n    return user\n\n\n_BASE_NOTIFY_OWNER_NEW_BOOKING = notify_owner_new_booking\n\ndef notify_owner_new_booking(db, booking, service):\n    business = db.get(Business, booking.business_id)\n    if not business:\n        return\n    lang = _bookly_user_language(business.owner_telegram_id)\n    d = _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)]\n    text=(\n        f"🔔 <b>{d['new']}</b>\\n\\n"\n        f"👤 {booking.client_name}\\n"\n        f"📞 {booking.client_phone or d['phone_missing']}\\n"\n        f"💈 {service.name}\\n"\n        f"📅 {booking.day.isoformat()}\\n"\n        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\\n"\n        f"🆔 #{booking.id}"\n    )\n    telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})\n\n\n# Wrap direct Telegram messages in the existing routes so their fixed copy is localized too.\n_BASE_TELEGRAM_API = telegram_api\ndef telegram_api(method: str, payload: dict):\n    if method == "sendMessage" and isinstance(payload, dict):\n        text = str(payload.get("text", ""))\n        chat_id = payload.get("chat_id")\n        if chat_id:\n            lang = _bookly_user_language(int(chat_id))\n            d = _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)]\n            replacements = [\n              ("❌ <b>Ваша запись отменена</b>", f"❌ <b>{d['cancelled_client']}</b>"),\n              ("Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", d["contact_hint"]),\n              ("✅ <b>Вы успешно записаны!</b>", f"✅ <b>{d['client_booked']}</b>"),\n              ("Ждём вас!", d["waiting"]),\n              ("❌ <b>Запись отменена</b>", f"❌ <b>{d['cancelled_client']}</b>"),\n              ("❌ Ваша запись отменена бизнесом.", f"❌ {d['cancelled_business']}."),\n              ("❌ <b>Клиент отменил запись</b>", f"❌ <b>{d['client_cancelled']}</b>"),\n              ("номер не передан", d["phone_missing"]),\n              ("номер не указан", d["phone_missing"]),\n              ("Адрес не указан", {"ru":"Адрес не указан","en":"Address not provided","uz":"Manzil ko‘rsatilmagan","tr":"Adres belirtilmedi","ar":"العنوان غير متوفر"}[_bookly_normalize_language(lang)]),\n              ("Ваш номер:", {"ru":"Ваш номер:","en":"Your number:","uz":"Raqamingiz:","tr":"Numaranız:","ar":"رقمك:"}[_bookly_normalize_language(lang)]),\n              ("Связаться:", {"ru":"Связаться:","en":"Contact:","uz":"Bog‘lanish:","tr":"İletişim:","ar":"للتواصل:"}[_bookly_normalize_language(lang)]),\n            ]\n            for old, new in replacements:\n                text = text.replace(old, new)\n            payload = dict(payload)\n            payload["text"] = text\n    return _BASE_TELEGRAM_API(method, payload)\n\n\nBase.metadata.create_all(engine)\n'''
+              text = text.replace(anchor, block + '\n' + anchor, 1)
+
+          app.write_text(text, encoding='utf-8')
+
+          # Worker reminders are localized using the stored Telegram language.
+          worker = Path('worker.py')
+          wt = worker.read_text(encoding='utf-8')
+          if 'TELEGRAM_USER_LANG' not in wt:
+              wt = wt.replace('from backend.app import SessionLocal, Booking, Business, Service', 'from backend.app import SessionLocal, Booking, Business, Service, _bookly_user_language, _bookly_t')
+              wt = wt.replace('send(b.client_telegram_id, f"🔔 Напоминание о записи в Bookly\\n\\n📅 {b.day.isoformat()}\\n🕐 {b.start.strftime(\'%H:%M\')}–{b.end.strftime(\'%H:%M\')}")', 'lang = _bookly_user_language(b.client_telegram_id)\n                send(b.client_telegram_id, f"🔔 {_bookly_t(lang, \"reminder24\")}\\n\\n📅 {b.day.isoformat()}\\n🕐 {b.start.strftime(\'%H:%M\')}–{b.end.strftime(\'%H:%M\')}")')
+              wt = wt.replace('business=db.get(Business,b.business_id)\n                if business: send(business.owner_telegram_id, f"🔔 Напоминание: запись #{b.id} завтра в {b.start.strftime(\'%H:%M\')}")', 'business=db.get(Business,b.business_id)\n                if business:\n                    lang = _bookly_user_language(business.owner_telegram_id)\n                    send(business.owner_telegram_id, f"🔔 {_bookly_t(lang, \"owner_reminder24\")} #{b.id} {b.start.strftime(\'%H:%M\')}")')
+              wt = wt.replace('send(b.client_telegram_id, f"⏰ Ваша запись сегодня в {b.start.strftime(\'%H:%M\')}")', 'lang = _bookly_user_language(b.client_telegram_id)\n                send(b.client_telegram_id, f"⏰ {_bookly_t(lang, \"reminder2\")} {b.start.strftime(\'%H:%M\')}")')
+          worker.write_text(wt, encoding='utf-8')
+
+          # Bot /start message follows Telegram account language.
+          bot = Path('bot.py')
+          bt = bot.read_text(encoding='utf-8')
+          if 'BOOKLY_BOT_TEXTS' not in bt:
+              bt = bt.replace('BOT_USERNAME=os.getenv("BOT_USERNAME","BooklyBot")', '''BOT_USERNAME=os.getenv("BOT_USERNAME","BooklyBot")\n\nBOOKLY_BOT_TEXTS={\n  "ru": ("Открыть Bookly", "Bookly — бронирование внутри Telegram.\\n\\nОткройте приложение:"),\n  "en": ("Open Bookly", "Bookly — booking inside Telegram.\\n\\nOpen the app:"),\n  "uz": ("Bookly’ni ochish", "Bookly — Telegram ichida bron qilish.\\n\\nIlovani oching:"),\n  "tr": ("Bookly’yi aç", "Bookly — Telegram içinde rezervasyon.\\n\\nUygulamayı açın:"),\n  "ar": ("فتح Bookly", "Bookly — الحجز داخل Telegram.\\n\\nافتح التطبيق:"),\n}\n\ndef normalize_bot_language(code):\n    code=(code or "").lower()\n    for x in ("ru","uz","tr","ar"):\n        if code.startswith(x): return x\n    return "en"\n''')
+              bt = bt.replace('kb=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Открыть Bookly", web_app=WebAppInfo(url=url))]])\n        await message.answer("Bookly — бронирование внутри Telegram.\\n\\nОткройте приложение:", reply_markup=kb)', 'lang=normalize_bot_language(getattr(message.from_user, "language_code", None))\n        button_text, answer_text = BOOKLY_BOT_TEXTS[lang]\n        kb=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=button_text, web_app=WebAppInfo(url=url))]])\n        await message.answer(answer_text, reply_markup=kb)')
+          bot.write_text(bt, encoding='utf-8')
+
+          # Send a compact marker file so the migration can be confirmed if needed.
+          Path('/tmp/notification-localization-done').write_text('ok')
+          PY
+
+      - name: Check modified files
+        run: |
+          git diff --check
+          git diff -- backend/app.py worker.py bot.py | sed -n '1,260p'
+
+      - name: Commit localized notifications
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f .github/workflows/localize-telegram-notifications.yml
+          git add backend/app.py worker.py bot.py .github/workflows/localize-telegram-notifications.yml
+          git commit -m "chore: localize Telegram notifications [notification-localization]" || exit 0
+          git push origin HEAD:main
