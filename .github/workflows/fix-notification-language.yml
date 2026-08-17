@@ -1,0 +1,25 @@
+name: Fix Telegram notification language
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-notification-language.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch backend
+        run: python tools/fix_notification_language.py
+      - name: Commit changes and remove temporary files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f tools/fix_notification_language.py .github/workflows/fix-notification-language.yml
+          git add backend/app.py tools/fix_notification_language.py .github/workflows/fix-notification-language.yml
+          git commit -m "fix: send Telegram notifications in Bookly language"
+          git push
