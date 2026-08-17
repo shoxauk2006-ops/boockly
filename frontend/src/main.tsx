@@ -1200,6 +1200,7 @@ return (
         <Settings
           business={business}
           reload={load}
+          t={t}
         />
       )}
     </section>
@@ -3586,10 +3587,12 @@ function BookingRow({
 }
 function Settings({
   business,
-  reload
+  reload,
+  t
 }: {
   business: any;
   reload: () => void;
+  t: (key: string, fallback?: string) => string;
 }) {
   const [name, setName] =
     useState(
