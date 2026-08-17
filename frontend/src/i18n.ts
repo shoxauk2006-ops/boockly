@@ -283,26 +283,27 @@ const en: TranslationMap = {
   'home.openAdmin': 'Open admin panel',
   'home.openBusiness': 'Open business page',
   'home.slugPlaceholder': 'Business link or slug',
-  'home.emptySaved': 'Businesses you save will appear here.',
-  'days.mon'
-  'days.tue'
-'days.wed'
-'days.thu'
-'days.fri'
-'days.sat'
-'days.sun'
+   'home.emptySaved': 'Businesses you save will appear here.',
 
-'owner.businessesLoadError'
-'owner.enterBusinessName'
-'owner.creatingBusiness'
-'owner.createBusiness'
-'owner.opened'
-'owner.telegramOnlyTitle'
-'owner.telegramOnlyDescription'
-'owner.paddleLoading'
-'owner.telegramUserError'
-'owner.selectedBusinessError'
-  'owner.today': 'Today',
+'days.mon': 'Mon',
+'days.tue': 'Tue',
+'days.wed': 'Wed',
+'days.thu': 'Thu',
+'days.fri': 'Fri',
+'days.sat': 'Sat',
+'days.sun': 'Sun',
+
+'owner.businessesLoadError': 'Failed to load businesses',
+'owner.enterBusinessName': 'Enter business name',
+'owner.creatingBusiness': 'Creating...',
+'owner.createBusiness': 'Create business',
+'owner.opened': 'Open',
+'owner.telegramOnlyTitle': 'Open Bookly from Telegram',
+'owner.telegramOnlyDescription': 'The admin panel works inside the Telegram Mini App.',
+'owner.paddleLoading': 'Paddle is still loading. Please try again.',
+'owner.telegramUserError': 'Could not identify your Telegram user.',
+'owner.selectedBusinessError': 'Could not determine the selected business.',
+'owner.today': 'Today',
   'owner.upcoming': 'Upcoming',
   'owner.past': 'Past',
   'owner.addBooking': 'New booking',
