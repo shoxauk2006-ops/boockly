@@ -1,7 +1,7 @@
 import os, asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 TOKEN=os.getenv("BOT_TOKEN")
 WEBAPP_URL=os.getenv("WEBAPP_URL","https://YOUR-DOMAIN.example")
