@@ -1,0 +1,49 @@
+name: Fix notification backend startup
+
+on:
+  push:
+    paths:
+      - 'backend/app.py'
+      - '.github/workflows/fix-notification-import.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove premature notification wrappers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
+
+          start = s.find('_BASE_TELEGRAM_USER = telegram_user')
+          end = s.find('Base.metadata.create_all(engine)', start)
+
+          if start == -1 or end == -1:
+              raise SystemExit('premature notification wrapper block not found')
+
+          fixed = s[:start] + s[end:]
+          p.write_text(fixed, encoding='utf-8')
+          print('Removed premature notification wrappers')
+          PY
+
+      - name: Commit fix and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- backend/app.py; then
+            git rm -f .github/workflows/fix-notification-import.yml
+            git commit -m "chore: remove temporary notification fix workflow"
+          else
+            git add backend/app.py .github/workflows/fix-notification-import.yml
+            git rm -f .github/workflows/fix-notification-import.yml
+            git commit -m "fix: remove premature notification wrappers"
+          fi
+          git push
