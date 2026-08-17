@@ -1377,49 +1377,99 @@ function Dashboard({
   );
 }
 function Stat({n,t}:{n:any,t:string}){return <div className="stat"><strong>{n}</strong><span>{t}</span></div>}
-function Subscription({business}:{business:any}){
-  const status = business?.subscription_status || "inactive";
- const active = business?.subscription_active || false;
+function Subscription({
+  business,
+  t
+}: {
+  business: any;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const status =
+    business?.subscription_status ||
+    'inactive';
 
-  const paymentFailed = status === "past_due" || status === "unpaid";
-  const cancelledButActive = status === "cancelled" && active;
+  const active =
+    business?.subscription_active ||
+    false;
+
+  const paymentFailed =
+    status === 'past_due' ||
+    status === 'unpaid';
+
+  const cancelledButActive =
+    status === 'cancelled' &&
+    active;
 
   if (active && !paymentFailed) {
     return (
       <div className="card subscription">
         <div className="subscription-head">
           <div>
-            <h3>Bookly Pro</h3>
-            <p><b>$9.99 / месяц</b></p>
+            <h3>
+              Bookly Pro
+            </h3>
+
+            <p>
+              <b>
+                $9.99 / месяц
+              </b>
+            </p>
           </div>
 
           <span className="pill ok">
-            Активна
+            {t('owner.active')}
           </span>
         </div>
 
         <ul>
-          <li>Неограниченные записи</li>
-          <li>Ссылка для клиентов</li>
-          <li>Уведомления в Telegram</li>
-          <li>Расписание и блокировки</li>
+          <li>
+            {t(
+              'owner.unlimitedBookings'
+            )}
+          </li>
+
+          <li>
+            {t(
+              'owner.clientLink'
+            )}
+          </li>
+
+          <li>
+            {t(
+              'owner.telegramNotifications'
+            )}
+          </li>
+
+          <li>
+            {t(
+              'owner.scheduleAndBlocks'
+            )}
+          </li>
         </ul>
 
         <div className="success">
-          ✅ Bookly активирован
+          ✅ {t(
+            'owner.booklyActivated'
+          )}
 
           {business.subscription_expires_at && (
             <p className="muted">
-              Следующее списание:{" "}
+              {t(
+                'owner.nextPayment'
+              )}{' '}
               {new Date(
                 business.subscription_expires_at
-              ).toLocaleDateString("ru-RU")}
+              ).toLocaleDateString(
+                'ru-RU'
+              )}
             </p>
           )}
 
           {cancelledButActive && (
             <p className="muted">
-              Подписка отменена и действует до конца оплаченного периода.
+              {t(
+                'owner.cancelledActive'
+              )}
             </p>
           )}
         </div>
@@ -1432,29 +1482,43 @@ function Subscription({business}:{business:any}){
       <div className="card subscription">
         <div className="subscription-head">
           <div>
-            <h3>Bookly Pro</h3>
-            <p><b>$9.99 / месяц</b></p>
+            <h3>
+              Bookly Pro
+            </h3>
+
+            <p>
+              <b>
+                $9.99 / месяц
+              </b>
+            </p>
           </div>
 
           <span className="pill">
-            Оплата не прошла
+            {t(
+              'owner.paymentFailed'
+            )}
           </span>
         </div>
 
         <p className="muted">
-          Оплатите подписку, чтобы активировать Bookly.
+          {t(
+            'owner.subscribeToActivate'
+          )}
         </p>
-<button
-  className="primary full"
- onClick={() =>
-  checkout(
-    'paddle',
-    business.id
-  )
-}
->
-  Оплатить $9.99 / месяц
-</button>
+
+        <button
+          className="primary full"
+          onClick={() =>
+            checkout(
+              'paddle',
+              business.id
+            )
+          }
+        >
+          {t(
+            'owner.payMonthly'
+          )}
+        </button>
       </div>
     );
   }
@@ -1463,24 +1527,41 @@ function Subscription({business}:{business:any}){
     <div className="card subscription">
       <div className="subscription-head">
         <div>
-          <h3>Bookly Pro</h3>
-          <p><b>$9.99 / месяц</b></p>
+          <h3>
+            Bookly Pro
+          </h3>
+
+          <p>
+            <b>
+              $9.99 / месяц
+            </b>
+          </p>
         </div>
 
         <span className="pill">
-          Не активирована
+          {t(
+            'owner.inactive'
+          )}
         </span>
       </div>
 
       <p className="muted">
-        Оплатите подписку, чтобы активировать Bookly.
+        {t(
+          'owner.subscribeToActivate'
+        )}
       </p>
 
       <button
         className="primary full"
-       onClick={()=>checkout('paddle')}
+        onClick={() =>
+          checkout(
+            'paddle'
+          )
+        }
       >
-        Оплатить $9.99 / месяц
+        {t(
+          'owner.payMonthly'
+        )}
       </button>
     </div>
   );
