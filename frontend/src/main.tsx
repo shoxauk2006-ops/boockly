@@ -1157,10 +1157,11 @@ return (
       </nav>
 
       {tab === 'home' && (
-        <Dashboard
-          bookings={bookings}
-          business={business}
-        />
+       <Dashboard
+  bookings={bookings}
+  business={business}
+  t={t}
+/>
       )}
 
       {tab === 'services' && (
@@ -1297,7 +1298,84 @@ function BusinessForm({onSaved}:{onSaved:()=>void}) {
   );
 }
 
-function Dashboard({bookings,business}:{bookings:any[],business:any}){const today=new Date().toISOString().slice(0,10);const b=bookings.filter(x=>x.day===today&&x.status==='confirmed');return <><div className="grid3"><Stat n={b.length} t="Сегодня"/><Stat n={bookings.filter(x=>x.status==='confirmed').length} t="Всего записей"/><Stat n={business.subscription_active?'✓':'—'} t="Подписка"/></div><div className="card"><h3>Сегодня</h3>{b.length?b.map(x=><BookingRow x={x} key={x.id}/>):<p>Записей пока нет.</p>}</div><Subscription business={business}/></>}
+function Dashboard({
+  bookings,
+  business,
+  t
+}: {
+  bookings: any[];
+  business: any;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const today =
+    new Date()
+      .toISOString()
+      .slice(0, 10);
+
+  const todayBookings =
+    bookings.filter(
+      x =>
+        x.day === today &&
+        x.status === 'confirmed'
+    );
+
+  const totalBookings =
+    bookings.filter(
+      x =>
+        x.status === 'confirmed'
+    ).length;
+
+  return (
+    <>
+      <div className="grid3">
+        <Stat
+          n={todayBookings.length}
+          t={t('owner.today')}
+        />
+
+        <Stat
+          n={totalBookings}
+          t={t('owner.totalBookings')}
+        />
+
+        <Stat
+          n={
+            business.subscription_active
+              ? '✓'
+              : '—'
+          }
+          t={t('owner.subscription')}
+        />
+      </div>
+
+      <div className="card">
+        <h3>
+          {t('owner.today')}
+        </h3>
+
+        {todayBookings.length ? (
+          todayBookings.map(
+            x => (
+              <BookingRow
+                x={x}
+                key={x.id}
+              />
+            )
+          )
+        ) : (
+          <p>
+            {t('owner.noBookings')}
+          </p>
+        )}
+      </div>
+
+      <Subscription
+        business={business}
+        t={t}
+      />
+    </>
+  );
+}
 function Stat({n,t}:{n:any,t:string}){return <div className="stat"><strong>{n}</strong><span>{t}</span></div>}
 function Subscription({business}:{business:any}){
   const status = business?.subscription_status || "inactive";
