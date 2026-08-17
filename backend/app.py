@@ -215,6 +215,134 @@ class Booking(Base):
     reminder_24_sent: Mapped[bool] = mapped_column(Boolean, default=False)
     reminder_2_sent: Mapped[bool] = mapped_column(Boolean, default=False)
 
+
+
+class TelegramUserLanguage(Base):
+    __tablename__ = "telegram_user_languages"
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    language: Mapped[str] = mapped_column(String(8), default="en")
+
+
+def _bookly_normalize_language(value: str | None) -> str:
+    value = (value or "").lower().replace("_", "-")
+    if value.startswith("ru"): return "ru"
+    if value.startswith("uz"): return "uz"
+    if value.startswith("tr"): return "tr"
+    if value.startswith("ar"): return "ar"
+    return "en"
+
+
+def _bookly_remember_language(user: dict) -> None:
+    try:
+        uid = int(user.get("id"))
+    except (TypeError, ValueError):
+        return
+    lang = _bookly_normalize_language(user.get("language_code"))
+    try:
+        with SessionLocal() as db:
+            row = db.get(TelegramUserLanguage, uid)
+            if row is None:
+                row = TelegramUserLanguage(telegram_user_id=uid, language=lang)
+                db.add(row)
+            else:
+                row.language = lang
+            db.commit()
+    except Exception:
+        pass
+
+
+def _bookly_user_language(telegram_user_id: int) -> str:
+    try:
+        with SessionLocal() as db:
+            row = db.get(TelegramUserLanguage, int(telegram_user_id))
+            return _bookly_normalize_language(row.language if row else "en")
+    except Exception:
+        return "en"
+
+
+_BOOKLY_NOTIFY_TEXT = {
+  "ru": {
+    "new": "Новая запись в Bookly", "phone_missing": "номер не передан", "cancelled_client": "Ваша запись отменена", "cancelled_business": "Запись отменена бизнесом", "client_booked": "Вы успешно записаны!", "contact_hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "waiting": "Ждём вас!", "client_cancelled": "Клиент отменил запись", "reminder24": "Напоминание о записи в Bookly", "reminder2": "Ваша запись сегодня в", "owner_reminder24": "Напоминание: запись",
+  },
+  "en": {
+    "new": "New booking in Bookly", "phone_missing": "phone not provided", "cancelled_client": "Your booking has been cancelled", "cancelled_business": "Your booking was cancelled by the business", "client_booked": "You are successfully booked!", "contact_hint": "Please contact the business if you want to choose another time.", "waiting": "We look forward to seeing you!", "client_cancelled": "Client cancelled the booking", "reminder24": "Bookly booking reminder", "reminder2": "Your booking is today at", "owner_reminder24": "Reminder: booking",
+  },
+  "uz": {
+    "new": "Bookly’da yangi bron", "phone_missing": "telefon berilmagan", "cancelled_client": "Broningiz bekor qilindi", "cancelled_business": "Bron biznes tomonidan bekor qilindi", "client_booked": "Siz muvaffaqiyatli bron qilindingiz!", "contact_hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.", "waiting": "Sizni kutamiz!", "client_cancelled": "Mijoz bronni bekor qildi", "reminder24": "Bookly bron eslatmasi", "reminder2": "Bugungi broningiz vaqti", "owner_reminder24": "Eslatma: bron",
+  },
+  "tr": {
+    "new": "Bookly’da yeni rezervasyon", "phone_missing": "telefon verilmedi", "cancelled_client": "Rezervasyonunuz iptal edildi", "cancelled_business": "Rezervasyon işletme tarafından iptal edildi", "client_booked": "Rezervasyonunuz başarıyla oluşturuldu!", "contact_hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.", "waiting": "Sizi bekliyoruz!", "client_cancelled": "Müşteri rezervasyonu iptal etti", "reminder24": "Bookly rezervasyon hatırlatması", "reminder2": "Bugünkü rezervasyon saatiniz", "owner_reminder24": "Hatırlatma: rezervasyon",
+  },
+  "ar": {
+    "new": "حجز جديد في Bookly", "phone_missing": "رقم الهاتف غير متوفر", "cancelled_client": "تم إلغاء حجزك", "cancelled_business": "تم إلغاء الحجز من قبل النشاط", "client_booked": "تم حجز موعدك بنجاح!", "contact_hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.", "waiting": "ننتظركم!", "client_cancelled": "ألغى العميل الحجز", "reminder24": "تذكير بحجز Bookly", "reminder2": "موعد حجزك اليوم في", "owner_reminder24": "تذكير: الحجز",
+  },
+}
+
+
+def _bookly_t(lang: str, key: str) -> str:
+    return _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)][key]
+
+
+_BASE_TELEGRAM_USER = telegram_user
+
+def telegram_user(x_init_data: str) -> dict:
+    user = _BASE_TELEGRAM_USER(x_init_data)
+    _bookly_remember_language(user)
+    return user
+
+
+_BASE_NOTIFY_OWNER_NEW_BOOKING = notify_owner_new_booking
+
+def notify_owner_new_booking(db, booking, service):
+    business = db.get(Business, booking.business_id)
+    if not business:
+        return
+    lang = _bookly_user_language(business.owner_telegram_id)
+    d = _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)]
+    text=(
+        f"🔔 <b>{d['new']}</b>\n\n"
+        f"👤 {booking.client_name}\n"
+        f"📞 {booking.client_phone or d['phone_missing']}\n"
+        f"💈 {service.name}\n"
+        f"📅 {booking.day.isoformat()}\n"
+        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\n"
+        f"🆔 #{booking.id}"
+    )
+    telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
+
+
+# Wrap direct Telegram messages in the existing routes so their fixed copy is localized too.
+_BASE_TELEGRAM_API = telegram_api
+def telegram_api(method: str, payload: dict):
+    if method == "sendMessage" and isinstance(payload, dict):
+        text = str(payload.get("text", ""))
+        chat_id = payload.get("chat_id")
+        if chat_id:
+            lang = _bookly_user_language(int(chat_id))
+            d = _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)]
+            replacements = [
+              ("❌ <b>Ваша запись отменена</b>", f"❌ <b>{d['cancelled_client']}</b>"),
+              ("Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", d["contact_hint"]),
+              ("✅ <b>Вы успешно записаны!</b>", f"✅ <b>{d['client_booked']}</b>"),
+              ("Ждём вас!", d["waiting"]),
+              ("❌ <b>Запись отменена</b>", f"❌ <b>{d['cancelled_client']}</b>"),
+              ("❌ Ваша запись отменена бизнесом.", f"❌ {d['cancelled_business']}."),
+              ("❌ <b>Клиент отменил запись</b>", f"❌ <b>{d['client_cancelled']}</b>"),
+              ("номер не передан", d["phone_missing"]),
+              ("номер не указан", d["phone_missing"]),
+              ("Адрес не указан", {"ru":"Адрес не указан","en":"Address not provided","uz":"Manzil ko‘rsatilmagan","tr":"Adres belirtilmedi","ar":"العنوان غير متوفر"}[_bookly_normalize_language(lang)]),
+              ("Ваш номер:", {"ru":"Ваш номер:","en":"Your number:","uz":"Raqamingiz:","tr":"Numaranız:","ar":"رقمك:"}[_bookly_normalize_language(lang)]),
+              ("Связаться:", {"ru":"Связаться:","en":"Contact:","uz":"Bog‘lanish:","tr":"İletişim:","ar":"للتواصل:"}[_bookly_normalize_language(lang)]),
+            ]
+            for old, new in replacements:
+                text = text.replace(old, new)
+            payload = dict(payload)
+            payload["text"] = text
+    return _BASE_TELEGRAM_API(method, payload)
+
+
+Base.metadata.create_all(engine)
+
 Base.metadata.create_all(engine)
 app = FastAPI(title="Bookly API", version="0.2.0")
 ACTIVE_BUSINESS_ID: ContextVar[Optional[int]] = ContextVar(
