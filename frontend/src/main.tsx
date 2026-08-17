@@ -1191,8 +1191,9 @@ return (
 
       {tab === 'bookings' && (
         <Bookings
-          bookings={bookings}
-        />
+  bookings={bookings}
+  t={t}
+/>
       )}
 
       {tab === 'settings' && (
@@ -2603,9 +2604,11 @@ function Blocks({
 }
 
 function Bookings({
-  bookings
+  bookings,
+  t
 }: {
   bookings: any[];
+  t: (key: string, fallback?: string) => string;
 }) {
   const [showForm, setShowForm] = useState(false);
 
