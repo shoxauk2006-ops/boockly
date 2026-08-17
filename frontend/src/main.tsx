@@ -1679,7 +1679,6 @@ function Services({
   business: any;
   t: (key: string, fallback?: string) => string;
 }) {
-
   const [editingId, setEditingId] =
     useState<number | null>(null);
 
@@ -1694,13 +1693,14 @@ function Services({
 
   const [savingBusiness, setSavingBusiness] =
     useState(false);
+
   const [f, setF] = useState({
-  name: '',
-  description: '',
-  price: '',
-  currency: 'UZS',
-  duration_min: '30'
-});
+    name: '',
+    description: '',
+    price: '',
+    currency: 'UZS',
+    duration_min: '30'
+  });
 
   useEffect(() => {
     setBusinessPhone(
@@ -1756,7 +1756,7 @@ function Services({
       if (DisplayNames) {
         const names =
           new DisplayNames(
-            ['en'],
+            [getStoredLanguage()],
             {
               type: 'currency'
             }
@@ -1776,9 +1776,14 @@ function Services({
     code: string
   ) => {
     try {
+      const locale =
+        getStoredLanguage() === 'ar'
+          ? 'ar'
+          : 'en';
+
       const parts =
         new Intl.NumberFormat(
-          'en',
+          locale,
           {
             style: 'currency',
             currency: code,
@@ -1883,19 +1888,20 @@ function Services({
               method: 'PUT',
               headers: headers(),
               body: JSON.stringify({
-                name: business.name,
+                name:
+                  business?.name || '',
                 description:
-                  business.description ||
+                  business?.description ||
                   '',
                 address:
                   businessAddress.trim(),
                 phone:
                   businessPhone.trim(),
                 latitude:
-                  business.latitude ??
+                  business?.latitude ??
                   null,
                 longitude:
-                  business.longitude ??
+                  business?.longitude ??
                   null
               })
             }
@@ -1909,25 +1915,31 @@ function Services({
         if (!response.ok) {
           throw new Error(
             data?.detail ||
-            'Не удалось сохранить контакты'
+            t(
+              'owner.saveContactsError',
+              'Не удалось сохранить контакты'
+            )
           );
         }
 
         alert(
-          '✅ Настройки сохранены'
+          t(
+            'owner.contactsSaved',
+            '✅ Настройки сохранены'
+          )
         );
 
         reload();
-
       } catch (e: any) {
         alert(
           e?.message ||
-          'Не удалось сохранить настройки'
+          t(
+            'owner.saveContactsError',
+            'Не удалось сохранить настройки'
+          )
         );
       } finally {
-        setSavingBusiness(
-          false
-        );
+        setSavingBusiness(false);
       }
     };
 
@@ -1943,18 +1955,24 @@ function Services({
         Number(f.duration_min);
 
       if (!name) {
-  alert(
-    t('owner.invalidServiceName')
-  );
-  return;
-}
+        alert(
+          t(
+            'owner.invalidServiceName',
+            'Введите название услуги'
+          )
+        );
+        return;
+      }
 
       if (
         !Number.isFinite(price) ||
         price < 0
       ) {
         alert(
-          'Введите корректную цену'
+          t(
+            'owner.invalidPrice',
+            'Введите корректную цену'
+          )
         );
         return;
       }
@@ -1967,61 +1985,86 @@ function Services({
         duration > 480
       ) {
         alert(
-          'Длительность должна быть от 1 до 480 минут'
+          t(
+            'owner.invalidDuration',
+            'Длительность должна быть от 1 до 480 минут'
+          )
         );
         return;
       }
 
-      const url = editingId
-        ? API +
-          `/admin/services/${editingId}`
-        : API +
-          '/admin/services';
-
-      const response =
-        await fetch(
-          url,
-          {
-            method: editingId
-              ? 'PATCH'
-              : 'POST',
-            headers: headers(),
-            body:
-              JSON.stringify({
-                name,
-                description:
-                  f.description.trim(),
-                price,
-                currency:
-                  f.currency,
-                duration_min:
-                  duration,
-                active: true
-              })
-          }
-        );
-
-      const data =
-        await response
-          .json()
-          .catch(() => null);
-
-      if (!response.ok) {
-        alert(
-          data?.detail ||
-          'Не удалось сохранить услугу'
-        );
-        return;
-      }
-
-      alert(
+      const url =
         editingId
-          ? '✅ Услуга изменена'
-          : '✅ Услуга добавлена'
-      );
+          ? API +
+            `/admin/services/${editingId}`
+          : API +
+            '/admin/services';
 
-      resetForm();
-      reload();
+      try {
+        const response =
+          await fetch(
+            url,
+            {
+              method:
+                editingId
+                  ? 'PATCH'
+                  : 'POST',
+              headers:
+                headers(),
+              body:
+                JSON.stringify({
+                  name,
+                  description:
+                    f.description.trim(),
+                  price,
+                  currency:
+                    f.currency,
+                  duration_min:
+                    duration,
+                  active: true
+                })
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => null);
+
+        if (!response.ok) {
+          alert(
+            data?.detail ||
+            t(
+              'owner.saveServiceError',
+              'Не удалось сохранить услугу'
+            )
+          );
+          return;
+        }
+
+        alert(
+          editingId
+            ? t(
+                'owner.serviceUpdated',
+                '✅ Услуга изменена'
+              )
+            : t(
+                'owner.serviceAdded',
+                '✅ Услуга добавлена'
+              )
+        );
+
+        resetForm();
+        reload();
+      } catch (e: any) {
+        alert(
+          e?.message ||
+          t(
+            'owner.saveServiceError',
+            'Не удалось сохранить услугу'
+          )
+        );
+      }
     };
 
   const editService = (
@@ -2065,32 +2108,49 @@ function Services({
   const remove = async (
     id: number
   ) => {
-    if (
-      !window.confirm(
-        'Удалить эту услугу?'
-      )
-    ) {
+    const confirmed =
+      window.confirm(
+        t(
+          'owner.confirmDeleteService',
+          'Удалить эту услугу?'
+        )
+      );
+
+    if (!confirmed) {
       return;
     }
 
-    const response =
-      await fetch(
-        API +
-          `/admin/services/${id}`,
-        {
-          method: 'DELETE',
-          headers: headers()
-        }
-      );
+    try {
+      const response =
+        await fetch(
+          API +
+            `/admin/services/${id}`,
+          {
+            method: 'DELETE',
+            headers: headers()
+          }
+        );
 
-    if (!response.ok) {
+      if (!response.ok) {
+        alert(
+          t(
+            'owner.deleteServiceError',
+            'Не удалось удалить услугу'
+          )
+        );
+        return;
+      }
+
+      reload();
+    } catch (e: any) {
       alert(
-        'Не удалось удалить услугу'
+        e?.message ||
+        t(
+          'owner.deleteServiceError',
+          'Не удалось удалить услугу'
+        )
       );
-      return;
     }
-
-    reload();
   };
 
   return (
@@ -2103,7 +2163,11 @@ function Services({
 
         <input
           type="tel"
-          placeholder={t('owner.phonePlaceholder')}
+          placeholder={
+            t(
+              'owner.phonePlaceholder'
+            )
+          }
           value={businessPhone}
           onChange={e =>
             setBusinessPhone(
@@ -2113,7 +2177,11 @@ function Services({
         />
 
         <input
-          placeholder={t('owner.addressPlaceholder')}
+          placeholder={
+            t(
+              'owner.addressPlaceholder'
+            )
+          }
           value={businessAddress}
           onChange={e =>
             setBusinessAddress(
@@ -2133,7 +2201,9 @@ function Services({
         >
           {savingBusiness
             ? t('owner.saving')
-            : t('owner.saveContacts')}
+            : t(
+                'owner.saveContacts'
+              )}
         </button>
       </div>
 
@@ -2145,7 +2215,9 @@ function Services({
         </h2>
 
         <input
-          placeholder={t('owner.serviceName')}
+          placeholder={
+            t('owner.serviceName')
+          }
           value={f.name}
           onChange={e =>
             setF({
@@ -2157,7 +2229,11 @@ function Services({
         />
 
         <input
-          placeholder={t('owner.serviceDescription')}
+          placeholder={
+            t(
+              'owner.serviceDescription'
+            )
+          }
           value={
             f.description
           }
@@ -2171,12 +2247,13 @@ function Services({
         />
 
         <div className="two">
-
           <input
             type="number"
             min="0"
             step="0.001"
-            placeholder={t('owner.price')}
+            placeholder={
+              t('owner.price')
+            }
             value={f.price}
             onChange={e =>
               setF({
@@ -2188,7 +2265,11 @@ function Services({
           />
 
           <input
-            placeholder={t('owner.searchCurrency')}
+            placeholder={
+              t(
+                'owner.searchCurrency'
+              )
+            }
             value={
               currencySearch
             }
@@ -2198,7 +2279,6 @@ function Services({
               )
             }
           />
-
         </div>
 
         <select
@@ -2233,7 +2313,9 @@ function Services({
           type="number"
           min="1"
           max="480"
-          placeholder={t('owner.duration')}
+          placeholder={
+            t('owner.duration')
+          }
           value={
             f.duration_min
           }
@@ -2247,7 +2329,6 @@ function Services({
         />
 
         <div className="two">
-
           <button
             className="primary full"
             onClick={
@@ -2255,8 +2336,12 @@ function Services({
             }
           >
             {editingId
-              ? t('owner.saveChanges')
-              : t('owner.addServiceButton')}
+              ? t(
+                  'owner.saveChanges'
+                )
+              : t(
+                  'owner.addServiceButton'
+                )}
           </button>
 
           {editingId && (
@@ -2266,10 +2351,9 @@ function Services({
                 resetForm
               }
             >
-              t('common.cancel'
+              {t('common.cancel')}
             </button>
           )}
-
         </div>
       </div>
 
@@ -2279,7 +2363,6 @@ function Services({
             className="card row"
             key={service.id}
           >
-
             <div>
               <b>
                 {service.name}
@@ -2302,7 +2385,9 @@ function Services({
                 {
                   service.duration_min
                 }{' '}
-                мин
+                {t(
+                  'owner.minutes'
+                )}
               </p>
             </div>
 
@@ -2319,7 +2404,9 @@ function Services({
                   )
                 }
               >
-                t('owner.edit')
+                {t(
+                  'owner.edit'
+                )}
               </button>
 
               <button
@@ -2330,14 +2417,14 @@ function Services({
                   )
                 }
               >
-                t('owner.delete')
+                {t(
+                  'owner.delete'
+                )}
               </button>
             </div>
-
           </div>
         )
       )}
-
     </div>
   );
 }
