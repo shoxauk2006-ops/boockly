@@ -285,7 +285,7 @@ const en: TranslationMap = {
   'home.slugPlaceholder': 'Business link or slug',
   'home.emptySaved': 'Businesses you save will appear here.',
   'days.mon'
-'days.tue'
+  'days.tue'
 'days.wed'
 'days.thu'
 'days.fri'
