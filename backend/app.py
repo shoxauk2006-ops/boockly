@@ -468,10 +468,9 @@ def telegram_api(method: str, payload: dict):
         payload = dict(payload)
         chat_id = int(payload["chat_id"])
         request_lang = BOOKLY_REQUEST_LANGUAGE.get()
-        request_user_id = BOOKLY_REQUEST_USER_ID.get()
         effective_lang = (
-            request_lang
-            if request_lang and request_user_id == chat_id
+            _bookly_normalize_language(request_lang)
+            if request_lang
             else _bookly_user_language(chat_id)
         )
         payload["text"] = _bookly_localize_outgoing_text(
@@ -488,8 +487,13 @@ def telegram_api(method: str, payload: dict):
     )
     try:
         with urllib_request.urlopen(req, timeout=8) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except (URLError, TimeoutError, ValueError):
+            body = response.read().decode("utf-8")
+            result = json.loads(body)
+            if not result.get("ok", True):
+                print("TELEGRAM API ERROR:", result)
+            return result
+    except Exception as exc:
+        print("TELEGRAM SEND ERROR:", repr(exc))
         return None
 
 def owner_business(
