@@ -291,10 +291,11 @@ const openClient = (
   }
 
   {mode==='client' &&
-    <Client
-      slug={clientSlug}
-      onBack={()=>setMode('home')}
-    />
+   <Client
+  slug={clientSlug}
+  onBack={()=>setMode('home')}
+  t={t}
+/>
   }
 
 </div>
@@ -4195,10 +4196,12 @@ function MyBookings() {
 }
 function Client({
   slug,
-  onBack
+  onBack,
+  t
 }: {
   slug: string;
   onBack: () => void;
+  t: (key: string, fallback?: string) => string;
 }) {
   const [business, setBusiness] =
     useState<any>(null);
