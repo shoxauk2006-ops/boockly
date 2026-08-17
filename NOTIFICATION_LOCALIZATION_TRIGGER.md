@@ -1,0 +1,1 @@
+Temporary trigger for the notification localization workflow. This file is removed by the workflow.
