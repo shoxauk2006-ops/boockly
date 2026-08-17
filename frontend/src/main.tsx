@@ -1177,6 +1177,7 @@ return (
         <Hours
           hours={hours}
           reload={load}
+          t={t}
         />
       )}
 
@@ -1184,6 +1185,7 @@ return (
         <Blocks
           blocks={blocks}
           reload={load}
+          t={t}
         />
       )}
 
