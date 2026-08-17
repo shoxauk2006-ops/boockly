@@ -286,64 +286,6 @@ def _bookly_t(lang: str, key: str) -> str:
     return _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)][key]
 
 
-_BASE_TELEGRAM_USER = telegram_user
-
-def telegram_user(x_init_data: str) -> dict:
-    user = _BASE_TELEGRAM_USER(x_init_data)
-    _bookly_remember_language(user)
-    return user
-
-
-_BASE_NOTIFY_OWNER_NEW_BOOKING = notify_owner_new_booking
-
-def notify_owner_new_booking(db, booking, service):
-    business = db.get(Business, booking.business_id)
-    if not business:
-        return
-    lang = _bookly_user_language(business.owner_telegram_id)
-    d = _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)]
-    text=(
-        f"🔔 <b>{d['new']}</b>\n\n"
-        f"👤 {booking.client_name}\n"
-        f"📞 {booking.client_phone or d['phone_missing']}\n"
-        f"💈 {service.name}\n"
-        f"📅 {booking.day.isoformat()}\n"
-        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\n"
-        f"🆔 #{booking.id}"
-    )
-    telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
-
-
-# Wrap direct Telegram messages in the existing routes so their fixed copy is localized too.
-_BASE_TELEGRAM_API = telegram_api
-def telegram_api(method: str, payload: dict):
-    if method == "sendMessage" and isinstance(payload, dict):
-        text = str(payload.get("text", ""))
-        chat_id = payload.get("chat_id")
-        if chat_id:
-            lang = _bookly_user_language(int(chat_id))
-            d = _BOOKLY_NOTIFY_TEXT[_bookly_normalize_language(lang)]
-            replacements = [
-              ("❌ <b>Ваша запись отменена</b>", f"❌ <b>{d['cancelled_client']}</b>"),
-              ("Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", d["contact_hint"]),
-              ("✅ <b>Вы успешно записаны!</b>", f"✅ <b>{d['client_booked']}</b>"),
-              ("Ждём вас!", d["waiting"]),
-              ("❌ <b>Запись отменена</b>", f"❌ <b>{d['cancelled_client']}</b>"),
-              ("❌ Ваша запись отменена бизнесом.", f"❌ {d['cancelled_business']}."),
-              ("❌ <b>Клиент отменил запись</b>", f"❌ <b>{d['client_cancelled']}</b>"),
-              ("номер не передан", d["phone_missing"]),
-              ("номер не указан", d["phone_missing"]),
-              ("Адрес не указан", {"ru":"Адрес не указан","en":"Address not provided","uz":"Manzil ko‘rsatilmagan","tr":"Adres belirtilmedi","ar":"العنوان غير متوفر"}[_bookly_normalize_language(lang)]),
-              ("Ваш номер:", {"ru":"Ваш номер:","en":"Your number:","uz":"Raqamingiz:","tr":"Numaranız:","ar":"رقمك:"}[_bookly_normalize_language(lang)]),
-              ("Связаться:", {"ru":"Связаться:","en":"Contact:","uz":"Bog‘lanish:","tr":"İletişim:","ar":"للتواصل:"}[_bookly_normalize_language(lang)]),
-            ]
-            for old, new in replacements:
-                text = text.replace(old, new)
-            payload = dict(payload)
-            payload["text"] = text
-    return _BASE_TELEGRAM_API(method, payload)
-
-
 Base.metadata.create_all(engine)
 
 Base.metadata.create_all(engine)
