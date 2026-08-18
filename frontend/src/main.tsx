@@ -4565,13 +4565,7 @@ function Settings({
             ? t('owner.saving')
             : t('common.save')}
         </button>
-      </div>
-
-                    
-            
-      
-      </div>
-
+      </div> 
     </div>
   );
 }
