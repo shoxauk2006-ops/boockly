@@ -90,14 +90,6 @@ function App(){
     const telegram = tg();
 
 telegram?.ready();
-telegram?.expand();
-
-if (
-  telegram &&
-  typeof telegram.requestFullscreen === 'function'
-) {
-  telegram.requestFullscreen();
-}
 
     const startParam =
       tg()?.initDataUnsafe?.start_param ||
