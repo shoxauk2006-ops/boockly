@@ -5273,8 +5273,6 @@ function Client({
 
 </div>
 
-</div>
-
 <details className="card">
         <summary
           style={{
