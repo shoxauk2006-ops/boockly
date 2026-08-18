@@ -4567,32 +4567,7 @@ function Settings({
         </button>
       </div>
 
-      <div className="card">
-        <h2>
-          {t(
-            'settings.share'
-          )}
-        </h2>
-
-        <p className="muted">
-          {t(
-            'home.emptySaved'
-          )}
-        </p>
-
-        <code
-          style={{
-            display: 'block',
-            padding: 12,
-            borderRadius: 12,
-            wordBreak: 'break-all',
-            background: '#f4f4f4'
-          }}
-        >
-          {clientLink}
-        </code>
-
-        <div
+      
           style={{
             display: 'flex',
             gap: 8,
@@ -4621,21 +4596,7 @@ function Settings({
         </div>
       </div>
 
-      <div className="card">
-        <h2>
-          {t(
-            'settings.qr'
-          )}
-        </h2>
-
-        <p className="muted">
-          {t(
-            'settings.downloadQr'
-          )}
-        </p>
-
-        {qrDataUrl && (
-          <div
+     
             style={{
               display: 'flex',
               justifyContent:
