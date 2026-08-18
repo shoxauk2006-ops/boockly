@@ -1734,29 +1734,86 @@ function Dashboard({
   business: any;
   t: (key: string, fallback?: string) => string;
 }) {
-  const today =
-    new Date()
-      .toISOString()
-      .slice(0, 10);
+  const today = new Date()
+    .toISOString()
+    .slice(0, 10);
 
-  const todayBookings =
-    bookings.filter(
-      x =>
-        x.day === today &&
-        x.status === 'confirmed'
-    );
+  const todayBookings = bookings.filter(
+    x =>
+      x.day === today &&
+      x.status === 'confirmed'
+  );
 
- 
+  const clientLink =
+    `https://t.me/${BOT_USERNAME}?startapp=${business.slug}`;
+
+  const [qrDataUrl, setQrDataUrl] =
+    useState('');
+
+  useEffect(() => {
+    const generateQR = async () => {
+      try {
+        const url =
+          await QRCode.toDataURL(
+            clientLink,
+            {
+              width: 500,
+              margin: 3,
+              errorCorrectionLevel: 'H'
+            }
+          );
+
+        setQrDataUrl(url);
+      } catch (e) {
+        console.error(
+          'Dashboard QR ERROR:',
+          e
+        );
+      }
+    };
+
+    generateQR();
+  }, [clientLink]);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        clientLink
+      );
+
+      alert(
+        t(
+          'settings.copyLink',
+          'Ссылка скопирована'
+        )
+      );
+    } catch {
+      alert(clientLink);
+    }
+  };
+
+  const openBusinessPage = () => {
+    if (tg()?.openTelegramLink) {
+      tg().openTelegramLink(
+        clientLink
+      );
+    } else {
+      window.open(
+        clientLink,
+        '_blank'
+      );
+    }
+  };
 
   return (
     <>
-      <div className="grid3">
+      <div className="grid2">
+
         <Stat
           n={todayBookings.length}
           t={t('owner.today')}
         />
 
-        
         <Stat
           n={
             business.subscription_active
@@ -1765,6 +1822,7 @@ function Dashboard({
           }
           t={t('owner.subscription')}
         />
+
       </div>
 
       <div className="card">
@@ -1787,6 +1845,118 @@ function Dashboard({
             {t('owner.noBookings')}
           </p>
         )}
+      </div>
+
+      <div className="card admin-quick-actions">
+
+        <div className="admin-section-title">
+          <h3>
+            {t(
+              'owner.quickActions',
+              'Быстрые действия'
+            )}
+          </h3>
+
+          <p className="muted">
+            {t(
+              'owner.shareBusinessHint',
+              'Поделитесь страницей бизнеса с клиентами'
+            )}
+          </p>
+        </div>
+
+        <div className="admin-action-row">
+          <div>
+            <strong>
+              {t(
+                'owner.businessLink',
+                'Ссылка на бизнес'
+              )}
+            </strong>
+
+            <small>
+              {clientLink}
+            </small>
+          </div>
+
+          <button
+            className="admin-action-button"
+            onClick={copyLink}
+          >
+            {t(
+              'settings.copyLink',
+              'Копировать'
+            )}
+          </button>
+        </div>
+
+        <div className="admin-action-row">
+          <div>
+            <strong>
+              {t(
+                'owner.openBusinessPage',
+                'Страница бизнеса'
+              )}
+            </strong>
+
+            <small>
+              {t(
+                'owner.openBusinessPageHint',
+                'Открыть клиентскую страницу'
+              )}
+            </small>
+          </div>
+
+          <button
+            className="admin-action-button"
+            onClick={openBusinessPage}
+          >
+            {t(
+              'common.open',
+              'Открыть'
+            )}
+          </button>
+        </div>
+
+        {qrDataUrl && (
+          <div className="admin-qr-box">
+
+            <div>
+              <strong>
+                {t(
+                  'settings.qr',
+                  'QR-код'
+                )}
+              </strong>
+
+              <p className="muted">
+                {t(
+                  'settings.downloadQr',
+                  'Скачайте QR-код для размещения у бизнеса'
+                )}
+              </p>
+            </div>
+
+            <img
+              src={qrDataUrl}
+              alt="Bookly QR"
+              className="admin-home-qr"
+            />
+
+            <a
+              className="admin-action-button admin-download-button"
+              href={qrDataUrl}
+              download={`${business.slug}-bookly-qr.png`}
+            >
+              {t(
+                'settings.downloadQr',
+                'Скачать QR-код'
+              )}
+            </a>
+
+          </div>
+        )}
+
       </div>
 
       <Subscription
