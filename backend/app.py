@@ -1649,7 +1649,7 @@ def cancel_subscription(
 
         # Доступ остаётся до конца оплаченного периода.
         business.subscription_active = True
-        business.subscription_status = "active"
+        business.subscription_status = "cancelled"
 
         if effective_at:
             try:
