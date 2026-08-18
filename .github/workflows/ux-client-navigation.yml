@@ -16,85 +16,115 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Patch client navigation
+      - name: Apply client navigation UX
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           main = Path('frontend/src/main.tsx')
           css = Path('frontend/src/style.css')
           s = main.read_text(encoding='utf-8')
-
-          # 1) Client tab state.
-          anchor = "  const [savingBusiness, setSavingBusiness] =\\n    useState(false);\\n"
-          if "clientTab, setClientTab" not in s:
-              if anchor not in s:
-                  raise SystemExit('client state anchor not found')
-              s = s.replace(
-                  anchor,
-                  anchor + "\\n  const [clientTab, setClientTab] = useState<'home' | 'bookings' | 'saved' | 'profile'>('home');\\n",
-                  1,
-              )
-
-          # 2) Stable anchors for bottom navigation.
-          marker = "      <div className=\"card\">\\n\\n        <div\\n          style={{\\n            display: 'flex',\\n"
-          if 'id="client-top"' not in s:
-              client_start = s.find('function Client({')
-              pos = s.find(marker, client_start)
-              if pos == -1:
-                  raise SystemExit('client top anchor not found')
-              s = s[:pos] + s[pos:].replace(
-                  '<div className="card">',
-                  '<div id="client-top" className="card">',
-                  1,
-              )
-
-          details_booking = '<details className="card">\\n        <summary'
           client_start = s.find('function Client({')
-          p = s.find(details_booking, client_start)
-          if p == -1:
-              raise SystemExit('booking details anchor not found')
-          if 'id="client-bookings"' not in s[p:p+200]:
-              s = s[:p] + s[p:].replace(
-                  '<details className="card">',
-                  '<details id="client-bookings" className="card">',
-                  1,
+          if client_start < 0:
+              raise SystemExit('Client component not found')
+
+          client_end = s.rfind('\n    </section>\n  );\n}\n\ncreateRoot', client_start)
+          if client_end < 0:
+              raise SystemExit('Client closing marker not found')
+
+          client = s[client_start:client_end]
+
+          if 'clientTab, setClientTab' not in client:
+              pattern = r"(const \[savingBusiness,\s*setSavingBusiness\]\s*=\s*useState\(false\);)"
+              client, n = re.subn(
+                  pattern,
+                  r"\1\n\n  const [clientTab, setClientTab] = useState<'home' | 'bookings' | 'saved' | 'profile'>('home');",
+                  client,
+                  count=1,
               )
+              if n != 1:
+                  raise SystemExit('client state insertion point not found')
 
-          p = s.find(details_booking, p + 20)
-          if p == -1:
-              raise SystemExit('saved details anchor not found')
-          if 'id="client-saved"' not in s[p:p+200]:
-              s = s[:p] + s[p:].replace(
-                  '<details className="card">',
-                  '<details id="client-saved" className="card">',
-                  1,
-              )
+          # Add stable anchors to the existing client sections.
+          if 'id="client-top"' not in client:
+              client = client.replace('<div className="card">', '<div id="client-top" className="card">', 1)
 
-          # 3) Add a real profile section and fixed bottom navigation.
-          close_marker = "\\n    </section>\\n  );\\n}\\n\\ncreateRoot"
-          end = s.rfind(close_marker)
-          if end == -1:
-              raise SystemExit('client closing marker not found')
+          if 'id="client-bookings"' not in client:
+              client = client.replace('<details className="card">', '<details id="client-bookings" className="card">', 1)
 
-          if 'id="client-profile"' not in s:
-              profile = r'''\n      <div id="client-profile" className="card client-profile-card">\n        <div className="client-profile-head">\n          <div className="client-profile-avatar">\n            {(tg()?.initDataUnsafe?.user?.first_name || 'B').charAt(0).toUpperCase()}\n          </div>\n          <div>\n            <h2>{t('nav.profile')}</h2>\n            <p className="muted">\n              {tg()?.initDataUnsafe?.user?.first_name || ''}\n              {tg()?.initDataUnsafe?.user?.last_name ? ` ${tg()?.initDataUnsafe?.user?.last_name}` : ''}\n            </p>\n          </div>\n        </div>\n        <div className="client-profile-row">\n          <span>{t('language.title')}</span>\n          <strong>{SUPPORTED_LANGUAGES.find(x => x.code === getStoredLanguage())?.nativeLabel || getStoredLanguage()}</strong>\n        </div>\n      </div>\n\n      <nav className="client-bottom-nav" aria-label={t('nav.home')}>\n        <button className={clientTab === 'home' ? 'active' : ''} onClick={() => { setClientTab('home'); document.getElementById('client-top')?.scrollIntoView({behavior:'smooth', block:'start'}); }}>\n          <span>⌂</span>\n          <small>{t('nav.home')}</small>\n        </button>\n        <button className={clientTab === 'bookings' ? 'active' : ''} onClick={() => { setClientTab('bookings'); const el=document.getElementById('client-bookings') as HTMLElement | null; el?.setAttribute('open',''); el?.scrollIntoView({behavior:'smooth', block:'start'}); }}>\n          <span>◷</span>\n          <small>{t('nav.bookings')}</small>\n        </button>\n        <button className={clientTab === 'saved' ? 'active' : ''} onClick={() => { setClientTab('saved'); const el=document.getElementById('client-saved') as HTMLElement | null; el?.setAttribute('open',''); el?.scrollIntoView({behavior:'smooth', block:'start'}); }}>\n          <span>♡</span>\n          <small>{t('nav.saved')}</small>\n        </button>\n        <button className={clientTab === 'profile' ? 'active' : ''} onClick={() => { setClientTab('profile'); document.getElementById('client-profile')?.scrollIntoView({behavior:'smooth', block:'start'}); }}>\n          <span>◎</span>\n          <small>{t('nav.profile')}</small>\n        </button>\n      </nav>\n'''
-              s = s[:end] + profile + s[end:]
+          # Find the second details element for Saved.
+          if 'id="client-saved"' not in client:
+              first = client.find('<details id="client-bookings" className="card">')
+              second = client.find('<details className="card">', first + 1)
+              if second < 0:
+                  raise SystemExit('saved section not found')
+              client = client[:second] + '<details id="client-saved" className="card">' + client[second + len('<details className="card">'):]
 
+          if 'id="client-profile"' not in client:
+              profile = '''
+      <div id="client-profile" className="card client-profile-card">
+        <div className="client-profile-head">
+          <div className="client-profile-avatar">
+            {(tg()?.initDataUnsafe?.user?.first_name || 'B').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h2>{t('nav.profile')}</h2>
+            <p className="muted">
+              {tg()?.initDataUnsafe?.user?.first_name || ''}
+              {tg()?.initDataUnsafe?.user?.last_name ? ` ${tg()?.initDataUnsafe?.user?.last_name}` : ''}
+            </p>
+          </div>
+        </div>
+        <div className="client-profile-row">
+          <span>{t('language.title')}</span>
+          <strong>{SUPPORTED_LANGUAGES.find(x => x.code === getStoredLanguage())?.nativeLabel || getStoredLanguage()}</strong>
+        </div>
+      </div>
+
+      <nav className="client-bottom-nav" aria-label={t('nav.home')}>
+        <button className={clientTab === 'home' ? 'active' : ''} onClick={() => { setClientTab('home'); document.getElementById('client-top')?.scrollIntoView({behavior:'smooth', block:'start'}); }}>
+          <span>⌂</span><small>{t('nav.home')}</small>
+        </button>
+        <button className={clientTab === 'bookings' ? 'active' : ''} onClick={() => { setClientTab('bookings'); const el=document.getElementById('client-bookings'); el?.setAttribute('open',''); el?.scrollIntoView({behavior:'smooth', block:'start'}); }}>
+          <span>◷</span><small>{t('nav.bookings')}</small>
+        </button>
+        <button className={clientTab === 'saved' ? 'active' : ''} onClick={() => { setClientTab('saved'); const el=document.getElementById('client-saved'); el?.setAttribute('open',''); el?.scrollIntoView({behavior:'smooth', block:'start'}); }}>
+          <span>♡</span><small>{t('nav.saved')}</small>
+        </button>
+        <button className={clientTab === 'profile' ? 'active' : ''} onClick={() => { setClientTab('profile'); document.getElementById('client-profile')?.scrollIntoView({behavior:'smooth', block:'start'}); }}>
+          <span>◎</span><small>{t('nav.profile')}</small>
+        </button>
+      </nav>
+'''
+              client += profile
+
+          s = s[:client_start] + client + s[client_end:]
           main.write_text(s, encoding='utf-8')
 
-          # CSS is appended once, deliberately scoped to the new client navigation.
-          styles = '''\n\n/* Client UX 2.0 */\n.client-profile-card{scroll-margin-top:18px;margin-bottom:90px}.client-profile-head{display:flex;align-items:center;gap:12px}.client-profile-avatar{width:46px;height:46px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;flex:0 0 auto}.client-profile-head h2{margin:0 0 2px}.client-profile-head p{margin:0}.client-profile-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid #eee}.client-bottom-nav{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(620px,calc(100vw - 24px));display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:7px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border:1px solid #e7e7e9;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.14);z-index:9997}.client-bottom-nav button{background:transparent;color:#777;padding:8px 4px;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:650}.client-bottom-nav button span{font-size:18px;line-height:1}.client-bottom-nav button small{font-size:10px;line-height:1.1}.client-bottom-nav button.active{background:#111;color:#fff}.app{padding-bottom:94px}@media(max-width:420px){.client-bottom-nav{bottom:8px}.client-bottom-nav button small{font-size:9px}}\n'''
           current_css = css.read_text(encoding='utf-8')
           if '/* Client UX 2.0 */' not in current_css:
-              css.write_text(current_css + styles, encoding='utf-8')
+              current_css += '''
+
+/* Client UX 2.0 */
+.client-profile-card{scroll-margin-top:18px;margin:12px 0 90px}
+.client-profile-head{display:flex;align-items:center;gap:12px}
+.client-profile-avatar{width:46px;height:46px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;flex:0 0 auto}
+.client-profile-head h2{margin:0 0 2px}.client-profile-head p{margin:0}
+.client-profile-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid #eee}
+.client-bottom-nav{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(620px,calc(100vw - 24px));display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:7px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border:1px solid #e7e7e9;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.14);z-index:9997}
+.client-bottom-nav button{background:transparent;color:#777;padding:8px 4px;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:650}
+.client-bottom-nav button span{font-size:18px;line-height:1}.client-bottom-nav button small{font-size:10px;line-height:1.1}.client-bottom-nav button.active{background:#111;color:#fff}
+.app{padding-bottom:94px}@media(max-width:420px){.client-bottom-nav{bottom:8px}.client-bottom-nav button small{font-size:9px}}
+'''
+              css.write_text(current_css, encoding='utf-8')
           PY
 
-      - name: Commit changes and remove workflow
+      - name: Commit UX and remove workflow
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/src/main.tsx frontend/src/style.css .github/workflows/ux-client-navigation.yml
+          git add frontend/src/main.tsx frontend/src/style.css
           git rm -f .github/workflows/ux-client-navigation.yml
           git commit -m "feat: improve client navigation UX"
           git push
