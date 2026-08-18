@@ -5203,26 +5203,6 @@ function Client({
           </div>
 
           <button
-            disabled={
-              savingBusiness
-            }
-            onClick={
-              toggleSave
-            }
-            style={{
-              fontSize: 24,
-              background:
-                'transparent',
-              border: 'none',
-              padding: 4
-            }}
-            title={
-              isSaved
-                ? t('client.removeSaved')
-                : t('client.saveBusiness')
-            }
-          >
-            <button
   className={
     isSaved
       ? 'client-save-button saved'
@@ -5235,15 +5215,30 @@ function Client({
     ? t('client.savedBusiness')
     : t('client.saveBusiness')}
 </button>
-          </button>
-        </div>
 
         <div className="client-contact-actions">
 
   {business.phone && (
+    <button
+      type="button"
+      className="client-contact-button"
+      onClick={() => {
+        window.location.href = `tel:${business.phone}`;
+      }}
+    >
+      <span className="client-contact-label">
+        {business.phone}
+      </span>
+
+      <span className="client-contact-arrow">
+        →
+      </span>
+    </button>
+  )}
 
   {mapUrl && (
     <button
+      type="button"
       className="client-contact-button"
       onClick={() => {
         if (tg()?.openLink) {
