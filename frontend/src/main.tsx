@@ -2174,14 +2174,7 @@ function Subscription({
         ) : (
           <button
             className="subscription-manage-button"
-            onClick={() => {
-              alert(
-                t(
-                  'owner.subscriptionManageComing',
-                  'Управление подпиской будет доступно после подключения отмены автопродления.'
-                )
-              );
-            }}
+            
           >
             {t(
               'owner.manageSubscription',
@@ -2195,6 +2188,74 @@ function Subscription({
   }
 
   if (paymentFailed) {
+    const cancelSubscription =
+  async () => {
+    const confirmed =
+      window.confirm(
+        t(
+          'owner.confirmCancelSubscription',
+          'Отменить автоматическое продление подписки? Доступ сохранится до конца оплаченного периода.'
+        )
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response =
+        await fetch(
+          API +
+            '/admin/subscription/cancel',
+          {
+            method: 'POST',
+            headers: headers()
+          }
+        );
+
+      const data =
+        await response
+          .json()
+          .catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          t(
+            'owner.cancelSubscriptionError',
+            'Не удалось отменить подписку'
+          )
+        );
+      }
+
+      alert(
+        t(
+          'owner.subscriptionCancelled',
+          'Автоматическое продление отменено'
+        )
+      );
+
+      window.location.reload();
+
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        t(
+          'owner.cancelSubscriptionError',
+          'Не удалось отменить подписку'
+        )
+      );
+    }
+  };
+    <button
+  className="subscription-manage-button"
+  onClick={cancelSubscription}
+>
+  {t(
+    'owner.cancelSubscription',
+    'Отменить подписку'
+  )}
+</button>
     return (
       <div className="card subscription">
 
