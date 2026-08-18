@@ -2285,20 +2285,49 @@ function Subscription({
           )}
         </div>
 
-        {cancelledButActive
-          <button
-            type="button"
-            className="subscription-manage-button"
-            onClick={
-              cancelSubscription
-            }
-          >
-            {t(
-              'owner.cancelSubscription',
-              'Отменить подписку'
-            )}
-          </button>
-        )}
+        {cancelledButActive ? (
+  <div className="subscription-cancelled-note">
+    <strong>
+      {t(
+        'owner.subscriptionCancelledTitle',
+        'Автопродление отменено'
+      )}
+    </strong>
+
+    <p className="muted">
+      {t(
+        'owner.cancelledActive',
+        'Доступ сохраняется до конца оплаченного периода. Новых списаний не будет.'
+      )}
+    </p>
+
+    <button
+      type="button"
+      className="subscription-manage-button"
+      onClick={
+        resumeSubscription
+      }
+    >
+      {t(
+        'owner.resumeSubscription',
+        'Возобновить подписку'
+      )}
+    </button>
+  </div>
+) : (
+  <button
+    type="button"
+    className="subscription-manage-button"
+    onClick={
+      cancelSubscription
+    }
+  >
+    {t(
+      'owner.cancelSubscription',
+      'Отменить подписку'
+    )}
+  </button>
+)}
 
       </div>
     );
