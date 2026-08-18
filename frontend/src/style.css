@@ -248,3 +248,174 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 @keyframes booklySpin{
   to{transform:rotate(360deg)}
 }
+.personal-business-skeleton{
+  margin:14px 0;
+  padding:22px;
+  border-radius:24px;
+  background:#111;
+  overflow:hidden;
+  animation:booklyFade .25s ease;
+}
+
+.skeleton-line{
+  border-radius:8px;
+  background:linear-gradient(
+    90deg,
+    #222 25%,
+    #333 50%,
+    #222 75%
+  );
+  background-size:200% 100%;
+  animation:skeletonShimmer 1.4s infinite;
+}
+
+.skeleton-small{
+  width:90px;
+  height:10px;
+  margin-bottom:14px;
+}
+
+.skeleton-title{
+  width:65%;
+  height:25px;
+  margin-bottom:12px;
+}
+
+.skeleton-text{
+  width:90%;
+  height:13px;
+  margin-bottom:22px;
+}
+
+.skeleton-button{
+  width:115px;
+  height:42px;
+  border-radius:14px;
+  background:#333;
+  animation:skeletonShimmer 1.4s infinite;
+}
+
+@keyframes skeletonShimmer{
+  0%{
+    background-position:200% 0;
+  }
+  100%{
+    background-position:-200% 0;
+  }
+}
+
+.personal-saved-card{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px;
+  margin:10px 0;
+  border:1px solid #e8eaed;
+  border-radius:20px;
+  background:#fff;
+  color:#111;
+  text-align:left;
+  box-shadow:0 7px 24px rgba(0,0,0,.045);
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    border-color .18s ease;
+}
+
+.personal-saved-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 30px rgba(0,0,0,.08);
+  border-color:#d8dce1;
+}
+
+.personal-saved-card:active{
+  transform:scale(.985);
+}
+
+.personal-saved-icon{
+  flex:0 0 44px;
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  background:#111;
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:17px;
+  font-weight:800;
+}
+
+.personal-saved-info{
+  flex:1;
+  min-width:0;
+}
+
+.personal-saved-info strong{
+  display:block;
+  font-size:16px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.personal-saved-info small{
+  display:block;
+  margin-top:5px;
+  color:#858b94;
+  font-size:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.personal-saved-arrow{
+  flex:0 0 auto;
+  font-size:22px;
+  color:#949aa3;
+}
+
+.personal-empty-page{
+  padding:54px 24px;
+  text-align:center;
+  background:#fff;
+  border:1px solid #e8eaed;
+  border-radius:24px;
+  box-shadow:0 8px 28px rgba(0,0,0,.045);
+}
+
+.personal-empty-icon{
+  width:54px;
+  height:54px;
+  margin:0 auto 16px;
+  border-radius:17px;
+  background:#f0f1f3;
+  display:grid;
+  place-items:center;
+  font-size:24px;
+}
+
+.personal-empty-page h2{
+  margin:0 0 8px;
+}
+
+.personal-empty-page p{
+  margin:0;
+  color:#858b94;
+}
+
+.personal-compact{
+  padding-bottom:14px;
+}
+
+@keyframes booklyFade{
+  from{
+    opacity:0;
+    transform:translateY(5px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
