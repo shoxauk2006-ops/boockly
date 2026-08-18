@@ -2064,12 +2064,22 @@ function Subscription({
     status === 'unpaid';
 
   const cancelledButActive =
-    status === 'cancelled' &&
-    active;
+    (
+      status === 'cancelled' ||
+      status === 'canceled'
+    ) && active;
+
+  const expiresAt =
+    business?.subscription_expires_at
+      ? new Date(
+          business.subscription_expires_at
+        )
+      : null;
 
   if (active && !paymentFailed) {
     return (
       <div className="card subscription">
+
         <div className="subscription-head">
           <div>
             <h3>
@@ -2078,7 +2088,9 @@ function Subscription({
 
             <p>
               <b>
-                {t('owner.monthlyPrice')}
+                {t(
+                  'owner.monthlyPrice'
+                )}
               </b>
             </p>
           </div>
@@ -2088,58 +2100,96 @@ function Subscription({
           </span>
         </div>
 
+        <p>
+          {t(
+            'owner.subscribeAccessText',
+            'Полный доступ к возможностям Bookly Pro'
+          )}
+        </p>
+
         <ul>
           <li>
             {t(
-              'owner.unlimitedBookings'
+              'owner.unlimitedBookings',
+              'Безлимитные записи'
             )}
           </li>
 
           <li>
             {t(
-              'owner.clientLink'
+              'owner.clientLink',
+              'Клиентская страница и ссылка'
             )}
           </li>
 
           <li>
             {t(
-              'owner.telegramNotifications'
+              'owner.telegramNotifications',
+              'Telegram-уведомления'
             )}
           </li>
 
           <li>
             {t(
-              'owner.scheduleAndBlocks'
+              'owner.scheduleAndBlocks',
+              'График и блокировки'
             )}
           </li>
         </ul>
 
         <div className="success">
-          ✅ {t(
-            'owner.booklyActivated'
-          )}
+          <strong>
+            {t(
+              'owner.booklyActivated',
+              'Bookly Pro активирован'
+            )}
+          </strong>
 
-          {business.subscription_expires_at && (
+          {expiresAt && (
             <p className="muted">
-              {t(
-                'owner.nextPayment'
-              )}{' '}
-              {new Date(
-                business.subscription_expires_at
-              ).toLocaleDateString(
+              {cancelledButActive
+                ? t(
+                    'owner.accessUntil',
+                    'Доступ до'
+                  )
+                : t(
+                    'owner.nextPayment',
+                    'Следующее списание'
+                  )}
+              :{' '}
+              {expiresAt.toLocaleDateString(
                 getLocale()
               )}
             </p>
           )}
-
-          {cancelledButActive && (
-            <p className="muted">
-              {t(
-                'owner.cancelledActive'
-              )}
-            </p>
-          )}
         </div>
+
+        {cancelledButActive ? (
+          <p className="muted subscription-cancelled-note">
+            {t(
+              'owner.cancelledActive',
+              'Автопродление отменено. Новых списаний не будет.'
+            )}
+          </p>
+        ) : (
+          <button
+            className="subscription-manage-button"
+            onClick={() => {
+              alert(
+                t(
+                  'owner.subscriptionManageComing',
+                  'Управление подпиской будет доступно после подключения отмены автопродления.'
+                )
+              );
+            }}
+          >
+            {t(
+              'owner.manageSubscription',
+              'Управление подпиской'
+            )}
+          </button>
+        )}
+
       </div>
     );
   }
@@ -2147,6 +2197,7 @@ function Subscription({
   if (paymentFailed) {
     return (
       <div className="card subscription">
+
         <div className="subscription-head">
           <div>
             <h3>
@@ -2155,21 +2206,25 @@ function Subscription({
 
             <p>
               <b>
-                {t('owner.monthlyPrice')}
+                {t(
+                  'owner.monthlyPrice'
+                )}
               </b>
             </p>
           </div>
 
           <span className="pill">
             {t(
-              'owner.paymentFailed'
+              'owner.paymentFailed',
+              'Платёж не прошёл'
             )}
           </span>
         </div>
 
         <p className="muted">
           {t(
-            'owner.subscribeToActivate'
+            'owner.subscribeAccessText',
+            'Активируйте подписку, чтобы открыть полный доступ к Bookly Pro'
           )}
         </p>
 
@@ -2183,15 +2238,18 @@ function Subscription({
           }
         >
           {t(
-            'owner.payMonthly'
+            'owner.openAccess',
+            'Открыть доступ'
           )}
         </button>
+
       </div>
     );
   }
 
   return (
     <div className="card subscription">
+
       <div className="subscription-head">
         <div>
           <h3>
@@ -2200,36 +2258,73 @@ function Subscription({
 
           <p>
             <b>
-              {t('owner.monthlyPrice')}
+              {t(
+                'owner.monthlyPrice'
+              )}
             </b>
           </p>
         </div>
 
         <span className="pill">
           {t(
-            'owner.inactive'
+            'owner.inactive',
+            'Неактивна'
           )}
         </span>
       </div>
 
-      <p className="muted">
+      <p>
         {t(
-          'owner.subscribeToActivate'
+          'owner.payToUnlock',
+          'Оплатите подписку, чтобы открыть доступ к безлимитным записям и всем функциям Bookly Pro.'
         )}
       </p>
+
+      <ul>
+        <li>
+          {t(
+            'owner.unlimitedBookings',
+            'Безлимитные записи'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.clientLink',
+            'Клиентская страница и ссылка'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.telegramNotifications',
+            'Telegram-уведомления'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.scheduleAndBlocks',
+            'График и блокировки'
+          )}
+        </li>
+      </ul>
 
       <button
         className="primary full"
         onClick={() =>
           checkout(
-            'paddle'
+            'paddle',
+            business.id
           )
         }
       >
         {t(
-          'owner.payMonthly'
+          'owner.openAccess',
+          'Открыть доступ'
         )}
       </button>
+
     </div>
   );
 }
