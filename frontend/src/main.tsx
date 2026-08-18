@@ -1557,6 +1557,47 @@ function Admin({
           t={t}
         />
       )}
+      {tab === 'more' && (
+  <div className="admin-more-page">
+
+    <div className="card">
+      <h2>{t('nav.more')}</h2>
+
+      <button
+        className="admin-more-item"
+        onClick={() => setTab('hours')}
+      >
+        <span>
+          {t('nav.schedule')}
+        </span>
+        <b>→</b>
+      </button>
+
+      <button
+        className="admin-more-item"
+        onClick={() => setTab('blocks')}
+      >
+        <span>
+          {t('nav.blocks')}
+        </span>
+        <b>→</b>
+      </button>
+
+      <button
+        className="admin-more-item"
+        onClick={() => setTab('settings')}
+      >
+        <span>
+          {t('nav.settings')}
+        </span>
+        <b>→</b>
+      </button>
+
+    </div>
+
+  </div>
+)}
+      <nav className="admin-bottom-nav">
     </section>
   );
 }
