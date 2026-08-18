@@ -36,3 +36,215 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 @keyframes bookly-card-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes bookly-fade{from{opacity:0}to{opacity:1}}
 #root.bookly-client-root .client-hero,#root.bookly-client-root .card{animation-name:bookly-card-in}
+.personal-home{
+  min-height:100vh;
+  padding:8px 0 105px;
+  animation:booklyFade .28s ease;
+}
+
+.personal-home-hero{
+  padding:28px 6px 22px;
+}
+
+.personal-home-hero h1{
+  margin:8px 0 8px;
+  font-size:32px;
+  line-height:1.05;
+  letter-spacing:-1.2px;
+}
+
+.personal-home-hero p{
+  margin:0;
+  color:#777;
+  line-height:1.5;
+}
+
+.personal-eyebrow{
+  display:block;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9298a1;
+}
+
+.personal-eyebrow.light{
+  color:#bfc3c8;
+}
+
+.personal-card,
+.personal-business-card{
+  border-radius:24px;
+  padding:20px;
+  margin:14px 0;
+  animation:booklyCardIn .35s ease both;
+}
+
+.personal-card{
+  background:#fff;
+  border:1px solid #e9ebee;
+  box-shadow:0 10px 30px rgba(0,0,0,.05);
+}
+
+.personal-card h2,
+.personal-business-card h2{
+  margin:5px 0 8px;
+  font-size:20px;
+}
+
+.personal-search{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:9px;
+}
+
+.personal-search input{
+  margin:0;
+}
+
+.personal-black-button,
+.personal-white-button,
+.client-service-button{
+  border:0;
+  border-radius:14px;
+  padding:13px 16px;
+  font-weight:800;
+  transition:
+    transform .16s ease,
+    box-shadow .16s ease,
+    opacity .16s ease;
+}
+
+.personal-black-button,
+.client-service-button{
+  background:#111;
+  color:#fff;
+}
+
+.personal-white-button{
+  background:#fff;
+  color:#111;
+}
+
+.personal-black-button:active,
+.personal-white-button:active,
+.client-service-button:active{
+  transform:scale(.97);
+}
+
+.personal-business-card{
+  background:#111;
+  color:#fff;
+  box-shadow:0 14px 34px rgba(0,0,0,.14);
+}
+
+.personal-business-card p{
+  color:#c7cbd0;
+}
+
+.personal-bottom-nav{
+  position:fixed;
+  left:50%;
+  bottom:9px;
+  transform:translateX(-50%);
+  width:280px;
+  padding:6px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:4px;
+  background:#fff;
+  border:1px solid #e7e9ec;
+  border-radius:21px;
+  box-shadow:0 14px 35px rgba(0,0,0,.15);
+  z-index:500;
+}
+
+.personal-bottom-nav button{
+  border:0;
+  background:transparent;
+  color:#858b94;
+  border-radius:15px;
+  padding:9px 4px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  align-items:center;
+}
+
+.personal-bottom-nav button.active{
+  background:#111;
+  color:#fff;
+}
+
+.client-section-title{
+  margin:22px 2px 10px;
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:-.6px;
+}
+
+.client-service-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:18px;
+  margin:10px 0;
+  background:#fff;
+  border:1px solid #e9ebee;
+  border-radius:21px;
+  box-shadow:0 8px 24px rgba(0,0,0,.045);
+  animation:booklyCardIn .3s ease both;
+}
+
+.client-service-card strong{
+  display:block;
+  font-size:17px;
+  margin-bottom:5px;
+}
+
+.client-service-card span{
+  display:block;
+  font-size:13px;
+  color:#666;
+}
+
+.client-service-card p{
+  margin:6px 0 0;
+  font-size:12px;
+}
+
+@keyframes booklyFade{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+@keyframes booklyCardIn{
+  from{
+    opacity:0;
+    transform:translateY(8px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.personal-loading{
+  display:flex;
+  justify-content:center;
+  padding:20px;
+}
+
+.personal-spinner{
+  width:24px;
+  height:24px;
+  border:3px solid #ddd;
+  border-top-color:#111;
+  border-radius:50%;
+  animation:booklySpin .7s linear infinite;
+}
+
+@keyframes booklySpin{
+  to{transform:rotate(360deg)}
+}
