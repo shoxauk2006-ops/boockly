@@ -1722,11 +1722,7 @@ function Dashboard({
         x.status === 'confirmed'
     );
 
-  const totalBookings =
-    bookings.filter(
-      x =>
-        x.status === 'confirmed'
-    ).length;
+ 
 
   return (
     <>
@@ -1736,11 +1732,7 @@ function Dashboard({
           t={t('owner.today')}
         />
 
-        <Stat
-          n={totalBookings}
-          t={t('owner.totalBookings')}
-        />
-
+        
         <Stat
           n={
             business.subscription_active
