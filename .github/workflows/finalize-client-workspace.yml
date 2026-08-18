@@ -1,0 +1,383 @@
+name: Integrate client workspace into React
+
+on:
+  push:
+    paths:
+      - 'frontend/src/main.tsx'
+      - 'frontend/src/style.css'
+      - 'frontend/index.html'
+      - '.github/workflows/finalize-client-workspace.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Integrate the client workspace
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          main = Path('frontend/src/main.tsx')
+          css = Path('frontend/src/style.css')
+          index = Path('frontend/index.html')
+
+          s = main.read_text(encoding='utf-8')
+
+          home_re = re.compile(
+              r"\n  \{mode==='home' &&\s*<Home[\s\S]*?\n  \}\n\n  \{mode==='admin' &&",
+              re.MULTILINE,
+          )
+
+          personal_component = r'''
+function PersonalWorkspace({
+  onAdmin,
+  slug,
+  setSlug,
+  open,
+  t
+}: {
+  onAdmin: () => void;
+  slug: string;
+  setSlug: (value: string) => void;
+  open: (input?: string) => void;
+  t: (key: string, fallback?: string) => string;
+}) {
+  type Tab = 'home' | 'bookings' | 'saved';
+
+  const [tab, setTab] = useState<Tab>('home');
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [saved, setSaved] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+
+      const results = await Promise.allSettled([
+        fetch(API + '/my/bookings', { headers: headers() }),
+        fetch(API + '/my/saved-businesses', { headers: headers() }),
+        fetch(API + '/admin/businesses', { headers: headers() })
+      ]);
+
+      if (cancelled) return;
+
+      const readArray = async (result: PromiseSettledResult<Response>) => {
+        if (result.status !== 'fulfilled' || !result.value.ok) return [];
+        const data = await result.value.json().catch(() => []);
+        return Array.isArray(data) ? data : [];
+      };
+
+      const [bookingData, savedData, businessData] = await Promise.all(
+        results.map(readArray)
+      );
+
+      if (cancelled) return;
+
+      setBookings(bookingData);
+      setSaved(savedData);
+      setBusinesses(businessData);
+      setLoading(false);
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const firstName = tg()?.initDataUnsafe?.user?.first_name || '';
+
+  const bookingCard = (item: any, index: number) => {
+    const statusKey =
+      item.status === 'cancelled'
+        ? 'owner.cancelled'
+        : item.status === 'completed'
+        ? 'owner.completed'
+        : 'owner.confirmed';
+
+    return (
+      <article className="personal-list-card" key={item.id ?? index}>
+        <div className="personal-list-main">
+          <span className="personal-status">{t(statusKey)}</span>
+          <h3>{item.business_name || 'Bookly'}</h3>
+          <p>{item.service_name || ''}</p>
+        </div>
+        <div className="personal-list-meta">
+          <strong>{item.day || ''}</strong>
+          <span>{item.start ? item.start.slice(0, 5) : ''}</span>
+        </div>
+      </article>
+    );
+  };
+
+  return (
+    <section
+      className="personal-workspace"
+      dir={getStoredLanguage() === 'ar' ? 'rtl' : 'ltr'}
+    >
+      {loading && (
+        <div className="personal-loading" aria-live="polite">
+          <div className="personal-spinner" />
+          <span>{t('common.loading')}</span>
+        </div>
+      )}
+
+      {!loading && tab === 'home' && (
+        <>
+          <section className="personal-hero">
+            <div className="personal-eyebrow">BOOKLY</div>
+            <h1>{firstName ? `${t('home.title')}, ${firstName}` : t('home.title')}</h1>
+            <p>{t('home.description')}</p>
+          </section>
+
+          <section className="personal-card">
+            <div className="personal-card-kicker">{t('home.openBusiness')}</div>
+            <h2>{t('home.openBusiness')}</h2>
+            <p>{t('home.slugPlaceholder')}</p>
+            <div className="personal-search-row">
+              <input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder={t('home.slugPlaceholder')}
+              />
+              <button type="button" onClick={() => open()}>
+                {t('common.open')}
+              </button>
+            </div>
+          </section>
+
+          <section className="personal-card personal-business-card">
+            <div className="personal-card-kicker">{t('nav.admin')}</div>
+            {businesses.length > 0 ? (
+              <>
+                <h2>{businesses[0].name || t('owner.currentBusiness')}</h2>
+                <p>{businesses[0].address || t('owner.currentBusiness')}</p>
+                <button type="button" className="personal-primary-button" onClick={onAdmin}>
+                  {t('home.openAdmin')}
+                </button>
+              </>
+            ) : (
+              <>
+                <h2>{t('owner.noBusiness')}</h2>
+                <p>{t('owner.addBusiness')}</p>
+                <button type="button" className="personal-primary-button" onClick={onAdmin}>
+                  {t('owner.addBusiness')}
+                </button>
+              </>
+            )}
+          </section>
+        </>
+      )}
+
+      {!loading && tab === 'bookings' && (
+        <section className="personal-page-section">
+          <div className="personal-page-header">
+            <div>
+              <div className="personal-eyebrow">BOOKLY</div>
+              <h1>{t('client.myBookings')}</h1>
+            </div>
+          </div>
+
+          {bookings.length === 0 ? (
+            <div className="personal-empty">
+              <div className="personal-empty-icon">◷</div>
+              <h3>{t('client.noBookings')}</h3>
+            </div>
+          ) : (
+            <div className="personal-list">
+              {bookings.map(bookingCard)}
+            </div>
+          )}
+        </section>
+      )}
+
+      {!loading && tab === 'saved' && (
+        <section className="personal-page-section">
+          <div className="personal-page-header">
+            <div>
+              <div className="personal-eyebrow">BOOKLY</div>
+              <h1>{t('client.savedBusinesses')}</h1>
+            </div>
+          </div>
+
+          {saved.length === 0 ? (
+            <div className="personal-empty">
+              <div className="personal-empty-icon">♡</div>
+              <h3>{t('client.noSavedBusinesses')}</h3>
+            </div>
+          ) : (
+            <div className="personal-list">
+              {saved.map((item: any, index: number) => (
+                <button
+                  type="button"
+                  className="personal-list-card personal-list-button"
+                  key={item.id ?? index}
+                  onClick={() => open(item.slug)}
+                >
+                  <span className="personal-saved-icon">♡</span>
+                  <span className="personal-list-main">
+                    <strong>{item.name || 'Bookly'}</strong>
+                    <small>{item.address || ''}</small>
+                  </span>
+                  <span className="personal-arrow">›</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <nav className="personal-bottom-nav" aria-label="Bookly">
+        <button
+          type="button"
+          className={tab === 'home' ? 'active' : ''}
+          onClick={() => setTab('home')}
+        >
+          <span>⌂</span>
+          <small>{t('nav.home')}</small>
+        </button>
+
+        <button
+          type="button"
+          className={tab === 'bookings' ? 'active' : ''}
+          onClick={() => setTab('bookings')}
+        >
+          <span>◷</span>
+          <small>{t('nav.bookings')}</small>
+        </button>
+
+        <button
+          type="button"
+          className={tab === 'saved' ? 'active' : ''}
+          onClick={() => setTab('saved')}
+        >
+          <span>♡</span>
+          <small>{t('nav.saved')}</small>
+        </button>
+      </nav>
+    </section>
+  );
+}
+'''
+
+          new_home = """
+  {mode==='home' &&
+    <PersonalWorkspace
+      onAdmin={()=>{
+        setAdminTab('home');
+        setMode('admin');
+      }}
+      slug={clientSlug}
+      setSlug={setClientSlug}
+      open={openClient}
+      t={t}
+    />
+  }
+
+  {mode==='admin' &&"""
+
+          s, replaced = home_re.subn(new_home, s, count=1)
+          if replaced != 1:
+              raise SystemExit('Home render block not found')
+
+          if 'function PersonalWorkspace(' not in s:
+              anchor = '\nfunction Home(p: any) {'
+              if anchor not in s:
+                  raise SystemExit('Home component anchor not found')
+              s = s.replace(anchor, '\n' + personal_component + '\n' + anchor, 1)
+
+          duplicate_root = "\ncreateRoot(document.getElementById('root')!).render(<App/>);\n"
+          s = s.replace(duplicate_root, '\n')
+
+          root_calls = re.findall(r"createRoot\(document\.getElementById\('root'\)!\)\.render\(", s)
+          if len(root_calls) != 1:
+              raise SystemExit(f'Expected exactly one root render, found {len(root_calls)}')
+
+          main.write_text(s, encoding='utf-8')
+
+          current_css = css.read_text(encoding='utf-8')
+          if '/* React personal workspace */' not in current_css:
+              current_css += r'''
+
+/* React personal workspace */
+.personal-workspace{position:relative;min-height:calc(100vh - 84px);padding:0 0 98px;color:#111}
+.personal-hero{padding:28px 4px 20px}
+.personal-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#8a919b}
+.personal-hero h1{font-size:32px;line-height:1.06;letter-spacing:-1.1px;margin:8px 0 8px}
+.personal-hero p{margin:0;max-width:520px;color:#6c7480}
+.personal-card{background:#fff;border:1px solid #e9ecf0;border-radius:22px;padding:20px;margin:12px 0;box-shadow:0 8px 28px rgba(15,23,42,.05)}
+.personal-card-kicker{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#8a919b;margin-bottom:8px}
+.personal-card h2{margin:0 0 8px;font-size:19px;letter-spacing:-.2px}
+.personal-card p{margin:0 0 15px;color:#707784}
+.personal-search-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.personal-search-row input{margin:0!important}
+.personal-search-row button,.personal-primary-button{margin:0!important;background:#111;color:#fff;border-radius:13px;border:0;padding:12px 16px;font-weight:750;white-space:nowrap}
+.personal-business-card{background:#111;color:#fff;border-color:#111}
+.personal-business-card p{color:#cbd0d7}
+.personal-business-card .personal-card-kicker{color:#aeb5be}
+.personal-business-card .personal-primary-button{background:#fff;color:#111}
+.personal-page-section{padding-top:26px}
+.personal-page-header{padding:0 4px 14px}
+.personal-page-header h1{font-size:29px;letter-spacing:-.9px;margin:7px 0 0}
+.personal-list{display:grid;gap:10px}
+.personal-list-card{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;background:#fff;border:1px solid #e9ecf0;border-radius:19px;padding:17px;text-align:left;color:#111;box-shadow:0 6px 22px rgba(15,23,42,.045)}
+.personal-list-button{cursor:pointer}
+.personal-list-main{min-width:0;flex:1}
+.personal-list-main h3,.personal-list-main strong{display:block;margin:0 0 5px;font-size:17px}
+.personal-list-main p{margin:0;color:#6f7783}
+.personal-list-main small{display:block;color:#8b929b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.personal-status{display:inline-flex;margin-bottom:7px;padding:5px 8px;border-radius:999px;background:#f0f2f4;color:#707784;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.personal-list-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto}
+.personal-list-meta strong{font-size:13px}
+.personal-list-meta span{font-size:15px;font-weight:800}
+.personal-saved-icon{width:40px;height:40px;border-radius:13px;background:#f0f2f4;display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+.personal-arrow{font-size:24px;color:#98a0ab;flex:0 0 auto}
+.personal-empty{background:#fff;border:1px solid #e9ecf0;border-radius:21px;padding:42px 20px;text-align:center;box-shadow:0 8px 28px rgba(15,23,42,.045)}
+.personal-empty-icon{width:48px;height:48px;border-radius:16px;background:#f0f2f4;display:grid;place-items:center;margin:0 auto 12px;font-size:21px}
+.personal-empty h3{margin:0;font-size:16px}
+.personal-bottom-nav{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);width:288px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:6px;background:rgba(255,255,255,.98);backdrop-filter:blur(18px);border:1px solid #e4e7eb;border-radius:20px;box-shadow:0 16px 40px rgba(15,23,42,.15);z-index:9998}
+.personal-bottom-nav button{min-width:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 4px;border:0;border-radius:15px;background:transparent;color:#7a828c;font-weight:800}
+.personal-bottom-nav button span{font-size:18px;line-height:1}
+.personal-bottom-nav button small{font-size:9px;line-height:1.1}
+.personal-bottom-nav button.active{background:#111;color:#fff}
+.personal-loading{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#707784}
+.personal-spinner{width:28px;height:28px;border:3px solid #ddd;border-top-color:#111;border-radius:50%;animation:bookly-spin .8s linear infinite}
+@media(max-width:520px){.personal-search-row{grid-template-columns:1fr}.personal-search-row button{width:100%}.personal-hero h1{font-size:28px}.personal-bottom-nav{bottom:8px;width:280px}.personal-bottom-nav button small{font-size:9px}}
+'''
+              css.write_text(current_css, encoding='utf-8')
+
+          idx = index.read_text(encoding='utf-8')
+          idx = re.sub(r'\s*<script src="/ux2-runtime\.js\?[^\"]+"></script>', '', idx)
+          index.write_text(idx, encoding='utf-8')
+          PY
+
+      - name: Validate frontend build
+        shell: bash
+        run: |
+          npm install --prefix frontend --no-audit --no-fund
+          npm run build --prefix frontend
+
+      - name: Remove temporary runtime/workflows and commit
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx frontend/src/style.css frontend/index.html
+          if [ -f frontend/public/ux2-runtime.js ]; then git rm -f frontend/public/ux2-runtime.js; fi
+          if [ -f .github/workflows/ux-client-navigation.yml ]; then git rm -f .github/workflows/ux-client-navigation.yml; fi
+          git rm -f .github/workflows/finalize-client-workspace.yml
+          git status --short
+          git commit -m "feat: integrate client workspace into React" || exit 0
+          git push
