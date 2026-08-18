@@ -4567,68 +4567,9 @@ function Settings({
         </button>
       </div>
 
+                    
+            
       
-          style={{
-            display: 'flex',
-            gap: 8,
-            marginTop: 12,
-            flexWrap: 'wrap'
-          }}
-        >
-          <button
-            onClick={copyLink}
-          >
-            {t(
-              'settings.copyLink'
-            )}
-          </button>
-
-          <button
-            className="primary"
-            onClick={
-              shareTelegram
-            }
-          >
-            {t(
-              'settings.share'
-            )}
-          </button>
-        </div>
-      </div>
-
-     
-            style={{
-              display: 'flex',
-              justifyContent:
-                'center',
-              margin: '18px 0'
-            }}
-          >
-            <img
-              src={qrDataUrl}
-              alt="Bookly QR"
-              style={{
-                width: 260,
-                height: 260,
-                borderRadius: 12
-              }}
-            />
-          </div>
-        )}
-
-        <button
-          className="primary full"
-          disabled={
-            !qrDataUrl
-          }
-          onClick={
-            downloadQR
-          }
-        >
-          {t(
-            'settings.downloadQr'
-          )}
-        </button>
       </div>
 
     </div>
