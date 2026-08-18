@@ -2135,7 +2135,65 @@ function Subscription({
         );
       }
     };
+  const resumeSubscription =
+    async () => {
+      const confirmed =
+        window.confirm(
+          t(
+            'owner.confirmResumeSubscription',
+            'Возобновить автоматическое продление подписки?'
+          )
+        );
 
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            API +
+              '/admin/subscription/resume',
+            {
+              method: 'POST',
+              headers: headers()
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+              t(
+                'owner.resumeSubscriptionError',
+                'Не удалось возобновить подписку'
+              )
+          );
+        }
+
+        alert(
+          t(
+            'owner.subscriptionResumed',
+            'Автоматическое продление возобновлено'
+          )
+        );
+
+        window.location.reload();
+
+      } catch (e: any) {
+        alert(
+          e?.message ||
+            t(
+              'owner.resumeSubscriptionError',
+              'Не удалось возобновить подписку'
+            )
+        );
+      }
+    };
   if (active && !paymentFailed) {
     return (
       <div className="card subscription">
@@ -2227,16 +2285,7 @@ function Subscription({
           )}
         </div>
 
-        {cancelledButActive ? (
-          <div className="subscription-cancelled-note">
-            <p className="muted">
-              {t(
-                'owner.cancelledActive',
-                'Автопродление отменено. Новых списаний не будет.'
-              )}
-            </p>
-          </div>
-        ) : (
+        {cancelledButActive
           <button
             type="button"
             className="subscription-manage-button"
