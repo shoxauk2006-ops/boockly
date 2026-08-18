@@ -1743,17 +1743,21 @@ function Dashboard({
     useState('');
 
   useEffect(() => {
+    if (!business.subscription_active) {
+      setQrDataUrl('');
+      return;
+    }
+
     const generateQR = async () => {
       try {
-        const url =
-          await QRCode.toDataURL(
-            clientLink,
-            {
-              width: 500,
-              margin: 3,
-              errorCorrectionLevel: 'H'
-            }
-          );
+        const url = await QRCode.toDataURL(
+          clientLink,
+          {
+            width: 500,
+            margin: 3,
+            errorCorrectionLevel: 'H'
+          }
+        );
 
         setQrDataUrl(url);
       } catch (e) {
@@ -1765,9 +1769,16 @@ function Dashboard({
     };
 
     generateQR();
-  }, [clientLink]);
+  }, [
+    clientLink,
+    business.subscription_active
+  ]);
 
   const copyLink = async () => {
+    if (!business.subscription_active) {
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(
         clientLink
@@ -1785,10 +1796,12 @@ function Dashboard({
   };
 
   const openBusinessPage = () => {
+    if (!business.subscription_active) {
+      return;
+    }
+
     if (tg()?.openTelegramLink) {
-      tg().openTelegramLink(
-        clientLink
-      );
+      tg().openTelegramLink(clientLink);
     } else {
       window.open(
         clientLink,
@@ -1797,10 +1810,12 @@ function Dashboard({
     }
   };
 
+  const subscriptionLocked =
+    !business.subscription_active;
+
   return (
     <>
       <div className="grid2">
-
         <Stat
           n={todayBookings.length}
           t={t('owner.today')}
@@ -1814,7 +1829,6 @@ function Dashboard({
           }
           t={t('owner.subscription')}
         />
-
       </div>
 
       <div className="card">
@@ -1823,15 +1837,13 @@ function Dashboard({
         </h3>
 
         {todayBookings.length ? (
-          todayBookings.map(
-            x => (
-              <BookingRow
-                x={x}
-                key={x.id}
-                t={t}
-              />
-            )
-          )
+          todayBookings.map(x => (
+            <BookingRow
+              x={x}
+              key={x.id}
+              t={t}
+            />
+          ))
         ) : (
           <p>
             {t('owner.noBookings')}
@@ -1839,8 +1851,13 @@ function Dashboard({
         )}
       </div>
 
-      <div className="card admin-quick-actions">
-
+      <div
+        className={
+          subscriptionLocked
+            ? 'card admin-quick-actions subscription-locked'
+            : 'card admin-quick-actions'
+        }
+      >
         <div className="admin-section-title">
           <h3>
             {t(
@@ -1850,69 +1867,92 @@ function Dashboard({
           </h3>
 
           <p className="muted">
-            {t(
-              'owner.shareBusinessHint',
-              'Поделитесь страницей бизнеса с клиентами'
-            )}
+            {subscriptionLocked
+              ? t(
+                  'owner.activateToAccessFeatures',
+                  'Активируйте подписку, чтобы открыть доступ к функциям Bookly Pro'
+                )
+              : t(
+                  'owner.shareBusinessHint',
+                  'Поделитесь страницей бизнеса с клиентами'
+                )}
           </p>
         </div>
 
-        <div className="admin-action-row">
-          <div>
-            <strong>
-              {t(
-                'owner.businessLink',
-                'Ссылка на бизнес'
-              )}
-            </strong>
+        <div className="subscription-feature-list">
 
-            <small>
-              {clientLink}
-            </small>
+          <div className="admin-action-row">
+            <div>
+              <strong>
+                {t(
+                  'owner.businessLink',
+                  'Ссылка на бизнес'
+                )}
+              </strong>
+
+              <small>
+                {subscriptionLocked
+                  ? t(
+                      'owner.activateForClientLink',
+                      'Активируйте подписку, чтобы получить клиентскую ссылку'
+                    )
+                  : clientLink}
+              </small>
+            </div>
+
+            <button
+              className="admin-action-button"
+              disabled={subscriptionLocked}
+              onClick={copyLink}
+            >
+              {subscriptionLocked
+                ? '🔒'
+                : t(
+                    'settings.copyLink',
+                    'Копировать'
+                  )}
+            </button>
           </div>
 
-          <button
-            className="admin-action-button"
-            onClick={copyLink}
-          >
-            {t(
-              'settings.copyLink',
-              'Копировать'
-            )}
-          </button>
-        </div>
+          <div className="admin-action-row">
+            <div>
+              <strong>
+                {t(
+                  'owner.openBusinessPage',
+                  'Страница бизнеса'
+                )}
+              </strong>
 
-        <div className="admin-action-row">
-          <div>
-            <strong>
-              {t(
-                'owner.openBusinessPage',
-                'Страница бизнеса'
-              )}
-            </strong>
+              <small>
+                {subscriptionLocked
+                  ? t(
+                      'owner.activateForClientPage',
+                      'Функция доступна после активации'
+                    )
+                  : t(
+                      'owner.openBusinessPageHint',
+                      'Открыть клиентскую страницу'
+                    )}
+              </small>
+            </div>
 
-            <small>
-              {t(
-                'owner.openBusinessPageHint',
-                'Открыть клиентскую страницу'
-              )}
-            </small>
+            <button
+              className="admin-action-button"
+              disabled={subscriptionLocked}
+              onClick={
+                openBusinessPage
+              }
+            >
+              {subscriptionLocked
+                ? '🔒'
+                : t(
+                    'common.open',
+                    'Открыть'
+                  )}
+            </button>
           </div>
 
-          <button
-            className="admin-action-button"
-            onClick={openBusinessPage}
-          >
-            {t(
-              'common.open',
-              'Открыть'
-            )}
-          </button>
-        </div>
-
-        {qrDataUrl && (
-          <div className="admin-qr-box">
-
+          <div className="admin-action-row">
             <div>
               <strong>
                 {t(
@@ -1921,34 +1961,79 @@ function Dashboard({
                 )}
               </strong>
 
-              <p className="muted">
-                {t(
-                  'settings.downloadQr',
-                  'Скачайте QR-код для размещения у бизнеса'
-                )}
-              </p>
+              <small>
+                {subscriptionLocked
+                  ? t(
+                      'owner.activateForQR',
+                      'Активируйте подписку, чтобы получить QR-код'
+                    )
+                  : t(
+                      'settings.downloadQr',
+                      'Скачать QR-код'
+                    )}
+              </small>
             </div>
 
-            <img
-              src={qrDataUrl}
-              alt="Bookly QR"
-              className="admin-home-qr"
-            />
+            {subscriptionLocked ? (
+              <span className="admin-lock-badge">
+                🔒
+              </span>
+            ) : (
+              qrDataUrl && (
+                <a
+                  className="admin-action-button"
+                  href={qrDataUrl}
+                  download={`${business.slug}-bookly-qr.png`}
+                >
+                  {t(
+                    'settings.downloadQr',
+                    'Скачать'
+                  )}
+                </a>
+              )
+            )}
+          </div>
 
-            <a
-              className="admin-action-button admin-download-button"
-              href={qrDataUrl}
-              download={`${business.slug}-bookly-qr.png`}
-            >
-              {t(
-                'settings.downloadQr',
-                'Скачать QR-код'
-              )}
-            </a>
+        </div>
 
+        {subscriptionLocked && (
+          <div className="subscription-lock-overlay">
+            <div className="subscription-lock-content">
+              <div className="subscription-lock-icon">
+                🔒
+              </div>
+
+              <strong>
+                {t(
+                  'owner.booklyProRequired',
+                  'Функции Bookly Pro'
+                )}
+              </strong>
+
+              <p>
+                {t(
+                  'owner.activateToUnlock',
+                  'Активируйте подписку, чтобы получить полный доступ'
+                )}
+              </p>
+
+              <button
+                className="primary"
+                onClick={() =>
+                  checkout(
+                    'paddle',
+                    business.id
+                  )
+                }
+              >
+                {t(
+                  'owner.openAccess',
+                  'Открыть доступ'
+                )}
+              </button>
+            </div>
           </div>
         )}
-
       </div>
 
       <Subscription
