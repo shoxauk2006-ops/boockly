@@ -1396,42 +1396,51 @@ def cancel_subscription(
                 "Business not found"
             )
 
-        subscription_id = (
-            business.external_subscription_id
-            or ""
-        ).strip()
-
-        if not subscription_id:
-            raise HTTPException(
-                400,
-                "external_subscription_id is empty"
-            )
-
         if business.payment_provider != "paddle":
             raise HTTPException(
                 400,
                 f"Wrong payment provider: {business.payment_provider}"
             )
 
-        # Старые записи могли сохранить txn_...
-        if subscription_id.startswith("txn_"):
-            transaction_req = urllib_request.Request(
-                f"{PADDLE_API_BASE}/transactions/{subscription_id}",
+        subscription_id = (
+            business.external_subscription_id
+            or ""
+        ).strip()
+
+        # Если в базе уже есть настоящий Paddle subscription ID,
+        # используем его напрямую.
+        if subscription_id.startswith("sub_"):
+            pass
+
+        else:
+            # Старый txn_... больше не используем.
+            # Ищем активную подписку напрямую в Paddle.
+            list_url = (
+                f"{PADDLE_API_BASE}/subscriptions"
+                "?status=active"
+                "&per_page=200"
+            )
+
+            req = urllib_request.Request(
+                list_url,
                 headers={
                     "Authorization":
                         f"Bearer {PADDLE_API_KEY}",
-                    "Paddle-Version": "1"
+                    "Paddle-Version":
+                        "1"
                 },
                 method="GET"
             )
 
             try:
                 with urllib_request.urlopen(
-                    transaction_req,
+                    req,
                     timeout=20
                 ) as response:
-                    transaction_data = json.loads(
-                        response.read().decode("utf-8")
+
+                    response_data = json.loads(
+                        response.read()
+                        .decode("utf-8")
                     )
 
             except Exception as e:
@@ -1453,7 +1462,7 @@ def cancel_subscription(
                         pass
 
                 print(
-                    "PADDLE TRANSACTION LOOKUP FAILED:",
+                    "PADDLE SUBSCRIPTION LIST ERROR:",
                     error_code,
                     error_body
                 )
@@ -1461,53 +1470,101 @@ def cancel_subscription(
                 raise HTTPException(
                     502,
                     (
-                        "Paddle transaction lookup failed. "
+                        "Paddle subscription lookup failed. "
                         f"HTTP={error_code}. "
                         f"BODY={error_body[:1000]}"
                     )
                 )
 
-            transaction = (
-                transaction_data.get(
+            subscriptions = (
+                response_data.get(
                     "data",
-                    {}
-                ) or {}
+                    []
+                )
+                or []
             )
 
-            real_subscription_id = (
-                transaction.get(
-                    "subscription_id"
-                ) or ""
-            )
+            matched = None
 
-            if not real_subscription_id:
-                raise HTTPException(
-                    400,
-                    "Paddle transaction has no subscription_id"
+            for item in subscriptions:
+                custom_data = (
+                    item.get(
+                        "custom_data",
+                        {}
+                    )
+                    or {}
                 )
 
-            subscription_id = (
-                real_subscription_id
+                item_business_id = str(
+                    custom_data.get(
+                        "business_id",
+                        ""
+                    )
+                )
+
+                item_owner_id = str(
+                    custom_data.get(
+                        "telegram_user_id",
+                        ""
+                    )
+                )
+
+                if (
+                    item_business_id
+                    == str(business.id)
+                ):
+                    matched = item
+                    break
+
+                if (
+                    item_owner_id
+                    == str(owner_id)
+                ):
+                    matched = item
+                    break
+
+            if not matched:
+                raise HTTPException(
+                    404,
+                    (
+                        "Active Paddle subscription "
+                        "was not found for this business"
+                    )
+                )
+
+            subscription_id = str(
+                matched.get(
+                    "id",
+                    ""
+                )
             )
 
+            if not subscription_id.startswith(
+                "sub_"
+            ):
+                raise HTTPException(
+                    500,
+                    "Invalid Paddle subscription ID"
+                )
+
+            # Исправляем старое значение в базе.
             business.external_subscription_id = (
                 subscription_id
             )
 
             db.commit()
 
-        if not subscription_id.startswith("sub_"):
-            raise HTTPException(
-                400,
-                f"Invalid Paddle subscription ID: {subscription_id}"
-            )
+        # -------------------------------------------------
+        # Отмена следующего продления.
+        # Текущий оплаченный период сохраняется.
+        # -------------------------------------------------
 
         payload = json.dumps({
             "effective_from":
                 "next_billing_period"
         }).encode("utf-8")
 
-        req = urllib_request.Request(
+        cancel_req = urllib_request.Request(
             f"{PADDLE_API_BASE}/subscriptions/"
             f"{subscription_id}/cancel",
             data=payload,
@@ -1524,10 +1581,11 @@ def cancel_subscription(
 
         try:
             with urllib_request.urlopen(
-                req,
+                cancel_req,
                 timeout=20
             ) as response:
-                data = json.loads(
+
+                cancel_data = json.loads(
                     response.read()
                     .decode("utf-8")
                 )
@@ -1551,7 +1609,7 @@ def cancel_subscription(
                     pass
 
             print(
-                "PADDLE CANCEL FAILED:",
+                "PADDLE CANCEL ERROR:",
                 error_code,
                 error_body
             )
@@ -1566,28 +1624,30 @@ def cancel_subscription(
             )
 
         subscription = (
-            data.get(
+            cancel_data.get(
                 "data",
                 {}
-            ) or {}
+            )
+            or {}
         )
 
         scheduled_change = (
             subscription.get(
                 "scheduled_change"
-            ) or {}
+            )
+            or {}
         )
 
         effective_at = (
             scheduled_change.get(
                 "effective_at"
             )
-            or
-            subscription.get(
+            or subscription.get(
                 "next_billed_at"
             )
         )
 
+        # Доступ остаётся до конца оплаченного периода.
         business.subscription_active = True
         business.subscription_status = "active"
 
