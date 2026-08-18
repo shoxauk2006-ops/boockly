@@ -5222,19 +5222,49 @@ function Client({
   <div className="client-contact-actions">
 
   {business.phone && (
-    <a
-      href={`tel:${business.phone}`}
-      className="client-contact-button"
-    >
-      <span className="client-contact-label">
-        {business.phone}
-      </span>
+  <button
+    type="button"
+    className="client-contact-button"
+    onClick={async () => {
+      try {
+        await navigator.clipboard.writeText(
+          business.phone
+        );
 
-      <span className="client-contact-arrow">
-        →
-      </span>
-    </a>
-  )}
+        tg()?.showAlert?.(
+          t(
+            'client.phoneCopied',
+            'Номер скопирован'
+          )
+        );
+      } catch {
+        const input =
+          document.createElement('input');
+
+        input.value = business.phone;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        input.remove();
+
+        tg()?.showAlert?.(
+          t(
+            'client.phoneCopied',
+            'Номер скопирован'
+          )
+        );
+      }
+    }}
+  >
+    <span className="client-contact-label">
+      {business.phone}
+    </span>
+
+    <span className="client-contact-arrow">
+      {t('client.copy', 'Скопировать')}
+    </span>
+  </button>
+)}
 
   {mapUrl && (
     <button
