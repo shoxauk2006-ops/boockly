@@ -5221,23 +5221,30 @@ function Client({
 <div className="client-contact-actions">
 
   {business.phone && (
-    <button
-      type="button"
-      className="client-contact-button"
-      onClick={() => {
-        window.location.href = `tel:${business.phone}`;
-      }}
-    >
-      <span className="client-contact-label">
-        {business.phone}
-      </span>
+  <a
+    href={`tel:${business.phone}`}
+    className="client-contact-button"
+    onClick={(e) => {
+      e.stopPropagation();
 
-      <span className="client-contact-arrow">
-        →
-      </span>
-    </button>
-  )}
+      const phone =
+        `tel:${business.phone}`;
 
+      if (tg()?.openLink) {
+        e.preventDefault();
+        tg().openLink(phone);
+      }
+    }}
+  >
+    <span className="client-contact-label">
+      {business.phone}
+    </span>
+
+    <span className="client-contact-arrow">
+      →
+    </span>
+  </a>
+)}
   {mapUrl && (
     <button
       type="button"
