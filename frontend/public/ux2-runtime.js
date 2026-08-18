@@ -1,6 +1,15 @@
 (() => {
   const NAV_ID = 'bookly-client-bottom-nav';
-  const PROFILE_ID = 'bookly-client-profile-runtime';
+  const SHELL_ID = 'bookly-client-page-shell';
+  const PROFILE_ID = 'bookly-client-profile-page';
+
+  const LANGS = {
+    ru: { home: 'Главная', bookings: 'Записи', saved: 'Сохранённые', profile: 'Профиль', myBookings: 'Мои записи', savedBusinesses: 'Сохранённые бизнесы', account: 'Аккаунт', preferences: 'Настройки', language: 'Язык', telegram: 'Telegram', close: 'Закрыть' },
+    en: { home: 'Home', bookings: 'Bookings', saved: 'Saved', profile: 'Profile', myBookings: 'My bookings', savedBusinesses: 'Saved businesses', account: 'Account', preferences: 'Preferences', language: 'Language', telegram: 'Telegram', close: 'Close' },
+    uz: { home: 'Bosh sahifa', bookings: 'Bronlar', saved: 'Saqlanganlar', profile: 'Profil', myBookings: 'Mening bronlarim', savedBusinesses: 'Saqlangan bizneslar', account: 'Hisob', preferences: 'Sozlamalar', language: 'Til', telegram: 'Telegram', close: 'Yopish' },
+    tr: { home: 'Ana sayfa', bookings: 'Rezervasyonlar', saved: 'Kaydedilenler', profile: 'Profil', myBookings: 'Rezervasyonlarım', savedBusinesses: 'Kaydedilen işletmeler', account: 'Hesap', preferences: 'Tercihler', language: 'Dil', telegram: 'Telegram', close: 'Kapat' },
+    ar: { home: 'الرئيسية', bookings: 'الحجوزات', saved: 'المحفوظة', profile: 'الملف الشخصي', myBookings: 'حجوزاتي', savedBusinesses: 'الأنشطة المحفوظة', account: 'الحساب', preferences: 'الإعدادات', language: 'اللغة', telegram: 'Telegram', close: 'إغلاق' }
+  };
 
   const getLang = () => {
     try {
@@ -10,63 +19,145 @@
     }
   };
 
-  const translations = {
-    ru: { home: 'Главная', bookings: 'Записи', saved: 'Сохранённые', profile: 'Профиль', language: 'Язык', myBookings: 'Мои записи', savedBusinesses: 'Сохранённые бизнесы' },
-    en: { home: 'Home', bookings: 'Bookings', saved: 'Saved', profile: 'Profile', language: 'Language', myBookings: 'My bookings', savedBusinesses: 'Saved businesses' },
-    uz: { home: 'Bosh sahifa', bookings: 'Bronlar', saved: 'Saqlanganlar', profile: 'Profil', language: 'Til', myBookings: 'Mening bronlarim', savedBusinesses: 'Saqlangan bizneslar' },
-    tr: { home: 'Ana sayfa', bookings: 'Rezervasyonlar', saved: 'Kaydedilenler', profile: 'Profil', language: 'Dil', myBookings: 'Rezervasyonlarım', savedBusinesses: 'Kaydedilen işletmeler' },
-    ar: { home: 'الرئيسية', bookings: 'الحجوزات', saved: 'المحفوظة', profile: 'الملف الشخصي', language: 'اللغة', myBookings: 'حجوزاتي', savedBusinesses: 'الأنشطة المحفوظة' }
+  const t = (key) => (LANGS[getLang()] || LANGS.en)[key];
+
+  const getClientSection = () => {
+    const root = document.querySelector('#root > .app');
+    if (!root) return null;
+    const details = root.querySelectorAll('details');
+    return details.length >= 2 ? root : null;
   };
 
-  const t = (key) => (translations[getLang()] || translations.en)[key];
-
-  const isClientView = () => document.querySelectorAll('#root details').length >= 2;
-
-  const findDetails = (kind) => {
-    const wanted = kind === 'bookings' ? t('myBookings') : t('savedBusinesses');
-    return [...document.querySelectorAll('#root details')].find((el) => {
-      const text = (el.querySelector('summary')?.textContent || '').trim().toLowerCase();
-      return text === wanted.toLowerCase() || (kind === 'bookings' ? /booking|брон|запис|rezerv|حجز/i.test(text) : /saved|сохран|saql|kaydet|محفوظ/i.test(text));
-    }) || null;
+  const getBookingsDetails = () => {
+    const root = getClientSection();
+    if (!root) return null;
+    return [...root.querySelectorAll('details')][0] || null;
   };
 
-  const scrollToDetails = (kind) => {
-    const el = findDetails(kind);
-    if (!el) return;
-    el.open = true;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const getSavedDetails = () => {
+    const root = getClientSection();
+    if (!root) return null;
+    return [...root.querySelectorAll('details')][1] || null;
   };
+
+  const getClientRootChildren = () => {
+    const root = getClientSection();
+    if (!root) return [];
+    const section = [...root.querySelectorAll('section')].find((x) => x.querySelector('details'));
+    if (!section) return [];
+    return [...section.children];
+  };
+
+  const restoreClientLayout = () => {
+    const children = getClientRootChildren();
+    children.forEach((el) => {
+      if (el.classList.contains('bookly-runtime-profile-page')) return;
+      el.style.removeProperty('display');
+    });
+    getBookingsDetails()?.removeAttribute('open');
+    getSavedDetails()?.removeAttribute('open');
+  };
+
+  const hideAllClientContent = () => {
+    const children = getClientRootChildren();
+    children.forEach((el) => {
+      el.style.setProperty('display', 'none', 'important');
+    });
+  };
+
+  const getLanguageSelect = () => document.querySelector('select.language-select');
 
   const buildProfile = () => {
     let profile = document.getElementById(PROFILE_ID);
-    if (profile) return profile;
+    if (profile) profile.remove();
 
     const user = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
     const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Bookly';
+    const username = user.username ? `@${user.username}` : '';
     const letter = fullName.charAt(0).toUpperCase();
+    const select = getLanguageSelect();
 
     profile = document.createElement('section');
     profile.id = PROFILE_ID;
-    profile.className = 'bookly-runtime-profile card';
+    profile.className = 'bookly-runtime-profile-page';
     profile.innerHTML = `
-      <div class="bookly-runtime-profile-head">
-        <div class="bookly-runtime-avatar">${letter}</div>
+      <div class="runtime-page-card runtime-profile-hero">
+        <div class="runtime-profile-avatar">${letter}</div>
         <div>
-          <h2>${t('profile')}</h2>
-          <p class="muted">${fullName}</p>
+          <h1>${t('profile')}</h1>
+          <p>${fullName}</p>
+          ${username ? `<small>${username}</small>` : ''}
         </div>
       </div>
-      <div class="bookly-runtime-profile-row">
-        <span>${t('language')}</span>
-        <strong>${document.querySelector('select.language-select')?.selectedOptions?.[0]?.textContent?.trim() || getLang()}</strong>
+
+      <div class="runtime-page-card">
+        <div class="runtime-section-label">${t('account')}</div>
+        <div class="runtime-profile-item">
+          <span>${t('telegram')}</span>
+          <strong>${username || '—'}</strong>
+        </div>
+      </div>
+
+      <div class="runtime-page-card">
+        <div class="runtime-section-label">${t('preferences')}</div>
+        <div class="runtime-profile-item runtime-language-row">
+          <span>${t('language')}</span>
+          <div class="runtime-language-control"></div>
+        </div>
       </div>
     `;
 
-    document.querySelector('#root > .app')?.appendChild(profile);
+    const slot = profile.querySelector('.runtime-language-control');
+    if (select && slot) {
+      const clone = select.cloneNode(true);
+      clone.className = 'runtime-language-select';
+      clone.value = getLang();
+      clone.addEventListener('change', (event) => {
+        select.value = event.target.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        setTimeout(renderPage, 50);
+      });
+      slot.appendChild(clone);
+    }
+
+    const root = getClientSection();
+    if (root) root.appendChild(profile);
     return profile;
   };
 
-  const scrollHome = () => {
+  const showHome = () => {
+    restoreClientLayout();
+    setActive('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const showBookings = () => {
+    hideAllClientContent();
+    const details = getBookingsDetails();
+    if (details) {
+      details.style.removeProperty('display');
+      details.open = true;
+    }
+    setActive('bookings');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const showSaved = () => {
+    hideAllClientContent();
+    const details = getSavedDetails();
+    if (details) {
+      details.style.removeProperty('display');
+      details.open = true;
+    }
+    setActive('saved');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const showProfile = () => {
+    hideAllClientContent();
+    const profile = buildProfile();
+    profile.style.removeProperty('display');
+    setActive('profile');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -76,71 +167,87 @@
     });
   };
 
+  const go = (key) => {
+    if (key === 'home') showHome();
+    if (key === 'bookings') showBookings();
+    if (key === 'saved') showSaved();
+    if (key === 'profile') showProfile();
+    try { history.replaceState({}, '', `${location.pathname}${location.search}#${key}`); } catch {}
+  };
+
   const buildNav = () => {
     let nav = document.getElementById(NAV_ID);
-    if (nav) return nav;
+    if (nav) {
+      nav.querySelectorAll('small').forEach((el, index) => {
+        const keys = ['home', 'bookings', 'saved', 'profile'];
+        el.textContent = t(keys[index]);
+      });
+      return nav;
+    }
 
     nav = document.createElement('nav');
     nav.id = NAV_ID;
     nav.className = 'bookly-runtime-bottom-nav';
-    nav.setAttribute('aria-label', 'Bookly navigation');
 
     const items = [
-      ['home', '⌂', 'home', scrollHome],
-      ['bookings', '◷', 'bookings', () => scrollToDetails('bookings')],
-      ['saved', '♡', 'saved', () => scrollToDetails('saved')],
-      ['profile', '◎', 'profile', () => {
-        setActive('profile');
-        buildProfile()?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }]
+      ['home', '⌂'],
+      ['bookings', '◷'],
+      ['saved', '♡'],
+      ['profile', '◎']
     ];
 
-    items.forEach(([key, icon, labelKey, action]) => {
+    items.forEach(([key, icon]) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.tab = key;
-      button.innerHTML = `<span aria-hidden="true">${icon}</span><small>${t(labelKey)}</small>`;
-      button.addEventListener('click', () => {
-        setActive(key);
-        action();
-      });
+      button.innerHTML = `<span aria-hidden="true">${icon}</span><small>${t(key)}</small>`;
+      button.addEventListener('click', () => go(key));
       nav.appendChild(button);
     });
 
     document.body.appendChild(nav);
-    setActive('home');
     return nav;
   };
 
-  const removeRuntime = () => {
-    document.getElementById(NAV_ID)?.remove();
-    document.getElementById(PROFILE_ID)?.remove();
+  const renderPage = () => {
+    if (!getClientSection()) return;
+    buildNav();
+    const hash = location.hash.replace('#', '');
+    if (hash === 'bookings') showBookings();
+    else if (hash === 'saved') showSaved();
+    else if (hash === 'profile') showProfile();
+    else showHome();
   };
 
-  let lastClient = false;
-  let lastLang = getLang();
+  let previousLang = getLang();
+  let previousClient = false;
+  let ticking = false;
 
   const sync = () => {
-    const client = isClientView();
-    const lang = getLang();
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      const client = !!getClientSection();
+      const lang = getLang();
 
-    if (client) {
-      buildNav();
-      if (lang !== lastLang) {
+      if (client && !previousClient) {
+        renderPage();
+      } else if (client && lang !== previousLang) {
+        renderPage();
+      } else if (!client && previousClient) {
         document.getElementById(NAV_ID)?.remove();
         document.getElementById(PROFILE_ID)?.remove();
-        buildNav();
       }
-    } else if (lastClient && !client) {
-      removeRuntime();
-    }
 
-    lastClient = client;
-    lastLang = lang;
+      previousClient = client;
+      previousLang = lang;
+    });
   };
 
   const observer = new MutationObserver(sync);
   observer.observe(document.getElementById('root') || document.body, { childList: true, subtree: true });
-  setInterval(sync, 700);
-  setTimeout(sync, 300);
+  window.addEventListener('hashchange', renderPage);
+  setInterval(sync, 800);
+  setTimeout(sync, 400);
 })();
