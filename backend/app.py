@@ -1419,72 +1419,88 @@ def cancel_subscription(
                 400,
                 "Unsupported payment provider"
             )
-# В старых записях мог сохраниться txn_...
-# вместо sub_.... Восстанавливаем subscription_id
-# через Paddle transaction API.
 
-if subscription_id.startswith("txn_"):
-
-    transaction_req = urllib_request.Request(
-        f"{PADDLE_API_BASE}/transactions/"
-        f"{subscription_id}",
-        headers={
-            "Authorization":
-                f"Bearer {PADDLE_API_KEY}",
-            "Paddle-Version": "1"
-        },
-        method="GET"
-    )
-
-    try:
-        with urllib_request.urlopen(
-            transaction_req,
-            timeout=20
-        ) as response:
-
-            transaction_data = json.loads(
-                response.read()
-                .decode("utf-8")
+        # Старые записи могли сохранить txn_...
+        # вместо настоящего sub_... ID.
+        if subscription_id.startswith("txn_"):
+            transaction_req = urllib_request.Request(
+                f"{PADDLE_API_BASE}/transactions/"
+                f"{subscription_id}",
+                headers={
+                    "Authorization":
+                        f"Bearer {PADDLE_API_KEY}",
+                    "Paddle-Version": "1"
+                },
+                method="GET"
             )
 
-        transaction = (
-            transaction_data.get(
-                "data",
-                {}
-            )
-            or {}
-        )
+            try:
+                with urllib_request.urlopen(
+                    transaction_req,
+                    timeout=20
+                ) as response:
 
-        real_subscription_id = (
-            transaction.get(
-                "subscription_id"
-            )
-            or ""
-        )
+                    transaction_data = json.loads(
+                        response.read()
+                        .decode("utf-8")
+                    )
 
-        if real_subscription_id.startswith(
-            "sub_"
-        ):
-            subscription_id = (
-                real_subscription_id
-            )
+                transaction = (
+                    transaction_data.get(
+                        "data",
+                        {}
+                    )
+                    or {}
+                )
 
-            business.external_subscription_id = (
-                subscription_id
-            )
+                real_subscription_id = (
+                    transaction.get(
+                        "subscription_id"
+                    )
+                    or ""
+                )
 
-            db.commit()
+                if not real_subscription_id.startswith(
+                    "sub_"
+                ):
+                    raise HTTPException(
+                        400,
+                        "Paddle subscription ID was not found"
+                    )
 
-    except Exception as e:
-        print(
-            "PADDLE TRANSACTION LOOKUP ERROR:",
-            repr(e)
-        )
+                subscription_id = (
+                    real_subscription_id
+                )
 
-        raise HTTPException(
-            502,
-            "Unable to resolve Paddle subscription"
-        )
+                business.external_subscription_id = (
+                    subscription_id
+                )
+
+                db.commit()
+
+            except HTTPException:
+                raise
+
+            except Exception as e:
+                print(
+                    "PADDLE TRANSACTION LOOKUP ERROR:",
+                    repr(e)
+                )
+
+                if hasattr(e, "read"):
+                    try:
+                        print(
+                            "PADDLE TRANSACTION ERROR BODY:",
+                            e.read().decode("utf-8")
+                        )
+                    except Exception:
+                        pass
+
+                raise HTTPException(
+                    502,
+                    "Unable to resolve Paddle subscription"
+                )
+
         payload = json.dumps({
             "effective_from":
                 "next_billing_period"
@@ -1525,8 +1541,7 @@ if subscription_id.startswith("txn_"):
                 try:
                     print(
                         "PADDLE ERROR BODY:",
-                        e.read()
-                        .decode("utf-8")
+                        e.read().decode("utf-8")
                     )
                 except Exception:
                     pass
@@ -1537,7 +1552,10 @@ if subscription_id.startswith("txn_"):
             )
 
         subscription = (
-            data.get("data", {})
+            data.get(
+                "data",
+                {}
+            )
             or {}
         )
 
@@ -1557,13 +1575,14 @@ if subscription_id.startswith("txn_"):
             )
         )
 
-        # Подписка остается активной
-        # до конца оплаченного периода.
+        # Доступ сохраняется до конца
+        # уже оплаченного периода.
         business.subscription_active = True
 
-        business.subscription_status = (
-            "active"
-        )
+        # Сохраняем статус как active,
+        # потому что Paddle отменяет следующее
+        # продление, а не текущий оплаченный доступ.
+        business.subscription_status = "active"
 
         if effective_at:
             try:
