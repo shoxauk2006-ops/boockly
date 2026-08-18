@@ -1590,6 +1590,7 @@ function Admin({
 )}
 
 <nav className="admin-bottom-nav">
+
   <button
     className={tab === 'home' ? 'active' : ''}
     onClick={() => setTab('home')}
@@ -1621,40 +1622,12 @@ function Admin({
     <span>•••</span>
     <small>{t('nav.more')}</small>
   </button>
-</nav>
-
-  <button
-    className={tab === 'bookings' ? 'active' : ''}
-    onClick={() => setTab('bookings')}
-  >
-    <span>◷</span>
-    <small>
-      {t('nav.bookings')}
-    </small>
-  </button>
-
-  <button
-    className={tab === 'services' ? 'active' : ''}
-    onClick={() => setTab('services')}
-  >
-    <span>≡</span>
-    <small>
-      {t('nav.services')}
-    </small>
-  </button>
-
-  <button
-    className={tab === 'more' ? 'active' : ''}
-    onClick={() => setTab('more')}
-  >
-    <span>•••</span>
-    <small>
-      {t('nav.more')}
-    </small>
-  </button>
 
 </nav>
 
+</section>
+);
+}
 
 function BusinessForm({onSaved, t}:{onSaved:()=>void; t:(key:string,fallback?:string)=>string}) {
   const [name,setName] = useState('');
