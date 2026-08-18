@@ -473,7 +473,7 @@ function PersonalHome({
       onClick={onAdmin}
     >
       {businesses.length
-        ? t('home.manage', 'Управлять')
+        ? tt('owner.manage')
         : t('owner.createBusiness', 'Создать бизнес')}
     </button>
   </div>
