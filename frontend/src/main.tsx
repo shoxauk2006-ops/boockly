@@ -5312,87 +5312,50 @@ function Client({
         </div>
       ) : (
         services.map(
-          service => (
-            <div
-              <div
-  className={
-    selected?.id === service.id
-      ? 'client-service-card selected'
-      : 'client-service-card'
-  }
-  key={service.id}
->
-  <div className="client-service-info">
-    <strong>
-      {service.name}
-    </strong>
+  service => (
+    <div
+      className={
+        selected?.id === service.id
+          ? 'client-service-card selected'
+          : 'client-service-card'
+      }
+      key={service.id}
+    >
+      <div className="client-service-info">
+        <strong>
+          {service.name}
+        </strong>
 
-    <div className="client-service-meta">
-      {money(
-        service.price,
-        service.currency
-      )}
+        <div className="client-service-meta">
+          {money(
+            service.price,
+            service.currency
+          )}
 
-      <span>·</span>
+          <span>·</span>
 
-      {service.duration_min}{' '}
-      {t('owner.minutes')}
+          {service.duration_min}{' '}
+          {t('owner.minutes')}
+        </div>
+
+        {service.description && (
+          <p>
+            {service.description}
+          </p>
+        )}
+      </div>
+
+      <button
+        className="client-service-button"
+        onClick={() =>
+          chooseService(service)
+        }
+      >
+        {t('client.chooseService')}
+      </button>
     </div>
-
-    {service.description && (
-      <p>
-        {service.description}
-      </p>
-    )}
-  </div>
-
-  <button
-    className="client-service-button"
-    onClick={() =>
-      chooseService(service)
-    }
-  >
-    {t('client.chooseService')}
-  </button>
-</div>
-              <div>
-                <b>
-                  {service.name}
-                </b>
-
-                {service.description && (
-                  <p>
-                    {
-                      service.description
-                    }
-                  </p>
-                )}
-
-                <p>
-                  {money(
-                    service.price,
-                    service.currency
-                  )}{' '}
-                  ·{' '}
-                  {
-                    service.duration_min
-                  }{' '}
-                  {t('owner.minutes')}
-                </p>
-              </div>
-
-              <button
-                onClick={() =>
-                  chooseService(
-                    service
-                  )
-                }
-              >
-                {t('client.chooseService')}
-              </button>
-            </div>
-          )
-        )
+  )
+)
       )}
 
       {selected && (
