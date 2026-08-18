@@ -150,3 +150,18 @@
 .side-menu-head small{
   color:#777;
 }
+
+/* Visible client UX 2.0 */
+.app{padding-bottom:24px}
+.bookly-runtime-bottom-nav{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);width:min(620px,calc(100vw - 20px));display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:7px;background:rgba(255,255,255,.98);border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 12px 32px rgba(0,0,0,.15);backdrop-filter:blur(18px);z-index:10000}
+.bookly-runtime-bottom-nav button{min-width:0;background:transparent!important;color:#6b7280!important;border-radius:12px!important;padding:8px 4px!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:18px;line-height:1}
+.bookly-runtime-bottom-nav button small{font-size:10px;font-weight:650;line-height:1.1;color:inherit}
+.bookly-runtime-bottom-nav button.active{background:#111!important;color:#fff!important}
+.bookly-runtime-profile{scroll-margin-top:18px;margin:12px 0 110px}
+.bookly-runtime-profile-head{display:flex;align-items:center;gap:12px}
+.bookly-runtime-avatar{width:46px;height:46px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;flex:0 0 auto}
+.bookly-runtime-profile-head h2{margin:0 0 2px}
+.bookly-runtime-profile-head p{margin:0}
+.bookly-runtime-profile-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid #eee}
+#root:has(.bookly-runtime-bottom-nav){padding-bottom:92px}
+@media(max-width:420px){.bookly-runtime-bottom-nav{bottom:8px}.bookly-runtime-bottom-nav button{padding:7px 2px!important}.bookly-runtime-bottom-nav button small{font-size:9px}}
