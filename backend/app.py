@@ -1373,22 +1373,15 @@ PADDLE_API_BASE = os.getenv(
 
 @app.post("/admin/subscription/cancel")
 def cancel_subscription(
-    x_telegram_init_data: str = Header(
-        default=""
-    )
+    x_telegram_init_data: str = Header(default="")
 ):
-    user = telegram_user(
-        x_telegram_init_data
-    )
-
-    owner_id = int(
-        user["id"]
-    )
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
 
     if not PADDLE_API_KEY:
         raise HTTPException(
             500,
-            "Paddle API key is not configured"
+            "PADDLE_API_KEY is empty"
         )
 
     with SessionLocal() as db:
@@ -1411,21 +1404,19 @@ def cancel_subscription(
         if not subscription_id:
             raise HTTPException(
                 400,
-                "No active Paddle subscription found"
+                "external_subscription_id is empty"
             )
 
         if business.payment_provider != "paddle":
             raise HTTPException(
                 400,
-                "Unsupported payment provider"
+                f"Wrong payment provider: {business.payment_provider}"
             )
 
         # Старые записи могли сохранить txn_...
-        # вместо настоящего sub_... ID.
         if subscription_id.startswith("txn_"):
             transaction_req = urllib_request.Request(
-                f"{PADDLE_API_BASE}/transactions/"
-                f"{subscription_id}",
+                f"{PADDLE_API_BASE}/transactions/{subscription_id}",
                 headers={
                     "Authorization":
                         f"Bearer {PADDLE_API_KEY}",
@@ -1439,67 +1430,77 @@ def cancel_subscription(
                     transaction_req,
                     timeout=20
                 ) as response:
-
                     transaction_data = json.loads(
-                        response.read()
-                        .decode("utf-8")
+                        response.read().decode("utf-8")
                     )
-
-                transaction = (
-                    transaction_data.get(
-                        "data",
-                        {}
-                    )
-                    or {}
-                )
-
-                real_subscription_id = (
-                    transaction.get(
-                        "subscription_id"
-                    )
-                    or ""
-                )
-
-                if not real_subscription_id.startswith(
-                    "sub_"
-                ):
-                    raise HTTPException(
-                        400,
-                        "Paddle subscription ID was not found"
-                    )
-
-                subscription_id = (
-                    real_subscription_id
-                )
-
-                business.external_subscription_id = (
-                    subscription_id
-                )
-
-                db.commit()
-
-            except HTTPException:
-                raise
 
             except Exception as e:
-                print(
-                    "PADDLE TRANSACTION LOOKUP ERROR:",
-                    repr(e)
+                error_code = getattr(
+                    e,
+                    "code",
+                    "unknown"
                 )
+
+                error_body = ""
 
                 if hasattr(e, "read"):
                     try:
-                        print(
-                            "PADDLE TRANSACTION ERROR BODY:",
-                            e.read().decode("utf-8")
+                        error_body = (
+                            e.read()
+                            .decode("utf-8")
                         )
                     except Exception:
                         pass
 
+                print(
+                    "PADDLE TRANSACTION LOOKUP FAILED:",
+                    error_code,
+                    error_body
+                )
+
                 raise HTTPException(
                     502,
-                    "Unable to resolve Paddle subscription"
+                    (
+                        "Paddle transaction lookup failed. "
+                        f"HTTP={error_code}. "
+                        f"BODY={error_body[:1000]}"
+                    )
                 )
+
+            transaction = (
+                transaction_data.get(
+                    "data",
+                    {}
+                ) or {}
+            )
+
+            real_subscription_id = (
+                transaction.get(
+                    "subscription_id"
+                ) or ""
+            )
+
+            if not real_subscription_id:
+                raise HTTPException(
+                    400,
+                    "Paddle transaction has no subscription_id"
+                )
+
+            subscription_id = (
+                real_subscription_id
+            )
+
+            business.external_subscription_id = (
+                subscription_id
+            )
+
+            db.commit()
+
+        if not subscription_id.startswith("sub_"):
+            raise HTTPException(
+                400,
+                f"Invalid Paddle subscription ID: {subscription_id}"
+            )
 
         payload = json.dumps({
             "effective_from":
@@ -1515,7 +1516,8 @@ def cancel_subscription(
                     f"Bearer {PADDLE_API_KEY}",
                 "Content-Type":
                     "application/json",
-                "Paddle-Version": "1"
+                "Paddle-Version":
+                    "1"
             },
             method="POST"
         )
@@ -1525,63 +1527,68 @@ def cancel_subscription(
                 req,
                 timeout=20
             ) as response:
-
                 data = json.loads(
                     response.read()
                     .decode("utf-8")
                 )
 
         except Exception as e:
-            print(
-                "PADDLE CANCEL ERROR:",
-                repr(e)
+            error_code = getattr(
+                e,
+                "code",
+                "unknown"
             )
+
+            error_body = ""
 
             if hasattr(e, "read"):
                 try:
-                    print(
-                        "PADDLE ERROR BODY:",
-                        e.read().decode("utf-8")
+                    error_body = (
+                        e.read()
+                        .decode("utf-8")
                     )
                 except Exception:
                     pass
 
+            print(
+                "PADDLE CANCEL FAILED:",
+                error_code,
+                error_body
+            )
+
             raise HTTPException(
                 502,
-                "Failed to cancel Paddle subscription"
+                (
+                    "Paddle cancel failed. "
+                    f"HTTP={error_code}. "
+                    f"BODY={error_body[:1000]}"
+                )
             )
 
         subscription = (
             data.get(
                 "data",
                 {}
-            )
-            or {}
+            ) or {}
         )
 
         scheduled_change = (
             subscription.get(
                 "scheduled_change"
-            )
-            or {}
+            ) or {}
         )
 
         effective_at = (
             scheduled_change.get(
                 "effective_at"
             )
-            or subscription.get(
+            or
+            subscription.get(
                 "next_billed_at"
             )
         )
 
-        # Доступ сохраняется до конца
-        # уже оплаченного периода.
         business.subscription_active = True
-
-        # Сохраняем статус как active,
-        # потому что Paddle отменяет следующее
-        # продление, а не текущий оплаченный доступ.
         business.subscription_status = "active"
 
         if effective_at:
@@ -1604,89 +1611,13 @@ def cancel_subscription(
         return {
             "ok": True,
             "cancelled": True,
+            "subscription_id":
+                subscription_id,
             "access_until":
                 business.subscription_expires_at.isoformat()
                 if business.subscription_expires_at
                 else None
         }
-# ---------- payments ----------
-LEMON_API_KEY=os.getenv("LEMON_API_KEY","")
-LEMON_STORE_ID=os.getenv("LEMON_STORE_ID","")
-LEMON_VARIANT_ID=os.getenv("LEMON_VARIANT_ID","")
-LEMON_WEBHOOK_SECRET=os.getenv("LEMON_WEBHOOK_SECRET","")
-PUBLIC_APP_URL=os.getenv("PUBLIC_APP_URL","")
-PADDLE_WEBHOOK_SECRET=os.getenv("PADDLE_WEBHOOK_SECRET","")
-
-
-def lemonsqueezy_checkout(owner_id: int):
-    if not all([LEMON_API_KEY, LEMON_STORE_ID, LEMON_VARIANT_ID]):
-        print("LEMON CONFIG ERROR: missing API key, Store ID or Variant ID")
-        return None
-
-    payload = {
-        "data": {
-            "type": "checkouts",
-            "attributes": {
-                "checkout_data": {
-                    "custom": {
-                       "telegram_user_id": str(owner_id)
-                    }
-                },
-                "product_options": {
-                    "redirect_url": PUBLIC_APP_URL or None,
-                    "receipt_button_text": "Вернуться в Bookly",
-                    "receipt_link_url": PUBLIC_APP_URL or None
-                },
-                "checkout_options": {
-                    "subscription_preview": True
-                }
-            },
-            "relationships": {
-                "store": {
-                    "data": {
-                        "type": "stores",
-                        "id": str(LEMON_STORE_ID)
-                    }
-                },
-                "variant": {
-                    "data": {
-                        "type": "variants",
-                        "id": str(LEMON_VARIANT_ID)
-                    }
-                }
-            }
-        }
-    }
-
-    raw = json.dumps(payload).encode("utf-8")
-
-    req = urllib_request.Request(
-        "https://api.lemonsqueezy.com/v1/checkouts",
-        data=raw,
-        headers={
-            "Accept": "application/vnd.api+json",
-            "Content-Type": "application/vnd.api+json",
-            "Authorization": f"Bearer {LEMON_API_KEY}"
-        },
-        method="POST"
-    )
-
-    try:
-        with urllib_request.urlopen(req, timeout=15) as response:
-            body = json.loads(response.read().decode("utf-8"))
-            return body["data"]["attributes"]["url"]
-
-    except Exception as e:
-        print("LEMON CHECKOUT ERROR:", repr(e))
-
-        if hasattr(e, "read"):
-            try:
-                error_body = e.read().decode("utf-8")
-                print("LEMON ERROR BODY:", error_body)
-            except Exception:
-                pass
-
-        return None
 @app.post("/payments/checkout/{provider}")
 def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
     if provider not in {"uzum","lemonsqueezy"}:raise HTTPException(400,"Unsupported provider")
