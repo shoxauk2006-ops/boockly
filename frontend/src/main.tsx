@@ -338,6 +338,7 @@ function PersonalHome({
   t: (key: string, fallback?: string) => string;
 }) {
   const [businesses, setBusinesses] = useState<any[]>([]);
+  const [page, setPage] = useState<'home' | 'bookings' | 'saved'>('home');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -383,106 +384,134 @@ function PersonalHome({
   return (
     <section className="personal-home">
 
-      <div className="personal-home-hero">
-        <span className="personal-eyebrow">
-          BOOKLY
-        </span>
-
-        <h1>
-          {firstName
-            ? `${t('home.greeting', 'С возвращением')}, ${firstName}`
-            : t('home.greeting', 'С возвращением')}
-        </h1>
-
-        <p>
-          {t(
-            'home.subtitle',
-            'Ваш Bookly — всё важное в одном месте.'
-          )}
-        </p>
-      </div>
-
-      <div className="personal-card">
-        <div className="personal-card-header">
-          <div>
+      {page === 'home' && (
+        <>
+          <div className="personal-home-hero">
             <span className="personal-eyebrow">
-              {t('home.find', 'ПОИСК')}
+              BOOKLY
+            </span>
+
+            <h1>
+              {firstName
+                ? `${t('home.greeting', 'С возвращением')}, ${firstName}`
+                : t('home.greeting', 'С возвращением')}
+            </h1>
+
+            <p>
+              {t(
+                'home.description',
+                'Bookly помогает бизнесу принимать записи прямо в Telegram.'
+              )}
+            </p>
+          </div>
+
+          <div className="personal-card">
+            <span className="personal-eyebrow">
+              {t('home.openBusiness', 'Найти место')}
             </span>
 
             <h2>
               {t('home.openBusiness', 'Найти место')}
             </h2>
+
+            <div className="personal-search">
+              <input
+                value={slug}
+                onChange={(e) =>
+                  setSlug(e.target.value)
+                }
+                placeholder={t(
+                  'home.slugPlaceholder',
+                  'Ссылка или slug бизнеса'
+                )}
+              />
+
+              <button
+                className="personal-black-button"
+                onClick={() => open()}
+              >
+                {t('common.open', 'Открыть')}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="personal-search">
-          <input
-            value={slug}
-            onChange={(e) =>
-              setSlug(e.target.value)
-            }
-            placeholder={t(
-              'home.slugPlaceholder',
-              'Ссылка или slug бизнеса'
-            )}
-          />
+          <div className="personal-business-card">
+            <span className="personal-eyebrow light">
+              {t('nav.admin', 'ДЛЯ БИЗНЕСА')}
+            </span>
 
-          <button
-            className="personal-black-button"
-            onClick={() => open()}
-          >
-            {t('common.open', 'Открыть')}
-          </button>
-        </div>
-      </div>
+            <h2>
+              {businesses.length
+                ? businesses.length === 1
+                  ? businesses[0].name
+                  : t('nav.businesses', 'Мои бизнесы')
+                : t(
+                    'owner.addBusiness',
+                    'Создать бизнес'
+                  )}
+            </h2>
 
-      <div className="personal-business-card">
-        <span className="personal-eyebrow light">
-          {t('nav.admin', 'ДЛЯ БИЗНЕСА')}
-        </span>
+            <p>
+              {businesses.length
+                ? t(
+                    'nav.admin',
+                    'Управляйте своим бизнесом в Bookly'
+                  )
+                : t(
+                    'owner.noBusiness',
+                    'Создайте свой бизнес в Bookly'
+                  )}
+            </p>
 
-        <h2>
-          {businesses.length
-            ? businesses.length === 1
-              ? businesses[0].name
-              : t(
-                  'owner.yourBusinesses',
-                  'Ваши бизнесы'
-                )
-            : t(
-                'owner.addBusiness',
-                'Создать бизнес'
-              )}
-        </h2>
+            <button
+              className="personal-white-button"
+              onClick={onAdmin}
+            >
+              {businesses.length
+                ? t('common.open', 'Управлять')
+                : t(
+                    'owner.createBusiness',
+                    'Создать бизнес'
+                  )}
+            </button>
+          </div>
 
-        <p>
-          {t(
-            'owner.manageBusinessHint',
-            'Управляйте записями, услугами и расписанием'
+          {loading && (
+            <div className="personal-loading">
+              <div className="personal-spinner" />
+            </div>
           )}
-        </p>
+        </>
+      )}
 
-        <button
-          className="personal-white-button"
-          onClick={onAdmin}
-        >
-          {businesses.length
-            ? t('owner.manage', 'Управлять')
-            : t(
-                'owner.createBusiness',
-                'Создать бизнес'
-              )}
-        </button>
-      </div>
+      {page === 'bookings' && (
+        <div className="personal-page">
+          <div className="personal-home-hero personal-compact">
+            <span className="personal-eyebrow">
+              BOOKLY
+            </span>
 
-      {loading && (
-        <div className="personal-loading">
-          <div className="personal-spinner" />
+            <h1>
+              {t('nav.bookings', 'Записи')}
+            </h1>
+          </div>
+
+          <MyBookings t={t} />
         </div>
       )}
 
+      {page === 'saved' && (
+        <SavedBusinessesPage
+          t={t}
+          open={open}
+        />
+      )}
+
       <nav className="personal-bottom-nav">
-        <button className="active">
+        <button
+          className={page === 'home' ? 'active' : ''}
+          onClick={() => setPage('home')}
+        >
           <span>⌂</span>
           <small>
             {t('nav.home', 'Главная')}
@@ -490,13 +519,8 @@ function PersonalHome({
         </button>
 
         <button
-          onClick={() =>
-            document
-              .getElementById('bookings-page')
-              ?.scrollIntoView({
-                behavior: 'smooth'
-              })
-          }
+          className={page === 'bookings' ? 'active' : ''}
+          onClick={() => setPage('bookings')}
         >
           <span>◷</span>
           <small>
@@ -505,13 +529,8 @@ function PersonalHome({
         </button>
 
         <button
-          onClick={() =>
-            document
-              .getElementById('saved-page')
-              ?.scrollIntoView({
-                behavior: 'smooth'
-              })
-          }
+          className={page === 'saved' ? 'active' : ''}
+          onClick={() => setPage('saved')}
         >
           <span>♡</span>
           <small>
@@ -521,6 +540,125 @@ function PersonalHome({
       </nav>
 
     </section>
+  );
+}
+
+function SavedBusinessesPage({
+  t,
+  open
+}: {
+  t: (key: string, fallback?: string) => string;
+  open: (input?: string) => void;
+}) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(
+      API + '/my/saved-businesses',
+      { headers: headers() }
+    )
+      .then((r) =>
+        r.ok ? r.json() : []
+      )
+      .then((data) => {
+        if (!cancelled) {
+          setItems(
+            Array.isArray(data) ? data : []
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setItems([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="personal-empty-page">
+        <div className="personal-spinner" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="personal-page">
+
+      <div className="personal-home-hero personal-compact">
+        <span className="personal-eyebrow">
+          BOOKLY
+        </span>
+
+        <h1>
+          {t(
+            'nav.saved',
+            'Сохранённые'
+          )}
+        </h1>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="personal-empty-page">
+          <div className="personal-empty-icon">
+            ♡
+          </div>
+
+          <h2>
+            {t(
+              'client.noSavedBusinesses',
+              'Нет сохранённых бизнесов'
+            )}
+          </h2>
+
+          <p>
+            {t(
+              'home.emptySaved',
+              'Здесь появятся сохранённые вами места.'
+            )}
+          </p>
+        </div>
+      ) : (
+        items.map((item) => (
+          <button
+            key={item.id}
+            className="personal-saved-card"
+            onClick={() => open(item.slug)}
+          >
+            <span className="personal-saved-icon">
+              B
+            </span>
+
+            <span className="personal-saved-info">
+              <strong>{item.name}</strong>
+
+              {item.address && (
+                <small>
+                  {item.address}
+                </small>
+              )}
+            </span>
+
+            <span className="personal-saved-arrow">
+              →
+            </span>
+          </button>
+        ))
+      )}
+
+    </div>
   );
 }
 function Home(p: any) {
@@ -5383,4 +5521,4 @@ createRoot(
   <App />
 );
 
-createRoot(document.getElementById('root')!).render(<App/>);
+
