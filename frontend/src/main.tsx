@@ -2076,6 +2076,66 @@ function Subscription({
         )
       : null;
 
+  const cancelSubscription =
+    async () => {
+      const confirmed =
+        window.confirm(
+          t(
+            'owner.confirmCancelSubscription',
+            'Отменить автоматическое продление подписки? Доступ сохранится до конца оплаченного периода.'
+          )
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const response =
+          await fetch(
+            API +
+              '/admin/subscription/cancel',
+            {
+              method: 'POST',
+              headers: headers()
+            }
+          );
+
+        const data =
+          await response
+            .json()
+            .catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+              t(
+                'owner.cancelSubscriptionError',
+                'Не удалось отменить подписку'
+              )
+          );
+        }
+
+        alert(
+          t(
+            'owner.subscriptionCancelled',
+            'Автоматическое продление отменено'
+          )
+        );
+
+        window.location.reload();
+
+      } catch (e: any) {
+        alert(
+          e?.message ||
+            t(
+              'owner.cancelSubscriptionError',
+              'Не удалось отменить подписку'
+            )
+        );
+      }
+    };
+
   if (active && !paymentFailed) {
     return (
       <div className="card subscription">
@@ -2096,7 +2156,10 @@ function Subscription({
           </div>
 
           <span className="pill ok">
-            {t('owner.active')}
+            {t(
+              'owner.active',
+              'Активна'
+            )}
           </span>
         </div>
 
@@ -2165,20 +2228,25 @@ function Subscription({
         </div>
 
         {cancelledButActive ? (
-          <p className="muted subscription-cancelled-note">
-            {t(
-              'owner.cancelledActive',
-              'Автопродление отменено. Новых списаний не будет.'
-            )}
-          </p>
+          <div className="subscription-cancelled-note">
+            <p className="muted">
+              {t(
+                'owner.cancelledActive',
+                'Автопродление отменено. Новых списаний не будет.'
+              )}
+            </p>
+          </div>
         ) : (
           <button
+            type="button"
             className="subscription-manage-button"
-            
+            onClick={
+              cancelSubscription
+            }
           >
             {t(
-              'owner.manageSubscription',
-              'Управление подпиской'
+              'owner.cancelSubscription',
+              'Отменить подписку'
             )}
           </button>
         )}
@@ -2188,74 +2256,6 @@ function Subscription({
   }
 
   if (paymentFailed) {
-    const cancelSubscription =
-  async () => {
-    const confirmed =
-      window.confirm(
-        t(
-          'owner.confirmCancelSubscription',
-          'Отменить автоматическое продление подписки? Доступ сохранится до конца оплаченного периода.'
-        )
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const response =
-        await fetch(
-          API +
-            '/admin/subscription/cancel',
-          {
-            method: 'POST',
-            headers: headers()
-          }
-        );
-
-      const data =
-        await response
-          .json()
-          .catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail ||
-          t(
-            'owner.cancelSubscriptionError',
-            'Не удалось отменить подписку'
-          )
-        );
-      }
-
-      alert(
-        t(
-          'owner.subscriptionCancelled',
-          'Автоматическое продление отменено'
-        )
-      );
-
-      window.location.reload();
-
-    } catch (e: any) {
-      alert(
-        e?.message ||
-        t(
-          'owner.cancelSubscriptionError',
-          'Не удалось отменить подписку'
-        )
-      );
-    }
-  };
-    <button
-  className="subscription-manage-button"
-  onClick={cancelSubscription}
->
-  {t(
-    'owner.cancelSubscription',
-    'Отменить подписку'
-  )}
-</button>
     return (
       <div className="card subscription">
 
@@ -2290,6 +2290,7 @@ function Subscription({
         </p>
 
         <button
+          type="button"
           className="primary full"
           onClick={() =>
             checkout(
@@ -2372,6 +2373,7 @@ function Subscription({
       </ul>
 
       <button
+        type="button"
         className="primary full"
         onClick={() =>
           checkout(
