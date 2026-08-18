@@ -2069,6 +2069,46 @@ async def paddle_webhook(
                     pass
 
         # Обычные события подписки.
+                scheduled_change = (
+            data.get(
+                "scheduled_change",
+                {}
+            )
+            or {}
+        )
+
+        scheduled_action = (
+            scheduled_change.get(
+                "action"
+            )
+        )
+
+        scheduled_effective_at = (
+            scheduled_change.get(
+                "effective_at"
+            )
+        )
+
+        if scheduled_action == "cancel":
+
+            b.subscription_status = "cancelled"
+            b.subscription_active = True
+
+            if scheduled_effective_at:
+                try:
+                    b.subscription_expires_at = (
+                        datetime.fromisoformat(
+                            scheduled_effective_at.replace(
+                                "Z",
+                                "+00:00"
+                            )
+                        ).replace(
+                            tzinfo=None
+                        )
+                    )
+                except ValueError:
+                    pass
+
         elif event_type in {
             "transaction.completed",
             "subscription.created",
