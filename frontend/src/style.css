@@ -38,12 +38,12 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 #root.bookly-client-root .client-hero,#root.bookly-client-root .card{animation-name:bookly-card-in}
 .personal-home{
   min-height:100vh;
-  padding:8px 0 105px;
+  padding:0 0 125px;
   animation:booklyFade .28s ease;
 }
 
 .personal-home-hero{
-  padding:28px 6px 22px;
+  padding:14px 6px 16px;
 }
 
 .personal-home-hero h1{
@@ -553,4 +553,22 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 
 .client-service-button:active{
   transform:scale(.97);
+}
+@media(max-width:480px){
+  .personal-home{
+    padding-bottom:125px;
+  }
+
+  .personal-home-hero{
+    padding-top:10px;
+    padding-bottom:14px;
+  }
+
+  .personal-home-hero h1{
+    margin-top:5px;
+  }
+
+  .personal-business-card{
+    margin-bottom:10px;
+  }
 }
