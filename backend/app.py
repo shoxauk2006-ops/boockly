@@ -1719,8 +1719,6 @@ async def paddle_webhook(
             "PADDLE_WEBHOOK_SECRET is not configured"
         )
 
-    # Paddle подписывает так:
-    # ts=<timestamp>;h1=<hash>
     parts = dict(
         p.split("=", 1)
         for p in signature_header.split(";")
@@ -1794,30 +1792,39 @@ async def paddle_webhook(
         ""
     )
 
+    # В subscription events ID самой data —
+    # это sub_....
+    #
+    # В transaction events data.id —
+    # это txn_...., поэтому берем
+    # отдельное data.subscription_id.
     subscription_id = ""
 
-if event_type in {
-    "subscription.created",
-    "subscription.updated",
-    "subscription.resumed",
-    "subscription.paused",
-    "subscription.canceled"
-}:
-    subscription_id = str(
-        data.get("id", "")
-        or ""
-    )
-
-elif event_type.startswith(
-    "transaction."
-):
-    subscription_id = str(
-        data.get(
-            "subscription_id",
-            ""
+    if event_type in {
+        "subscription.created",
+        "subscription.updated",
+        "subscription.resumed",
+        "subscription.paused",
+        "subscription.canceled"
+    }:
+        subscription_id = str(
+            data.get(
+                "id",
+                ""
+            )
+            or ""
         )
-        or ""
-    )
+
+    elif event_type.startswith(
+        "transaction."
+    ):
+        subscription_id = str(
+            data.get(
+                "subscription_id",
+                ""
+            )
+            or ""
+        )
 
     billing_period = data.get(
         "current_billing_period",
@@ -1825,7 +1832,9 @@ elif event_type.startswith(
     ) or {}
 
     next_billed_at = (
-        data.get("next_billed_at")
+        data.get(
+            "next_billed_at"
+        )
         or
         billing_period.get(
             "ends_at"
@@ -1836,8 +1845,8 @@ elif event_type.startswith(
 
         b = None
 
-        # Для новых оплат пытаемся найти
-        # конкретный выбранный бизнес.
+        # Для новых оплат сначала пытаемся
+        # найти конкретный выбранный бизнес.
         if business_id:
             try:
                 candidate = db.get(
@@ -1859,8 +1868,7 @@ elif event_type.startswith(
             ):
                 b = None
 
-        # Совместимость со старыми платежами,
-        # где business_id ещё не передавался.
+        # Совместимость со старыми платежами.
         if not b and owner_id:
             b = owner_business(
                 db,
@@ -1874,12 +1882,18 @@ elif event_type.startswith(
 
         b.payment_provider = "paddle"
 
-        if subscription_id:
+        # Никогда не сохраняем txn_...
+        # как subscription ID.
+        if subscription_id.startswith(
+            "sub_"
+        ):
             b.external_subscription_id = (
                 subscription_id
             )
 
-        b.subscription_status = status
+        # Сохраняем статус.
+        if status:
+            b.subscription_status = status
 
         if next_billed_at:
             try:
@@ -1903,8 +1917,10 @@ elif event_type.startswith(
             "subscription.resumed"
         }:
             b.subscription_active = (
-                status not in {
+                status
+                not in {
                     "canceled",
+                    "cancelled",
                     "paused"
                 }
             )
@@ -1913,15 +1929,19 @@ elif event_type.startswith(
             "subscription.canceled",
             "subscription.paused"
         }:
-            if b.subscription_expires_at:
-                b.subscription_active = (
-                    b.subscription_expires_at
-                    > datetime.utcnow()
-                )
+            if (
+                b.subscription_expires_at
+                and
+                b.subscription_expires_at
+                > datetime.utcnow()
+            ):
+                b.subscription_active = True
             else:
                 b.subscription_active = False
 
-        elif event_type == "transaction.payment_failed":
+        elif event_type == (
+            "transaction.payment_failed"
+        ):
             if (
                 b.subscription_expires_at
                 and
@@ -1936,6 +1956,27 @@ elif event_type.startswith(
 
     return {
         "received": True
+    }
+
+
+@app.post("/payments/webhook/{provider}")
+def payment_webhook(
+    provider: str,
+    payload: dict
+):
+    if provider not in {
+        "uzum"
+    }:
+        raise HTTPException(
+            400,
+            "Use the provider-specific webhook"
+        )
+
+    return {
+        "received": True,
+        "provider": provider,
+        "status":
+            "awaiting merchant callback mapping"
     }
 @app.post("/payments/webhook/{provider}")
 def payment_webhook(provider:str,payload:dict):
