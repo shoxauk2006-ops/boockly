@@ -293,18 +293,18 @@ const openClient = (
     </>
   )}
 
-  {mode==='home' &&
-    <Home
-      onAdmin={()=>{
-        setAdminTab('home');
-        setMode('admin');
-      }}
-      slug={clientSlug}
-      setSlug={setClientSlug}
-      open={openClient}
-      t={t}
-    />
-  }
+ {mode==='home' && (
+  <PersonalHome
+    onAdmin={() => {
+      setAdminTab('home');
+      setMode('admin');
+    }}
+    slug={clientSlug}
+    setSlug={setClientSlug}
+    open={openClient}
+    t={t}
+  />
+)}
 
   {mode==='admin' &&
     <Admin
@@ -324,7 +324,205 @@ const openClient = (
 
 </div>
 }
+function PersonalHome({
+  onAdmin,
+  slug,
+  setSlug,
+  open,
+  t
+}: {
+  onAdmin: () => void;
+  slug: string;
+  setSlug: (value: string) => void;
+  open: (input?: string) => void;
+  t: (key: string, fallback?: string) => string;
+}) {
+  const [businesses, setBusinesses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const response = await fetch(
+          API + '/admin/businesses',
+          { headers: headers() }
+        );
+
+        const data = response.ok
+          ? await response.json()
+          : [];
+
+        if (!cancelled) {
+          setBusinesses(
+            Array.isArray(data) ? data : []
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setBusinesses([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const firstName =
+    tg()?.initDataUnsafe?.user?.first_name || '';
+
+  return (
+    <section className="personal-home">
+
+      <div className="personal-home-hero">
+        <span className="personal-eyebrow">
+          BOOKLY
+        </span>
+
+        <h1>
+          {firstName
+            ? `${t('home.greeting', 'С возвращением')}, ${firstName}`
+            : t('home.greeting', 'С возвращением')}
+        </h1>
+
+        <p>
+          {t(
+            'home.subtitle',
+            'Ваш Bookly — всё важное в одном месте.'
+          )}
+        </p>
+      </div>
+
+      <div className="personal-card">
+        <div className="personal-card-header">
+          <div>
+            <span className="personal-eyebrow">
+              {t('home.find', 'ПОИСК')}
+            </span>
+
+            <h2>
+              {t('home.openBusiness', 'Найти место')}
+            </h2>
+          </div>
+        </div>
+
+        <div className="personal-search">
+          <input
+            value={slug}
+            onChange={(e) =>
+              setSlug(e.target.value)
+            }
+            placeholder={t(
+              'home.slugPlaceholder',
+              'Ссылка или slug бизнеса'
+            )}
+          />
+
+          <button
+            className="personal-black-button"
+            onClick={() => open()}
+          >
+            {t('common.open', 'Открыть')}
+          </button>
+        </div>
+      </div>
+
+      <div className="personal-business-card">
+        <span className="personal-eyebrow light">
+          {t('nav.admin', 'ДЛЯ БИЗНЕСА')}
+        </span>
+
+        <h2>
+          {businesses.length
+            ? businesses.length === 1
+              ? businesses[0].name
+              : t(
+                  'owner.yourBusinesses',
+                  'Ваши бизнесы'
+                )
+            : t(
+                'owner.addBusiness',
+                'Создать бизнес'
+              )}
+        </h2>
+
+        <p>
+          {t(
+            'owner.manageBusinessHint',
+            'Управляйте записями, услугами и расписанием'
+          )}
+        </p>
+
+        <button
+          className="personal-white-button"
+          onClick={onAdmin}
+        >
+          {businesses.length
+            ? t('owner.manage', 'Управлять')
+            : t(
+                'owner.createBusiness',
+                'Создать бизнес'
+              )}
+        </button>
+      </div>
+
+      {loading && (
+        <div className="personal-loading">
+          <div className="personal-spinner" />
+        </div>
+      )}
+
+      <nav className="personal-bottom-nav">
+        <button className="active">
+          <span>⌂</span>
+          <small>
+            {t('nav.home', 'Главная')}
+          </small>
+        </button>
+
+        <button
+          onClick={() =>
+            document
+              .getElementById('bookings-page')
+              ?.scrollIntoView({
+                behavior: 'smooth'
+              })
+          }
+        >
+          <span>◷</span>
+          <small>
+            {t('nav.bookings', 'Записи')}
+          </small>
+        </button>
+
+        <button
+          onClick={() =>
+            document
+              .getElementById('saved-page')
+              ?.scrollIntoView({
+                behavior: 'smooth'
+              })
+          }
+        >
+          <span>♡</span>
+          <small>
+            {t('nav.saved', 'Сохранённые')}
+          </small>
+        </button>
+      </nav>
+
+    </section>
+  );
+}
 function Home(p: any) {
   const [savedBusinesses, setSavedBusinesses] =
     useState<any[]>([]);
@@ -4973,69 +5171,7 @@ function Client({
         </div>
       </details>
 
-      <details className="card">
-        <summary
-          style={{
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: 18
-          }}
-        >
-          ❤️ {t('client.savedBusinesses')}
-        </summary>
-
-        <div
-          style={{
-            marginTop: 15
-          }}
-        >
-          {savedBusinesses.length === 0 ? (
-            <p className="muted">
-              {t('client.noSavedBusinesses')}
-            </p>
-          ) : (
-            savedBusinesses.map(
-              item => (
-                <div
-                  key={item.id}
-                  className="card row"
-                >
-                  <div>
-                    <b>
-                      {item.name}
-                    </b>
-
-                    {item.address && (
-                      <p
-                        className="muted"
-                        style={{
-                          margin:
-                            '4px 0 0'
-                        }}
-                      >
-                        📍{' '}
-                        {item.address}
-                      </p>
-                    )}
-                  </div>
-
-                  <button
-                    className="primary"
-                    onClick={() =>
-                      window.location.href =
-                        `?startapp=${encodeURIComponent(
-                          item.slug
-                        )}`
-                    }
-                  >
-                    {t('common.open')}
-                  </button>
-                </div>
-              )
-            )
-          )}
-        </div>
-      </details>
+      
 
       <h2>
         {t('client.services')}
