@@ -30,8 +30,7 @@ const ru: TranslationMap = {
   'nav.settings': 'Настройки',
   'nav.subscription': 'Подписка',
   'nav.admin': 'Админ-панель',
-  'nav.more': 'Ещё'
-  'common.back': 'Назад',
+    'common.back': 'Назад',
   'common.open': 'Открыть',
   'common.save': 'Сохранить',
   'common.cancel': 'Отмена',
