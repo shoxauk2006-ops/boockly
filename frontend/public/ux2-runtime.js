@@ -14,144 +14,63 @@
 
   const tr = {
     ru: {
-      home: 'Главная', bookings: 'Записи', saved: 'Сохранённые', profile: 'Профиль',
-      greeting: 'С возвращением', subtitle: 'Ваш Bookly — всё важное в одном месте.',
-      nextBooking: 'Ближайшая запись', noBookings: 'У вас пока нет записей',
-      openBooking: 'Открыть запись', savedTitle: 'Сохранённые места', emptySaved: 'Сохранённых бизнесов пока нет',
-      open: 'Открыть', explore: 'Найти место', exploreHint: 'Введите ссылку или slug бизнеса',
-      manageBusiness: 'Для бизнеса', manageBusinessHint: 'Управляйте своими записями, услугами и расписанием',
-      manage: 'Управлять', yourBusinesses: 'Ваши бизнесы', addBusiness: 'Создать бизнес',
-      profileTitle: 'Профиль', account: 'Аккаунт', language: 'Язык', name: 'Имя', username: 'Username',
-      support: 'Поддержка', help: 'Помощь', about: 'О Bookly', version: 'Версия',
-      allBookings: 'Все записи', upcoming: 'Предстоящая', past: 'Завершённая',
-      loading: 'Загрузка…', retry: 'Повторить', noBusiness: 'У вас пока нет бизнеса',
-      close: 'Закрыть', search: 'Открыть', timezone: 'Часовой пояс', preferences: 'Настройки'
+      home:'Главная', bookings:'Записи', saved:'Сохранённые', profile:'Профиль', greeting:'С возвращением', subtitle:'Ваш Bookly — всё важное в одном месте.', explore:'Найти место', exploreHint:'Введите ссылку или slug бизнеса', search:'Открыть', manageBusiness:'Для бизнеса', manageBusinessHint:'Управляйте своими записями, услугами и расписанием', manage:'Управлять', yourBusinesses:'Ваши бизнесы', addBusiness:'Создать бизнес', allBookings:'Все записи', upcoming:'Предстоящая', past:'Завершённая', noBookings:'У вас пока нет записей', savedTitle:'Сохранённые места', emptySaved:'Сохранённых бизнесов пока нет'
     },
     en: {
-      home: 'Home', bookings: 'Bookings', saved: 'Saved', profile: 'Profile',
-      greeting: 'Welcome back', subtitle: 'Your Bookly space — everything important in one place.',
-      nextBooking: 'Next booking', noBookings: 'You have no bookings yet',
-      openBooking: 'Open booking', savedTitle: 'Saved places', emptySaved: 'No saved businesses yet',
-      open: 'Open', explore: 'Find a place', exploreHint: 'Enter a business link or slug',
-      manageBusiness: 'For business', manageBusinessHint: 'Manage bookings, services and schedule',
-      manage: 'Manage', yourBusinesses: 'Your businesses', addBusiness: 'Create business',
-      profileTitle: 'Profile', account: 'Account', language: 'Language', name: 'Name', username: 'Username',
-      support: 'Support', help: 'Help', about: 'About Bookly', version: 'Version',
-      allBookings: 'All bookings', upcoming: 'Upcoming', past: 'Completed',
-      loading: 'Loading…', retry: 'Retry', noBusiness: 'You do not have a business yet',
-      close: 'Close', search: 'Open', timezone: 'Time zone', preferences: 'Preferences'
+      home:'Home', bookings:'Bookings', saved:'Saved', profile:'Profile', greeting:'Welcome back', subtitle:'Your Bookly space — everything important in one place.', explore:'Find a place', exploreHint:'Enter a business link or slug', search:'Open', manageBusiness:'For business', manageBusinessHint:'Manage bookings, services and schedule', manage:'Manage', yourBusinesses:'Your businesses', addBusiness:'Create business', allBookings:'All bookings', upcoming:'Upcoming', past:'Completed', noBookings:'You have no bookings yet', savedTitle:'Saved places', emptySaved:'No saved businesses yet'
     },
     uz: {
-      home: 'Bosh sahifa', bookings: 'Bronlar', saved: 'Saqlanganlar', profile: 'Profil',
-      greeting: 'Xush kelibsiz', subtitle: 'Bookly — barcha muhim narsalar bir joyda.',
-      nextBooking: 'Keyingi bron', noBookings: 'Hozircha bronlaringiz yo‘q',
-      openBooking: 'Bronni ochish', savedTitle: 'Saqlangan joylar', emptySaved: 'Saqlangan bizneslar yo‘q',
-      open: 'Ochish', explore: 'Joy topish', exploreHint: 'Biznes havolasi yoki slugini kiriting',
-      manageBusiness: 'Biznes uchun', manageBusinessHint: 'Bronlar, xizmatlar va jadvalni boshqaring',
-      manage: 'Boshqarish', yourBusinesses: 'Bizneslaringiz', addBusiness: 'Biznes yaratish',
-      profileTitle: 'Profil', account: 'Hisob', language: 'Til', name: 'Ism', username: 'Username',
-      support: 'Yordam', help: 'Yordam', about: 'Bookly haqida', version: 'Versiya',
-      allBookings: 'Barcha bronlar', upcoming: 'Kelgusi', past: 'Yakunlangan',
-      loading: 'Yuklanmoqda…', retry: 'Qayta urinish', noBusiness: 'Hali biznesingiz yo‘q',
-      close: 'Yopish', search: 'Ochish', timezone: 'Vaqt mintaqasi', preferences: 'Sozlamalar'
+      home:'Bosh sahifa', bookings:'Bronlar', saved:'Saqlanganlar', profile:'Profil', greeting:'Xush kelibsiz', subtitle:'Bookly — barcha muhim narsalar bir joyda.', explore:'Joy topish', exploreHint:'Biznes havolasi yoki slugini kiriting', search:'Ochish', manageBusiness:'Biznes uchun', manageBusinessHint:'Bronlar, xizmatlar va jadvalni boshqaring', manage:'Boshqarish', yourBusinesses:'Bizneslaringiz', addBusiness:'Biznes yaratish', allBookings:'Barcha bronlar', upcoming:'Kelgusi', past:'Yakunlangan', noBookings:'Hozircha bronlaringiz yo‘q', savedTitle:'Saqlangan joylar', emptySaved:'Saqlangan bizneslar yo‘q'
     },
     tr: {
-      home: 'Ana sayfa', bookings: 'Rezervasyonlar', saved: 'Kaydedilenler', profile: 'Profil',
-      greeting: 'Tekrar hoş geldiniz', subtitle: 'Bookly alanınız — önemli olan her şey tek yerde.',
-      nextBooking: 'Sonraki rezervasyon', noBookings: 'Henüz rezervasyonunuz yok',
-      openBooking: 'Rezervasyonu aç', savedTitle: 'Kaydedilen yerler', emptySaved: 'Henüz kaydedilen işletme yok',
-      open: 'Aç', explore: 'Bir yer bul', exploreHint: 'İşletme bağlantısı veya slug girin',
-      manageBusiness: 'İşletmeler için', manageBusinessHint: 'Rezervasyonları, hizmetleri ve programı yönetin',
-      manage: 'Yönet', yourBusinesses: 'İşletmeleriniz', addBusiness: 'İşletme oluştur',
-      profileTitle: 'Profil', account: 'Hesap', language: 'Dil', name: 'Ad', username: 'Kullanıcı adı',
-      support: 'Destek', help: 'Yardım', about: 'Bookly hakkında', version: 'Sürüm',
-      allBookings: 'Tüm rezervasyonlar', upcoming: 'Yaklaşan', past: 'Tamamlanan',
-      loading: 'Yükleniyor…', retry: 'Tekrar dene', noBusiness: 'Henüz işletmeniz yok',
-      close: 'Kapat', search: 'Aç', timezone: 'Saat dilimi', preferences: 'Tercihler'
+      home:'Ana sayfa', bookings:'Rezervasyonlar', saved:'Kaydedilenler', profile:'Profil', greeting:'Tekrar hoş geldiniz', subtitle:'Bookly alanınız — önemli olan her şey tek yerde.', explore:'Bir yer bul', exploreHint:'İşletme bağlantısı veya slug girin', search:'Aç', manageBusiness:'İşletmeler için', manageBusinessHint:'Rezervasyonları, hizmetleri ve programı yönetin', manage:'Yönet', yourBusinesses:'İşletmeleriniz', addBusiness:'İşletme oluştur', allBookings:'Tüm rezervasyonlar', upcoming:'Yaklaşan', past:'Tamamlanan', noBookings:'Henüz rezervasyonunuz yok', savedTitle:'Kaydedilen yerler', emptySaved:'Henüz kaydedilen işletme yok'
     },
     ar: {
-      home: 'الرئيسية', bookings: 'الحجوزات', saved: 'المحفوظة', profile: 'الملف الشخصي',
-      greeting: 'مرحباً بعودتك', subtitle: 'Bookly — كل ما يهمك في مكان واحد.',
-      nextBooking: 'الحجز القادم', noBookings: 'لا توجد حجوزات بعد',
-      openBooking: 'فتح الحجز', savedTitle: 'الأماكن المحفوظة', emptySaved: 'لا توجد أعمال محفوظة بعد',
-      open: 'فتح', explore: 'ابحث عن مكان', exploreHint: 'أدخل رابط النشاط أو الـ slug',
-      manageBusiness: 'لأصحاب الأعمال', manageBusinessHint: 'إدارة الحجوزات والخدمات والجدول',
-      manage: 'إدارة', yourBusinesses: 'أعمالك', addBusiness: 'إنشاء نشاط',
-      profileTitle: 'الملف الشخصي', account: 'الحساب', language: 'اللغة', name: 'الاسم', username: 'اسم المستخدم',
-      support: 'الدعم', help: 'المساعدة', about: 'عن Bookly', version: 'الإصدار',
-      allBookings: 'كل الحجوزات', upcoming: 'القادمة', past: 'المكتملة',
-      loading: 'جارٍ التحميل…', retry: 'إعادة المحاولة', noBusiness: 'لا يوجد لديك نشاط بعد',
-      close: 'إغلاق', search: 'فتح', timezone: 'المنطقة الزمنية', preferences: 'الإعدادات'
+      home:'الرئيسية', bookings:'الحجوزات', saved:'المحفوظة', profile:'الملف الشخصي', greeting:'مرحباً بعودتك', subtitle:'Bookly — كل ما يهمك في مكان واحد.', explore:'ابحث عن مكان', exploreHint:'أدخل رابط النشاط أو الـ slug', search:'فتح', manageBusiness:'لأصحاب الأعمال', manageBusinessHint:'إدارة الحجوزات والخدمات والجدول', manage:'إدارة', yourBusinesses:'أعمالك', addBusiness:'إنشاء نشاط', allBookings:'كل الحجوزات', upcoming:'القادمة', past:'المكتملة', noBookings:'لا توجد حجوزات بعد', savedTitle:'الأماكن المحفوظة', emptySaved:'لا توجد أعمال محفوظة بعد'
     }
   };
 
   const api = () => 'https://boockly-3.onrender.com';
-  const getLang = () => {
-    try { return localStorage.getItem('bookly_language') || 'en'; } catch { return 'en'; }
-  };
-  const text = (key) => (tr[getLang()] || tr.en)[key] || tr.en[key] || key;
-  const initHeaders = () => ({
-    'Content-Type': 'application/json',
-    'X-Telegram-Init-Data': initData(),
-    'X-Bookly-Language': getLang()
-  });
+  const getLang = () => { try { return localStorage.getItem('bookly_language') || 'en'; } catch { return 'en'; } };
+  const text = key => (tr[getLang()] || tr.en)[key] || tr.en[key] || key;
+  const initHeaders = () => ({'Content-Type':'application/json','X-Telegram-Init-Data':initData(),'X-Bookly-Language':getLang()});
   const hasStartParam = () => Boolean(tg()?.initDataUnsafe?.start_param || new URLSearchParams(window.location.search).get('startapp'));
-  const rootIsHome = () => {
-    const root = ROOT();
-    return Boolean(root && !hasStartParam() && root.querySelector('.hero') && root.querySelector('input'));
-  };
+  const rootIsHome = () => { const root=ROOT(); return Boolean(root && !hasStartParam() && root.querySelector('.hero') && root.querySelector('input')); };
   const el = (tag, cls, content) => { const n=document.createElement(tag); if(cls)n.className=cls; if(content!=null)n.textContent=content; return n; };
   const btn = (label, cls, fn) => { const b=el('button',cls,label); b.type='button'; b.addEventListener('click',fn); return b; };
-  const setLang = (lang) => { try{localStorage.setItem('bookly_language',lang);}catch{}; window.location.reload(); };
+  const setLang = lang => { try{localStorage.setItem('bookly_language',lang);}catch{} window.location.reload(); };
 
-  let data = { bookings:[], saved:[], businesses:[] };
-  let nav = 'home';
+  let data={bookings:[],saved:[],businesses:[]};
+  let nav='home';
 
-  const fetchAll = async () => {
-    const results = await Promise.allSettled([
+  const fetchAll=async()=>{
+    const results=await Promise.allSettled([
       fetch(api()+'/my/bookings',{headers:initHeaders()}),
       fetch(api()+'/my/saved-businesses',{headers:initHeaders()}),
       fetch(api()+'/admin/businesses',{headers:initHeaders()})
     ]);
-    data.bookings = results[0].status==='fulfilled' && results[0].value.ok ? await results[0].value.json().catch(()=>[]) : [];
-    data.saved = results[1].status==='fulfilled' && results[1].value.ok ? await results[1].value.json().catch(()=>[]) : [];
-    data.businesses = results[2].status==='fulfilled' && results[2].value.ok ? await results[2].value.json().catch(()=>[]) : [];
-    data.bookings = Array.isArray(data.bookings)?data.bookings:[];
-    data.saved = Array.isArray(data.saved)?data.saved:[];
-    data.businesses = Array.isArray(data.businesses)?data.businesses:[];
+    data.bookings=results[0].status==='fulfilled'&&results[0].value.ok?await results[0].value.json().catch(()=>[]):[];
+    data.saved=results[1].status==='fulfilled'&&results[1].value.ok?await results[1].value.json().catch(()=>[]):[];
+    data.businesses=results[2].status==='fulfilled'&&results[2].value.ok?await results[2].value.json().catch(()=>[]):[];
+    data.bookings=Array.isArray(data.bookings)?data.bookings:[];
+    data.saved=Array.isArray(data.saved)?data.saved:[];
+    data.businesses=Array.isArray(data.businesses)?data.businesses:[];
   };
 
-  const dateText = (day,time) => {
+  const dateText=(day,time)=>{
     if(!day)return '';
-    try{
-      const locale = {ru:'ru-RU',en:'en-US',uz:'uz-UZ',tr:'tr-TR',ar:'ar-SA'}[getLang()] || 'en-US';
-      return new Intl.DateTimeFormat(locale,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(`${day}T${(time||'00:00').slice(0,5)}:00`));
-    }catch{return `${day}${time?` · ${time.slice(0,5)}`:''}`;}
+    try{const locale={ru:'ru-RU',en:'en-US',uz:'uz-UZ',tr:'tr-TR',ar:'ar-SA'}[getLang()]||'en-US';return new Intl.DateTimeFormat(locale,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(`${day}T${(time||'00:00').slice(0,5)}:00`));}catch{return `${day}${time?` · ${time.slice(0,5)}`:''}`;}
   };
 
-  const openBusiness = (slug) => {
-    if(!slug)return;
-    const url=new URL(window.location.href); url.searchParams.set('startapp',slug); window.location.href=url.toString();
-  };
+  const openBusiness=slug=>{if(!slug)return;const url=new URL(window.location.href);url.searchParams.set('startapp',slug);window.location.href=url.toString();};
+  const leaveShellForAdmin=businessId=>{try{if(businessId)localStorage.setItem('bookly_active_business_id',String(businessId));}catch{} document.getElementById(SHELL_ID)?.remove();const root=ROOT();if(root)root.style.display='';setTimeout(()=>{const target=[...document.querySelectorAll('#root button')].find(b=>/admin|админ|business|бизнес|управ|boshqar/i.test(b.textContent||''));target?.click();},100);};
 
-  const leaveShellForAdmin = (businessId) => {
-    try{ if(businessId)localStorage.setItem('bookly_active_business_id',String(businessId)); }catch{}
-    document.getElementById(SHELL_ID)?.remove();
-    const root=ROOT(); if(root)root.style.display='';
-    setTimeout(()=>{
-      const target=[...document.querySelectorAll('#root button')].find(b=>/admin|админ|business|бизнес|управ|boshqar/i.test(b.textContent||''));
-      target?.click();
-    },100);
-  };
-
-  const render = () => {
-    const host=document.getElementById(SHELL_ID); if(!host)return;
+  const render=()=>{
+    const host=document.getElementById(SHELL_ID);if(!host)return;
     host.querySelectorAll('.bookly-nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===nav));
-    const body=host.querySelector('.bookly-content');
-    body.replaceChildren();
+    const body=host.querySelector('.bookly-content');body.replaceChildren();
 
     if(nav==='home'){
-      const first=(data.bookings.find(x=>x.status==='confirmed')||data.bookings[0]);
       const head=el('section','bookly-hero');
       const firstName=tg()?.initDataUnsafe?.user?.first_name;
       head.append(el('div','bookly-eyebrow','BOOKLY'));
@@ -159,79 +78,57 @@
       head.append(el('p','bookly-muted',text('subtitle')));
       body.append(head);
 
-      if(first){
-        const card=el('section','bookly-next-card');
-        card.append(el('span','bookly-kicker',text('nextBooking')));
-        card.append(el('h2','',first.business_name||'Bookly'));
-        card.append(el('p','bookly-service',first.service_name||''));
-        card.append(el('strong','bookly-date',`📅 ${dateText(first.day,first.start)}`));
-        card.append(btn(text('openBooking'),'bookly-button bookly-button-light',()=>{nav='bookings';render();}));
-        body.append(card);
-      }else{
-        const empty=el('section','bookly-empty');
-        empty.append(el('div','bookly-empty-symbol','◷'));
-        empty.append(el('h3','',text('noBookings')));
-        empty.append(el('p','bookly-muted',text('exploreHint')));
-        body.append(empty);
-      }
-
       const find=el('section','bookly-section');
       find.append(el('h2','',text('explore')));
       const search=el('div','bookly-search');
-      const input=el('input','bookly-input'); input.placeholder=text('exploreHint');
-      search.append(input); search.append(btn(text('search'),'bookly-button',()=>openBusiness(input.value.trim()))); find.append(search); body.append(find);
-
-      const saved=el('section','bookly-section');
-      const sh=el('div','bookly-section-head'); sh.append(el('h2','',text('savedTitle'))); sh.append(btn(String(data.saved.length),'bookly-count',()=>{nav='saved';render();})); saved.append(sh);
-      if(data.saved.length){data.saved.slice(0,3).forEach(item=>{const r=el('button','bookly-entity');r.append(el('span','bookly-entity-icon','♡'));const info=el('span');info.append(el('strong','',item.name||''));info.append(el('small','bookly-muted',item.address||''));r.append(info);r.addEventListener('click',()=>openBusiness(item.slug));saved.append(r);});}
-      else saved.append(el('p','bookly-muted',text('emptySaved')));
-      body.append(saved);
+      const input=el('input','bookly-input');input.placeholder=text('exploreHint');
+      search.append(input);search.append(btn(text('search'),'bookly-button',()=>openBusiness(input.value.trim())));find.append(search);body.append(find);
 
       const biz=el('section','bookly-business-card');
       biz.append(el('span','bookly-kicker',text('manageBusiness')));
-      if(data.businesses.length){biz.append(el('h2','',data.businesses.length===1?data.businesses[0].name:text('yourBusinesses')));biz.append(el('p','bookly-muted',text('manageBusinessHint')));biz.append(btn(text('manage'),'bookly-button',()=>leaveShellForAdmin(data.businesses[0]?.id)));}
-      else {biz.append(el('h2','',text('addBusiness')));biz.append(el('p','bookly-muted',text('manageBusinessHint')));biz.append(btn(text('manage'),'bookly-button',()=>leaveShellForAdmin()));}
+      if(data.businesses.length){
+        biz.append(el('h2','',data.businesses.length===1?data.businesses[0].name:text('yourBusinesses')));
+        biz.append(el('p','bookly-muted',text('manageBusinessHint')));
+        biz.append(btn(text('manage'),'bookly-button',()=>leaveShellForAdmin(data.businesses[0]?.id)));
+      }else{
+        biz.append(el('h2','',text('addBusiness')));
+        biz.append(el('p','bookly-muted',text('manageBusinessHint')));
+        biz.append(btn(text('addBusiness'),'bookly-button',()=>leaveShellForAdmin()));
+      }
       body.append(biz);
     }
 
     if(nav==='bookings'){
-      body.append(el('section','bookly-hero bookly-compact-hero')).append(el('h1','',''));
-      body.firstElementChild.querySelector('h1').textContent=text('allBookings');
-      if(!data.bookings.length){const empty=el('section','bookly-empty');empty.append(el('div','bookly-empty-symbol','◷'));empty.append(el('h3','',text('noBookings')));body.append(empty);}
-      else data.bookings.forEach(item=>{const c=el('section','bookly-booking');c.append(el('span','bookly-kicker',item.status==='cancelled'?text('past'):text('upcoming')));c.append(el('h2','',item.business_name||'Bookly'));c.append(el('p','bookly-service',item.service_name||''));c.append(el('strong','bookly-date',`📅 ${dateText(item.day,item.start)}`));body.append(c);});
+      const hero=el('section','bookly-hero bookly-compact-hero');hero.append(el('h1','',text('allBookings')));body.append(hero);
+      if(!data.bookings.length){
+        const empty=el('section','bookly-empty');empty.append(el('div','bookly-empty-symbol','◷'));empty.append(el('h3','',text('noBookings')));body.append(empty);
+      }else{
+        data.bookings.forEach(item=>{const c=el('section','bookly-booking');c.append(el('span','bookly-kicker',item.status==='cancelled'?text('past'):text('upcoming')));c.append(el('h2','',item.business_name||'Bookly'));c.append(el('p','bookly-service',item.service_name||''));c.append(el('strong','bookly-date',`📅 ${dateText(item.day,item.start)}`));body.append(c);});
+      }
     }
 
     if(nav==='saved'){
-      body.append(el('section','bookly-hero bookly-compact-hero'));body.firstElementChild.querySelector('h1').textContent=text('savedTitle');
-      if(!data.saved.length){const empty=el('section','bookly-empty');empty.append(el('div','bookly-empty-symbol','♡'));empty.append(el('h3','',text('emptySaved')));body.append(empty);}
-      else data.saved.forEach(item=>{const c=el('button','bookly-saved-entity');c.append(el('span','bookly-entity-icon','♡'));const info=el('span');info.append(el('strong','',item.name||''));info.append(el('small','bookly-muted',item.address||''));c.append(info);c.append(el('span','bookly-arrow','›'));c.addEventListener('click',()=>openBusiness(item.slug));body.append(c);});
-    }
-
-    if(nav==='profile'){
-      const user=tg()?.initDataUnsafe?.user||{};const fullName=[user.first_name,user.last_name].filter(Boolean).join(' ')||'Bookly';
-      body.append(el('section','bookly-hero bookly-compact-hero'));body.firstElementChild.querySelector('h1').textContent=text('profileTitle');
-      const identity=el('section','bookly-profile-card');identity.append(el('div','bookly-avatar',fullName.charAt(0).toUpperCase()));const ii=el('div');ii.append(el('h2','',fullName));ii.append(el('p','bookly-muted',user.username?`@${user.username}`:'Telegram'));identity.append(ii);body.append(identity);
-      const account=el('section','bookly-section');account.append(el('h2','',text('account')));const rows=[['name',fullName],['username',user.username?`@${user.username}`:'—']];rows.forEach(([k,v])=>{const r=el('div','bookly-profile-row');r.append(el('span','',text(k)));r.append(el('strong','',v));account.append(r);});body.append(account);
-      const prefs=el('section','bookly-section');prefs.append(el('h2','',text('preferences')));const lr=el('div','bookly-profile-row');lr.append(el('span','',text('language')));const select=document.createElement('select');select.className='bookly-profile-select';languages.forEach(l=>{const o=document.createElement('option');o.value=l.code;o.textContent=l.label;select.append(o);});select.value=getLang();select.addEventListener('change',e=>setLang(e.target.value));lr.append(select);prefs.append(lr);const tz=el('div','bookly-profile-row');tz.append(el('span','',text('timezone')));tz.append(el('strong','',Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Tashkent'));prefs.append(tz);body.append(prefs);
-      const business=el('section','bookly-business-card');business.append(el('span','bookly-kicker',text('manageBusiness')));business.append(el('h2','',data.businesses.length===1?data.businesses[0].name:text('yourBusinesses')));business.append(el('p','bookly-muted',text('manageBusinessHint')));business.append(btn(data.businesses.length?text('manage'):text('addBusiness'),'bookly-button',()=>leaveShellForAdmin(data.businesses[0]?.id)));body.append(business);
-      const about=el('section','bookly-section');about.append(el('div','bookly-profile-row',`${text('about')} · ${text('version')} 1.0`));body.append(about);
+      const hero=el('section','bookly-hero bookly-compact-hero');hero.append(el('h1','',text('savedTitle')));body.append(hero);
+      if(!data.saved.length){
+        const empty=el('section','bookly-empty');empty.append(el('div','bookly-empty-symbol','♡'));empty.append(el('h3','',text('emptySaved')));body.append(empty);
+      }else{
+        data.saved.forEach(item=>{const c=el('button','bookly-saved-entity');c.append(el('span','bookly-entity-icon','♡'));const info=el('span');info.append(el('strong','',item.name||''));info.append(el('small','bookly-muted',item.address||''));c.append(info);c.append(el('span','bookly-arrow','›'));c.addEventListener('click',()=>openBusiness(item.slug));body.append(c);});
+      }
     }
   };
 
   const createShell=async()=>{
     if(!rootIsHome()||document.getElementById(SHELL_ID))return;
-    const root=ROOT(); if(root)root.style.display='none';
+    const root=ROOT();if(root)root.style.display='none';
     const host=document.createElement('div');host.id=SHELL_ID;host.dir=getLang()==='ar'?'rtl':'ltr';host.innerHTML=`<header class="bookly-header"><div class="bookly-wordmark">Bookly</div><select class="bookly-top-language"></select></header><main class="bookly-content"></main><nav class="bookly-nav"></nav>`;document.body.append(host);
     const lang=host.querySelector('.bookly-top-language');languages.forEach(l=>{const o=document.createElement('option');o.value=l.code;o.textContent=l.label;lang.append(o);});lang.value=getLang();lang.addEventListener('change',e=>setLang(e.target.value));
-    const navEl=host.querySelector('.bookly-nav');[['home','⌂'],['bookings','◷'],['saved','♡'],['profile','◎']].forEach(([key,icon])=>{const b=document.createElement('button');b.dataset.tab=key;b.innerHTML=`<span>${icon}</span><small>${text(key)}</small>`;b.addEventListener('click',()=>{nav=key;render();});navEl.append(b);});
+    const navEl=host.querySelector('.bookly-nav');
+    [['home','⌂'],['bookings','◷'],['saved','♡']].forEach(([key,icon])=>{const b=document.createElement('button');b.dataset.tab=key;b.innerHTML=`<span>${icon}</span><small>${text(key)}</small>`;b.addEventListener('click',()=>{nav=key;render();});navEl.append(b);});
     await fetchAll();render();
   };
 
   let busy=false;
-  const sync=async()=>{
-    if(hasStartParam()){document.getElementById(SHELL_ID)?.remove();const root=ROOT();if(root)root.style.display='';return;}
-    if(!busy&&rootIsHome()&&!document.getElementById(SHELL_ID)){busy=true;try{await createShell();}finally{busy=false;}}
-  };
+  const sync=async()=>{if(hasStartParam()){document.getElementById(SHELL_ID)?.remove();const root=ROOT();if(root)root.style.display='';return;}if(!busy&&rootIsHome()&&!document.getElementById(SHELL_ID)){busy=true;try{await createShell();}finally{busy=false;}}};
   tg()?.ready();tg()?.expand();
   const observer=new MutationObserver(()=>sync());observer.observe(ROOT()||document.body,{childList:true,subtree:true});
   setTimeout(sync,500);setInterval(sync,1200);
