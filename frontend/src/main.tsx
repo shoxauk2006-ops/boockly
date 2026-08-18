@@ -5228,55 +5228,45 @@ function Client({
           </button>
         </div>
 
-        {business.phone && (
-          <p>
-            ☎️{' '}
-            <a
-              href={
-                `tel:${business.phone}`
-              }
-            >
-              {business.phone}
-            </a>
-          </p>
-        )}
+        <div className="client-contact-actions">
 
-        {business.address && (
-          <p>
-            📍{' '}
-            {mapUrl ? (
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {business.address}
-              </a>
-            ) : (
-              business.address
-            )}
-          </p>
-        )}
+  {business.phone && (
+    <a
+      className="client-contact-button"
+      href={`tel:${business.phone}`}
+    >
+      <span className="client-contact-label">
+        {business.phone}
+      </span>
 
-        {mapUrl && (
-          <button
-            className="full"
-            onClick={() => {
-              if (tg()?.openLink) {
-                tg().openLink(
-                  mapUrl
-                );
-              } else {
-                window.open(
-                  mapUrl,
-                  '_blank'
-                );
-              }
-            }}
-          >
-            📍 {t('client.location')}
-          </button>
-        )}
+      <span className="client-contact-arrow">
+        →
+      </span>
+    </a>
+  )}
+
+  {mapUrl && (
+    <button
+      className="client-contact-button"
+      onClick={() => {
+        if (tg()?.openLink) {
+          tg().openLink(mapUrl);
+        } else {
+          window.open(mapUrl, '_blank');
+        }
+      }}
+    >
+      <span className="client-contact-label">
+        {business.address || t('client.location')}
+      </span>
+
+      <span className="client-contact-arrow">
+        →
+      </span>
+    </button>
+  )}
+
+</div>
 
         <p
           className="muted"
