@@ -2195,144 +2195,127 @@ function Subscription({
       }
     };
   if (active && !paymentFailed) {
-    return (
-      <div className="card subscription">
+  return (
+    <div className="card subscription">
 
-        <div className="subscription-head">
-          <div>
-            <h3>
-              Bookly Pro
-            </h3>
+      <div className="subscription-head">
+        <div>
+          <h3>Bookly Pro</h3>
 
-            <p>
-              <b>
-                {t(
-                  'owner.monthlyPrice'
-                )}
-              </b>
-            </p>
-          </div>
-
-          <span className="pill ok">
-            {t(
-              'owner.active',
-              'Активна'
-            )}
-          </span>
-        </div>
-
-        <p>
-          {t(
-            'owner.subscribeAccessText',
-            'Полный доступ к возможностям Bookly Pro'
-          )}
-        </p>
-
-        <ul>
-          <li>
-            {t(
-              'owner.unlimitedBookings',
-              'Безлимитные записи'
-            )}
-          </li>
-
-          <li>
-            {t(
-              'owner.clientLink',
-              'Клиентская страница и ссылка'
-            )}
-          </li>
-
-          <li>
-            {t(
-              'owner.telegramNotifications',
-              'Telegram-уведомления'
-            )}
-          </li>
-
-          <li>
-            {t(
-              'owner.scheduleAndBlocks',
-              'График и блокировки'
-            )}
-          </li>
-        </ul>
-
-        <div className="success">
-          <strong>
-            {t(
-              'owner.booklyActivated',
-              'Bookly Pro активирован'
-            )}
-          </strong>
-
-          {expiresAt && (
-            <p className="muted">
-              {cancelledButActive
-                ? t(
-                    'owner.accessUntil',
-                    'Доступ до'
-                  )
-                : t(
-                    'owner.nextPayment',
-                    'Следующее списание'
-                  )}
-              :{' '}
-              {expiresAt.toLocaleDateString(
-                getLocale()
+          <p>
+            <b>
+              {t(
+                'owner.monthlyPrice',
+                '$9.99 / месяц'
               )}
-            </p>
-          )}
+            </b>
+          </p>
         </div>
 
-        {cancelledButActive ? (
-  <div className="subscription-cancelled-note">
-    <strong>
-      {t(
-        'owner.subscriptionCancelledTitle',
-        'Автопродление отменено'
-      )}
-    </strong>
-
-    <p className="muted">
-      {t(
-        'owner.cancelledActive',
-        'Доступ сохраняется до конца оплаченного периода. Новых списаний не будет.'
-      )}
-    </p>
-
-    <button
-      type="button"
-      className="subscription-manage-button"
-      onClick={
-        resumeSubscription
-      }
-    >
-      {t(
-        'owner.resumeSubscription',
-        'Возобновить подписку'
-      )}
-    </button>
-  </div>
-) : (
-  <button
-    type="button"
-    className="subscription-manage-button"
-    onClick={
-      cancelSubscription
-    }
-  >
-    {t(
-      'owner.cancelSubscription',
-      'Отменить подписку'
-    )}
-  </button>
-)}
-
+        <span className="pill ok">
+          {t(
+            'owner.active',
+            'Активна'
+          )}
+        </span>
       </div>
-    );
-  }
 
+      <p>
+        {t(
+          'owner.subscribeAccessText',
+          'Полный доступ к возможностям Bookly Pro'
+        )}
+      </p>
+
+      <ul>
+        <li>
+          {t(
+            'owner.unlimitedBookings',
+            'Безлимитные записи'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.clientLink',
+            'Клиентская страница и ссылка'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.telegramNotifications',
+            'Telegram-уведомления'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.scheduleAndBlocks',
+            'График и блокировки'
+          )}
+        </li>
+      </ul>
+
+      <div className="success">
+        <strong>
+          {cancelledButActive
+            ? t(
+                'owner.subscriptionCancelledTitle',
+                'Автопродление отменено'
+              )
+            : t(
+                'owner.booklyActivated',
+                'Bookly Pro активирован'
+              )}
+        </strong>
+
+        {expiresAt && (
+          <p className="muted">
+            {cancelledButActive
+              ? t(
+                  'owner.accessUntil',
+                  'Доступ до'
+                )
+              : t(
+                  'owner.nextPayment',
+                  'Следующее списание'
+                )}
+            :{' '}
+            {expiresAt.toLocaleDateString(
+              getLocale()
+            )}
+          </p>
+        )}
+      </div>
+
+      {cancelledButActive ? (
+        <button
+          type="button"
+          className="subscription-manage-button"
+          onClick={resumeSubscription}
+        >
+          {t(
+            'owner.resumeSubscription',
+            'Возобновить подписку'
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="subscription-manage-button"
+          onClick={cancelSubscription}
+        >
+          {t(
+            'owner.manageSubscription',
+            'Управление подпиской'
+          )}
+        </button>
+      )}
+
+    </div>
+  );
+}
   if (paymentFailed) {
     return (
       <div className="card subscription">
