@@ -5222,28 +5222,25 @@ function Client({
                 : t('client.saveBusiness')
             }
           >
-            {isSaved
-              ? '❤️'
-              : '🤍'}
+            <button
+  className={
+    isSaved
+      ? 'client-save-button saved'
+      : 'client-save-button'
+  }
+  disabled={savingBusiness}
+  onClick={toggleSave}
+>
+  {isSaved
+    ? t('client.savedBusiness')
+    : t('client.saveBusiness')}
+</button>
           </button>
         </div>
 
         <div className="client-contact-actions">
 
   {business.phone && (
-    <a
-      className="client-contact-button"
-      href={`tel:${business.phone}`}
-    >
-      <span className="client-contact-label">
-        {business.phone}
-      </span>
-
-      <span className="client-contact-arrow">
-        →
-      </span>
-    </a>
-  )}
 
   {mapUrl && (
     <button
