@@ -1817,6 +1817,104 @@ def cancel_subscription(
                 if business.subscription_expires_at
                 else None
         }
+        @app.post("/admin/subscription/resume")
+def resume_subscription(
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
+
+    with SessionLocal() as db:
+        business = owner_business(db, owner_id)
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        subscription_id = (
+            business.external_subscription_id or ""
+        ).strip()
+
+        if not subscription_id.startswith("sub_"):
+            raise HTTPException(
+                400,
+                "Invalid Paddle subscription ID"
+            )
+
+        payload = json.dumps({
+            "scheduled_change": None
+        }).encode("utf-8")
+
+        req = urllib_request.Request(
+            f"{PADDLE_API_BASE}/subscriptions/{subscription_id}",
+            data=payload,
+            headers={
+                "Authorization":
+                    f"Bearer {PADDLE_API_KEY}",
+                "Content-Type":
+                    "application/json",
+                "Paddle-Version":
+                    "1"
+            },
+            method="PATCH"
+        )
+
+        try:
+            with urllib_request.urlopen(
+                req,
+                timeout=20
+            ) as response:
+                data = json.loads(
+                    response.read().decode("utf-8")
+                )
+
+        except Exception as e:
+            error_body = ""
+
+            if hasattr(e, "read"):
+                try:
+                    error_body = (
+                        e.read().decode("utf-8")
+                    )
+                except Exception:
+                    pass
+
+            raise HTTPException(
+                502,
+                f"Paddle resume failed: {error_body[:1000]}"
+            )
+
+        business.subscription_active = True
+        business.subscription_status = "active"
+
+        next_billed_at = (
+            data.get("data", {})
+            .get("next_billed_at")
+        )
+
+        if next_billed_at:
+            try:
+                business.subscription_expires_at = (
+                    datetime.fromisoformat(
+                        next_billed_at.replace(
+                            "Z",
+                            "+00:00"
+                        )
+                    ).replace(
+                        tzinfo=None
+                    )
+                )
+            except ValueError:
+                pass
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "resumed": True
+        }
 @app.post("/payments/checkout/{provider}")
 def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
     if provider not in {"uzum","lemonsqueezy"}:raise HTTPException(400,"Unsupported provider")
