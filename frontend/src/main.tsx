@@ -5216,7 +5216,9 @@ function Client({
     : t('client.saveBusiness')}
 </button>
 
-        <div className="client-contact-actions">
+</div>
+
+<div className="client-contact-actions">
 
   {business.phone && (
     <button
@@ -5261,16 +5263,19 @@ function Client({
 </div>
 
         <p
-          className="muted"
-          style={{
-            marginBottom: 0
-          }}
-        >
-          {t('client.chooseServiceHint')}
-        </p>
-      </div>
+  className="muted"
+  style={{
+    marginBottom: 0
+  }}
+>
+  {t('client.chooseServiceHint')}
+</p>
 
-      <details className="card">
+</div>
+
+</div>
+
+<details className="card">
         <summary
           style={{
             cursor: 'pointer',
