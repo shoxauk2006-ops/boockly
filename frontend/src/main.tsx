@@ -5218,7 +5218,6 @@ function Client({
 
 </div>
 
-<div className="client-contact-actions">
 
   <div className="client-contact-actions">
 
