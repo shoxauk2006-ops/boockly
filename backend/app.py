@@ -1358,7 +1358,173 @@ def admin_cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default=
         if x.client_telegram_id:
             telegram_api("sendMessage", {"chat_id":x.client_telegram_id,"text":f"❌ Ваша запись отменена бизнесом.\n\n📅 {x.day.isoformat()}\n🕐 {x.start.strftime('%H:%M')}–{x.end.strftime('%H:%M')}"})
         return {"ok":True}
+# ---------- subscription management ----------
 
+PADDLE_API_KEY = os.getenv(
+    "PADDLE_API_KEY",
+    ""
+)
+
+PADDLE_API_BASE = os.getenv(
+    "PADDLE_API_BASE",
+    "https://api.paddle.com"
+)
+
+
+@app.post("/admin/subscription/cancel")
+def cancel_subscription(
+    x_telegram_init_data: str = Header(
+        default=""
+    )
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(
+        user["id"]
+    )
+
+    if not PADDLE_API_KEY:
+        raise HTTPException(
+            500,
+            "Paddle API key is not configured"
+        )
+
+    with SessionLocal() as db:
+        business = owner_business(
+            db,
+            owner_id
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        subscription_id = (
+            business.external_subscription_id
+            or ""
+        ).strip()
+
+        if not subscription_id:
+            raise HTTPException(
+                400,
+                "No active Paddle subscription found"
+            )
+
+        if business.payment_provider != "paddle":
+            raise HTTPException(
+                400,
+                "Unsupported payment provider"
+            )
+
+        payload = json.dumps({
+            "effective_from":
+                "next_billing_period"
+        }).encode("utf-8")
+
+        req = urllib_request.Request(
+            f"{PADDLE_API_BASE}/subscriptions/"
+            f"{subscription_id}/cancel",
+            data=payload,
+            headers={
+                "Authorization":
+                    f"Bearer {PADDLE_API_KEY}",
+                "Content-Type":
+                    "application/json",
+                "Paddle-Version": "1"
+            },
+            method="POST"
+        )
+
+        try:
+            with urllib_request.urlopen(
+                req,
+                timeout=20
+            ) as response:
+
+                data = json.loads(
+                    response.read()
+                    .decode("utf-8")
+                )
+
+        except Exception as e:
+            print(
+                "PADDLE CANCEL ERROR:",
+                repr(e)
+            )
+
+            if hasattr(e, "read"):
+                try:
+                    print(
+                        "PADDLE ERROR BODY:",
+                        e.read()
+                        .decode("utf-8")
+                    )
+                except Exception:
+                    pass
+
+            raise HTTPException(
+                502,
+                "Failed to cancel Paddle subscription"
+            )
+
+        subscription = (
+            data.get("data", {})
+            or {}
+        )
+
+        scheduled_change = (
+            subscription.get(
+                "scheduled_change"
+            )
+            or {}
+        )
+
+        effective_at = (
+            scheduled_change.get(
+                "effective_at"
+            )
+            or subscription.get(
+                "next_billed_at"
+            )
+        )
+
+        # Подписка остается активной
+        # до конца оплаченного периода.
+        business.subscription_active = True
+
+        business.subscription_status = (
+            "active"
+        )
+
+        if effective_at:
+            try:
+                business.subscription_expires_at = (
+                    datetime.fromisoformat(
+                        effective_at.replace(
+                            "Z",
+                            "+00:00"
+                        )
+                    ).replace(
+                        tzinfo=None
+                    )
+                )
+            except ValueError:
+                pass
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "cancelled": True,
+            "access_until":
+                business.subscription_expires_at.isoformat()
+                if business.subscription_expires_at
+                else None
+        }
 # ---------- payments ----------
 LEMON_API_KEY=os.getenv("LEMON_API_KEY","")
 LEMON_STORE_ID=os.getenv("LEMON_STORE_ID","")
