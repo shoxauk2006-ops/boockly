@@ -1508,50 +1508,7 @@ function Admin({
         </span>
       </div>
 
-      <nav className="tabs">
-        {[
-          [
-            'home',
-            t('nav.home')
-          ],
-          [
-            'services',
-            t('nav.services')
-          ],
-          [
-            'hours',
-            t('nav.schedule')
-          ],
-          [
-            'blocks',
-            t('nav.blocks')
-          ],
-          [
-            'bookings',
-            t('nav.bookings')
-          ],
-          [
-            'settings',
-            t('nav.settings')
-          ]
-        ].map(
-          ([key, label]) => (
-            <button
-              className={
-                tab === key
-                  ? 'active'
-                  : ''
-              }
-              onClick={() =>
-                setTab(key)
-              }
-              key={key}
-            >
-              {label}
-            </button>
-          )
-        )}
-      </nav>
+     
 
       {tab === 'home' && (
         <Dashboard
@@ -1603,6 +1560,50 @@ function Admin({
     </section>
   );
 }
+<nav className="admin-bottom-nav">
+
+  <button
+    className={tab === 'home' ? 'active' : ''}
+    onClick={() => setTab('home')}
+  >
+    <span>⌂</span>
+    <small>
+      {t('nav.home')}
+    </small>
+  </button>
+
+  <button
+    className={tab === 'bookings' ? 'active' : ''}
+    onClick={() => setTab('bookings')}
+  >
+    <span>◷</span>
+    <small>
+      {t('nav.bookings')}
+    </small>
+  </button>
+
+  <button
+    className={tab === 'services' ? 'active' : ''}
+    onClick={() => setTab('services')}
+  >
+    <span>≡</span>
+    <small>
+      {t('nav.services')}
+    </small>
+  </button>
+
+  <button
+    className={tab === 'more' ? 'active' : ''}
+    onClick={() => setTab('more')}
+  >
+    <span>•••</span>
+    <small>
+      {t('nav.more')}
+    </small>
+  </button>
+
+</nav>
+
 
 function BusinessForm({onSaved, t}:{onSaved:()=>void; t:(key:string,fallback?:string)=>string}) {
   const [name,setName] = useState('');
