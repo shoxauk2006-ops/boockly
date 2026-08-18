@@ -1559,7 +1559,6 @@ function Admin({
       )}
       {tab === 'more' && (
   <div className="admin-more-page">
-
     <div className="card">
       <h2>{t('nav.more')}</h2>
 
@@ -1567,9 +1566,7 @@ function Admin({
         className="admin-more-item"
         onClick={() => setTab('hours')}
       >
-        <span>
-          {t('nav.schedule')}
-        </span>
+        <span>{t('nav.schedule')}</span>
         <b>→</b>
       </button>
 
@@ -1577,9 +1574,7 @@ function Admin({
         className="admin-more-item"
         onClick={() => setTab('blocks')}
       >
-        <span>
-          {t('nav.blocks')}
-        </span>
+        <span>{t('nav.blocks')}</span>
         <b>→</b>
       </button>
 
@@ -1587,31 +1582,46 @@ function Admin({
         className="admin-more-item"
         onClick={() => setTab('settings')}
       >
-        <span>
-          {t('nav.settings')}
-        </span>
+        <span>{t('nav.settings')}</span>
         <b>→</b>
       </button>
-
     </div>
-
   </div>
 )}
-      <nav className="admin-bottom-nav">
-    </section>
-  );
-}
-<nav className="admin-bottom-nav">
 
+<nav className="admin-bottom-nav">
   <button
     className={tab === 'home' ? 'active' : ''}
     onClick={() => setTab('home')}
   >
     <span>⌂</span>
-    <small>
-      {t('nav.home')}
-    </small>
+    <small>{t('nav.home')}</small>
   </button>
+
+  <button
+    className={tab === 'bookings' ? 'active' : ''}
+    onClick={() => setTab('bookings')}
+  >
+    <span>◷</span>
+    <small>{t('nav.bookings')}</small>
+  </button>
+
+  <button
+    className={tab === 'services' ? 'active' : ''}
+    onClick={() => setTab('services')}
+  >
+    <span>≡</span>
+    <small>{t('nav.services')}</small>
+  </button>
+
+  <button
+    className={tab === 'more' ? 'active' : ''}
+    onClick={() => setTab('more')}
+  >
+    <span>•••</span>
+    <small>{t('nav.more')}</small>
+  </button>
+</nav>
 
   <button
     className={tab === 'bookings' ? 'active' : ''}
