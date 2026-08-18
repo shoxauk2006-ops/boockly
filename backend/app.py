@@ -2022,30 +2022,63 @@ async def paddle_webhook(
             )
 
         # Сохраняем статус.
-        if status:
-            b.subscription_status = status
+                # Проверяем, есть ли у подписки
+        # запланированная отмена.
+        scheduled_change = (
+            data.get(
+                "scheduled_change",
+                {}
+            )
+            or {}
+        )
 
-        if next_billed_at:
-            try:
-                b.subscription_expires_at = (
-                    datetime.fromisoformat(
-                        next_billed_at.replace(
-                            "Z",
-                            "+00:00"
+        scheduled_action = (
+            scheduled_change.get(
+                "action"
+            )
+        )
+
+        scheduled_effective_at = (
+            scheduled_change.get(
+                "effective_at"
+            )
+        )
+
+        # Если Paddle уже запланировал отмену,
+        # сохраняем подписку активной до этой даты,
+        # но в Bookly помечаем автопродление
+        # как отменённое.
+        if scheduled_action == "cancel":
+
+            b.subscription_status = "cancelled"
+            b.subscription_active = True
+
+            if scheduled_effective_at:
+                try:
+                    b.subscription_expires_at = (
+                        datetime.fromisoformat(
+                            scheduled_effective_at.replace(
+                                "Z",
+                                "+00:00"
+                            )
+                        ).replace(
+                            tzinfo=None
                         )
-                    ).replace(
-                        tzinfo=None
                     )
-                )
-            except ValueError:
-                pass
+                except ValueError:
+                    pass
 
-        if event_type in {
+        # Обычные события подписки.
+        elif event_type in {
             "transaction.completed",
             "subscription.created",
             "subscription.updated",
             "subscription.resumed"
         }:
+
+            if status:
+                b.subscription_status = status
+
             b.subscription_active = (
                 status
                 not in {
@@ -2054,6 +2087,21 @@ async def paddle_webhook(
                     "paused"
                 }
             )
+
+            if next_billed_at:
+                try:
+                    b.subscription_expires_at = (
+                        datetime.fromisoformat(
+                            next_billed_at.replace(
+                                "Z",
+                                "+00:00"
+                            )
+                        ).replace(
+                            tzinfo=None
+                        )
+                    )
+                except ValueError:
+                    pass
 
         elif event_type in {
             "subscription.canceled",
