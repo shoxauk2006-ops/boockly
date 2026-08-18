@@ -1375,8 +1375,13 @@ PADDLE_API_BASE = os.getenv(
 def cancel_subscription(
     x_telegram_init_data: str = Header(default="")
 ):
-    user = telegram_user(x_telegram_init_data)
-    owner_id = int(user["id"])
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(
+        user["id"]
+    )
 
     if not PADDLE_API_KEY:
         raise HTTPException(
@@ -1407,14 +1412,14 @@ def cancel_subscription(
             or ""
         ).strip()
 
-        # Если в базе уже есть настоящий Paddle subscription ID,
-        # используем его напрямую.
-        if subscription_id.startswith("sub_"):
-            pass
+        # -------------------------------------------------
+        # Если старый ID не sub_..., ищем активную
+        # подписку через Paddle.
+        # -------------------------------------------------
 
-        else:
-            # Старый txn_... больше не используем.
-            # Ищем активную подписку напрямую в Paddle.
+        if not subscription_id.startswith(
+            "sub_"
+        ):
             list_url = (
                 f"{PADDLE_API_BASE}/subscriptions"
                 "?status=active"
@@ -1461,12 +1466,6 @@ def cancel_subscription(
                     except Exception:
                         pass
 
-                print(
-                    "PADDLE SUBSCRIPTION LIST ERROR:",
-                    error_code,
-                    error_body
-                )
-
                 raise HTTPException(
                     502,
                     (
@@ -1495,30 +1494,30 @@ def cancel_subscription(
                     or {}
                 )
 
-                item_business_id = str(
-                    custom_data.get(
-                        "business_id",
-                        ""
-                    )
-                )
-
-                item_owner_id = str(
-                    custom_data.get(
-                        "telegram_user_id",
-                        ""
-                    )
-                )
-
                 if (
-                    item_business_id
-                    == str(business.id)
+                    str(
+                        custom_data.get(
+                            "business_id",
+                            ""
+                        )
+                    )
+                    == str(
+                        business.id
+                    )
                 ):
                     matched = item
                     break
 
                 if (
-                    item_owner_id
-                    == str(owner_id)
+                    str(
+                        custom_data.get(
+                            "telegram_user_id",
+                            ""
+                        )
+                    )
+                    == str(
+                        owner_id
+                    )
                 ):
                     matched = item
                     break
@@ -1526,10 +1525,7 @@ def cancel_subscription(
             if not matched:
                 raise HTTPException(
                     404,
-                    (
-                        "Active Paddle subscription "
-                        "was not found for this business"
-                    )
+                    "Active Paddle subscription was not found"
                 )
 
             subscription_id = str(
@@ -1547,7 +1543,6 @@ def cancel_subscription(
                     "Invalid Paddle subscription ID"
                 )
 
-            # Исправляем старое значение в базе.
             business.external_subscription_id = (
                 subscription_id
             )
@@ -1555,8 +1550,152 @@ def cancel_subscription(
             db.commit()
 
         # -------------------------------------------------
-        # Отмена следующего продления.
-        # Текущий оплаченный период сохраняется.
+        # Сначала получаем текущее состояние подписки.
+        # -------------------------------------------------
+
+        get_req = urllib_request.Request(
+            f"{PADDLE_API_BASE}/subscriptions/"
+            f"{subscription_id}",
+            headers={
+                "Authorization":
+                    f"Bearer {PADDLE_API_KEY}",
+                "Paddle-Version":
+                    "1"
+            },
+            method="GET"
+        )
+
+        try:
+            with urllib_request.urlopen(
+                get_req,
+                timeout=20
+            ) as response:
+
+                current_data = json.loads(
+                    response.read()
+                    .decode("utf-8")
+                )
+
+        except Exception as e:
+            error_code = getattr(
+                e,
+                "code",
+                "unknown"
+            )
+
+            error_body = ""
+
+            if hasattr(e, "read"):
+                try:
+                    error_body = (
+                        e.read()
+                        .decode("utf-8")
+                    )
+                except Exception:
+                    pass
+
+            raise HTTPException(
+                502,
+                (
+                    "Paddle subscription fetch failed. "
+                    f"HTTP={error_code}. "
+                    f"BODY={error_body[:1000]}"
+                )
+            )
+
+        subscription = (
+            current_data.get(
+                "data",
+                {}
+            )
+            or {}
+        )
+
+        scheduled_change = (
+            subscription.get(
+                "scheduled_change"
+            )
+            or {}
+        )
+
+        scheduled_action = (
+            scheduled_change.get(
+                "action"
+            )
+        )
+
+        effective_at = (
+            scheduled_change.get(
+                "effective_at"
+            )
+        )
+
+        # -------------------------------------------------
+        # ОТМЕНА УЖЕ ЗАПЛАНИРОВАНА.
+        # Повторный /cancel НЕ отправляем.
+        # -------------------------------------------------
+
+        if scheduled_action == "cancel":
+
+            business.subscription_active = True
+            business.subscription_status = (
+                "cancelled"
+            )
+
+            if effective_at:
+                try:
+                    business.subscription_expires_at = (
+                        datetime.fromisoformat(
+                            effective_at.replace(
+                                "Z",
+                                "+00:00"
+                            )
+                        ).replace(
+                            tzinfo=None
+                        )
+                    )
+                except ValueError:
+                    pass
+
+            db.commit()
+
+            return {
+                "ok": True,
+                "cancelled": True,
+                "already_scheduled": True,
+                "subscription_id":
+                    subscription_id,
+                "access_until":
+                    business.subscription_expires_at.isoformat()
+                    if business.subscription_expires_at
+                    else None
+            }
+
+        # -------------------------------------------------
+        # Если подписка уже окончательно canceled.
+        # -------------------------------------------------
+
+        if subscription.get(
+            "status"
+        ) == "canceled":
+
+            business.subscription_active = False
+            business.subscription_status = (
+                "canceled"
+            )
+
+            db.commit()
+
+            return {
+                "ok": True,
+                "cancelled": True,
+                "already_cancelled": True,
+                "subscription_id":
+                    subscription_id
+            }
+
+        # -------------------------------------------------
+        # Новой отмены ещё нет — создаём её.
         # -------------------------------------------------
 
         payload = json.dumps({
@@ -1608,12 +1747,6 @@ def cancel_subscription(
                 except Exception:
                     pass
 
-            print(
-                "PADDLE CANCEL ERROR:",
-                error_code,
-                error_body
-            )
-
             raise HTTPException(
                 502,
                 (
@@ -1647,9 +1780,14 @@ def cancel_subscription(
             )
         )
 
-        # Доступ остаётся до конца оплаченного периода.
         business.subscription_active = True
-        business.subscription_status = "cancelled"
+
+        # ВАЖНО:
+        # у Paddle статус остаётся active до effective_at,
+        # но в Bookly мы помечаем, что автопродление отменено.
+        business.subscription_status = (
+            "cancelled"
+        )
 
         if effective_at:
             try:
@@ -1671,6 +1809,7 @@ def cancel_subscription(
         return {
             "ok": True,
             "cancelled": True,
+            "already_scheduled": False,
             "subscription_id":
                 subscription_id,
             "access_until":
