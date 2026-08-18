@@ -1817,7 +1817,7 @@ def cancel_subscription(
                 if business.subscription_expires_at
                 else None
         }
-        @app.post("/admin/subscription/resume")
+ @app.post("/admin/subscription/resume")
 def resume_subscription(
     x_telegram_init_data: str = Header(default="")
 ):
