@@ -5220,7 +5220,23 @@ function Client({
 
 <div className="client-contact-actions">
 
+  <div className="client-contact-actions">
+
   {business.phone && (
+    <a
+      href={`tel:${business.phone}`}
+      className="client-contact-button"
+    >
+      <span className="client-contact-label">
+        {business.phone}
+      </span>
+
+      <span className="client-contact-arrow">
+        →
+      </span>
+    </a>
+  )}
+
   {mapUrl && (
     <button
       type="button"
