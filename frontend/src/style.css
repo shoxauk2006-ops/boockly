@@ -38,7 +38,11 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 #root.bookly-client-root .client-hero,#root.bookly-client-root .card{animation-name:bookly-card-in}
 .personal-home{
   min-height:100vh;
-  padding:0 0 125px;
+  padding-top:var(--tg-content-safe-area-inset-top, 0px);
+  padding-right:0;
+  padding-bottom:125px;
+  padding-left:0;
+  box-sizing:border-box;
   animation:booklyFade .28s ease;
 }
 
