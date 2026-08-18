@@ -572,3 +572,43 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
     margin-bottom:10px;
   }
 }
+.client-phone-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  width:100%;
+  min-height:52px;
+  padding:7px 8px 7px 16px;
+  box-sizing:border-box;
+  border:1px solid #e3e6ea;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 6px 18px rgba(15,23,42,.045);
+}
+
+.client-phone-number{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:700;
+  color:#111;
+}
+
+.client-copy-button{
+  flex:0 0 auto;
+  border:0;
+  border-radius:11px;
+  padding:10px 13px;
+  background:#111;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+  transition:transform .16s ease;
+}
+
+.client-copy-button:active{
+  transform:scale(.96);
+}
