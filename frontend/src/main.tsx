@@ -435,52 +435,51 @@ function PersonalHome({
             </div>
           </div>
 
-          <div className="personal-business-card">
-            <span className="personal-eyebrow light">
-              {t('nav.admin', 'ДЛЯ БИЗНЕСА')}
-            </span>
+          {loading ? (
+  <div className="personal-business-skeleton">
+    <div className="skeleton-line skeleton-small" />
+    <div className="skeleton-line skeleton-title" />
+    <div className="skeleton-line skeleton-text" />
+    <div className="skeleton-button" />
+  </div>
+) : (
+  <div className="personal-business-card">
+    <span className="personal-eyebrow light">
+      {t('nav.admin', 'ДЛЯ БИЗНЕСА')}
+    </span>
 
-            <h2>
-              {businesses.length
-                ? businesses.length === 1
-                  ? businesses[0].name
-                  : t('nav.businesses', 'Мои бизнесы')
-                : t(
-                    'owner.addBusiness',
-                    'Создать бизнес'
-                  )}
-            </h2>
+    <h2>
+      {businesses.length
+        ? businesses.length === 1
+          ? businesses[0].name
+          : t('nav.businesses', 'Мои бизнесы')
+        : t('owner.addBusiness', 'Создать бизнес')}
+    </h2>
 
-            <p>
-              {businesses.length
-                ? t(
-                    'nav.admin',
-                    'Управляйте своим бизнесом в Bookly'
-                  )
-                : t(
-                    'owner.noBusiness',
-                    'Создайте свой бизнес в Bookly'
-                  )}
-            </p>
-
-            <button
-              className="personal-white-button"
-              onClick={onAdmin}
-            >
-              {businesses.length
-                ? t('common.open', 'Управлять')
-                : t(
-                    'owner.createBusiness',
-                    'Создать бизнес'
-                  )}
-            </button>
-          </div>
-
-          {loading && (
-            <div className="personal-loading">
-              <div className="personal-spinner" />
-            </div>
+    <p>
+      {businesses.length
+        ? t(
+            'home.manageBusiness',
+            'Управляйте своим бизнесом в Bookly'
+          )
+        : t(
+            'home.createBusinessHint',
+            'Создайте свой бизнес в Bookly'
           )}
+    </p>
+
+    <button
+      className="personal-white-button"
+      onClick={onAdmin}
+    >
+      {businesses.length
+        ? t('home.manage', 'Управлять')
+        : t('owner.createBusiness', 'Создать бизнес')}
+    </button>
+  </div>
+)}
+
+          
         </>
       )}
 
