@@ -5222,48 +5222,48 @@ function Client({
   <div className="client-contact-actions">
 
   {business.phone && (
-  <button
-    type="button"
-    className="client-contact-button"
-    onClick={async () => {
-      try {
-        await navigator.clipboard.writeText(
-          business.phone
-        );
-
-        tg()?.showAlert?.(
-          t(
-            'client.phoneCopied',
-            'Номер скопирован'
-          )
-        );
-      } catch {
-        const input =
-          document.createElement('input');
-
-        input.value = business.phone;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        input.remove();
-
-        tg()?.showAlert?.(
-          t(
-            'client.phoneCopied',
-            'Номер скопирован'
-          )
-        );
-      }
-    }}
-  >
-    <span className="client-contact-label">
+  <div className="client-phone-row">
+    <span className="client-phone-number">
       {business.phone}
     </span>
 
-    <span className="client-contact-arrow">
+    <button
+      type="button"
+      className="client-copy-button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(
+            business.phone
+          );
+
+          tg()?.showAlert?.(
+            t(
+              'client.phoneCopied',
+              'Номер скопирован'
+            )
+          );
+        } catch {
+          const input =
+            document.createElement('input');
+
+          input.value = business.phone;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          input.remove();
+
+          tg()?.showAlert?.(
+            t(
+              'client.phoneCopied',
+              'Номер скопирован'
+            )
+          );
+        }
+      }}
+    >
       {t('client.copy', 'Скопировать')}
-    </span>
-  </button>
+    </button>
+  </div>
 )}
 
   {mapUrl && (
