@@ -704,3 +704,103 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   color:#8b929d;
   font-size:20px;
 }
+.grid2{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.admin-quick-actions{
+  margin-top:14px;
+}
+
+.admin-section-title h3{
+  margin:0;
+}
+
+.admin-section-title p{
+  margin:5px 0 14px;
+}
+
+.admin-action-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 0;
+  border-top:1px solid #eceef1;
+}
+
+.admin-action-row > div{
+  min-width:0;
+}
+
+.admin-action-row strong{
+  display:block;
+  font-size:14px;
+}
+
+.admin-action-row small{
+  display:block;
+  margin-top:4px;
+  color:#8b929d;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.admin-action-button{
+  flex:0 0 auto;
+  border:0;
+  border-radius:12px;
+  padding:10px 14px;
+  background:#111;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.admin-qr-box{
+  margin-top:8px;
+  padding-top:16px;
+  border-top:1px solid #eceef1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+}
+
+.admin-qr-box strong{
+  display:block;
+  margin-bottom:4px;
+}
+
+.admin-home-qr{
+  width:190px;
+  height:190px;
+  margin:14px 0;
+  border-radius:14px;
+}
+
+.admin-download-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+@media(max-width:520px){
+  .grid2{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .admin-action-row{
+    align-items:flex-start;
+  }
+
+  .admin-action-button{
+    padding:9px 11px;
+  }
+}
