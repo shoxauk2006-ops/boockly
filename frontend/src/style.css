@@ -915,3 +915,30 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   top: 16px;
   right: 16px;
 }
+.subscription-modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.38);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:100001;
+}
+
+.subscription-modal{
+  position:relative;
+  width:min(520px,100%);
+  max-height:85vh;
+  overflow-y:auto;
+  background:#fff;
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+
+.subscription-modal-close{
+  position:absolute;
+  top:16px;
+  right:16px;
+}
