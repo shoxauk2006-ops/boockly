@@ -906,3 +906,12 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 .subscription li{
   margin:7px 0;
 }
+.subscription-modal {
+  position: relative;
+}
+
+.subscription-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
