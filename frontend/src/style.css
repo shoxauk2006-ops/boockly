@@ -943,10 +943,10 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   right:16px;
 }
 .personal-home-menu{
-  position:absolute;
+  position:fixed;
   top:14px;
   right:14px;
-  z-index:1000;
+  z-index:10000;
 }
 
 .personal-menu-button{
