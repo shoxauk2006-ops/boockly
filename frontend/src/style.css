@@ -990,3 +990,15 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 .personal-info-menu button:hover{
   background:#f3f4f6;
 }
+.contact-email-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.contact-email{
+  color:#111;
+  font-weight:700;
+  text-decoration:none;
+}
