@@ -440,15 +440,39 @@ const openClient = (
         </p>
 
         <a
-          href="mailto:boocklyapp@gmail.com"
-          style={{
-            color:'#111',
-            fontWeight:700,
-            textDecoration:'none'
-          }}
-        >
-          boocklyapp@gmail.com
-        </a>
+          <div
+  style={{
+    display:'flex',
+    alignItems:'center',
+    gap:'10px',
+    flexWrap:'wrap'
+  }}
+>
+  <a
+    href="mailto:boocklyapp@gmail.com"
+    style={{
+      color:'#111',
+      fontWeight:700,
+      textDecoration:'none'
+    }}
+  >
+    boocklyapp@gmail.com
+  </a>
+
+  <button
+    type="button"
+    className="ghost"
+    onClick={async () => {
+      try {
+        await navigator.clipboard.writeText(
+          'boocklyapp@gmail.com'
+        );
+      } catch {}
+    }}
+  >
+    Скопировать
+  </button>
+</div>
       </div>
     </div>
   </div>
