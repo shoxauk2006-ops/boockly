@@ -4940,32 +4940,30 @@ function Settings({
   }, [clientLink]);
 
   useEffect(() => {
-    setName(
-      business?.name || ''
-    );
+  setName(
+    business?.name || ''
+  );
 
-    setDescription(
-      business?.description || ''
-    );
+  setDescription(
+    business?.description || ''
+  );
 
-    setAddress(
-      business?.address || ''
-    );
+  setAddress(
+    business?.address || ''
+  );
 
-    setPhone(
-      business?.phone || ''
-    );
+  setPhone(
+    business?.phone || ''
+  );
 
-    setLatitude(
-      business?.latitude ?? ''
-    );
+  setLatitude(
+    business?.latitude ?? ''
+  );
 
-    setLongitude(
-      business?.longitude ?? ''
-    );
-        setBusinessImage(
-      business?.business_image || ''
-    );
+  setLongitude(
+    business?.longitude ?? ''
+  );
+}, [business]);
   }, [business]);
   const handleBusinessImage = (
     file?: File
