@@ -2170,27 +2170,47 @@ function Dashboard({
             </button>
           </div>
 
-          <div className="admin-action-row">
-            <div>
-              <strong>
-                {t(
-                  'settings.qr',
-                  'QR-код'
-                )}
-              </strong>
+          <div className="admin-qr-box">
+  <strong>
+    {t(
+      'settings.qr',
+      'QR-код'
+    )}
+  </strong>
 
-              <small>
-                {subscriptionLocked
-                  ? t(
-                      'owner.activateForQR',
-                      'Активируйте подписку, чтобы получить QR-код'
-                    )
-                  : t(
-                      'settings.downloadQr',
-                      'Скачать QR-код'
-                    )}
-              </small>
-            </div>
+  <small>
+    {subscriptionLocked
+      ? t(
+          'owner.activateForQR',
+          'Активируйте подписку, чтобы получить QR-код'
+        )
+      : 'Клиенты могут сканировать и сразу перейти к записи'}
+  </small>
+
+  {subscriptionLocked ? (
+    <span className="admin-lock-badge">
+      🔒
+    </span>
+  ) : (
+    qrDataUrl && (
+      <>
+        <img
+          src={qrDataUrl}
+          alt="QR-код"
+          className="admin-home-qr"
+        />
+
+        <button
+          type="button"
+          className="admin-action-button admin-download-button"
+          onClick={downloadQr}
+        >
+          Скачать QR-код
+        </button>
+      </>
+    )
+  )}
+</div>
 
             {subscriptionLocked ? (
               <span className="admin-lock-badge">
@@ -5137,7 +5157,42 @@ function Settings({
       setSaving(false);
     }
   };
+  const downloadQr = async () => {
+  if (!qrDataUrl) {
+    return;
+  }
 
+  try {
+    const response =
+      await fetch(qrDataUrl);
+
+    const blob =
+      await response.blob();
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement('a');
+
+    link.href = url;
+    link.download =
+      `${business.slug}-bookly-qr.png`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  } catch (e) {
+    console.error(
+      'QR DOWNLOAD ERROR:',
+      e
+    );
+  }
+};
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(
