@@ -330,6 +330,7 @@ const openClient = (
   onBack={()=>setMode('home')}
   initialTab={adminTab}
   t={t}
+  setInfoModal={() => setInfoModal(true)}
 />
   }
 
