@@ -1504,10 +1504,23 @@ function Admin({
       <div className="card">
         {business.business_image && (
   <img
-    src={business.business_image}
-    className="client-business-image"
-    alt={business.name}
-  />
+  src={business.business_image}
+  alt={business.name}
+  style={{
+    width: '90px',
+    height: '90px',
+    minWidth: '90px',
+    maxWidth: '90px',
+    minHeight: '90px',
+    maxHeight: '90px',
+    objectFit: 'contain',
+    flexShrink: 0,
+    display: 'block',
+    borderRadius: '16px',
+    background: '#f3f4f6',
+    border: '1px solid #e7eaee'
+  }}
+/>
 )}
         <div
           style={{
