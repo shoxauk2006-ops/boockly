@@ -6005,6 +6005,13 @@ function Client({
       </button>
 
       <div className="card">
+        {business?.business_image && (
+  <img
+    src={business.business_image}
+    alt={business.name}
+    className="client-business-image"
+  />
+)}
 
         <div
           style={{
