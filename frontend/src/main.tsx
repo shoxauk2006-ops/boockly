@@ -2068,6 +2068,8 @@ function Subscription({
       status === 'cancelled' ||
       status === 'canceled'
     ) && active;
+  const [subscriptionModal, setSubscriptionModal] =
+  useState(false);
 
   const expiresAt =
     business?.subscription_expires_at
@@ -2305,7 +2307,7 @@ function Subscription({
         <button
           type="button"
           className="subscription-manage-button"
-          onClick={cancelSubscription}
+          onClick={() => setSubscriptionModal(true)}
         >
           {t(
             'owner.manageSubscription',
