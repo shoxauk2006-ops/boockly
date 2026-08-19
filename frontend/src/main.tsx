@@ -6049,21 +6049,8 @@ function Client({
       )}
     </div>
 
-    <button
-      className={
-        isSaved
-          ? 'client-save-button saved'
-          : 'client-save-button'
-      }
-      disabled={savingBusiness}
-      onClick={toggleSave}
-    >
-      {isSaved
-        ? t('client.savedBusiness')
-        : t('client.saveBusiness')}
-    </button>
+    
 
-  </div>
 
   <div className="client-contact-actions">
 
@@ -6139,7 +6126,19 @@ function Client({
     )}
 
   </div>
-
+  <button
+    className={
+      isSaved
+        ? 'client-save-button saved'
+        : 'client-save-button'
+    }
+    disabled={savingBusiness}
+    onClick={toggleSave}
+  >
+    {isSaved
+      ? t('client.savedBusiness')
+      : t('client.saveBusiness')}
+  </button>
   <p
     className="muted"
     style={{
