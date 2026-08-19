@@ -1065,8 +1065,29 @@ function Admin({
   const [businessPanel, setBusinessPanel] =
     useState<'closed' | 'list' | 'create'>('closed');
 
-  const [newBusinessName, setNewBusinessName] = useState('');
-  const [creatingBusiness, setCreatingBusiness] = useState(false);
+    const [newBusinessName, setNewBusinessName] =
+    useState('');
+
+  const [newBusinessDescription, setNewBusinessDescription] =
+    useState('');
+
+  const [newBusinessPhone, setNewBusinessPhone] =
+    useState('');
+
+  const [newBusinessAddress, setNewBusinessAddress] =
+    useState('');
+
+  const [newBusinessLatitude, setNewBusinessLatitude] =
+    useState<number | null>(null);
+
+  const [newBusinessLongitude, setNewBusinessLongitude] =
+    useState<number | null>(null);
+
+  const [newBusinessImage, setNewBusinessImage] =
+    useState('');
+
+  const [creatingBusiness, setCreatingBusiness] =
+    useState(false);
 
   const loadBusinesses = async () => {
     const response = await fetch(
@@ -1295,13 +1316,16 @@ function Admin({
     setLoading(false);
   };
 
-  const createBusiness = async () => {
+    const createBusiness = async () => {
     const name =
       newBusinessName.trim();
 
     if (!name) {
       alert(
-        t('owner.enterBusinessName')
+        t(
+          'owner.enterBusinessName',
+          'Введите название бизнеса'
+        )
       );
       return;
     }
@@ -1316,7 +1340,25 @@ function Admin({
             method: 'POST',
             headers: headers(),
             body: JSON.stringify({
-              name
+              name,
+
+              description:
+                newBusinessDescription.trim(),
+
+              phone:
+                newBusinessPhone.trim(),
+
+              address:
+                newBusinessAddress.trim(),
+
+              latitude:
+                newBusinessLatitude,
+
+              longitude:
+                newBusinessLongitude,
+
+              business_image:
+                newBusinessImage
             })
           }
         );
@@ -1329,7 +1371,10 @@ function Admin({
       if (!response.ok) {
         throw new Error(
           data?.detail ||
-          t('owner.createBusinessError')
+          t(
+            'owner.createBusinessError',
+            'Не удалось создать бизнес'
+          )
         );
       }
 
@@ -1341,6 +1386,13 @@ function Admin({
       } catch {}
 
       setNewBusinessName('');
+      setNewBusinessDescription('');
+      setNewBusinessPhone('');
+      setNewBusinessAddress('');
+      setNewBusinessLatitude(null);
+      setNewBusinessLongitude(null);
+      setNewBusinessImage('');
+
       setBusiness(data);
       setBusinessPanel('closed');
 
@@ -1366,12 +1418,19 @@ function Admin({
 
       alert(
         '✅ ' +
-        t('owner.businessCreated')
+        t(
+          'owner.businessCreated',
+          'Бизнес создан'
+        )
       );
+
     } catch (e: any) {
       alert(
         e?.message ||
-        t('owner.createBusinessError')
+        t(
+          'owner.createBusinessError',
+          'Не удалось создать бизнес'
+        )
       );
     } finally {
       setCreatingBusiness(false);
@@ -1652,44 +1711,192 @@ function Admin({
         </div>
       )}
 
-      {businessPanel ===
-        'create' && (
-        <div className="card">
-          <h3>
-            {t('owner.addBusiness')}
-          </h3>
+              {businessPanel === 'create' && (
+          <div className="card">
+            <h2>
+              {t(
+                'owner.addBusiness',
+                'Добавить бизнес'
+              )}
+            </h2>
 
-          <input
-            placeholder={t(
-              'owner.serviceName'
-            )}
-            value={newBusinessName}
-            onChange={e =>
-              setNewBusinessName(
-                e.target.value
-              )
-            }
-          />
-
-          <button
-            className="primary full"
-            disabled={
-              creatingBusiness
-            }
-            onClick={
-              createBusiness
-            }
-          >
-            {creatingBusiness
-              ? t(
-                  'owner.creatingBusiness'
+            <input
+              placeholder={t(
+                'owner.serviceName',
+                'Название бизнеса'
+              )}
+              value={newBusinessName}
+              onChange={e =>
+                setNewBusinessName(
+                  e.target.value
                 )
-              : t(
-                  'owner.createBusiness'
-                )}
-          </button>
-        </div>
-      )}
+              }
+            />
+
+            <textarea
+              placeholder={t(
+                'owner.businessDescription',
+                'Описание бизнеса'
+              )}
+              value={newBusinessDescription}
+              onChange={e =>
+                setNewBusinessDescription(
+                  e.target.value
+                )
+              }
+              rows={4}
+            />
+
+            <input
+              type="tel"
+              placeholder={t(
+                'owner.businessPhone',
+                'Номер телефона'
+              )}
+              value={newBusinessPhone}
+              onChange={e =>
+                setNewBusinessPhone(
+                  e.target.value
+                )
+              }
+            />
+
+            <input
+              placeholder={t(
+                'owner.businessAddress',
+                'Адрес'
+              )}
+              value={newBusinessAddress}
+              onChange={e =>
+                setNewBusinessAddress(
+                  e.target.value
+                )
+              }
+            />
+
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => {
+                if (
+                  !navigator.geolocation
+                ) {
+                  alert(
+                    'Геолокация недоступна'
+                  );
+                  return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                  position => {
+                    setNewBusinessLatitude(
+                      position.coords.latitude
+                    );
+
+                    setNewBusinessLongitude(
+                      position.coords.longitude
+                    );
+
+                    alert(
+                      '✅ Местоположение добавлено'
+                    );
+                  },
+                  () => {
+                    alert(
+                      'Не удалось получить местоположение'
+                    );
+                  }
+                );
+              }}
+            >
+              📍 Определить местоположение
+            </button>
+
+            {newBusinessLatitude !== null &&
+              newBusinessLongitude !== null && (
+                <p className="muted">
+                  📍 Местоположение добавлено
+                </p>
+              )}
+
+            <label
+              style={{
+                display: 'block',
+                marginTop: 12
+              }}
+            >
+              <span
+                className="muted"
+                style={{
+                  display: 'block',
+                  marginBottom: 8
+                }}
+              >
+                Фото бизнеса
+              </span>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => {
+                  const file =
+                    e.target.files?.[0];
+
+                  if (!file) {
+                    return;
+                  }
+
+                  const reader =
+                    new FileReader();
+
+                  reader.onload = () => {
+                    setNewBusinessImage(
+                      String(
+                        reader.result || ''
+                      )
+                    );
+                  };
+
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+
+            {newBusinessImage && (
+              <img
+                src={newBusinessImage}
+                alt="Фото бизнеса"
+                style={{
+                  width: '100%',
+                  maxHeight: 220,
+                  objectFit: 'cover',
+                  borderRadius: 16,
+                  marginTop: 12
+                }}
+              />
+            )}
+
+            <button
+              className="primary full"
+              disabled={
+                creatingBusiness
+              }
+              onClick={
+                createBusiness
+              }
+            >
+              {creatingBusiness
+                ? t(
+                    'owner.creatingBusiness',
+                    'Создание...'
+                  )
+                : t(
+                    'owner.createBusiness',
+                    'Создать бизнес'
+                  )}
+            </button>
+          </div>
+        )}
 
       <div className="business-head">
         <div>
