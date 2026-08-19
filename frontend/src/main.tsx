@@ -5211,15 +5211,24 @@ function Settings({
         : 'Добавить фото'}
 
       <input
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={e =>
-          handleBusinessImage(
-            e.target.files?.[0]
-          )
-        }
-      />
+  type="file"
+  accept="image/*"
+  style={{
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
+    pointerEvents: 'none'
+  }}
+  onClick={e => {
+    e.currentTarget.value = '';
+  }}
+  onChange={e => {
+    handleBusinessImage(
+      e.target.files?.[0]
+    );
+  }}
+/>
     </label>
 
     {businessImage && (
