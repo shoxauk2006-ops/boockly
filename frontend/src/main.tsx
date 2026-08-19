@@ -2197,31 +2197,33 @@ function Dashboard({
                 🔒
               </span>
             ) : (
-              qrDataUrl && (
-                {qrDataUrl && (
-  <img
-    src={qrDataUrl}
-    alt="QR-код"
-    style={{
-      width: '220px',
-      height: '220px',
-      display: 'block',
-      margin: '16px auto',
-      objectFit: 'contain'
-    }}
-  />
-)}
-                <a
-                  className="admin-action-button"
-                  href={qrDataUrl}
-                  download={`${business.slug}-bookly-qr.png`}
-                >
-                  {t(
-                    'settings.downloadQr',
-                    'Скачать'
-                  )}
-                </a>
-              )
+  qrDataUrl && (
+    <>
+      <img
+        src={qrDataUrl}
+        alt="QR-код"
+        style={{
+          width: '220px',
+          height: '220px',
+          display: 'block',
+          margin: '16px auto',
+          objectFit: 'contain'
+        }}
+      />
+
+      <a
+        className="admin-action-button"
+        href={qrDataUrl}
+        download={`${business.slug}-bookly-qr.png`}
+      >
+        {t(
+          'settings.downloadQr',
+          'Скачать'
+        )}
+      </a>
+    </>
+  )
+)
             )}
           </div>
 
