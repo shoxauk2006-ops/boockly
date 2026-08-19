@@ -1502,6 +1502,13 @@ function Admin({
       </button>
 
       <div className="card">
+        {business.business_image && (
+  <img
+    src={business.business_image}
+    className="client-business-image"
+    alt={business.name}
+  />
+)}
         <div
           style={{
             display: 'flex',
