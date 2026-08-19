@@ -95,6 +95,11 @@ class Business(Base):
     longitude: Mapped[Optional[float]] = mapped_column(
         nullable=True
     )
+   
+    timezone: Mapped[str] = mapped_column(
+        String(64),
+        default="Asia/Tashkent"
+    )
 
     slug: Mapped[str] = mapped_column(
         String(80),
