@@ -312,15 +312,16 @@ const openClient = (
 
  {mode==='home' && (
   <PersonalHome
-    onAdmin={() => {
-      setAdminTab('home');
-      setMode('admin');
-    }}
-    slug={clientSlug}
-    setSlug={setClientSlug}
-    open={openClient}
-    t={t}
-  />
+  onAdmin={() => {
+    setAdminTab('home');
+    setMode('admin');
+  }}
+  slug={clientSlug}
+  setSlug={setClientSlug}
+  open={openClient}
+  t={t}
+  setInfoModal={() => setInfoModal(true)}
+/>
 )}
 
   {mode==='admin' &&
@@ -459,13 +460,15 @@ function PersonalHome({
   slug,
   setSlug,
   open,
-  t
+  t,
+  setInfoModal
 }: {
   onAdmin: () => void;
   slug: string;
   setSlug: (value: string) => void;
   open: (input?: string) => void;
   t: (key: string, fallback?: string) => string;
+  setInfoModal: () => void;
 }) {
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [page, setPage] = useState<'home' | 'bookings' | 'saved'>('home');
@@ -526,13 +529,14 @@ function PersonalHome({
   {infoMenuOpen && (
     <div className="personal-info-menu">
       <button
-        type="button"
-        onClick={() => {
-          setInfoMenuOpen(false);
-        }}
-      >
-        Правила и контакты
-      </button>
+  type="button"
+  onClick={() => {
+    setInfoMenuOpen(false);
+    setInfoModal();
+  }}
+>
+  Правила и контакты
+</button>
     </div>
   )}
 </div>
