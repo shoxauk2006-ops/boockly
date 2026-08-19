@@ -1116,3 +1116,30 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 .save-business-button{
   flex-shrink:0;
 }
+/* Скрываем системные поля выбора файла */
+.business-photo-settings input[type="file"] {
+  display: none;
+}
+
+/* Блок фотографии */
+.business-photo-preview {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin: 12px 0;
+}
+
+/* Когда фотографии нет */
+.business-photo-empty {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border-radius: 16px;
+  color: #999;
+  margin: 12px 0;
+}
