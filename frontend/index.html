@@ -13,11 +13,63 @@
       .loading-screen p{color:#777!important}
       #bookly-page-transition{background:#fff!important;color:#111!important}
       .bookly-transition-spinner{border-color:#ddd!important;border-top-color:#111!important}
+
+      /* Business photo */
+      .business-photo-settings{margin-top:18px}
+      .business-photo-settings > strong{display:block;font-size:16px;margin-bottom:6px}
+      .business-photo-settings > .muted{margin:0 0 12px}
+      .business-photo-preview,
+      .client-business-image{
+        display:block;
+        width:100%;
+        height:auto;
+        max-height:260px;
+        aspect-ratio:16/9;
+        object-fit:cover;
+        object-position:center;
+        border-radius:18px;
+        background:#f3f4f6;
+        border:1px solid #e7eaee;
+        overflow:hidden;
+      }
+      .business-photo-empty{
+        width:100%;
+        min-height:150px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+        text-align:center;
+        color:#8a919b;
+        background:#f3f4f6;
+        border:1px dashed #d9dde2;
+        border-radius:18px;
+      }
+      .business-photo-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:9px;
+        margin-top:10px;
+      }
+      .business-photo-actions .admin-action-button{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:auto;
+        margin:0;
+        cursor:pointer;
+      }
+      .business-photo-actions input[type="file"][hidden]{
+        display:none!important;
+      }
+      .business-photo-actions .ghost{
+        margin:0;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
