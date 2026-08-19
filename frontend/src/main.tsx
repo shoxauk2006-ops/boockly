@@ -449,18 +449,24 @@ const openClient = (
   </a>
 
   <button
-    type="button"
-    className="ghost"
-    onClick={async () => {
-      try {
-        await navigator.clipboard.writeText(
-          'boocklyapp@gmail.com'
-        );
-      } catch {}
-    }}
-  >
-    Скопировать
-  </button>
+  type="button"
+  className="ghost"
+  onClick={async () => {
+    try {
+      await navigator.clipboard.writeText(
+        'boocklyapp@gmail.com'
+      );
+
+      setEmailCopied(true);
+
+      setTimeout(() => {
+        setEmailCopied(false);
+      }, 1500);
+    } catch {}
+  }}
+>
+  {emailCopied ? '✓ Скопировано' : 'Скопировать'}
+</button>
 </div>
       </div>
     </div>
@@ -487,6 +493,7 @@ function PersonalHome({
   const [page, setPage] = useState<'home' | 'bookings' | 'saved'>('home');
   const [loading, setLoading] = useState(true);
   const [infoMenuOpen, setInfoMenuOpen] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
