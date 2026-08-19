@@ -2293,27 +2293,118 @@ function Subscription({
       </div>
 
       {cancelledButActive ? (
-        <button
-          type="button"
-          className="subscription-manage-button"
-          onClick={resumeSubscription}
+  <button
+    type="button"
+    className="subscription-manage-button"
+    onClick={resumeSubscription}
+  >
+    {t(
+      'owner.resumeSubscription',
+      'Возобновить подписку'
+    )}
+  </button>
+) : (
+  <>
+    <button
+      type="button"
+      className="subscription-manage-button"
+      onClick={() => setSubscriptionModal(true)}
+    >
+      {t(
+        'owner.manageSubscription',
+        'Управление подпиской'
+      )}
+    </button>
+
+    {subscriptionModal && (
+      <div
+        className="subscription-modal-overlay"
+        onClick={() =>
+          setSubscriptionModal(false)
+        }
+      >
+        <div
+          className="subscription-modal"
+          onClick={(e) =>
+            e.stopPropagation()
+          }
         >
-          {t(
-            'owner.resumeSubscription',
-            'Возобновить подписку'
-          )}
-        </button>
-      ) : (
-        <button
-          type="button"
-          className="subscription-manage-button"
-          onClick={() => setSubscriptionModal(true)}
-        >
-          {t(
-            'owner.manageSubscription',
-            'Управление подпиской'
-          )}
-        </button>
+          <button
+            type="button"
+            className="subscription-modal-close"
+            onClick={() =>
+              setSubscriptionModal(false)
+            }
+          >
+            ×
+          </button>
+
+          <span className="personal-eyebrow">
+            BOOKLY PRO
+          </span>
+
+          <h3>
+            {t(
+              'owner.manageSubscription',
+              'Управление подпиской'
+            )}
+          </h3>
+
+          <div className="subscription-modal-info">
+            <div>
+              <span>
+                {t(
+                  'owner.price',
+                  'Стоимость'
+                )}
+              </span>
+              <strong>
+                $9.99 / месяц
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                {t(
+                  'owner.nextPayment',
+                  'Следующее списание'
+                )}
+              </span>
+              <strong>
+                {expiresAt
+                  ? expiresAt.toLocaleDateString(
+                      getLocale()
+                    )
+                  : '—'}
+              </strong>
+            </div>
+          </div>
+
+          <p className="muted">
+            {t(
+              'owner.cancelSubscriptionDescription',
+              'Отмена отключит следующее автоматическое списание. Доступ к Bookly Pro сохранится до конца оплаченного периода.'
+            )}
+          </p>
+
+          <button
+            type="button"
+            className="subscription-danger-button"
+            onClick={async () => {
+              setSubscriptionModal(false);
+              await cancelSubscription();
+            }}
+          >
+            {t(
+              'owner.cancelSubscription',
+              'Отменить автопродление'
+            )}
+          </button>
+        </div>
+      </div>
+    )}
+  </>
+)}
       )}
 
     </div>
