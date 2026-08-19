@@ -4879,6 +4879,11 @@ function Settings({
     useState(
       business?.longitude ?? ''
     );
+    
+  const [businessImage, setBusinessImage] =
+    useState(
+      business?.business_image || ''
+    );
 
   const [saving, setSaving] =
     useState(false);
@@ -4938,8 +4943,102 @@ function Settings({
     setLongitude(
       business?.longitude ?? ''
     );
+        setBusinessImage(
+      business?.business_image || ''
+    );
   }, [business]);
+  const handleBusinessImage = (
+    file?: File
+  ) => {
+    if (!file) {
+      return;
+    }
 
+    if (!file.type.startsWith('image/')) {
+      alert(
+        t(
+          'settings.invalidImage',
+          'Выберите изображение'
+        )
+      );
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert(
+        t(
+          'settings.imageTooLarge',
+          'Размер изображения не должен превышать 5 МБ'
+        )
+      );
+      return;
+    }
+
+    const objectUrl =
+      URL.createObjectURL(file);
+
+    const image =
+      new Image();
+
+    image.onload = () => {
+      const maxWidth = 1200;
+      const maxHeight = 800;
+
+      const scale = Math.min(
+        maxWidth / image.width,
+        maxHeight / image.height,
+        1
+      );
+
+      const canvas =
+        document.createElement('canvas');
+
+      canvas.width =
+        Math.round(
+          image.width * scale
+        );
+
+      canvas.height =
+        Math.round(
+          image.height * scale
+        );
+
+      const ctx =
+        canvas.getContext('2d');
+
+      if (!ctx) {
+        URL.revokeObjectURL(
+          objectUrl
+        );
+        return;
+      }
+
+      ctx.drawImage(
+        image,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const compressed =
+        canvas.toDataURL(
+          'image/jpeg',
+          0.82
+        );
+
+      setBusinessImage(
+        compressed
+      );
+
+      URL.revokeObjectURL(
+        objectUrl
+      );
+    };
+
+    image.src =
+      objectUrl;
+  };
   const save = async () => {
     setSaving(true);
 
@@ -4952,6 +5051,8 @@ function Settings({
             headers: headers(),
             body: JSON.stringify({
               name: name.trim(),
+              business_image:
+                businessImage || '',
               description:
                 description.trim(),
               address:
@@ -5065,6 +5166,58 @@ function Settings({
             'settings.businessInfo'
           )}
         </h2>
+        <div className="business-photo-settings">
+  <strong>
+    Фото бизнеса
+  </strong>
+
+  <p className="muted">
+    Добавьте фотографию, которая будет отображаться у клиентов.
+  </p>
+
+  {businessImage ? (
+    <img
+      src={businessImage}
+      className="business-photo-preview"
+      alt="Business"
+    />
+  ) : (
+    <div className="business-photo-empty">
+      Фото пока не добавлено
+    </div>
+  )}
+
+  <div className="business-photo-actions">
+    <label className="admin-action-button">
+      {businessImage
+        ? 'Заменить фото'
+        : 'Добавить фото'}
+
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={e =>
+          handleBusinessImage(
+            e.target.files?.[0]
+          )
+        }
+      />
+    </label>
+
+    {businessImage && (
+      <button
+        type="button"
+        className="ghost"
+        onClick={() =>
+          setBusinessImage('')
+        }
+      >
+        Удалить
+      </button>
+    )}
+  </div>
+</div>
 
         <input
           placeholder={t(
