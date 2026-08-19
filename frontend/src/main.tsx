@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {
   Language,
   SUPPORTED_LANGUAGES,
@@ -4904,6 +4904,8 @@ function Settings({
     useState(
       business?.business_image || ''
     );
+  const businessImageInputRef =
+  useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] =
     useState(false);
@@ -4964,6 +4966,35 @@ function Settings({
     business?.longitude ?? ''
   );
 }, [business]);
+  useEffect(() => {
+  const resetFileInput = () => {
+    if (businessImageInputRef.current) {
+      businessImageInputRef.current.value = '';
+    }
+  };
+
+  document.addEventListener(
+    'visibilitychange',
+    resetFileInput
+  );
+
+  window.addEventListener(
+    'pageshow',
+    resetFileInput
+  );
+
+  return () => {
+    document.removeEventListener(
+      'visibilitychange',
+      resetFileInput
+    );
+
+    window.removeEventListener(
+      'pageshow',
+      resetFileInput
+    );
+  };
+}, []);
     const handleBusinessImage = (
     file?: File
   ) => {
@@ -5205,44 +5236,55 @@ function Settings({
   )}
 
   <div className="business-photo-actions">
-    <label className="admin-action-button">
-      {businessImage
-        ? 'Заменить фото'
-        : 'Добавить фото'}
 
-      <input
-  type="file"
-  accept="image/*"
-  style={{
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    opacity: 0,
-    pointerEvents: 'none'
-  }}
-  onClick={e => {
-    e.currentTarget.value = '';
-  }}
-  onChange={e => {
-    handleBusinessImage(
-      e.target.files?.[0]
-    );
-  }}
-/>
-    </label>
+  <button
+    type="button"
+    className="admin-action-button"
+    onClick={() => {
+      businessImageInputRef.current?.click();
+    }}
+  >
+    {businessImage
+      ? 'Заменить фото'
+      : 'Добавить фото'}
+  </button>
 
-    {businessImage && (
-      <button
-        type="button"
-        className="ghost"
-        onClick={() =>
-          setBusinessImage('')
-        }
-      >
-        Удалить
-      </button>
-    )}
-  </div>
+  <input
+    ref={businessImageInputRef}
+    type="file"
+    accept="image/*"
+    style={{
+      position: 'absolute',
+      width: 1,
+      height: 1,
+      opacity: 0,
+      pointerEvents: 'none'
+    }}
+    onChange={e => {
+      const file =
+        e.target.files?.[0];
+
+      if (file) {
+        handleBusinessImage(file);
+      }
+
+      e.currentTarget.value = '';
+    }}
+  />
+
+  {businessImage && (
+    <button
+      type="button"
+      className="ghost"
+      onClick={() => {
+        setBusinessImage('');
+      }}
+    >
+      Удалить
+    </button>
+  )}
+
+</div>
 </div>
 
         <input
