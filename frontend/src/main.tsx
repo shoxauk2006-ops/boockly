@@ -1991,7 +1991,52 @@ function Dashboard({
     clientLink,
     business.subscription_active
   ]);
+  const downloadQr = () => {
+  if (!business.subscription_active) {
+    return;
+  }
 
+  const qrUrl =
+    `${API}/businesses/${encodeURIComponent(
+      business.slug
+    )}/qr.png?bot_username=${encodeURIComponent(
+      BOT_USERNAME
+    )}`;
+
+  const telegram = tg();
+
+  if (
+    telegram?.downloadFile &&
+    (!telegram.isVersionAtLeast ||
+      telegram.isVersionAtLeast('8.0'))
+  ) {
+    telegram.downloadFile(
+      {
+        url: qrUrl,
+        file_name: `${business.slug}-bookly-qr.png`
+      },
+      (accepted: boolean) => {
+        console.log(
+          'QR download:',
+          accepted
+        );
+      }
+    );
+
+    return;
+  }
+
+  const link =
+    document.createElement('a');
+
+  link.href = qrUrl;
+  link.download =
+    `${business.slug}-bookly-qr.png`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
   const copyLink = async () => {
     if (!business.subscription_active) {
       return;
@@ -2203,16 +2248,7 @@ function Dashboard({
         <button
   type="button"
   className="admin-action-button admin-download-button"
-  onClick={() => {
-    if (!qrDataUrl) return;
-
-    const link = document.createElement('a');
-    link.href = qrDataUrl;
-    link.download = `${business.slug}-bookly-qr.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }}
+  onClick={downloadQr}
 >
   Скачать QR-код
 </button>
