@@ -439,7 +439,7 @@ const openClient = (
           о нарушениях:
         </p>
 
-        <a
+        
    <div className="contact-email-row">
   <a
     href="mailto:boocklyapp@gmail.com"
