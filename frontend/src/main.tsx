@@ -6005,139 +6005,128 @@ function Client({
       </button>
 
       <div className="card">
-        {business?.business_image && (
-  <img
-    src={business.business_image}
-    alt={business.name}
-    className="client-business-image"
-  />
-)}
 
-        <div
-          style={{
-            display: 'flex',
-            justifyContent:
-              'space-between',
-            alignItems:
-              'flex-start',
-            gap: 12
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                marginTop: 0,
-                marginBottom: 8
-              }}
-            >
-              {business.name}
-            </h1>
+  <div className="client-business-header">
 
-            {business.description && (
-              <p>
-                {
-                  business.description
-                }
-              </p>
-            )}
-          </div>
+    {business?.business_image && (
+      <img
+        src={business.business_image}
+        alt={business.name}
+        className="client-business-thumb"
+      />
+    )}
 
-          <button
-  className={
-    isSaved
-      ? 'client-save-button saved'
-      : 'client-save-button'
-  }
-  disabled={savingBusiness}
-  onClick={toggleSave}
->
-  {isSaved
-    ? t('client.savedBusiness')
-    : t('client.saveBusiness')}
-</button>
+    <div className="client-business-header-info">
+      <h1>
+        {business.name}
+      </h1>
 
-</div>
+      {business.description && (
+        <p>
+          {business.description}
+        </p>
+      )}
+    </div>
 
+    <button
+      className={
+        isSaved
+          ? 'client-save-button saved'
+          : 'client-save-button'
+      }
+      disabled={savingBusiness}
+      onClick={toggleSave}
+    >
+      {isSaved
+        ? t('client.savedBusiness')
+        : t('client.saveBusiness')}
+    </button>
+
+  </div>
 
   <div className="client-contact-actions">
 
-  {business.phone && (
-  <div className="client-phone-row">
-    <span className="client-phone-number">
-      {business.phone}
-    </span>
+    {business.phone && (
+      <div className="client-phone-row">
+        <span className="client-phone-number">
+          {business.phone}
+        </span>
 
-    <button
-      type="button"
-      className="client-copy-button"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(
-            business.phone
-          );
+        <button
+          type="button"
+          className="client-copy-button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(
+                business.phone
+              );
 
-          tg()?.showAlert?.(
-            t(
-              'client.phoneCopied',
-              'Номер скопирован'
-            )
-          );
-        } catch {
-          const input =
-            document.createElement('input');
+              tg()?.showAlert?.(
+                t(
+                  'client.phoneCopied',
+                  'Номер скопирован'
+                )
+              );
+            } catch {
+              const input =
+                document.createElement('input');
 
-          input.value = business.phone;
-          document.body.appendChild(input);
-          input.select();
-          document.execCommand('copy');
-          input.remove();
+              input.value = business.phone;
+              document.body.appendChild(input);
+              input.select();
+              document.execCommand('copy');
+              input.remove();
 
-          tg()?.showAlert?.(
-            t(
-              'client.phoneCopied',
-              'Номер скопирован'
-            )
-          );
-        }
-      }}
-    >
-      {t('client.copy', 'Скопировать')}
-    </button>
+              tg()?.showAlert?.(
+                t(
+                  'client.phoneCopied',
+                  'Номер скопирован'
+                )
+              );
+            }
+          }}
+        >
+          {t('client.copy', 'Скопировать')}
+        </button>
+      </div>
+    )}
+
+    {mapUrl && (
+      <button
+        type="button"
+        className="client-contact-button"
+        onClick={() => {
+          if (tg()?.openLink) {
+            tg().openLink(mapUrl);
+          } else {
+            window.open(
+              mapUrl,
+              '_blank'
+            );
+          }
+        }}
+      >
+        <span className="client-contact-label">
+          {business.address ||
+            t('client.location')}
+        </span>
+
+        <span className="client-contact-arrow">
+          →
+        </span>
+      </button>
+    )}
+
   </div>
-)}
 
-  {mapUrl && (
-    <button
-      type="button"
-      className="client-contact-button"
-      onClick={() => {
-        if (tg()?.openLink) {
-          tg().openLink(mapUrl);
-        } else {
-          window.open(mapUrl, '_blank');
-        }
-      }}
-    >
-      <span className="client-contact-label">
-        {business.address || t('client.location')}
-      </span>
-
-      <span className="client-contact-arrow">
-        →
-      </span>
-    </button>
-  )}
-
-</div>
-
-        <p
-  className="muted"
-  style={{
-    marginBottom: 0
-  }}
->
-  {t('client.chooseServiceHint')}
-</p>
+  <p
+    className="muted"
+    style={{
+      marginBottom: 0
+    }}
+  >
+    {t('client.chooseServiceHint')}
+  </p>
 
 </div>
 
