@@ -1987,56 +1987,98 @@ function Dashboard({
     };
 
     generateQR();
-  }, [
+    }, [
     clientLink,
     business.subscription_active
   ]);
-  const downloadQr = () => {
-  if (!business.subscription_active) {
-    return;
-  }
 
-  const qrUrl =
-    `${API}/businesses/${encodeURIComponent(
-      business.slug
-    )}/qr.png?bot_username=${encodeURIComponent(
-      BOT_USERNAME
-    )}`;
+  const downloadQr = async () => {
+    if (!business.subscription_active) {
+      return;
+    }
 
-  const telegram = tg();
+    if (!qrDataUrl) {
+      return;
+    }
 
-  if (
-    telegram?.downloadFile &&
-    (!telegram.isVersionAtLeast ||
-      telegram.isVersionAtLeast('8.0'))
-  ) {
-    telegram.downloadFile(
-      {
-        url: qrUrl,
-        file_name: `${business.slug}-bookly-qr.png`
-      },
-      (accepted: boolean) => {
-        console.log(
-          'QR download:',
-          accepted
-        );
+    try {
+      const response =
+        await fetch(qrDataUrl);
+
+      const blob =
+        await response.blob();
+
+      const file = new File(
+        [blob],
+        `${business.slug}-bookly-qr.png`,
+        {
+          type: 'image/png'
+        }
+      );
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({
+          files: [file]
+        })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: 'Bookly QR-код'
+        });
+
+        return;
       }
-    );
 
-    return;
-  }
+      const telegram = tg();
 
-  const link =
-    document.createElement('a');
+      if (
+        telegram?.downloadFile
+      ) {
+        const qrUrl =
+          `${API}/businesses/${encodeURIComponent(
+            business.slug
+          )}/qr.png?bot_username=${encodeURIComponent(
+            BOT_USERNAME
+          )}`;
 
-  link.href = qrUrl;
-  link.download =
-    `${business.slug}-bookly-qr.png`;
+        telegram.downloadFile(
+          {
+            url: qrUrl,
+            file_name:
+              `${business.slug}-bookly-qr.png`
+          },
+          (accepted: boolean) => {
+            console.log(
+              'QR download:',
+              accepted
+            );
+          }
+        );
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+        return;
+      }
+
+      const link =
+        document.createElement('a');
+
+      link.href = qrDataUrl;
+      link.download =
+        `${business.slug}-bookly-qr.png`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+    } catch (error) {
+      console.error(
+        'QR SHARE ERROR:',
+        error
+      );
+    }
+  };
+
   const copyLink = async () => {
     if (!business.subscription_active) {
       return;
