@@ -1919,7 +1919,153 @@ const [newBusinessHours, setNewBusinessHours] =
                   📍 Местоположение добавлено
                 </p>
               )}
+      <div
+  style={{
+    marginTop: 20
+  }}
+>
+  <h3>
+    График работы
+  </h3>
 
+  <p
+    className="muted"
+    style={{
+      marginTop: 4
+    }}
+  >
+    Укажите часы работы бизнеса.
+  </p>
+
+  <div
+    className="card"
+    style={{
+      padding: 12,
+      marginTop: 10
+    }}
+  >
+    {newBusinessHours.map(
+      (day, index) => (
+        <div
+          key={day.weekday}
+          style={{
+            padding: '12px 0',
+            borderBottom:
+              index <
+              newBusinessHours.length - 1
+                ? '1px solid #eee'
+                : 'none'
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent:
+                'space-between',
+              gap: 10
+            }}
+          >
+            <strong>
+              {day.name}
+            </strong>
+
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={day.enabled}
+                onChange={e => {
+                  const next =
+                    [...newBusinessHours];
+
+                  next[index] = {
+                    ...next[index],
+                    enabled:
+                      e.target.checked
+                  };
+
+                  setNewBusinessHours(
+                    next
+                  );
+                }}
+              />
+
+              Работает
+            </label>
+          </div>
+
+          {day.enabled && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  '1fr 1fr',
+                gap: 10,
+                marginTop: 10
+              }}
+            >
+              <div>
+                <small className="muted">
+                  Открытие
+                </small>
+
+                <input
+                  type="time"
+                  value={day.start}
+                  onChange={e => {
+                    const next =
+                      [...newBusinessHours];
+
+                    next[index] = {
+                      ...next[index],
+                      start:
+                        e.target.value
+                    };
+
+                    setNewBusinessHours(
+                      next
+                    );
+                  }}
+                />
+              </div>
+
+              <div>
+                <small className="muted">
+                  Закрытие
+                </small>
+
+                <input
+                  type="time"
+                  value={day.end}
+                  onChange={e => {
+                    const next =
+                      [...newBusinessHours];
+
+                    next[index] = {
+                      ...next[index],
+                      end:
+                        e.target.value
+                    };
+
+                    setNewBusinessHours(
+                      next
+                    );
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    )}
+  </div>
+</div>
             <label
               style={{
                 display: 'block',
