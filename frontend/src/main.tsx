@@ -6047,12 +6047,31 @@ function Client({
           {business.description}
         </p>
       )}
-    </div>
+    <div className="client-business-header">
 
-    
+  {business?.business_image && (
+    <img
+      src={business.business_image}
+      alt={business.name}
+      className="client-business-thumb"
+    />
+  )}
 
+  <div className="client-business-header-info">
+    <h1>
+      {business.name}
+    </h1>
 
-  <div className="client-contact-actions">
+    {business.description && (
+      <p>
+        {business.description}
+      </p>
+    )}
+  </div>
+
+</div>
+
+<div className="client-contact-actions">
 
     {business.phone && (
       <div className="client-phone-row">
