@@ -13,7 +13,13 @@ from urllib.parse import parse_qsl
 from urllib import request as urllib_request
 from urllib.error import URLError
 
-from fastapi import FastAPI, HTTPException, Header, Request
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Header,
+    Request,
+    Response
+)
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import (
@@ -958,6 +964,67 @@ def get_business(slug:str):
         if not b.subscription_active:raise HTTPException(403,"Business is not active")
         services=db.query(Service).filter_by(business_id=b.id,active=True).all()
         return {"business":b,"services":services}
+        @app.get("/businesses/{slug}/qr.png")
+def business_qr(
+    slug: str,
+    bot_username: str = "BooklyBot"
+):
+    with SessionLocal() as db:
+        b = db.query(Business).filter_by(
+            slug=slug
+        ).first()
+
+        if not b:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        if not b.subscription_active:
+            raise HTTPException(
+                403,
+                "Business is not active"
+            )
+
+    bot_username = bot_username.strip().lstrip("@")
+
+    client_link = (
+        f"https://t.me/"
+        f"{bot_username}"
+        f"?startapp={slug}"
+    )
+
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=4
+    )
+
+    qr.add_data(client_link)
+    qr.make(fit=True)
+
+    image = qr.make_image(
+        fill_color="black",
+        back_color="white"
+    )
+
+    buffer = io.BytesIO()
+    image.save(
+        buffer,
+        format="PNG"
+    )
+
+    return Response(
+        content=buffer.getvalue(),
+        media_type="image/png",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="{slug}-bookly-qr.png"'
+            ),
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
 @app.get("/businesses/{business_id}/availability")
 def availability(business_id: int, service_id: int, day: date):
     with SessionLocal() as db:
