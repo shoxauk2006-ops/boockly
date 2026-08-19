@@ -340,7 +340,7 @@ const openClient = (
       className="client-info-button"
       onClick={() => setInfoModal(true)}
     >
-      ⋮
+      ☰
     </button>
 
     <Client
