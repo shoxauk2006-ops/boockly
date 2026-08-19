@@ -5217,6 +5217,7 @@ function Settings({
 
     input.type = 'file';
     input.accept = 'image/*';
+    input.style.display = 'none';
 
     input.onchange = () => {
       const file =
