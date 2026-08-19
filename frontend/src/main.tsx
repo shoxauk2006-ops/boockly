@@ -4964,8 +4964,7 @@ function Settings({
     business?.longitude ?? ''
   );
 }, [business]);
-  }, [business]);
-  const handleBusinessImage = (
+    const handleBusinessImage = (
     file?: File
   ) => {
     if (!file) {
