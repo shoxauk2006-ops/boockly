@@ -5212,27 +5212,47 @@ function Settings({
   type="button"
   className="admin-action-button"
   onClick={() => {
-    const input =
-      document.createElement('input');
+  const oldInput =
+    document.getElementById(
+      'business-photo-picker'
+    );
 
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.style.display = 'none';
+  if (oldInput) {
+    oldInput.remove();
+  }
 
-    input.onchange = () => {
-      const file =
-        input.files?.[0];
+  const input =
+    document.createElement('input');
 
-      if (file) {
-        handleBusinessImage(file);
-      }
+  input.id =
+    'business-photo-picker';
 
-      input.remove();
-    };
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
 
-    document.body.appendChild(input);
-    input.click();
-  }}
+  const cleanup = () => {
+    input.remove();
+  };
+
+  input.onchange = () => {
+    const file =
+      input.files?.[0];
+
+    if (file) {
+      handleBusinessImage(file);
+    }
+
+    cleanup();
+  };
+
+  input.oncancel = () => {
+    cleanup();
+  };
+
+  document.body.appendChild(input);
+  input.click();
+}}
 >
   {businessImage
     ? 'Заменить фото'
