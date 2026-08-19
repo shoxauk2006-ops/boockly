@@ -1085,7 +1085,64 @@ function Admin({
 
   const [newBusinessImage, setNewBusinessImage] =
     useState('');
+  const [newBusinessTimezone, setNewBusinessTimezone] =
+  useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    'Asia/Tashkent'
+  );
 
+const [newBusinessHours, setNewBusinessHours] =
+  useState([
+    {
+      weekday: 0,
+      name: 'Понедельник',
+      enabled: true,
+      start: '09:00',
+      end: '18:00'
+    },
+    {
+      weekday: 1,
+      name: 'Вторник',
+      enabled: true,
+      start: '09:00',
+      end: '18:00'
+    },
+    {
+      weekday: 2,
+      name: 'Среда',
+      enabled: true,
+      start: '09:00',
+      end: '18:00'
+    },
+    {
+      weekday: 3,
+      name: 'Четверг',
+      enabled: true,
+      start: '09:00',
+      end: '18:00'
+    },
+    {
+      weekday: 4,
+      name: 'Пятница',
+      enabled: true,
+      start: '09:00',
+      end: '18:00'
+    },
+    {
+      weekday: 5,
+      name: 'Суббота',
+      enabled: false,
+      start: '09:00',
+      end: '18:00'
+    },
+    {
+      weekday: 6,
+      name: 'Воскресенье',
+      enabled: false,
+      start: '09:00',
+      end: '18:00'
+    }
+  ]);
   const [creatingBusiness, setCreatingBusiness] =
     useState(false);
 
@@ -1340,26 +1397,30 @@ function Admin({
             method: 'POST',
             headers: headers(),
             body: JSON.stringify({
-              name,
+            {
+  name,
 
-              description:
-                newBusinessDescription.trim(),
+  description:
+    newBusinessDescription.trim(),
 
-              phone:
-                newBusinessPhone.trim(),
+  phone:
+    newBusinessPhone.trim(),
 
-              address:
-                newBusinessAddress.trim(),
+  address:
+    newBusinessAddress.trim(),
 
-              latitude:
-                newBusinessLatitude,
+  latitude:
+    newBusinessLatitude,
 
-              longitude:
-                newBusinessLongitude,
+  longitude:
+    newBusinessLongitude,
 
-              business_image:
-                newBusinessImage
-            })
+  business_image:
+    newBusinessImage,
+
+  timezone:
+    newBusinessTimezone
+})
           }
         );
 
@@ -1797,9 +1858,49 @@ function Admin({
                       position.coords.longitude
                     );
 
-                    alert(
-                      '✅ Местоположение добавлено'
-                    );
+                    onClick={() => {
+  if (!navigator.geolocation) {
+    alert(
+      'Геолокация недоступна'
+    );
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const latitude =
+        position.coords.latitude;
+
+      const longitude =
+        position.coords.longitude;
+
+      setNewBusinessLatitude(latitude);
+      setNewBusinessLongitude(longitude);
+
+      alert(
+        `✅ Местоположение получено\n\n` +
+        `Широта: ${latitude.toFixed(6)}\n` +
+        `Долгота: ${longitude.toFixed(6)}`
+      );
+    },
+    error => {
+      console.error(
+        'Geolocation error:',
+        error
+      );
+
+      alert(
+        'Не удалось получить местоположение. ' +
+        'Проверь разрешение геолокации.'
+      );
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    }
+  );
+}}
                   },
                   () => {
                     alert(
