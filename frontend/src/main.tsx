@@ -2319,22 +2319,16 @@ function Subscription({
     {subscriptionModal && (
       <div
         className="subscription-modal-overlay"
-        onClick={() =>
-          setSubscriptionModal(false)
-        }
+        onClick={() => setSubscriptionModal(false)}
       >
         <div
           className="subscription-modal"
-          onClick={(e) =>
-            e.stopPropagation()
-          }
+          onClick={(e) => e.stopPropagation()}
         >
           <button
             type="button"
             className="subscription-modal-close"
-            onClick={() =>
-              setSubscriptionModal(false)
-            }
+            onClick={() => setSubscriptionModal(false)}
           >
             ×
           </button>
