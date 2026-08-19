@@ -2184,7 +2184,7 @@ function Subscription({
 
         window.location.reload();
 
-      } catch (e: any) {
+            } catch (e: any) {
         alert(
           e?.message ||
             t(
@@ -2194,6 +2194,7 @@ function Subscription({
         );
       }
     };
+
   if (active && !paymentFailed) {
   return (
     <div className="card subscription">
