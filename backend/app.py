@@ -1968,7 +1968,20 @@ async def paddle_webhook(
             401,
             "Invalid Paddle signature header"
         )
-
+    try:
+        if abs(
+            int(datetime.utcnow().timestamp()) -
+            int(ts)
+        ) > 5:
+            raise HTTPException(
+                401,
+                "Expired Paddle webhook"
+            )
+    except ValueError:
+        raise HTTPException(
+            401,
+            "Invalid Paddle timestamp"
+        )
     signed_payload = (
         f"{ts}:{raw.decode()}"
     ).encode()
