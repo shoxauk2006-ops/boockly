@@ -325,14 +325,24 @@ const openClient = (
 />
 )}
 
-  {mode==='admin' &&
+  {mode === 'admin' && (
+  <>
+    <button
+      type="button"
+      className="admin-info-button"
+      onClick={() => setInfoModal(true)}
+    >
+      ☰
+    </button>
+
     <Admin
-  onBack={()=>setMode('home')}
-  initialTab={adminTab}
-  t={t}
-  setInfoModal={() => setInfoModal(true)}
-/>
-  }
+      onBack={() => setMode('home')}
+      initialTab={adminTab}
+      t={t}
+      setInfoModal={() => setInfoModal(true)}
+    />
+  </>
+)}
 
   {mode==='client' && (
   <>
