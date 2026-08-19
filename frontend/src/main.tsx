@@ -440,21 +440,10 @@ const openClient = (
         </p>
 
         <a
-   <div
-     style={{
-       display:'flex',
-       alignItems:'center',
-       gap:'10px',
-      flexWrap:'wrap'
-    }}
-  >
+   <div className="contact-email-row">
   <a
     href="mailto:boocklyapp@gmail.com"
-    style={{
-      color:'#111',
-      fontWeight:700,
-      textDecoration:'none'
-    }}
+    className="contact-email"
   >
     boocklyapp@gmail.com
   </a>
