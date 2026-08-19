@@ -1,6 +1,8 @@
 import os
 import json
 import hmac
+import io
+import qrcode
 import hashlib
 import secrets
 from datetime import date, time, datetime, timedelta
