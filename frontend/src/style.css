@@ -1046,10 +1046,14 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 .business-photo-preview{
   display:block;
   width:100%;
-  max-height:260px;
-  object-fit:cover;
+  height:auto;
+  max-height:180px;
+  object-fit:contain;
+  object-position:center;
   border-radius:16px;
   margin:10px 0;
+  border:1px solid #e7eaee;
+  background:#f3f4f6;
 }
 
 .business-photo-empty{
@@ -1075,10 +1079,12 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 .client-business-image{
   display:block;
   width:100%;
-  height:150px;
-  object-fit:cover;
+  height:auto;
+  max-height:280px;
+  object-fit:contain;
   object-position:center;
   border-radius:18px;
-  margin-bottom:14px;
+  margin-bottom:16px;
   border:1px solid #e7eaee;
+  background:#f3f4f6;
 }
