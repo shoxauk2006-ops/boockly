@@ -5208,56 +5208,27 @@ function Settings({
 
   <div className="business-photo-actions">
 
-  <button
-  type="button"
-  className="admin-action-button"
-  onClick={() => {
-  const oldInput =
-    document.getElementById(
-      'business-photo-picker'
-    );
-
-  if (oldInput) {
-    oldInput.remove();
-  }
-
-  const input =
-    document.createElement('input');
-
-  input.id =
-    'business-photo-picker';
-
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.style.display = 'none';
-
-  const cleanup = () => {
-    input.remove();
-  };
-
-  input.onchange = () => {
-    const file =
-      input.files?.[0];
-
-    if (file) {
-      handleBusinessImage(file);
-    }
-
-    cleanup();
-  };
-
-  input.oncancel = () => {
-    cleanup();
-  };
-
-  document.body.appendChild(input);
-  input.click();
-}}
->
+  <label className="admin-action-button">
   {businessImage
     ? 'Заменить фото'
     : 'Добавить фото'}
-</button>
+
+  <input
+    type="file"
+    accept="image/*"
+    hidden
+    onChange={(e) => {
+      const file =
+        e.target.files?.[0];
+
+      if (file) {
+        handleBusinessImage(file);
+      }
+
+      e.target.value = '';
+    }}
+  />
+</label>
 
   
 
