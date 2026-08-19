@@ -470,6 +470,7 @@ function PersonalHome({
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [page, setPage] = useState<'home' | 'bookings' | 'saved'>('home');
   const [loading, setLoading] = useState(true);
+  const [infoMenuOpen, setInfoMenuOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -513,6 +514,28 @@ function PersonalHome({
 
   return (
     <section className="personal-home">
+      <div className="personal-home-menu">
+  <button
+    type="button"
+    className="personal-menu-button"
+    onClick={() => setInfoMenuOpen(!infoMenuOpen)}
+  >
+    ☰
+  </button>
+
+  {infoMenuOpen && (
+    <div className="personal-info-menu">
+      <button
+        type="button"
+        onClick={() => {
+          setInfoMenuOpen(false);
+        }}
+      >
+        Правила и контакты
+      </button>
+    </div>
+  )}
+</div>
 
       {page === 'home' && (
         <>
