@@ -6047,26 +6047,7 @@ function Client({
           {business.description}
         </p>
       )}
-    <div className="client-business-header">
-
-  {business?.business_image && (
-    <img
-      src={business.business_image}
-      alt={business.name}
-      className="client-business-thumb"
-    />
-  )}
-
-  <div className="client-business-header-info">
-    <h1>
-      {business.name}
-    </h1>
-
-    {business.description && (
-      <p>
-        {business.description}
-      </p>
-    )}
+    
   </div>
 
 </div>
