@@ -294,6 +294,14 @@ const openClient = (
             }}>
               🏠 {t('nav.home')}
             </button>
+            <button
+  onClick={() => {
+    setInfoModal(true);
+    setMenuOpen(false);
+  }}
+>
+  ℹ️ Правила и контакты
+</button>
 
           </nav>
         )}
