@@ -85,7 +85,7 @@ function App(){
   const [clientSlug,setClientSlug]=useState('');
   const [menuOpen,setMenuOpen]=useState(false);
   const [adminTab,setAdminTab]=useState('home');
-
+  const [adminTab,setAdminTab]=useState('home');
   useEffect(()=>{
     const telegram = tg();
 
@@ -231,6 +231,14 @@ const openClient = (
             }}>
               🏠 {t('nav.home')}
             </button>
+            <button
+  onClick={() => {
+    setInfoModal(true);
+    setMenuOpen(false);
+  }}
+>
+  ℹ️ Правила и контакты
+</button>
 
             <button onClick={()=>{
               setAdminTab('services');
@@ -322,7 +330,120 @@ const openClient = (
   t={t}
 />
   }
+{infoModal && (
+  <div
+    className="subscription-modal-overlay"
+    onClick={() => setInfoModal(false)}
+  >
+    <div
+      className="subscription-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="subscription-modal-close"
+        onClick={() => setInfoModal(false)}
+      >
+        ×
+      </button>
 
+      <span className="personal-eyebrow">
+        BOOKLY
+      </span>
+
+      <h3>
+        Правила использования
+      </h3>
+
+      <div className="muted" style={{lineHeight:'1.6'}}>
+        <p>
+          1. Bookly предназначен для законного
+          использования и предоставления обычных
+          товаров и услуг.
+        </p>
+
+        <p>
+          2. Запрещено использовать Bookly для
+          незаконных товаров или услуг, наркотиков,
+          оружия, мошенничества, порнографии,
+          азартных игр и другой запрещённой
+          деятельности.
+        </p>
+
+        <p>
+          3. Пользователь самостоятельно отвечает
+          за законность своего бизнеса, товаров,
+          услуг, рекламы и контента.
+        </p>
+
+        <p>
+          4. Запрещено использовать Bookly для
+          обмана клиентов, спама, фиктивных записей
+          и другого злоупотребления сервисом.
+        </p>
+
+        <p>
+          5. Пользователь обязан соблюдать
+          применимое законодательство и требования
+          по защите персональных данных.
+        </p>
+
+        <p>
+          6. Мы вправе временно ограничить или
+          полностью заблокировать бизнес при
+          нарушении настоящих правил.
+        </p>
+
+        <p>
+          7. Запрещено создавать новый бизнес или
+          аккаунт для обхода ранее применённой
+          блокировки.
+        </p>
+
+        <p>
+          8. Мы можем изменять функции Bookly,
+          временно ограничивать работу сервиса
+          или прекращать предоставление сервиса.
+        </p>
+
+        <p>
+          9. Мы не обещаем бесперебойную или
+          безошибочную работу Bookly. Возможны
+          технические сбои, обслуживание и
+          недоступность сторонних сервисов.
+        </p>
+
+        <p>
+          10. Используя Bookly, пользователь
+          подтверждает согласие соблюдать эти
+          правила.
+        </p>
+
+        <hr />
+
+        <h3>
+          Контакты
+        </h3>
+
+        <p>
+          По вопросам работы Bookly и для сообщений
+          о нарушениях:
+        </p>
+
+        <a
+          href="mailto:boocklyapp@gmail.com"
+          style={{
+            color:'#111',
+            fontWeight:700,
+            textDecoration:'none'
+          }}
+        >
+          boocklyapp@gmail.com
+        </a>
+      </div>
+    </div>
+  </div>
+)}
 </div>
 }
 function PersonalHome({
