@@ -2201,12 +2201,21 @@ function Dashboard({
         />
 
         <button
-          type="button"
-          className="admin-action-button admin-download-button"
-          onClick={downloadQr}
-        >
-          Скачать QR-код
-        </button>
+  type="button"
+  className="admin-action-button admin-download-button"
+  onClick={() => {
+    if (!qrDataUrl) return;
+
+    const link = document.createElement('a');
+    link.href = qrDataUrl;
+    link.download = `${business.slug}-bookly-qr.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }}
+>
+  Скачать QR-код
+</button>
       </>
     )
   )}
