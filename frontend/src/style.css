@@ -1002,3 +1002,22 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   font-weight:700;
   text-decoration:none;
 }
+.client-info-button{
+  position:fixed;
+  top:14px;
+  right:14px;
+  z-index:10000;
+  width:42px;
+  height:42px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  color:#111;
+  border:1px solid #e5e7eb;
+  border-radius:13px;
+  font-size:24px;
+  line-height:1;
+  box-shadow:0 5px 18px rgba(0,0,0,.08);
+}
