@@ -333,13 +333,23 @@ const openClient = (
 />
   }
 
-  {mode==='client' &&
-   <Client
-  slug={clientSlug}
-  onBack={()=>setMode('home')}
-  t={t}
-/>
-  }
+  {mode==='client' && (
+  <>
+    <button
+      type="button"
+      className="client-info-button"
+      onClick={() => setInfoModal(true)}
+    >
+      ⋮
+    </button>
+
+    <Client
+      slug={clientSlug}
+      onBack={() => setMode('home')}
+      t={t}
+    />
+  </>
+)}
 {infoModal && (
   <div
     className="subscription-modal-overlay"
