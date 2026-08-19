@@ -85,7 +85,7 @@ function App(){
   const [clientSlug,setClientSlug]=useState('');
   const [menuOpen,setMenuOpen]=useState(false);
   const [adminTab,setAdminTab]=useState('home');
-  const [adminTab,setAdminTab]=useState('home');
+  const [infoModal,setInfoModal]=useState(false);
   useEffect(()=>{
     const telegram = tg();
 
