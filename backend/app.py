@@ -24,7 +24,10 @@ from sqlalchemy import (
     Time,
     DateTime,
     ForeignKey,
-    Numeric
+    Numeric,
+    Text,
+    inspect,
+    text
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
@@ -59,6 +62,11 @@ class Business(Base):
 
     description: Mapped[str] = mapped_column(
         String(500),
+        default=""
+    )
+       
+    business_image: Mapped[str] = mapped_column(
+        Text,
         default=""
     )
 
@@ -289,6 +297,25 @@ def _bookly_t(lang: str, key: str) -> str:
 Base.metadata.create_all(engine)
 
 Base.metadata.create_all(engine)
+def ensure_business_image_column():
+    columns = {
+        column["name"]
+        for column in inspect(engine).get_columns(
+            "businesses"
+        )
+    }
+
+    if "business_image" not in columns:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "ALTER TABLE businesses "
+                    "ADD COLUMN business_image TEXT"
+                )
+            )
+
+
+ensure_business_image_column()
 app = FastAPI(title="Bookly API", version="0.2.0")
 ACTIVE_BUSINESS_ID: ContextVar[Optional[int]] = ContextVar(
     "ACTIVE_BUSINESS_ID",
@@ -538,6 +565,7 @@ def ensure_owner(db, business_id: int, owner_id: int):
 # ---------- schemas ----------
 class BusinessIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
+    business_image: str = ""
     description: str = ""
     address: str = ""
     phone: str = ""
