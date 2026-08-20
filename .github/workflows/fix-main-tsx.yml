@@ -1,0 +1,44 @@
+name: Fix main.tsx syntax
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch main.tsx
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+          old = "    </section>\n)}\n  \n      {tab === 'home' && !businessCreatedNotice && ("
+          new = "    </section>\n    );\n  }\n\n  return (\n    <section>\n      {tab === 'home' && !businessCreatedNotice && ("
+          if old not in s:
+              raise SystemExit('first patch target not found')
+          s = s.replace(old, new, 1)
+          old = "</nav>\n\n);\n}\n\nfunction BusinessForm"
+          new = "</nav>\n    </section>\n  );\n}\n\nfunction BusinessForm"
+          if old not in s:
+              raise SystemExit('second patch target not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - name: Validate build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/main.tsx
+          git diff --cached --quiet || git commit -m 'fix: repair Admin JSX return structure'
+          git push
