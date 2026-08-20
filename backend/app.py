@@ -310,7 +310,7 @@ def _bookly_t(lang: str, key: str) -> str:
 Base.metadata.create_all(engine)
 
 Base.metadata.create_all(engine)
-def ensure_business_image_column():
+
 app = FastAPI(title="Bookly API", version="0.2.0")
 ACTIVE_BUSINESS_ID: ContextVar[Optional[int]] = ContextVar(
     "ACTIVE_BUSINESS_ID",
