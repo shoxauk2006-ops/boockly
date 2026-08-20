@@ -2528,6 +2528,34 @@ const [newBusinessHours, setNewBusinessHours] =
             Настроить →
           </strong>
         </button>
+        <button
+  type="button"
+  className="card"
+  style={{
+    textAlign: 'left',
+    cursor: 'pointer',
+    border: 'none',
+    width: '100%'
+  }}
+  onClick={() => {
+    setBusinessCreatedNotice(false);
+    setTab('blocks');
+  }}
+>
+  <strong>
+    5. Блокировки
+  </strong>
+
+  <p className="muted">
+    Если вам нужно отойти или временно прекратить
+    приём записей, создайте блокировку на нужное
+    время.
+  </p>
+
+  <strong>
+    Добавить блокировку →
+  </strong>
+</button>
 
         <button
           type="button"
@@ -2618,32 +2646,50 @@ const [newBusinessHours, setNewBusinessHours] =
     </div>
 
     <div
-      style={{
-        marginTop: 20,
-        padding: 16,
-        borderRadius: 16,
-        background: '#f5f5f5'
-      }}
-    >
-      <strong>
-        Как это работает
-      </strong>
+  style={{
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 16,
+    background: '#f5f5f5'
+  }}
+>
+  <strong>
+    Как это работает
+  </strong>
 
-      <p className="muted">
-        После активации Bookly ваш бизнес
-        станет доступен клиентам.
-      </p>
+  <p className="muted">
+    Сначала полностью настройте бизнес:
+    добавьте информацию, фотографию, услуги,
+    цены, график работы и блокировки.
+  </p>
 
-      <p className="muted">
-        Вы получите страницу бизнеса,
-        персональную ссылку и QR-код.
-      </p>
+  <p className="muted">
+    После этого ваш бизнес будет готов к работе
+    внутри Bookly. Вы сможете управлять услугами,
+    расписанием а также добавлять или отменять записи.
+  </p>
 
-      <p className="muted">
-        Клиент открывает страницу, выбирает
-        услугу, дату и время — после чего
-        запись появляется у вас в Bookly.
-      </p>
+  <p className="muted">
+    Чтобы клиенты могли найти ваш бизнес и
+    самостоятельно записываться на услуги,
+    нужно активировать Bookly Pro.
+  </p>
+
+  <p className="muted">
+    После активации вы получите клиентскую
+    страницу, персональную ссылку и QR-код.
+    Именно ими вы сможете делиться с клиентами,
+    размещать их в социальных сетях, на визитках
+    или показывать QR-код непосредственно в бизнесе.
+  </p>
+
+  <p className="muted">
+    Клиент открывает вашу страницу, выбирает
+    услугу, дату и свободное время — после чего
+    к вам приходит уведомление о новой записи в чат,
+    а также запись повляется в самом Boockly.
+  </p>
+</div>
     </div>
 
     <div
