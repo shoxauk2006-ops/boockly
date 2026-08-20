@@ -1914,11 +1914,39 @@ const [newBusinessHours, setNewBusinessHours] =
             </button>
 
             {newBusinessLatitude !== null &&
-              newBusinessLongitude !== null && (
-                <p className="muted">
-                  📍 Местоположение добавлено
-                </p>
-              )}
+  newBusinessLongitude !== null && (
+    <div
+      className="muted"
+      style={{
+        marginTop: 10,
+        padding: 12,
+        borderRadius: 12,
+        background: '#f5f5f5'
+      }}
+    >
+      <strong>
+        📍 Местоположение выбрано
+      </strong>
+
+      <div
+        style={{
+          marginTop: 5
+        }}
+      >
+        {newBusinessLatitude.toFixed(6)}
+        {', '}
+        {newBusinessLongitude.toFixed(6)}
+      </div>
+
+      <a
+        href={`https://www.google.com/maps?q=${newBusinessLatitude},${newBusinessLongitude}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Открыть на карте
+      </a>
+    </div>
+  )}
       <div
   style={{
     marginTop: 20
