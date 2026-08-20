@@ -1145,6 +1145,8 @@ const [newBusinessHours, setNewBusinessHours] =
   ]);
   const [creatingBusiness, setCreatingBusiness] =
     useState(false);
+  const [businessCreatedNotice, setBusinessCreatedNotice] =
+  useState(false);
 
   const loadBusinesses = async () => {
     const response = await fetch(
@@ -1456,6 +1458,7 @@ const [newBusinessHours, setNewBusinessHours] =
 
       setBusiness(data);
       setBusinessPanel('closed');
+      setBusinessCreatedNotice(true);
 
       const updated =
         await fetch(
@@ -1477,13 +1480,6 @@ const [newBusinessHours, setNewBusinessHours] =
 
       setTab('home');
 
-      alert(
-        '✅ ' +
-        t(
-          'owner.businessCreated',
-          'Бизнес создан'
-        )
-      );
 
     } catch (e: any) {
       alert(
@@ -1963,33 +1959,31 @@ const [newBusinessHours, setNewBusinessHours] =
             </strong>
 
             <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={day.enabled}
-                onChange={e => {
-                  const next =
-                    [...newBusinessHours];
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }}
+>
+  <input
+    type="checkbox"
+    checked={day.enabled}
+    onChange={e => {
+      const next =
+        [...newBusinessHours];
 
-                  next[index] = {
-                    ...next[index],
-                    enabled:
-                      e.target.checked
-                  };
+      next[index] = {
+        ...next[index],
+        enabled:
+          e.target.checked
+      };
 
-                  setNewBusinessHours(
-                    next
-                  );
-                }}
-              />
-
-              Работает
-            </label>
+      setNewBusinessHours(
+        next
+      );
+    }}
+  />
+</label>
           </div>
 
           {day.enabled && (
@@ -2165,7 +2159,153 @@ const [newBusinessHours, setNewBusinessHours] =
       </div>
 
      
+     {businessCreatedNotice && (
+  <div className="card">
+    <div
+      style={{
+        textAlign: 'center',
+        padding: '10px 0'
+      }}
+    >
+      <div
+        style={{
+          width: 64,
+          height: 64,
+          margin: '0 auto 16px',
+          borderRadius: '50%',
+          background: '#e8f8ee',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 32
+        }}
+      >
+        ✓
+      </div>
 
+      <h2 style={{ marginBottom: 8 }}>
+        Бизнес создан
+      </h2>
+
+      <p className="muted">
+        Ваш бизнес успешно создан.
+        Теперь настройте его перед запуском.
+      </p>
+    </div>
+
+    <div
+      style={{
+        marginTop: 20
+      }}
+    >
+      <h3>
+        Что нужно сделать
+      </h3>
+
+      <div
+        style={{
+          marginTop: 12,
+          display: 'grid',
+          gap: 10
+        }}
+      >
+        <div className="card">
+          <strong>1. Основная информация</strong>
+          <p className="muted">
+            Проверьте название, описание,
+            телефон и адрес бизнеса.
+          </p>
+        </div>
+
+        <div className="card">
+          <strong>2. Фотография</strong>
+          <p className="muted">
+            Добавьте фотографию, чтобы
+            клиентам было проще узнать ваш бизнес.
+          </p>
+        </div>
+
+        <div className="card">
+          <strong>3. Услуги</strong>
+          <p className="muted">
+            Добавьте услуги, цены и
+            продолжительность записи.
+          </p>
+        </div>
+
+        <div className="card">
+          <strong>4. График работы</strong>
+          <p className="muted">
+            Укажите дни и часы, когда
+            клиенты могут записываться.
+          </p>
+        </div>
+
+        <div className="card">
+          <strong>5. Страница бизнеса</strong>
+          <p className="muted">
+            После настройки вы сможете
+            дать клиентам ссылку на страницу.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      style={{
+        marginTop: 20,
+        padding: 16,
+        borderRadius: 16,
+        background: '#f5f5f5'
+      }}
+    >
+      <strong>
+        Как вы будете получать клиентов
+      </strong>
+
+      <p className="muted">
+        После активации Bookly вы получите
+        страницу бизнеса и персональную ссылку.
+        Её можно разместить в Telegram,
+        Instagram, WhatsApp и других местах.
+      </p>
+
+      <p className="muted">
+        Клиент открывает ссылку, выбирает
+        услугу, дату и время — а запись
+        появляется у вас в Bookly.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      className="primary full"
+      style={{
+        marginTop: 16
+      }}
+      onClick={() => {
+        setBusinessCreatedNotice(false);
+        setTab('services');
+      }}
+    >
+      Настроить услуги
+    </button>
+
+    <button
+      type="button"
+      className="ghost full"
+      style={{
+        marginTop: 10
+      }}
+      onClick={() => {
+        setBusinessCreatedNotice(false);
+        setTab('settings');
+      }}
+    >
+      Перейти к настройкам
+    </button>
+  </div>
+)}
       {tab === 'home' && (
         <Dashboard
           bookings={bookings}
