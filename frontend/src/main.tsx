@@ -1836,82 +1836,46 @@ const [newBusinessHours, setNewBusinessHours] =
             />
 
             <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                if (
-                  !navigator.geolocation
-                ) {
-                  alert(
-                    'Геолокация недоступна'
-                  );
-                  return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                  position => {
-                    setNewBusinessLatitude(
-                      position.coords.latitude
-                    );
-
-                    setNewBusinessLongitude(
-                      position.coords.longitude
-                    );
-
-                    onClick={() => {
-  if (!navigator.geolocation) {
-    alert(
-      'Геолокация недоступна'
-    );
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    position => {
-      const latitude =
-        position.coords.latitude;
-
-      const longitude =
-        position.coords.longitude;
-
-      setNewBusinessLatitude(latitude);
-      setNewBusinessLongitude(longitude);
-
-      alert(
-        `✅ Местоположение получено\n\n` +
-        `Широта: ${latitude.toFixed(6)}\n` +
-        `Долгота: ${longitude.toFixed(6)}`
-      );
-    },
-    error => {
-      console.error(
-        'Geolocation error:',
-        error
-      );
-
-      alert(
-        'Не удалось получить местоположение. ' +
-        'Проверь разрешение геолокации.'
-      );
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0
+  type="button"
+  className="ghost"
+  onClick={() => {
+    if (!navigator.geolocation) {
+      alert('Геолокация недоступна');
+      return;
     }
-  );
-}}
-                  },
-                  () => {
-                    alert(
-                      'Не удалось получить местоположение'
-                    );
-                  }
-                );
-              }}
-            >
-              📍 Определить местоположение
-            </button>
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        setNewBusinessLatitude(latitude);
+        setNewBusinessLongitude(longitude);
+
+        alert(
+          `Местоположение получено\n\n` +
+          `Широта: ${latitude.toFixed(6)}\n` +
+          `Долгота: ${longitude.toFixed(6)}`
+        );
+      },
+      error => {
+        console.error('Geolocation error:', error);
+
+        alert(
+          'Не удалось получить местоположение. ' +
+          'Проверь разрешение геолокации.'
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+    );
+  }}
+>
+  📍 Определить местоположение
+</button>
 
             {newBusinessLatitude !== null &&
   newBusinessLongitude !== null && (
