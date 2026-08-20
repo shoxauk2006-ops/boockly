@@ -2879,7 +2879,7 @@ const [newBusinessHours, setNewBusinessHours] =
 </nav>
 
 );
-}
+
 
 function BusinessForm({onSaved, t}:{onSaved:()=>void; t:(key:string,fallback?:string)=>string}) {
   const [name,setName] = useState('');
