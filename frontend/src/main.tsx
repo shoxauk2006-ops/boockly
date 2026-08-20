@@ -1950,8 +1950,11 @@ const [newBusinessHours, setNewBusinessHours] =
           </button>
         </div>
       </section>
-    );
+        );
   }
+
+  return (
+    <section>
       <button
         className="back"
         onClick={onBack}
