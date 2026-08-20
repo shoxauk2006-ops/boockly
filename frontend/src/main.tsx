@@ -2878,8 +2878,8 @@ const [newBusinessHours, setNewBusinessHours] =
 
 </nav>
 
+</section>
 );
-
 }
 
 function BusinessForm({onSaved, t}:{onSaved:()=>void; t:(key:string,fallback?:string)=>string}) {
