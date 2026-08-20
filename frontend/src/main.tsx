@@ -1371,111 +1371,109 @@ const [newBusinessHours, setNewBusinessHours] =
   };
 
     const createBusiness = async () => {
-    const name =
-      newBusinessName.trim();
+  const name = newBusinessName.trim();
 
-    if (!name) {
-      alert(
-        t(
-          'owner.enterBusinessName',
-          'Введите название бизнеса'
-        )
-      );
-      return;
-    }
+  if (!name) {
+    alert(
+      t(
+        'owner.enterBusinessName',
+        'Введите название бизнеса'
+      )
+    );
+    return;
+  }
 
-    setCreatingBusiness(true);
+  setCreatingBusiness(true);
 
-    try {
-      const response =
-        await fetch(
-          API + '/admin/businesses',
-          {
-            method: 'POST',
-            headers: headers(),
-            body: JSON.stringify({
-          }
-        );
-
-      const data =
-        await response
-          .json()
-          .catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail ||
-          t(
-            'owner.createBusinessError',
-            'Не удалось создать бизнес'
-          )
-        );
+  try {
+    const response = await fetch(
+      API + '/admin/businesses',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          name,
+          description: newBusinessDescription.trim(),
+          phone: newBusinessPhone.trim(),
+          address: newBusinessAddress.trim(),
+          latitude: newBusinessLatitude,
+          longitude: newBusinessLongitude,
+          timezone: newBusinessTimezone,
+          business_image: newBusinessImage,
+          hours: newBusinessHours.map(day => ({
+            weekday: day.weekday,
+            start: day.start,
+            end: day.end,
+            active: day.enabled
+          }))
+        })
       }
-      
+    );
+
+    const data = await response
+      .json()
+      .catch(() => null);
 
     if (!response.ok) {
-      const errorData =
-        await response.json().catch(() => null);
-
       throw new Error(
-        errorData?.detail ||
-        'Не удалось сохранить график работы'
-      );
-    }
-  })
-);
-
-      try {
-        localStorage.setItem(
-          'bookly_active_business_id',
-          String(data.id)
-        );
-      } catch {}
-
-      setNewBusinessName('');
-      setNewBusinessDescription('');
-      setNewBusinessPhone('');
-      setNewBusinessAddress('');
-      setNewBusinessLatitude(null);
-      setNewBusinessLongitude(null);
-      setNewBusinessImage('');
-
-      setBusiness(data);
-      setBusinessPanel('closed');
-      setBusinessCreatedNotice(true);
-
-      const updated =
-        await fetch(
-          API + '/admin/businesses',
-          {
-            headers: headers()
-          }
-        ).then(r =>
-          r.ok ? r.json() : []
-        );
-
-      setBusinesses(
-        Array.isArray(updated)
-          ? updated
-          : []
-      );
-
-      await loadBusinessData(data);
-
-      setTab('home');
-
-
-    } catch (e: any) {
-      alert(
-        e?.message ||
+        data?.detail ||
         t(
           'owner.createBusinessError',
           'Не удалось создать бизнес'
         )
       );
-    } finally {
-      setCreatingBusiness(false);
     }
+
+    try {
+      localStorage.setItem(
+        'bookly_active_business_id',
+        String(data.id)
+      );
+    } catch {}
+
+    setNewBusinessName('');
+    setNewBusinessDescription('');
+    setNewBusinessPhone('');
+    setNewBusinessAddress('');
+    setNewBusinessLatitude(null);
+    setNewBusinessLongitude(null);
+    setNewBusinessImage('');
+
+    setBusiness(data);
+    setBusinessPanel('closed');
+    setBusinessCreatedNotice(true);
+
+    const updated = await fetch(
+      API + '/admin/businesses',
+      {
+        headers: headers()
+      }
+    ).then(r =>
+      r.ok ? r.json() : []
+    );
+
+    setBusinesses(
+      Array.isArray(updated)
+        ? updated
+        : []
+    );
+
+    await loadBusinessData(data);
+
+    setTab('home');
+
+  } catch (e: any) {
+    alert(
+      e?.message ||
+      t(
+        'owner.createBusinessError',
+        'Не удалось создать бизнес'
+      )
+    );
+  } finally {
+    setCreatingBusiness(false);
+  }
+};
   };
 
   if (loading) {
@@ -1730,7 +1728,7 @@ const [newBusinessHours, setNewBusinessHours] =
                       </strong>
 
                       
-    alignItems: 'center'
+    
                     </div>
 
                     {day.enabled && (
