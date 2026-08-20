@@ -1,0 +1,277 @@
+name: Persist setup guide and Pro benefits
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update admin guidance
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+
+          start_marker = "     {businessCreatedNotice && ("
+          end_marker = "      {tab === 'home' && !businessCreatedNotice && ("
+
+          if start_marker in s and end_marker in s:
+              start = s.index(start_marker)
+              end = s.index(end_marker, start)
+
+              replacement = r'''      {business && (
+        <>
+          <div className="card">
+            <h3>
+              Настройка бизнеса
+            </h3>
+
+            <p className="muted">
+              Выполните основные шаги настройки.
+              Эта инструкция доступна на всех вкладках.
+            </p>
+
+            <div
+              style={{
+                marginTop: 12,
+                display: 'grid',
+                gap: 10
+              }}
+            >
+              <button
+                type="button"
+                className="card"
+                style={{
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  border: 'none',
+                  width: '100%'
+                }}
+                onClick={() => setTab('settings')}
+              >
+                <strong>
+                  1. Основная информация
+                </strong>
+                <p className="muted">
+                  Проверьте название, описание,
+                  телефон, адрес и фотографию бизнеса.
+                </p>
+                <strong>
+                  Настроить →
+                </strong>
+              </button>
+
+              <button
+                type="button"
+                className="card"
+                style={{
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  border: 'none',
+                  width: '100%'
+                }}
+                onClick={() => setTab('settings')}
+              >
+                <strong>
+                  2. Фотография
+                </strong>
+                <p className="muted">
+                  Добавьте фотографию бизнеса,
+                  чтобы клиентам было проще его узнать.
+                </p>
+                <strong>
+                  Добавить фото →
+                </strong>
+              </button>
+
+              <button
+                type="button"
+                className="card"
+                style={{
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  border: 'none',
+                  width: '100%'
+                }}
+                onClick={() => setTab('services')}
+              >
+                <strong>
+                  3. Услуги
+                </strong>
+                <p className="muted">
+                  Добавьте услуги, цены и
+                  продолжительность записи.
+                </p>
+                <strong>
+                  Добавить услуги →
+                </strong>
+              </button>
+
+              <button
+                type="button"
+                className="card"
+                style={{
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  border: 'none',
+                  width: '100%'
+                }}
+                onClick={() => setTab('hours')}
+              >
+                <strong>
+                  4. График работы
+                </strong>
+                <p className="muted">
+                  Укажите рабочие дни и часы,
+                  когда клиенты могут записываться.
+                </p>
+                <strong>
+                  Настроить график →
+                </strong>
+              </button>
+
+              <button
+                type="button"
+                className="card"
+                style={{
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  border: 'none',
+                  width: '100%'
+                }}
+                onClick={() => setTab('blocks')}
+              >
+                <strong>
+                  5. Блокировки
+                </strong>
+                <p className="muted">
+                  Временно закрывайте время для записей,
+                  когда бизнес не принимает клиентов.
+                </p>
+                <strong>
+                  Добавить блокировку →
+                </strong>
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="card"
+            style={{
+              marginTop: 16,
+              padding: 16
+            }}
+          >
+            <strong>
+              Как это работает
+            </strong>
+
+            <p className="muted">
+              Сначала настройте бизнес, услуги и расписание.
+              После этого Bookly будет готов к работе внутри админки.
+            </p>
+
+            <p className="muted">
+              Клиенты смогут самостоятельно записываться
+              только после активации Bookly Pro.
+            </p>
+          </div>
+
+          <div
+            className="card"
+            style={{
+              marginTop: 16,
+              padding: 16
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>
+              Bookly Pro
+            </h3>
+
+            <p className="muted">
+              Админкой можно пользоваться без подписки.
+              Bookly Pro нужен для клиентского доступа.
+            </p>
+
+            <ul
+              style={{
+                paddingLeft: 20,
+                marginBottom: 0
+              }}
+            >
+              <li>Клиентская страница</li>
+              <li>Персональная ссылка</li>
+              <li>QR-код бизнеса</li>
+              <li>Онлайн-записи</li>
+              <li>Уведомления о новых записях</li>
+            </ul>
+
+            {!business.subscription_active ? (
+              <button
+                type="button"
+                className="primary full"
+                style={{
+                  marginTop: 16
+                }}
+                onClick={() => {
+                  checkout(
+                    'paddle',
+                    business.id
+                  );
+                }}
+              >
+                Активировать Bookly Pro
+              </button>
+            ) : (
+              <div
+                className="pill ok"
+                style={{
+                  display: 'inline-block',
+                  marginTop: 16
+                }}
+              >
+                Bookly Pro активирован
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+'''
+              s = s[:start] + replacement + s[end:]
+
+          s = s.replace(
+              "      {tab === 'home' && !businessCreatedNotice && (",
+              "      {tab === 'home' && (",
+              1,
+          )
+
+          p.write_text(s)
+          PY
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/main.tsx
+          if git diff --cached --quiet; then
+            echo 'No source changes needed'
+            exit 0
+          fi
+          git commit -m 'feat: persist setup guide and Pro benefits'
+          git push
