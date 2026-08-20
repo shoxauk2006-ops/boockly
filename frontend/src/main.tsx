@@ -2690,8 +2690,6 @@ const [newBusinessHours, setNewBusinessHours] =
     а также запись повляется в самом Boockly.
   </p>
 </div>
-    </div>
-    )}
 
     <div
       style={{
@@ -2760,11 +2758,11 @@ const [newBusinessHours, setNewBusinessHours] =
       }}
     >
       Настроить бизнес сначала
-    </button>
+        </button>
 
     </section>
-)}
-  
+  );
+
       {tab === 'home' && !businessCreatedNotice && (
         <Dashboard
           bookings={bookings}
