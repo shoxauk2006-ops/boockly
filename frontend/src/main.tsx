@@ -652,7 +652,6 @@ setInfoSection={setInfoSection}
 )}
 
 </div>
-  );
 }
 
 function PersonalHome({
