@@ -1397,7 +1397,7 @@ const [newBusinessHours, setNewBusinessHours] =
             method: 'POST',
             headers: headers(),
             body: JSON.stringify({
-            {
+            
   name,
 
   description:
