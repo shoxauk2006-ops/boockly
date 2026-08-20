@@ -2161,6 +2161,269 @@ const [newBusinessHours, setNewBusinessHours] =
      
      {businessCreatedNotice && (
   <div className="card">
+
+    <div
+      style={{
+        textAlign: 'center',
+        padding: '10px 0 4px'
+      }}
+    >
+      <div
+        style={{
+          width: 64,
+          height: 64,
+          margin: '0 auto 16px',
+          borderRadius: '50%',
+          background: '#e8f8ee',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 32
+        }}
+      >
+        ✓
+      </div>
+
+      <h2 style={{ marginBottom: 8 }}>
+        Бизнес создан
+      </h2>
+
+      <p className="muted">
+        Отлично. Теперь подготовьте бизнес
+        к запуску.
+      </p>
+    </div>
+
+    <div style={{ marginTop: 20 }}>
+      <h3>
+        Что нужно сделать
+      </h3>
+
+      <div
+        style={{
+          marginTop: 12,
+          display: 'grid',
+          gap: 10
+        }}
+      >
+
+        <button
+          type="button"
+          className="card"
+          style={{
+            textAlign: 'left',
+            cursor: 'pointer',
+            border: 'none',
+            width: '100%'
+          }}
+          onClick={() => {
+            setBusinessCreatedNotice(false);
+            setTab('settings');
+          }}
+        >
+          <strong>
+            1. Основная информация
+          </strong>
+
+          <p className="muted">
+            Проверьте название, описание,
+            телефон, адрес и фотографию бизнеса.
+          </p>
+
+          <strong>
+            Настроить →
+          </strong>
+        </button>
+
+        <button
+          type="button"
+          className="card"
+          style={{
+            textAlign: 'left',
+            cursor: 'pointer',
+            border: 'none',
+            width: '100%'
+          }}
+          onClick={() => {
+            setBusinessCreatedNotice(false);
+            setTab('settings');
+          }}
+        >
+          <strong>
+            2. Фотография
+          </strong>
+
+          <p className="muted">
+            Добавьте красивую фотографию,
+            чтобы клиентам было проще узнать
+            ваш бизнес.
+          </p>
+
+          <strong>
+            Добавить фото →
+          </strong>
+        </button>
+
+        <button
+          type="button"
+          className="card"
+          style={{
+            textAlign: 'left',
+            cursor: 'pointer',
+            border: 'none',
+            width: '100%'
+          }}
+          onClick={() => {
+            setBusinessCreatedNotice(false);
+            setTab('services');
+          }}
+        >
+          <strong>
+            3. Услуги
+          </strong>
+
+          <p className="muted">
+            Добавьте услуги, цены и
+            продолжительность записи.
+          </p>
+
+          <strong>
+            Добавить услуги →
+          </strong>
+        </button>
+
+        <button
+          type="button"
+          className="card"
+          style={{
+            textAlign: 'left',
+            cursor: 'pointer',
+            border: 'none',
+            width: '100%'
+          }}
+          onClick={() => {
+            setBusinessCreatedNotice(false);
+            setTab('hours');
+          }}
+        >
+          <strong>
+            4. График работы
+          </strong>
+
+          <p className="muted">
+            Укажите рабочие дни и часы,
+            когда клиенты могут записываться.
+          </p>
+
+          <strong>
+            Настроить график →
+          </strong>
+        </button>
+
+      </div>
+    </div>
+
+    <div
+      style={{
+        marginTop: 20,
+        padding: 16,
+        borderRadius: 16,
+        background: '#f5f5f5'
+      }}
+    >
+      <strong>
+        Как это работает
+      </strong>
+
+      <p className="muted">
+        После активации Bookly ваш бизнес
+        станет доступен клиентам.
+      </p>
+
+      <p className="muted">
+        Вы получите страницу бизнеса,
+        персональную ссылку и QR-код.
+      </p>
+
+      <p className="muted">
+        Клиент открывает страницу, выбирает
+        услугу, дату и время — после чего
+        запись появляется у вас в Bookly.
+      </p>
+    </div>
+
+    <div
+      style={{
+        marginTop: 16,
+        padding: 16,
+        borderRadius: 16,
+        border: '1px solid #e5e5e5'
+      }}
+    >
+      <h3 style={{ marginTop: 0 }}>
+        Готовы привлекать клиентов?
+      </h3>
+
+      <p className="muted">
+        Активируйте Bookly Pro, чтобы открыть
+        бизнес для клиентов и начать принимать
+        онлайн-записи.
+      </p>
+
+      <ul
+        style={{
+          paddingLeft: 20,
+          marginBottom: 0
+        }}
+      >
+        <li>
+          Клиентская страница
+        </li>
+        <li>
+          Персональная ссылка
+        </li>
+        <li>
+          QR-код бизнеса
+        </li>
+        <li>
+          Онлайн-записи
+        </li>
+      </ul>
+    </div>
+
+    <button
+      type="button"
+      className="primary full"
+      style={{
+        marginTop: 16
+      }}
+      onClick={() => {
+        checkout(
+          'paddle',
+          business.id
+        );
+      }}
+    >
+      Активировать Bookly Pro
+    </button>
+
+    <button
+      type="button"
+      className="ghost full"
+      style={{
+        marginTop: 10
+      }}
+      onClick={() => {
+        setBusinessCreatedNotice(false);
+        setTab('services');
+      }}
+    >
+      Настроить бизнес сначала
+    </button>
+
+  </div>
+)}
+  <div className="card">
     <div
       style={{
         textAlign: 'center',
