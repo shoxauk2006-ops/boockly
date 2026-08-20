@@ -1557,7 +1557,7 @@ const [newBusinessHours, setNewBusinessHours] =
     );
   }
 
-  if (!business) {
+   if (!business) {
     return (
       <section>
         <button
@@ -1569,44 +1569,389 @@ const [newBusinessHours, setNewBusinessHours] =
 
         <div className="card">
           <h2>
-            {t('nav.businesses')}
+            {t(
+              'owner.addBusiness',
+              'Добавить бизнес'
+            )}
           </h2>
 
-          <p>
-            {t('owner.noBusiness')}
+          <p className="muted">
+            Заполните информацию о бизнесе,
+            чтобы клиенты могли его найти
+            и записаться.
           </p>
+
+          <input
+            placeholder={t(
+              'owner.serviceName',
+              'Название бизнеса'
+            )}
+            value={newBusinessName}
+            onChange={e =>
+              setNewBusinessName(
+                e.target.value
+              )
+            }
+          />
+
+          <textarea
+            placeholder={t(
+              'owner.businessDescription',
+              'Описание бизнеса'
+            )}
+            value={newBusinessDescription}
+            onChange={e =>
+              setNewBusinessDescription(
+                e.target.value
+              )
+            }
+            rows={4}
+          />
+
+          <input
+            type="tel"
+            placeholder={t(
+              'owner.businessPhone',
+              'Номер телефона'
+            )}
+            value={newBusinessPhone}
+            onChange={e =>
+              setNewBusinessPhone(
+                e.target.value
+              )
+            }
+          />
+
+          <input
+            placeholder={t(
+              'owner.businessAddress',
+              'Адрес'
+            )}
+            value={newBusinessAddress}
+            onChange={e =>
+              setNewBusinessAddress(
+                e.target.value
+              )
+            }
+          />
+
+          <button
+            type="button"
+            className="ghost"
+            onClick={() => {
+              if (!navigator.geolocation) {
+                alert(
+                  'Геолокация недоступна'
+                );
+                return;
+              }
+
+              navigator.geolocation.getCurrentPosition(
+                position => {
+                  const latitude =
+                    position.coords.latitude;
+
+                  const longitude =
+                    position.coords.longitude;
+
+                  setNewBusinessLatitude(
+                    latitude
+                  );
+
+                  setNewBusinessLongitude(
+                    longitude
+                  );
+                },
+                error => {
+                  console.error(
+                    'Geolocation error:',
+                    error
+                  );
+
+                  alert(
+                    'Не удалось получить местоположение. Проверьте разрешение геолокации.'
+                  );
+                },
+                {
+                  enableHighAccuracy: true,
+                  timeout: 15000,
+                  maximumAge: 0
+                }
+              );
+            }}
+          >
+            📍 Определить местоположение
+          </button>
+
+          {newBusinessLatitude !== null &&
+            newBusinessLongitude !== null && (
+              <div
+                className="muted"
+                style={{
+                  marginTop: 10,
+                  padding: 12,
+                  borderRadius: 12,
+                  background: '#f5f5f5'
+                }}
+              >
+                <strong>
+                  📍 Местоположение выбрано
+                </strong>
+
+                <div
+                  style={{
+                    marginTop: 5
+                  }}
+                >
+                  {newBusinessLatitude.toFixed(6)}
+                  {', '}
+                  {newBusinessLongitude.toFixed(6)}
+                </div>
+
+                <a
+                  href={`https://www.google.com/maps?q=${newBusinessLatitude},${newBusinessLongitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Открыть на карте
+                </a>
+              </div>
+            )}
+
+          <div
+            style={{
+              marginTop: 20
+            }}
+          >
+            <h3>
+              График работы
+            </h3>
+
+            <p
+              className="muted"
+              style={{
+                marginTop: 4
+              }}
+            >
+              Укажите часы работы бизнеса.
+            </p>
+
+            <div
+              style={{
+                marginTop: 10
+              }}
+            >
+              {newBusinessHours.map(
+                (day, index) => (
+                  <div
+                    key={day.weekday}
+                    style={{
+                      padding: '12px 0',
+                      borderBottom:
+                        index <
+                        newBusinessHours.length - 1
+                          ? '1px solid #eee'
+                          : 'none'
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent:
+                          'space-between',
+                        gap: 10
+                      }}
+                    >
+                      <strong>
+                        {day.name}
+                      </strong>
+
+                      <label
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={day.enabled}
+                          onChange={e => {
+                            const next = [
+                              ...newBusinessHours
+                            ];
+
+                            next[index] = {
+                              ...next[index],
+                              enabled:
+                                e.target.checked
+                            };
+
+                            setNewBusinessHours(
+                              next
+                            );
+                          }}
+                        />
+
+                        <span
+                          style={{
+                            marginLeft: 8
+                          }}
+                        >
+                          Работает
+                        </span>
+                      </label>
+                    </div>
+
+                    {day.enabled && (
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns:
+                            '1fr 1fr',
+                          gap: 10,
+                          marginTop: 10
+                        }}
+                      >
+                        <div>
+                          <small className="muted">
+                            Открытие
+                          </small>
+
+                          <input
+                            type="time"
+                            value={day.start}
+                            onChange={e => {
+                              const next = [
+                                ...newBusinessHours
+                              ];
+
+                              next[index] = {
+                                ...next[index],
+                                start:
+                                  e.target.value
+                              };
+
+                              setNewBusinessHours(
+                                next
+                              );
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <small className="muted">
+                            Закрытие
+                          </small>
+
+                          <input
+                            type="time"
+                            value={day.end}
+                            onChange={e => {
+                              const next = [
+                                ...newBusinessHours
+                              ];
+
+                              next[index] = {
+                                ...next[index],
+                                end:
+                                  e.target.value
+                              };
+
+                              setNewBusinessHours(
+                                next
+                              );
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+
+            <p className="muted">
+              Часовой пояс: {newBusinessTimezone}
+            </p>
+          </div>
+
+          <label
+            style={{
+              display: 'block',
+              marginTop: 12
+            }}
+          >
+            <span
+              className="muted"
+              style={{
+                display: 'block',
+                marginBottom: 8
+              }}
+            >
+              Фото бизнеса
+            </span>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => {
+                const file =
+                  e.target.files?.[0];
+
+                if (!file) {
+                  return;
+                }
+
+                const reader =
+                  new FileReader();
+
+                reader.onload = () => {
+                  setNewBusinessImage(
+                    String(
+                      reader.result || ''
+                    )
+                  );
+                };
+
+                reader.readAsDataURL(file);
+              }}
+            />
+          </label>
+
+          {newBusinessImage && (
+            <img
+              src={newBusinessImage}
+              alt="Фото бизнеса"
+              style={{
+                width: '100%',
+                maxHeight: 220,
+                objectFit: 'cover',
+                borderRadius: 16,
+                marginTop: 12
+              }}
+            />
+          )}
 
           <button
             className="primary full"
-            onClick={() =>
-              setBusinessPanel('create')
-            }
+            disabled={creatingBusiness}
+            onClick={createBusiness}
           >
-            + {t('owner.addBusiness')}
+            {creatingBusiness
+              ? t(
+                  'owner.creatingBusiness',
+                  'Создание...'
+                )
+              : t(
+                  'owner.createBusiness',
+                  'Создать бизнес'
+                )}
           </button>
         </div>
-
-        {businessPanel === 'create' && (
-  <div className="card">
-    <h2>
-      {t(
-        'owner.addBusiness',
-        'Добавить бизнес'
-      )}
-    </h2>
-
-    <input
-      placeholder={t(
-        'owner.serviceName',
-        'Название бизнеса'
-      )}
-        )}
       </section>
     );
   }
-
-  return (
-    <section>
       <button
         className="back"
         onClick={onBack}
