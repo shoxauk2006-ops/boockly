@@ -309,7 +309,94 @@ def _bookly_t(lang: str, key: str) -> str:
 
 Base.metadata.create_all(engine)
 
-Base.metadata.create_all(engine)
+
+def ensure_business_schema():
+    """
+    Добавляет новые колонки в существующую БД,
+    не удаляя существующие бизнесы.
+    """
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+
+        if "businesses" not in inspector.get_table_names():
+            return
+
+        existing = {
+            column["name"]
+            for column in inspector.get_columns("businesses")
+        }
+
+        dialect = engine.dialect.name
+
+        float_type = (
+            "DOUBLE PRECISION"
+            if dialect == "postgresql"
+            else "REAL"
+        )
+
+        columns_to_add = {
+            "description":
+                "VARCHAR(500) DEFAULT ''",
+
+            "business_image":
+                "TEXT DEFAULT ''",
+
+            "address":
+                "VARCHAR(255) DEFAULT ''",
+
+            "phone":
+                "VARCHAR(40) DEFAULT ''",
+
+            "latitude":
+                float_type,
+
+            "longitude":
+                float_type,
+
+            "timezone":
+                "VARCHAR(64) DEFAULT 'Asia/Tashkent'",
+
+            "subscription_active":
+                "BOOLEAN DEFAULT FALSE",
+
+            "subscription_expires_at":
+                "TIMESTAMP",
+
+            "subscription_status":
+                "VARCHAR(30) DEFAULT 'inactive'",
+
+            "payment_provider":
+                "VARCHAR(30) DEFAULT ''",
+
+            "external_subscription_id":
+                "VARCHAR(120) DEFAULT ''",
+
+            "payment_method_url":
+                "VARCHAR(1000) DEFAULT ''"
+        }
+
+        for column_name, column_definition in columns_to_add.items():
+
+            if column_name not in existing:
+
+                conn.execute(
+                    text(
+                        f"""
+                        ALTER TABLE businesses
+                        ADD COLUMN {column_name}
+                        {column_definition}
+                        """
+                    )
+                )
+
+
+ensure_business_schema()
+
+
+app = FastAPI(
+    title="Bookly API",
+    version="0.2.0"
+)
 
 app = FastAPI(title="Bookly API", version="0.2.0")
 ACTIVE_BUSINESS_ID: ContextVar[Optional[int]] = ContextVar(
@@ -585,6 +672,9 @@ class WorkingHourIn(BaseModel):
     start: time
     end: time
     active: bool = True
+    
+class BusinessCreateIn(BusinessIn):
+    hours: list[WorkingHourIn] = []
 
 class BlockIn(BaseModel):
     day: date
@@ -664,7 +754,7 @@ def admin_businesses(
 
 @app.post("/admin/businesses")
 def admin_create_business(
-    x: BusinessIn,
+    x: BusinessCreateIn,
     x_telegram_init_data: str = Header(
         default=""
     )
@@ -685,17 +775,68 @@ def admin_create_business(
     )
 
     with SessionLocal() as db:
-        business = Business(
-            owner_telegram_id=owner_id,
-            slug=slug,
-            **x.model_dump()
-        )
 
-        db.add(business)
-        db.commit()
-        db.refresh(business)
+        try:
 
-        return business
+            business_data = x.model_dump(
+                exclude={"hours"}
+            )
+
+            business = Business(
+                owner_telegram_id=owner_id,
+                slug=slug,
+                **business_data
+            )
+
+            db.add(business)
+
+            db.flush()
+
+            for hour in x.hours:
+
+                if not hour.active:
+                    continue
+
+                if hour.start >= hour.end:
+                    raise HTTPException(
+                        400,
+                        f"Некорректный график для дня {hour.weekday}"
+                    )
+
+                working_hour = WorkingHour(
+                    business_id=business.id,
+                    **hour.model_dump()
+                )
+
+                db.add(
+                    working_hour
+                )
+
+            db.commit()
+
+            db.refresh(
+                business
+            )
+
+            return business
+
+        except HTTPException:
+            db.rollback()
+            raise
+
+        except Exception as exc:
+
+            db.rollback()
+
+            print(
+                "CREATE BUSINESS ERROR:",
+                repr(exc)
+            )
+
+            raise HTTPException(
+                500,
+                "Не удалось создать бизнес"
+            )
 @app.get("/admin/business")
 def admin_business(x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
