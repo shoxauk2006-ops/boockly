@@ -2762,7 +2762,7 @@ const [newBusinessHours, setNewBusinessHours] =
       Настроить бизнес сначала
     </button>
 
-  </div>
+    </section>
 )}
   
       {tab === 'home' && !businessCreatedNotice && (
@@ -2880,7 +2880,6 @@ const [newBusinessHours, setNewBusinessHours] =
 
 </nav>
 
-</section>
 );
 }
 
