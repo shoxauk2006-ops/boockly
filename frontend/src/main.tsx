@@ -86,6 +86,8 @@ function App(){
   const [menuOpen,setMenuOpen]=useState(false);
   const [adminTab,setAdminTab]=useState('home');
   const [infoModal,setInfoModal]=useState(false);
+  const [infoSection, setInfoSection] =
+  useState<'help' | 'rules'>('help');
   const [emailCopied,setEmailCopied]=useState(false);
   useEffect(()=>{
     const telegram = tg();
@@ -234,11 +236,22 @@ const openClient = (
             </button>
             <button
   onClick={() => {
+    setInfoSection('help');
     setInfoModal(true);
     setMenuOpen(false);
   }}
 >
-  ℹ️ Правила и контакты
+  ℹ️ Как работает Bookly
+</button>
+
+<button
+  onClick={() => {
+    setInfoSection('rules');
+    setInfoModal(true);
+    setMenuOpen(false);
+  }}
+>
+  📄 Правила и контакты
 </button>
 
             <button onClick={()=>{
@@ -296,12 +309,24 @@ const openClient = (
               🏠 {t('nav.home')}
             </button>
             <button
+  <button
   onClick={() => {
+    setInfoSection('help');
     setInfoModal(true);
     setMenuOpen(false);
   }}
 >
-  ℹ️ Правила и контакты
+  ℹ️ Как работает Bookly
+</button>
+
+<button
+  onClick={() => {
+    setInfoSection('rules');
+    setInfoModal(true);
+    setMenuOpen(false);
+  }}
+>
+  📄 Правила и контакты
 </button>
 
           </nav>
@@ -322,6 +347,7 @@ const openClient = (
   open={openClient}
   t={t}
   setInfoModal={() => setInfoModal(true)}
+setInfoSection={setInfoSection}
 />
 )}
 
@@ -377,7 +403,44 @@ const openClient = (
       >
         ×
       </button>
+        <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 8,
+          marginBottom: 20
+        }}
+      >
+        <button
+          type="button"
+          className={
+            infoSection === 'help'
+              ? 'primary'
+              : 'ghost'
+          }
+          onClick={() =>
+            setInfoSection('help')
+          }
+        >
+          Как работает Bookly
+        </button>
 
+        <button
+          type="button"
+          className={
+            infoSection === 'rules'
+              ? 'primary'
+              : 'ghost'
+          }
+          onClick={() =>
+            setInfoSection('rules')
+          }
+        >
+          Правила и контакты
+        </button>
+      </div>
+      {infoSection === 'help' ? (
+        <>
       <span className="personal-eyebrow">
         BOOKLY
       </span>
@@ -385,7 +448,7 @@ const openClient = (
       <h3>
         Правила использования
       </h3>
-
+     
       <div className="muted" style={{lineHeight:'1.6'}}>
         <p>
           1. Bookly предназначен для законного
@@ -489,6 +552,37 @@ const openClient = (
 >
   {emailCopied ? '✓ Скопировано' : 'Скопировать'}
 </button>
+     <div
+  style={{
+    display: 'flex',
+    gap: 8,
+    marginBottom: 20
+  }}
+>
+  <button
+    type="button"
+    className={
+      infoSection === 'help'
+        ? 'primary'
+        : 'ghost'
+    }
+    onClick={() => setInfoSection('help')}
+  >
+    Как работает Bookly
+  </button>
+
+  <button
+    type="button"
+    className={
+      infoSection === 'rules'
+        ? 'primary'
+        : 'ghost'
+    }
+    onClick={() => setInfoSection('rules')}
+  >
+    Правила и контакты
+  </button>
+</div>
 </div>
       </div>
     </div>
@@ -502,7 +596,8 @@ function PersonalHome({
   setSlug,
   open,
   t,
-  setInfoModal
+  setInfoModal,
+  setInfoSection
 }: {
   onAdmin: () => void;
   slug: string;
@@ -510,6 +605,7 @@ function PersonalHome({
   open: (input?: string) => void;
   t: (key: string, fallback?: string) => string;
   setInfoModal: () => void;
+  setInfoSection: (section: 'help' | 'rules') => void;
 }) {
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [page, setPage] = useState<'home' | 'bookings' | 'saved'>('home');
@@ -570,14 +666,26 @@ function PersonalHome({
 
   {infoMenuOpen && (
     <div className="personal-info-menu">
-      <button
+     <button
   type="button"
   onClick={() => {
     setInfoMenuOpen(false);
+    setInfoSection('help');
     setInfoModal();
   }}
 >
-  Правила и контакты
+  ℹ️ Как работает Bookly
+</button>
+
+<button
+  type="button"
+  onClick={() => {
+    setInfoMenuOpen(false);
+    setInfoSection('rules');
+    setInfoModal();
+  }}
+>
+  📄 Правила и контакты
 </button>
     </div>
   )}
