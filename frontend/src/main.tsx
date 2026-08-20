@@ -1474,7 +1474,6 @@ const [newBusinessHours, setNewBusinessHours] =
     setCreatingBusiness(false);
   }
 };
-  };
 
   if (loading) {
     return (
