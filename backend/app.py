@@ -311,24 +311,6 @@ Base.metadata.create_all(engine)
 
 Base.metadata.create_all(engine)
 def ensure_business_image_column():
-    columns = {
-        column["name"]
-        for column in inspect(engine).get_columns(
-            "businesses"
-        )
-    }
-
-    if "business_image" not in columns:
-        with engine.begin() as connection:
-            connection.execute(
-                text(
-                    "ALTER TABLE businesses "
-                    "ADD COLUMN business_image TEXT"
-                )
-            )
-
-
-ensure_business_image_column()
 app = FastAPI(title="Bookly API", version="0.2.0")
 ACTIVE_BUSINESS_ID: ContextVar[Optional[int]] = ContextVar(
     "ACTIVE_BUSINESS_ID",
@@ -584,6 +566,7 @@ class BusinessIn(BaseModel):
     phone: str = ""
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    timezone: str = "Asia/Tashkent"
 
 class ServiceIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
