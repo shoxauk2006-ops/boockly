@@ -1394,30 +1394,6 @@ const [newBusinessHours, setNewBusinessHours] =
             method: 'POST',
             headers: headers(),
             body: JSON.stringify({
-            
-  name,
-
-  description:
-    newBusinessDescription.trim(),
-
-  phone:
-    newBusinessPhone.trim(),
-
-  address:
-    newBusinessAddress.trim(),
-
-  latitude:
-    newBusinessLatitude,
-
-  longitude:
-    newBusinessLongitude,
-
-  business_image:
-    newBusinessImage,
-
-  timezone:
-    newBusinessTimezone
-})
           }
         );
 
@@ -1435,21 +1411,7 @@ const [newBusinessHours, setNewBusinessHours] =
           )
         );
       }
-      await Promise.all(
-  newBusinessHours.map(async (day) => {
-    const response = await fetch(
-      API + '/admin/hours',
-      {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify({
-          weekday: day.weekday,
-          start: day.start,
-          end: day.end,
-          active: day.enabled
-        })
-      }
-    );
+      
 
     if (!response.ok) {
       const errorData =
