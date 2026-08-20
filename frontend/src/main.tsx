@@ -2746,7 +2746,7 @@ const [newBusinessHours, setNewBusinessHours] =
       Активировать Bookly Pro
     </button>
 
-    <button
+        <button
       type="button"
       className="ghost full"
       style={{
@@ -2758,10 +2758,10 @@ const [newBusinessHours, setNewBusinessHours] =
       }}
     >
       Настроить бизнес сначала
-        </button>
+    </button>
 
-    </section>
-  );
+  </div>
+)}
 
       {tab === 'home' && !businessCreatedNotice && (
         <Dashboard
