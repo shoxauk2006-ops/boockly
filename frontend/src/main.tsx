@@ -2306,7 +2306,7 @@ const [newBusinessHours, setNewBusinessHours] =
     </button>
   </div>
 )}
-      {tab === 'home' && (
+      {tab === 'home' && !businessCreatedNotice && (
         <Dashboard
           bookings={bookings}
           business={business}
