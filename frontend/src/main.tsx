@@ -650,6 +650,11 @@ setInfoSection={setInfoSection}
     </div>
   </div>
 )}
+
+</div>
+  );
+}
+
 function PersonalHome({
   onAdmin,
   slug,
