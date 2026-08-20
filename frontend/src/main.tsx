@@ -1767,40 +1767,8 @@ const [newBusinessHours, setNewBusinessHours] =
                         {day.name}
                       </strong>
 
-                      <label
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={day.enabled}
-                          onChange={e => {
-                            const next = [
-                              ...newBusinessHours
-                            ];
-
-                            next[index] = {
-                              ...next[index],
-                              enabled:
-                                e.target.checked
-                            };
-
-                            setNewBusinessHours(
-                              next
-                            );
-                          }}
-                        />
-
-                        <span
-                          style={{
-                            marginLeft: 8
-                          }}
-                        >
-                          Работает
-                        </span>
-                      </label>
+                      
+    alignItems: 'center'
                     </div>
 
                     {day.enabled && (
