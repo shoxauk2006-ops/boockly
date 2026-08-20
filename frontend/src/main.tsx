@@ -1191,11 +1191,35 @@ const [newBusinessHours, setNewBusinessHours] =
 
     if (selected) {
       try {
-        localStorage.setItem(
-          'bookly_active_business_id',
-          String(selected.id)
+        await Promise.all(
+  newBusinessHours
+    .filter(day => day.enabled)
+    .map(async day => {
+      const response = await fetch(
+        API + '/admin/hours',
+        {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({
+            weekday: day.weekday,
+            start: day.start,
+            end: day.end,
+            active: true
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData =
+          await response.json().catch(() => null);
+
+        throw new Error(
+          errorData?.detail ||
+          'Не удалось сохранить график работы'
         );
-      } catch {}
+      }
+    })
+);
 
       setBusiness(selected);
       return selected;
@@ -1564,45 +1588,20 @@ const [newBusinessHours, setNewBusinessHours] =
           </button>
         </div>
 
-        {businessPanel ===
-          'create' && (
-          <div className="card">
-            <h2>
-              {t(
-                'owner.addBusiness'
-              )}
-            </h2>
+        {businessPanel === 'create' && (
+  <div className="card">
+    <h2>
+      {t(
+        'owner.addBusiness',
+        'Добавить бизнес'
+      )}
+    </h2>
 
-            <input
-              placeholder={t(
-                'owner.serviceName'
-              )}
-              value={newBusinessName}
-              onChange={e =>
-                setNewBusinessName(
-                  e.target.value
-                )
-              }
-            />
-
-            <button
-              className="primary full"
-              disabled={
-                creatingBusiness
-              }
-              onClick={
-                createBusiness
-              }
-            >
-              {creatingBusiness
-                ? t(
-                    'owner.creatingBusiness'
-                  )
-                : t(
-                    'owner.createBusiness'
-                  )}
-            </button>
-          </div>
+    <input
+      placeholder={t(
+        'owner.serviceName',
+        'Название бизнеса'
+      )}
         )}
       </section>
     );
