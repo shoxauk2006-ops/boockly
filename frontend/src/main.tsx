@@ -2880,6 +2880,7 @@ const [newBusinessHours, setNewBusinessHours] =
 
 );
 
+}
 
 function BusinessForm({onSaved, t}:{onSaved:()=>void; t:(key:string,fallback?:string)=>string}) {
   const [name,setName] = useState('');
