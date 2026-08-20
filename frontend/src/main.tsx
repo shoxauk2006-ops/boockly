@@ -1147,7 +1147,29 @@ const [newBusinessHours, setNewBusinessHours] =
     useState(false);
   const [businessCreatedNotice, setBusinessCreatedNotice] =
   useState(false);
+  useEffect(() => {
+  if (!businessCreatedNotice) {
+    return;
+  }
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto'
+    });
+  };
+
+  scrollToTop();
+
+  const timer = window.setTimeout(() => {
+    scrollToTop();
+  }, 100);
+
+  return () => {
+    window.clearTimeout(timer);
+  };
+}, [businessCreatedNotice]);
   const loadBusinesses = async () => {
     const response = await fetch(
       API + '/admin/businesses',
