@@ -357,7 +357,7 @@ setInfoSection={setInfoSection}
       className="admin-info-button"
       onClick={() => setInfoModal(true)}
     >
-      ☰
+      ⓘ
     </button>
 
     <Admin
@@ -376,7 +376,7 @@ setInfoSection={setInfoSection}
       className="client-info-button"
       onClick={() => setInfoModal(true)}
     >
-      ☰
+      ⓘ
     </button>
 
     <Client
