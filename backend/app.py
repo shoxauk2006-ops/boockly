@@ -962,14 +962,34 @@ def is_free(db,business_id:int,day:date,st:time,en:time):
     return not overlap and not blocked
 
 @app.get("/businesses/{slug}")
-def get_business(slug:str):
+def get_business(slug: str):
     with SessionLocal() as db:
-        b=db.query(Business).filter_by(slug=slug).first()
-        if not b:raise HTTPException(404,"Business not found")
-        if not b.subscription_active:raise HTTPException(403,"Business is not active")
-        services=db.query(Service).filter_by(business_id=b.id,active=True).all()
-        return {"business":b,"services":services}
-        @app.get("/businesses/{slug}/qr.png")
+        b = db.query(Business).filter_by(slug=slug).first()
+
+        if not b:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        if not b.subscription_active:
+            raise HTTPException(
+                403,
+                "Business is not active"
+            )
+
+        services = db.query(Service).filter_by(
+            business_id=b.id,
+            active=True
+        ).all()
+
+        return {
+            "business": b,
+            "services": services
+        }
+
+
+@app.get("/businesses/{slug}/qr.png")
 def business_qr(
     slug: str,
     bot_username: str = "BooklyBot"
