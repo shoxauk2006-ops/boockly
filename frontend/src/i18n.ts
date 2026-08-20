@@ -257,3 +257,27 @@ export function applyLanguageDirection(language: Language): void {
   document.documentElement.lang = language;
   document.documentElement.dir = item?.dir || 'ltr';
 }
+// в i18n.ts
+export const translations = {
+  ru: {
+    // ... существующие переводы
+    help: {
+      title: "Как работает Bookly",
+      step1_title: "1. Создайте бизнес",
+      step1_desc: "Укажите название, описание, адрес, фото и часовой пояс.",
+      step2_title: "2. Информация и фото",
+      step2_desc: "Загрузите качественные фото и контактные данные для клиентов.",
+      step3_title: "3. Услуги и цены",
+      step3_desc: "Добавьте список предоставляемых услуг, их длительность и стоимость.",
+      step4_title: "4. График работы",
+      step4_desc: "Настройте рабочие дни и часы приема.",
+      step5_desc: "Вносите перерывы, выходные и личные дела в график, чтобы люди не смогли записаться.",
+      step6_title: "6. Управление записями",
+      step6_desc: "Отслеживайте статус входящих записей клиентов в режиме реального времени.",
+      step7_title: "7. Активация Bookly Pro",
+      step7_desc: "Активируйте подписку Bookly Pro через Paddle, чтобы открылся полный доступ к приему клиентов.",
+      close: "Понятно"
+    }
+  },
+  // Добавьте логику для других языков (en, uz)
+};
