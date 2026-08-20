@@ -1190,36 +1190,7 @@ const [newBusinessHours, setNewBusinessHours] =
     }
 
     if (selected) {
-      try {
-        await Promise.all(
-  newBusinessHours
-    .filter(day => day.enabled)
-    .map(async day => {
-      const response = await fetch(
-        API + '/admin/hours',
-        {
-          method: 'POST',
-          headers: headers(),
-          body: JSON.stringify({
-            weekday: day.weekday,
-            start: day.start,
-            end: day.end,
-            active: true
-          })
-        }
-      );
-
-      if (!response.ok) {
-        const errorData =
-          await response.json().catch(() => null);
-
-        throw new Error(
-          errorData?.detail ||
-          'Не удалось сохранить график работы'
-        );
-      }
-    })
-);
+      
 
       setBusiness(selected);
       return selected;
@@ -1464,6 +1435,33 @@ const [newBusinessHours, setNewBusinessHours] =
           )
         );
       }
+      await Promise.all(
+  newBusinessHours.map(async (day) => {
+    const response = await fetch(
+      API + '/admin/hours',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          weekday: day.weekday,
+          start: day.start,
+          end: day.end,
+          active: day.enabled
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData =
+        await response.json().catch(() => null);
+
+      throw new Error(
+        errorData?.detail ||
+        'Не удалось сохранить график работы'
+      );
+    }
+  })
+);
 
       try {
         localStorage.setItem(
