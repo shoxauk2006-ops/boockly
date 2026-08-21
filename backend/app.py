@@ -356,7 +356,35 @@ def _bookly_t(lang: str, key: str) -> str:
 
 Base.metadata.create_all(engine)
 
+def ensure_subscription_schema():
+    """
+    Создаёт таблицу подписок, если её ещё нет.
+    Существующие данные не удаляет.
+    """
+    with engine.begin() as conn:
+        inspector = inspect(conn)
 
+        if "subscriptions" not in inspector.get_table_names():
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE subscriptions (
+                        id INTEGER PRIMARY KEY,
+                        owner_telegram_id BIGINT UNIQUE NOT NULL,
+                        plan VARCHAR(30) DEFAULT 'standard',
+                        active BOOLEAN DEFAULT FALSE,
+                        expires_at TIMESTAMP,
+                        status VARCHAR(30) DEFAULT 'inactive',
+                        payment_provider VARCHAR(30) DEFAULT '',
+                        external_subscription_id VARCHAR(120) DEFAULT '',
+                        payment_method_url VARCHAR(1000) DEFAULT ''
+                    )
+                    """
+                )
+            )
+
+
+ensure_subscription_schema()
 def ensure_business_schema():
     """
     Добавляет новые колонки в существующую БД,
