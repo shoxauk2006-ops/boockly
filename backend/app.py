@@ -996,6 +996,30 @@ def subscription_limits(subscription):
         )
     } "max_services": 10
     }
+def calculate_subscription_price(services_limit: int) -> float:
+    """
+    Возвращает общую ежемесячную стоимость подписки.
+
+    10 услуг включены в Pro за $7.99.
+    Дополнительные лимиты оплачиваются отдельно.
+    """
+
+    if services_limit <= 10:
+        return PRO_PRICE
+
+    addon_price = SERVICE_ADDONS.get(
+        services_limit
+    )
+
+    if addon_price is None:
+        raise ValueError(
+            f"Недопустимый лимит услуг: {services_limit}"
+        )
+
+    return round(
+        PRO_PRICE + addon_price,
+        2
+    )
 def ensure_owner(db, business_id: int, owner_id: int):
     b = db.get(Business, business_id)
     if not b or b.owner_telegram_id != owner_id:
