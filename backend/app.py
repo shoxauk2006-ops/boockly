@@ -358,8 +358,8 @@ Base.metadata.create_all(engine)
 
 def ensure_subscription_schema():
     """
-    Создаёт таблицу подписок, если её ещё нет.
-    Существующие данные не удаляет.
+    Создаёт таблицу подписок и переносит
+    существующие данные подписки из businesses.
     """
     with engine.begin() as conn:
         inspector = inspect(conn)
@@ -381,6 +381,83 @@ def ensure_subscription_schema():
                     )
                     """
                 )
+            )
+
+        columns = {
+            row["name"]
+            for row in inspector.get_columns("subscriptions")
+        }
+
+        businesses = conn.execute(
+            text(
+                """
+                SELECT
+                    owner_telegram_id,
+                    subscription_active,
+                    subscription_expires_at,
+                    subscription_status,
+                    payment_provider,
+                    external_subscription_id,
+                    payment_method_url
+                FROM businesses
+                WHERE subscription_active = TRUE
+                """
+            )
+        ).mappings().all()
+
+        for business in businesses:
+            owner_id = business["owner_telegram_id"]
+
+            existing = conn.execute(
+                text(
+                    """
+                    SELECT id
+                    FROM subscriptions
+                    WHERE owner_telegram_id = :owner_id
+                    """
+                ),
+                {
+                    "owner_id": owner_id
+                }
+            ).first()
+
+            if existing:
+                continue
+
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO subscriptions (
+                        owner_telegram_id,
+                        plan,
+                        active,
+                        expires_at,
+                        status,
+                        payment_provider,
+                        external_subscription_id,
+                        payment_method_url
+                    )
+                    VALUES (
+                        :owner_id,
+                        'standard',
+                        :active,
+                        :expires_at,
+                        :status,
+                        :payment_provider,
+                        :external_subscription_id,
+                        :payment_method_url
+                    )
+                    """
+                ),
+                {
+                    "owner_id": owner_id,
+                    "active": business["subscription_active"],
+                    "expires_at": business["subscription_expires_at"],
+                    "status": business["subscription_status"] or "inactive",
+                    "payment_provider": business["payment_provider"] or "",
+                    "external_subscription_id": business["external_subscription_id"] or "",
+                    "payment_method_url": business["payment_method_url"] or ""
+                }
             )
 
 
