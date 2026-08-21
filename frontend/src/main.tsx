@@ -2624,261 +2624,238 @@ const [newBusinessHours, setNewBusinessHours] =
         </span>
       </div>
 
-     
      {businessCreatedNotice && (
-  <div className="card">
+  <div
+    className="card"
+    style={{
+      position: 'relative',
+      marginBottom: 16
+    }}
+  >
+    <button
+      type="button"
+      onClick={() => setBusinessCreatedNotice(false)}
+      aria-label="Закрыть инструкцию"
+      style={{
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        width: 34,
+        height: 34,
+        padding: 0,
+        borderRadius: '50%',
+        border: '1px solid #e5e5e5',
+        background: '#fff',
+        fontSize: 22,
+        lineHeight: 1,
+        cursor: 'pointer'
+      }}
+    >
+      ×
+    </button>
 
     <div
       style={{
         textAlign: 'center',
-        padding: '10px 0 4px'
+        padding: '6px 36px 4px'
       }}
     >
       <div
         style={{
-          width: 64,
-          height: 64,
-          margin: '0 auto 16px',
+          width: 56,
+          height: 56,
+          margin: '0 auto 12px',
           borderRadius: '50%',
           background: '#e8f8ee',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 32
+          fontSize: 28
         }}
       >
         ✓
       </div>
 
-      <h2 style={{ marginBottom: 8 }}>
+      <h2 style={{ marginBottom: 6 }}>
         Бизнес создан
       </h2>
 
       <p className="muted">
-        Отлично. Теперь подготовьте бизнес
-        к запуску.
+        Отлично. Теперь подготовьте бизнес к запуску.
       </p>
     </div>
 
-    <div style={{ marginTop: 20 }}>
+    <div style={{ marginTop: 18 }}>
       <h3>
         Что нужно сделать
       </h3>
 
       <div
         style={{
-          marginTop: 12,
+          marginTop: 10,
           display: 'grid',
-          gap: 10
+          gap: 8
         }}
       >
-
-        <button
-          type="button"
+        <div
           className="card"
           style={{
-            textAlign: 'left',
-            cursor: 'pointer',
-            border: 'none',
-            width: '100%'
-          }}
-          onClick={() => {
-            setBusinessCreatedNotice(false);
-            setTab('settings');
+            padding: 14,
+            margin: 0,
+            boxShadow: 'none'
           }}
         >
           <strong>
             1. Основная информация
           </strong>
 
-          <p className="muted">
-            Проверьте название, описание,
-            телефон, адрес и фотографию бизнеса.
+          <p
+            className="muted"
+            style={{ margin: '5px 0 0' }}
+          >
+            Проверьте название, описание, телефон,
+            адрес и фотографию бизнеса.
           </p>
+        </div>
 
-          <strong>
-            Настроить →
-          </strong>
-        </button>
-        <button
-  type="button"
-  className="card"
-  style={{
-    textAlign: 'left',
-    cursor: 'pointer',
-    border: 'none',
-    width: '100%'
-  }}
-  onClick={() => {
-    setBusinessCreatedNotice(false);
-    setTab('blocks');
-  }}
->
-  <strong>
-    5. Блокировки
-  </strong>
-
-  <p className="muted">
-    Если вам нужно отойти или временно прекратить
-    приём записей, создайте блокировку на нужное
-    время.
-  </p>
-
-  <strong>
-    Добавить блокировку →
-  </strong>
-</button>
-
-        <button
-          type="button"
+        <div
           className="card"
           style={{
-            textAlign: 'left',
-            cursor: 'pointer',
-            border: 'none',
-            width: '100%'
-          }}
-          onClick={() => {
-            setBusinessCreatedNotice(false);
-            setTab('settings');
+            padding: 14,
+            margin: 0,
+            boxShadow: 'none'
           }}
         >
           <strong>
             2. Фотография
           </strong>
 
-          <p className="muted">
+          <p
+            className="muted"
+            style={{ margin: '5px 0 0' }}
+          >
             Добавьте красивую фотографию,
-            чтобы клиентам было проще узнать
-            ваш бизнес.
+            чтобы клиентам было проще узнать ваш бизнес.
           </p>
+        </div>
 
-          <strong>
-            Добавить фото →
-          </strong>
-        </button>
-
-        <button
-          type="button"
+        <div
           className="card"
           style={{
-            textAlign: 'left',
-            cursor: 'pointer',
-            border: 'none',
-            width: '100%'
-          }}
-          onClick={() => {
-            setBusinessCreatedNotice(false);
-            setTab('services');
+            padding: 14,
+            margin: 0,
+            boxShadow: 'none'
           }}
         >
           <strong>
             3. Услуги
           </strong>
 
-          <p className="muted">
+          <p
+            className="muted"
+            style={{ margin: '5px 0 0' }}
+          >
             Добавьте услуги, цены и
             продолжительность записи.
           </p>
+        </div>
 
-          <strong>
-            Добавить услуги →
-          </strong>
-        </button>
-
-        <button
-          type="button"
+        <div
           className="card"
           style={{
-            textAlign: 'left',
-            cursor: 'pointer',
-            border: 'none',
-            width: '100%'
-          }}
-          onClick={() => {
-            setBusinessCreatedNotice(false);
-            setTab('hours');
+            padding: 14,
+            margin: 0,
+            boxShadow: 'none'
           }}
         >
           <strong>
             4. График работы
           </strong>
 
-          <p className="muted">
+          <p
+            className="muted"
+            style={{ margin: '5px 0 0' }}
+          >
             Укажите рабочие дни и часы,
             когда клиенты могут записываться.
           </p>
+        </div>
 
+        <div
+          className="card"
+          style={{
+            padding: 14,
+            margin: 0,
+            boxShadow: 'none'
+          }}
+        >
           <strong>
-            Настроить график →
+            5. Блокировки
           </strong>
-        </button>
 
+          <p
+            className="muted"
+            style={{ margin: '5px 0 0' }}
+          >
+            Если нужно временно прекратить приём
+            записей, создайте блокировку.
+          </p>
+        </div>
       </div>
     </div>
 
     <div
-  style={{
-    marginTop: 20,
-    padding: 16,
-    borderRadius: 16,
-    background: '#f5f5f5'
-  }}
->
-  <strong>
-    Как это работает
-  </strong>
+      style={{
+        marginTop: 16,
+        padding: 14,
+        borderRadius: 14,
+        background: '#f5f5f5'
+      }}
+    >
+      <strong>
+        Как это работает
+      </strong>
 
-  <p className="muted">
-    Сначала полностью настройте бизнес:
-    добавьте информацию, фотографию, услуги,
-    цены, график работы и блокировки.
-  </p>
+      <p className="muted">
+        Сначала полностью настройте бизнес:
+        информацию, фотографию, услуги, цены,
+        график работы и блокировки.
+      </p>
 
-  <p className="muted">
-    После этого ваш бизнес будет готов к работе
-    внутри Bookly. Вы сможете управлять услугами,
-    расписанием а также добавлять или отменять записи.
-  </p>
+      <p className="muted">
+        После этого бизнес будет готов к работе
+        внутри Bookly. Вы сможете управлять услугами,
+        расписанием и записями.
+      </p>
 
-  <p className="muted">
-    Чтобы клиенты могли найти ваш бизнес и
-    самостоятельно записываться на услуги,
-    нужно активировать Bookly Pro.
-  </p>
+      <p className="muted">
+        Чтобы клиенты могли найти ваш бизнес
+        и самостоятельно записываться на услуги,
+        активируйте Bookly Pro.
+      </p>
 
-  <p className="muted">
-    После активации вы получите клиентскую
-    страницу, персональную ссылку и QR-код.
-    Именно ими вы сможете делиться с клиентами,
-    размещать их в социальных сетях, на визитках
-    или показывать QR-код непосредственно в бизнесе.
-  </p>
-
-  <p className="muted">
-    Клиент открывает вашу страницу, выбирает
-    услугу, дату и свободное время — после чего
-    к вам приходит уведомление о новой записи в чат,
-    а также запись повляется в самом Boockly.
-  </p>
-</div>
+      <p className="muted">
+        После активации вы получите клиентскую
+        страницу, персональную ссылку и QR-код,
+        которыми сможете делиться с клиентами.
+      </p>
+    </div>
 
     <div
       style={{
-        marginTop: 16,
-        padding: 16,
-        borderRadius: 16,
+        marginTop: 14,
+        padding: 14,
+        borderRadius: 14,
         border: '1px solid #e5e5e5'
       }}
     >
-      <h3 style={{ marginTop: 0 }}>
-        Готовы привлекать клиентов?
-      </h3>
+      <strong>
+        Bookly Pro
+      </strong>
 
       <p className="muted">
-        Активируйте Bookly Pro, чтобы открыть
-        бизнес для клиентов и начать принимать
-        онлайн-записи.
+        После активации вы сможете открыть бизнес
+        для клиентов и начать принимать онлайн-записи.
       </p>
 
       <ul
@@ -2887,18 +2864,11 @@ const [newBusinessHours, setNewBusinessHours] =
           marginBottom: 0
         }}
       >
-        <li>
-          Клиентская страница
-        </li>
-        <li>
-          Персональная ссылка
-        </li>
-        <li>
-          QR-код бизнеса
-        </li>
-        <li>
-          Онлайн-записи
-        </li>
+        <li>Клиентская страница</li>
+        <li>Персональная ссылка</li>
+        <li>QR-код бизнеса</li>
+        <li>Онлайн-записи</li>
+        <li>Уведомления о новых записях</li>
       </ul>
     </div>
 
@@ -2906,7 +2876,7 @@ const [newBusinessHours, setNewBusinessHours] =
       type="button"
       className="primary full"
       style={{
-        marginTop: 16
+        marginTop: 14
       }}
       onClick={() => {
         checkout(
@@ -2917,21 +2887,6 @@ const [newBusinessHours, setNewBusinessHours] =
     >
       Активировать Bookly Pro
     </button>
-
-        <button
-      type="button"
-      className="ghost full"
-      style={{
-        marginTop: 10
-      }}
-      onClick={() => {
-        setBusinessCreatedNotice(false);
-        setTab('services');
-      }}
-    >
-      Настроить бизнес сначала
-    </button>
-
   </div>
 )}
 
