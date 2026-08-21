@@ -790,6 +790,36 @@ def owner_business(
         )
         .first()
     )
+def owner_subscription(db, owner_id: int):
+    return (
+        db.query(Subscription)
+        .filter(
+            Subscription.owner_telegram_id == owner_id
+        )
+        .first()
+    )
+
+
+def subscription_limits(subscription):
+    if not subscription or not subscription.active:
+        return {
+            "plan": "free",
+            "max_businesses": 1,
+            "max_services": 0
+        }
+
+    if subscription.plan == "pro":
+        return {
+            "plan": "pro",
+            "max_businesses": 5,
+            "max_services": 25
+        }
+
+    return {
+        "plan": "standard",
+        "max_businesses": 2,
+        "max_services": 10
+    }
 def ensure_owner(db, business_id: int, owner_id: int):
     b = db.get(Business, business_id)
     if not b or b.owner_telegram_id != owner_id:
