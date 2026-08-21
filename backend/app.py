@@ -945,9 +945,9 @@ def admin_create_business(
         x_telegram_init_data
     )
 
-        owner_id = int(
-            user["id"]
-        )
+    owner_id = int(
+        user["id"]
+    )
 
     with SessionLocal() as db:
         subscription = owner_subscription(
