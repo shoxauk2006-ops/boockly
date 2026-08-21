@@ -391,76 +391,145 @@ Base.metadata.create_all(engine)
 
 def ensure_subscription_schema():
     """
-    Создаёт таблицу подписок и переносит
-    существующие данные подписки из businesses.
+    Создаёт/обновляет таблицу подписок.
+
+    Подписка принадлежит конкретному бизнесу.
+    Старые данные из businesses сохраняются.
     """
     with engine.begin() as conn:
         inspector = inspect(conn)
+        tables = inspector.get_table_names()
 
-        if "subscriptions" not in inspector.get_table_names():
+        # ---------------------------------------------------------
+        # Создание новой таблицы, если её ещё нет
+        # ---------------------------------------------------------
+
+        if "subscriptions" not in tables:
             conn.execute(
                 text(
                     """
                     CREATE TABLE subscriptions (
                         id INTEGER PRIMARY KEY,
-                        owner_telegram_id BIGINT UNIQUE NOT NULL,
-                        plan VARCHAR(30) DEFAULT 'standard',
+                        business_id INTEGER UNIQUE NOT NULL,
+                        owner_telegram_id BIGINT NOT NULL,
+                        plan VARCHAR(30) DEFAULT 'pro',
                         active BOOLEAN DEFAULT FALSE,
                         expires_at TIMESTAMP,
                         status VARCHAR(30) DEFAULT 'inactive',
                         payment_provider VARCHAR(30) DEFAULT '',
                         external_subscription_id VARCHAR(120) DEFAULT '',
-                        payment_method_url VARCHAR(1000) DEFAULT ''
+                        payment_method_url VARCHAR(1000) DEFAULT '',
+                        current_services_limit INTEGER DEFAULT 10,
+                        pending_services_limit INTEGER,
+                        current_price REAL DEFAULT 7.99,
+                        pending_price REAL
                     )
                     """
                 )
             )
 
-        columns = {
-            row["name"]
-            for row in inspector.get_columns("subscriptions")
+            return
+
+        # ---------------------------------------------------------
+        # Получаем существующие колонки
+        # ---------------------------------------------------------
+
+        existing_columns = {
+            column["name"]
+            for column in inspect(conn).get_columns(
+                "subscriptions"
+            )
         }
 
-        businesses = conn.execute(
+        # ---------------------------------------------------------
+        # Добавляем новые колонки в старую таблицу
+        # ---------------------------------------------------------
+
+        columns_to_add = {
+            "business_id":
+                "INTEGER",
+
+            "current_services_limit":
+                "INTEGER DEFAULT 10",
+
+            "pending_services_limit":
+                "INTEGER",
+
+            "current_price":
+                "REAL DEFAULT 7.99",
+
+            "pending_price":
+                "REAL"
+        }
+
+        for column_name, column_definition in columns_to_add.items():
+
+            if column_name not in existing_columns:
+
+                conn.execute(
+                    text(
+                        f"""
+                        ALTER TABLE subscriptions
+                        ADD COLUMN {column_name}
+                        {column_definition}
+                        """
+                    )
+                )
+
+        # ---------------------------------------------------------
+        # Обновляем inspector после ALTER TABLE
+        # ---------------------------------------------------------
+
+        existing_columns = {
+            column["name"]
+            for column in inspect(conn).get_columns(
+                "subscriptions"
+            )
+        }
+
+        # ---------------------------------------------------------
+        # Старые подписки были owner-level.
+        #
+        # Сейчас мы не можем автоматически безопасно определить,
+        # какому из нескольких бизнесов владельца должна принадлежать
+        # старая подписка.
+        #
+        # Поэтому переносим подписку только если у владельца
+        # существует ровно один бизнес.
+        # ---------------------------------------------------------
+
+        if "businesses" not in inspect(conn).get_table_names():
+            return
+
+        owners = conn.execute(
             text(
                 """
                 SELECT
                     owner_telegram_id,
-                    subscription_active,
-                    subscription_expires_at,
-                    subscription_status,
-                    payment_provider,
-                    external_subscription_id,
-                    payment_method_url
+                    COUNT(*) AS business_count,
+                    MIN(id) AS business_id
                 FROM businesses
-                WHERE subscription_active = TRUE
+                GROUP BY owner_telegram_id
                 """
             )
         ).mappings().all()
 
-        for business in businesses:
-            owner_id = business["owner_telegram_id"]
+        for owner in owners:
 
-            existing = conn.execute(
-                text(
-                    """
-                    SELECT id
-                    FROM subscriptions
-                    WHERE owner_telegram_id = :owner_id
-                    """
-                ),
-                {
-                    "owner_id": owner_id
-                }
-            ).first()
+            owner_id = owner["owner_telegram_id"]
 
-            if existing:
+            business_count = owner["business_count"]
+            business_id = owner["business_id"]
+
+            if business_count != 1:
                 continue
 
-            conn.execute(
+            # Ищем старую подписку владельца
+            subscription = conn.execute(
                 text(
                     """
-                    INSERT INTO subscriptions (
+                    SELECT
+                        id,
                         owner_telegram_id,
                         plan,
                         active,
@@ -469,29 +538,73 @@ def ensure_subscription_schema():
                         payment_provider,
                         external_subscription_id,
                         payment_method_url
-                    )
-                    VALUES (
-                        :owner_id,
-                        'standard',
-                        :active,
-                        :expires_at,
-                        :status,
-                        :payment_provider,
-                        :external_subscription_id,
-                        :payment_method_url
-                    )
+                    FROM subscriptions
+                    WHERE owner_telegram_id = :owner_id
+                    ORDER BY id ASC
+                    LIMIT 1
                     """
                 ),
                 {
-                    "owner_id": owner_id,
-                    "active": business["subscription_active"],
-                    "expires_at": business["subscription_expires_at"],
-                    "status": business["subscription_status"] or "inactive",
-                    "payment_provider": business["payment_provider"] or "",
-                    "external_subscription_id": business["external_subscription_id"] or "",
-                    "payment_method_url": business["payment_method_url"] or ""
+                    "owner_id": owner_id
+                }
+            ).mappings().first()
+
+            if not subscription:
+                continue
+
+            # Если бизнес уже указан — ничего не меняем
+            if subscription.get("business_id"):
+                continue
+
+            conn.execute(
+                text(
+                    """
+                    UPDATE subscriptions
+                    SET
+                        business_id = :business_id,
+                        plan = CASE
+                            WHEN plan = 'standard'
+                            THEN 'pro'
+                            ELSE plan
+                        END,
+                        current_services_limit = 10,
+                        current_price = 7.99
+                    WHERE id = :subscription_id
+                    """
+                ),
+                {
+                    "business_id": business_id,
+                    "subscription_id": subscription["id"]
                 }
             )
+
+        # ---------------------------------------------------------
+        # Для новых/существующих записей:
+        # если лимит или цена NULL — устанавливаем базовые значения.
+        # ---------------------------------------------------------
+
+        conn.execute(
+            text(
+                """
+                UPDATE subscriptions
+                SET current_services_limit = 10
+                WHERE current_services_limit IS NULL
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                """
+                UPDATE subscriptions
+                SET current_price = 7.99
+                WHERE current_price IS NULL
+                """
+            )
+        )
+
+
+ensure_subscription_schema()
 
 
 ensure_subscription_schema()
