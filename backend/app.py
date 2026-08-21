@@ -945,9 +945,37 @@ def admin_create_business(
         x_telegram_init_data
     )
 
-    owner_id = int(
+        owner_id = int(
         user["id"]
     )
+
+    with SessionLocal() as db:
+        subscription = owner_subscription(
+            db,
+            owner_id
+        )
+
+        limits = subscription_limits(
+            subscription
+        )
+
+        business_count = (
+            db.query(Business)
+            .filter(
+                Business.owner_telegram_id == owner_id
+            )
+            .count()
+        )
+
+        if business_count >= limits["max_businesses"]:
+            raise HTTPException(
+                403,
+                (
+                    f"Лимит тарифа достигнут: "
+                    f"{limits['max_businesses']} "
+                    f"бизнесов."
+                )
+            )
 
     slug = (
         secrets.token_urlsafe(8)
