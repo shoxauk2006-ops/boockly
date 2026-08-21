@@ -58,15 +58,23 @@ class Subscription(Base):
         primary_key=True
     )
 
-    owner_telegram_id: Mapped[int] = mapped_column(
-        BigInteger,
+    # Подписка принадлежит конкретному бизнесу
+    business_id: Mapped[int] = mapped_column(
+        Integer,
         unique=True,
         index=True
     )
 
+    # Telegram ID владельца сохраняем для совместимости
+    owner_telegram_id: Mapped[int] = mapped_column(
+        BigInteger,
+        index=True
+    )
+
+    # Текущий тариф
     plan: Mapped[str] = mapped_column(
         String(30),
-        default="standard"
+        default="pro"
     )
 
     active: Mapped[bool] = mapped_column(
@@ -97,6 +105,31 @@ class Subscription(Base):
     payment_method_url: Mapped[str] = mapped_column(
         String(1000),
         default=""
+    )
+
+    # Текущий лимит услуг
+    current_services_limit: Mapped[int] = mapped_column(
+        Integer,
+        default=10
+    )
+
+    # Будущий лимит услуг.
+    # None = изменение не запланировано.
+    pending_services_limit: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True
+    )
+
+    # Текущая ежемесячная цена
+    current_price: Mapped[float] = mapped_column(
+        Float,
+        default=7.99
+    )
+
+    # Цена после следующего продления
+    pending_price: Mapped[Optional[float]] = mapped_column(
+        Float,
+        nullable=True
     )
 class Business(Base):
     __tablename__ = "businesses"
