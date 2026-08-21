@@ -1067,12 +1067,60 @@ def admin_services(x_telegram_init_data: str = Header(default="")):
         ).order_by(Service.id.desc()).all()
 
 @app.post("/admin/services")
-def admin_add_service(x: ServiceIn, x_telegram_init_data: str = Header(default="")):
-    user = telegram_user(x_telegram_init_data)
+def admin_add_service(
+    x: ServiceIn,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(
+        user["id"]
+    )
+
     with SessionLocal() as db:
-        b = owner_business(db, int(user["id"]))
-        if not b: raise HTTPException(400, "Create business first")
-        s = Service(business_id=b.id, **x.model_dump()); db.add(s); db.commit(); db.refresh(s); return s
+        b = owner_business(
+            db,
+            owner_id
+        )
+
+        if not b:
+            raise HTTPException(
+                400,
+                "Create business first"
+            )
+
+        subscription = owner_subscription(
+            db,
+            owner_id
+        )
+
+        limits = subscription_limits(
+            subscription
+        )
+
+        services_count = db.query(Service).filter(
+            Service.business_id == b.id,
+            Service.active == True
+        ).count()
+
+        if services_count >= limits["max_services"]:
+            raise HTTPException(
+                403,
+                f"Достигнут лимит услуг: {limits['max_services']}"
+            )
+
+        s = Service(
+            business_id=b.id,
+            **x.model_dump()
+        )
+
+        db.add(s)
+        db.commit()
+        db.refresh(s)
+
+        return s
 
 @app.patch("/admin/services/{service_id}")
 def admin_edit_service(service_id: int, x: ServiceIn, x_telegram_init_data: str = Header(default="")):
