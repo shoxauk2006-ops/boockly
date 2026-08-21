@@ -1310,6 +1310,7 @@ def admin_business(
     )
 
     with SessionLocal() as db:
+
         b = owner_business(
             db,
             owner_id
@@ -1318,9 +1319,10 @@ def admin_business(
         if not b:
             return None
 
+        # Подписка принадлежит именно этому бизнесу
         subscription = owner_subscription(
             db,
-            owner_id
+            b.id
         )
 
         result = {
@@ -1357,6 +1359,32 @@ def admin_business(
             "subscription_expires_at": (
                 subscription.expires_at
                 if subscription
+                else None
+            ),
+
+            "services_limit": (
+                subscription.current_services_limit
+                if subscription and subscription.active
+                else 0
+            ),
+
+            "pending_services_limit": (
+                subscription.pending_services_limit
+                if subscription
+                else None
+            ),
+
+            "current_price": (
+                float(subscription.current_price)
+                if subscription
+                and subscription.current_price is not None
+                else 0.0
+            ),
+
+            "pending_price": (
+                float(subscription.pending_price)
+                if subscription
+                and subscription.pending_price is not None
                 else None
             )
         }
