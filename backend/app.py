@@ -1047,6 +1047,37 @@ def admin_create_business(
                 500,
                 "Не удалось создать бизнес"
             )
+@app.delete("/admin/business/{business_id}")
+def admin_delete_business(
+    business_id: int,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(
+        user["id"]
+    )
+
+    with SessionLocal() as db:
+        business = db.query(Business).filter(
+            Business.id == business_id,
+            Business.owner_telegram_id == owner_id
+        ).first()
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        db.delete(business)
+        db.commit()
+
+        return {
+            "ok": True
+        }
 @app.get("/admin/business")
 def admin_business(x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
