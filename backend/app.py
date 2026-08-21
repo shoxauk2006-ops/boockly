@@ -1232,6 +1232,7 @@ def admin_delete_business(
     )
 
     with SessionLocal() as db:
+
         business = db.query(Business).filter(
             Business.id == business_id,
             Business.owner_telegram_id == owner_id
@@ -1242,6 +1243,20 @@ def admin_delete_business(
                 404,
                 "Business not found"
             )
+
+        # ---------------------------------------------------------
+        # Удаляем подписку этого конкретного бизнеса
+        # ---------------------------------------------------------
+
+        db.query(Subscription).filter(
+            Subscription.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        # ---------------------------------------------------------
+        # Удаляем связанные данные
+        # ---------------------------------------------------------
 
         db.query(SavedBusiness).filter(
             SavedBusiness.business_id == business.id
