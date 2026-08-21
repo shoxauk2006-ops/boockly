@@ -1072,7 +1072,40 @@ def admin_delete_business(
                 "Business not found"
             )
 
-        db.delete(business)
+        db.query(SavedBusiness).filter(
+            SavedBusiness.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(Booking).filter(
+            Booking.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(BlockedSlot).filter(
+            BlockedSlot.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(WorkingHour).filter(
+            WorkingHour.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(Service).filter(
+            Service.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.delete(
+            business
+        )
+
         db.commit()
 
         return {
