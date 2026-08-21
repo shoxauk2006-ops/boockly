@@ -2419,11 +2419,20 @@ def cancel_subscription(
 def resume_subscription(
     x_telegram_init_data: str = Header(default="")
 ):
-    user = telegram_user(x_telegram_init_data)
-    owner_id = int(user["id"])
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(
+        user["id"]
+    )
 
     with SessionLocal() as db:
-        business = owner_business(db, owner_id)
+
+        business = owner_business(
+            db,
+            owner_id
+        )
 
         if not business:
             raise HTTPException(
@@ -2431,8 +2440,19 @@ def resume_subscription(
                 "Business not found"
             )
 
+        subscription = owner_subscription(
+            db,
+            business.id
+        )
+
+        if not subscription:
+            raise HTTPException(
+                400,
+                "Subscription not found"
+            )
+
         subscription_id = (
-            business.external_subscription_id or ""
+            subscription.external_subscription_id or ""
         ).strip()
 
         if not subscription_id.startswith("sub_"):
@@ -2464,11 +2484,13 @@ def resume_subscription(
                 req,
                 timeout=20
             ) as response:
+
                 data = json.loads(
                     response.read().decode("utf-8")
                 )
 
         except Exception as e:
+
             error_body = ""
 
             if hasattr(e, "read"):
@@ -2484,17 +2506,23 @@ def resume_subscription(
                 f"Paddle resume failed: {error_body[:1000]}"
             )
 
-        business.subscription_active = True
-        business.subscription_status = "active"
+        paddle_data = data.get(
+            "data",
+            {}
+        )
+
+        subscription.status = "active"
+        subscription.active = True
 
         next_billed_at = (
-            data.get("data", {})
-            .get("next_billed_at")
+            paddle_data.get(
+                "next_billed_at"
+            )
         )
 
         if next_billed_at:
             try:
-                business.subscription_expires_at = (
+                subscription.expires_at = (
                     datetime.fromisoformat(
                         next_billed_at.replace(
                             "Z",
