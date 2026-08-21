@@ -50,7 +50,54 @@ BOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_
 BOOKLY_REQUEST_USER_ID: ContextVar[Optional[int]] = ContextVar("BOOKLY_REQUEST_USER_ID", default=None)
 
 class Base(DeclarativeBase): pass
+class Subscription(Base):
+    __tablename__ = "subscriptions"
 
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
+
+    owner_telegram_id: Mapped[int] = mapped_column(
+        BigInteger,
+        unique=True,
+        index=True
+    )
+
+    plan: Mapped[str] = mapped_column(
+        String(30),
+        default="standard"
+    )
+
+    active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False
+    )
+
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(30),
+        default="inactive"
+    )
+
+    payment_provider: Mapped[str] = mapped_column(
+        String(30),
+        default=""
+    )
+
+    external_subscription_id: Mapped[str] = mapped_column(
+        String(120),
+        default=""
+    )
+
+    payment_method_url: Mapped[str] = mapped_column(
+        String(1000),
+        default=""
+    )
 class Business(Base):
     __tablename__ = "businesses"
 
