@@ -956,14 +956,8 @@ def owner_subscription(db, business_id: int):
 
 def subscription_limits(subscription):
     """
-    Возвращает текущие возможности подписки конкретного бизнеса.
-
-    Pro:
-    - $7.99 / месяц
-    - 10 услуг включено
-
-    Дополнительные лимиты услуг хранятся
-    непосредственно в Subscription.
+    Возвращает текущие возможности подписки
+    конкретного бизнеса.
     """
 
     if not subscription or not subscription.active:
@@ -977,24 +971,27 @@ def subscription_limits(subscription):
 
     return {
         "plan": subscription.plan or "pro",
+
         "max_services": (
             subscription.current_services_limit
             or 10
         ),
+
         "current_price": (
             float(subscription.current_price)
             if subscription.current_price is not None
             else 7.99
         ),
+
         "pending_services": (
             subscription.pending_services_limit
         ),
+
         "pending_price": (
             float(subscription.pending_price)
             if subscription.pending_price is not None
             else None
         )
-    } "max_services": 10
     }
 def calculate_subscription_price(services_limit: int) -> float:
     """
