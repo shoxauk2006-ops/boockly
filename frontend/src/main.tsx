@@ -2648,6 +2648,7 @@ const [newBusinessHours, setNewBusinessHours] =
         background: '#fff',
         fontSize: 22,
         lineHeight: 1,
+        color: '#111',
         cursor: 'pointer'
       }}
     >
