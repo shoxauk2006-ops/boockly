@@ -6470,7 +6470,51 @@ function Settings({
 
     link.click();
   };
+  const deleteBusiness = async () => {
+    const confirmed = window.confirm(
+      'Вы действительно хотите удалить этот бизнес?\n\n' +
+      'Все данные бизнеса, включая услуги, график работы, блокировки и записи, будут удалены без возможности восстановления.\n\n' +
+      'Подписка при этом НЕ отменяется. Вы сможете создать новый бизнес и продолжить пользоваться активной подпиской.'
+    );
 
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        API + `/admin/business/${business.id}`,
+        {
+          method: 'DELETE',
+          headers: headers()
+        }
+      );
+
+      const data =
+        await response
+          .json()
+          .catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось удалить бизнес'
+        );
+      }
+
+      alert(
+        'Бизнес успешно удалён.'
+      );
+
+      reload();
+
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        'Не удалось удалить бизнес'
+      );
+    }
+  };
   return (
     <div>
 
@@ -6613,7 +6657,7 @@ function Settings({
           />
         </div>
 
-        <button
+                <button
           className="primary full"
           disabled={saving}
           onClick={save}
@@ -6622,7 +6666,28 @@ function Settings({
             ? t('owner.saving')
             : t('common.save')}
         </button>
-      </div> 
+
+        <div
+          style={{
+            marginTop: '24px',
+            paddingTop: '20px',
+            borderTop: '1px solid rgba(0,0,0,0.08)'
+          }}
+        >
+          <button
+            type="button"
+            className="ghost full"
+            onClick={deleteBusiness}
+            style={{
+              color: '#d32f2f',
+              borderColor: '#d32f2f'
+            }}
+          >
+            Удалить бизнес
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }
