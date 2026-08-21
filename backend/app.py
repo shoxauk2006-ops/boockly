@@ -1391,16 +1391,39 @@ def admin_business(
 
         return result
 @app.get("/admin/services")
-def admin_services(x_telegram_init_data: str = Header(default="")):
-    user = telegram_user(x_telegram_init_data)
+def admin_services(
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(
+        user["id"]
+    )
+
     with SessionLocal() as db:
-        b = owner_business(db, int(user["id"]))
+
+        b = owner_business(
+            db,
+            owner_id
+        )
+
         if not b:
             return []
-        return db.query(Service).filter_by(
-            business_id=b.id,
-            active=True
-        ).order_by(Service.id.desc()).all()
+
+        return (
+            db.query(Service)
+            .filter(
+                Service.business_id == b.id,
+                Service.active == True
+            )
+            .order_by(
+                Service.id.desc()
+            )
+            .all()
+        )
+
 
 @app.post("/admin/services")
 def admin_add_service(
@@ -1416,6 +1439,7 @@ def admin_add_service(
     )
 
     with SessionLocal() as db:
+
         b = owner_business(
             db,
             owner_id
@@ -1427,25 +1451,62 @@ def admin_add_service(
                 "Create business first"
             )
 
+        # ---------------------------------------------------------
+        # Подписка принадлежит именно этому бизнесу
+        # ---------------------------------------------------------
+
         subscription = owner_subscription(
             db,
-            owner_id
+            b.id
         )
 
         limits = subscription_limits(
             subscription
         )
 
-        services_count = db.query(Service).filter(
-            Service.business_id == b.id,
-            Service.active == True
-        ).count()
+        max_services = limits[
+            "max_services"
+        ]
 
-        if services_count >= limits["max_services"]:
+        # ---------------------------------------------------------
+        # Считаем только активные услуги
+        # ---------------------------------------------------------
+
+        services_count = (
+            db.query(Service)
+            .filter(
+                Service.business_id == b.id,
+                Service.active == True
+            )
+            .count()
+        )
+
+        # ---------------------------------------------------------
+        # Без активной Pro-подписки услуги создавать нельзя
+        # ---------------------------------------------------------
+
+        if not subscription or not subscription.active:
             raise HTTPException(
                 403,
-                f"Достигнут лимит услуг: {limits['max_services']}"
+                "Для добавления услуг необходима активная подписка Pro"
             )
+
+        # ---------------------------------------------------------
+        # Проверяем текущий лимит
+        # ---------------------------------------------------------
+
+        if services_count >= max_services:
+            raise HTTPException(
+                403,
+                (
+                    f"Достигнут лимит услуг: "
+                    f"{max_services}"
+                )
+            )
+
+        # ---------------------------------------------------------
+        # Создаём услугу
+        # ---------------------------------------------------------
 
         s = Service(
             business_id=b.id,
@@ -1453,7 +1514,9 @@ def admin_add_service(
         )
 
         db.add(s)
+
         db.commit()
+
         db.refresh(s)
 
         return s
