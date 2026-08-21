@@ -1112,12 +1112,70 @@ def admin_delete_business(
             "ok": True
         }
 @app.get("/admin/business")
-def admin_business(x_telegram_init_data: str = Header(default="")):
-    user = telegram_user(x_telegram_init_data)
-    with SessionLocal() as db:
-        b = owner_business(db, int(user["id"]))
-        return b
+def admin_business(
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
 
+    owner_id = int(
+        user["id"]
+    )
+
+    with SessionLocal() as db:
+        b = owner_business(
+            db,
+            owner_id
+        )
+
+        if not b:
+            return None
+
+        subscription = owner_subscription(
+            db,
+            owner_id
+        )
+
+        result = {
+            "id": b.id,
+            "owner_telegram_id": b.owner_telegram_id,
+            "name": b.name,
+            "slug": b.slug,
+            "description": b.description,
+            "business_image": b.business_image,
+            "address": b.address,
+            "phone": b.phone,
+            "latitude": b.latitude,
+            "longitude": b.longitude,
+            "timezone": b.timezone,
+
+            "subscription_active": (
+                bool(subscription.active)
+                if subscription
+                else False
+            ),
+
+            "subscription_status": (
+                subscription.status
+                if subscription
+                else "inactive"
+            ),
+
+            "subscription_plan": (
+                subscription.plan
+                if subscription
+                else "free"
+            ),
+
+            "subscription_expires_at": (
+                subscription.expires_at
+                if subscription
+                else None
+            )
+        }
+
+        return result
 @app.get("/admin/services")
 def admin_services(x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
