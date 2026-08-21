@@ -45,6 +45,14 @@ os.makedirs(os.path.join(BASE_DIR, '..', 'data'), exist_ok=True)
 engine = create_engine(DB_URL, connect_args={"check_same_thread": False} if DB_URL.startswith("sqlite") else {})
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+PRO_PRICE = 7.99
+
+SERVICE_ADDONS = {
+    20: 4.99,
+    30: 7.99,
+    50: 11.99,
+    100: 19.99,
+}
 
 BOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)
 BOOKLY_REQUEST_USER_ID: ContextVar[Optional[int]] = ContextVar("BOOKLY_REQUEST_USER_ID", default=None)
