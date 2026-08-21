@@ -612,7 +612,6 @@ def ensure_subscription_schema():
         )
 
 
-ensure_subscription_schema()
 
 
 ensure_subscription_schema()
