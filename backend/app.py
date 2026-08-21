@@ -946,8 +946,8 @@ def admin_create_business(
     )
 
         owner_id = int(
-        user["id"]
-    )
+            user["id"]
+        )
 
     with SessionLocal() as db:
         subscription = owner_subscription(
