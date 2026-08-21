@@ -936,11 +936,11 @@ def owner_business(
         )
         .first()
     )
-def owner_subscription(db, owner_id: int):
+def owner_subscription(db, business_id: int):
     return (
         db.query(Subscription)
         .filter(
-            Subscription.owner_telegram_id == owner_id
+            Subscription.business_id == business_id
         )
         .first()
     )
