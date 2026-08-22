@@ -779,8 +779,16 @@ async def capture_active_business(
             BOOKLY_REQUEST_USER_ID.set(None)
         except Exception:
             pass
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://boockly.vercel.app",
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ---------- Telegram Mini App authentication ----------
 def validate_init_data(init_data: str) -> dict:
     if not BOT_TOKEN:
