@@ -1570,26 +1570,79 @@ const [newBusinessHours, setNewBusinessHours] =
       `Новая цена: $${newPrice.toFixed(2)}/мес.`;
 
 
-const confirmed = window.confirm(
-  isUpgrade
-    ? `Увеличить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
-      `Новая цена: $${nextPrice.toFixed(2)}/мес.\n\n` +
-      `Сейчас будет списана только доплата за оставшиеся дни текущего оплаченного периода. ` +
-      `Её размер Paddle рассчитывает автоматически.\n\n` +
-      `Со следующего продления подписки полная стоимость составит ` +
+const isUpgrade = limit > serviceLimit;
+
+if (isUpgrade) {
+  try {
+    const previewResponse = await fetch(
+      API + '/admin/subscription/preview-limit',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          services_limit: limit
+        })
+      }
+    );
+
+    const preview = await previewResponse
+      .json()
+      .catch(() => null);
+
+    if (!previewResponse.ok) {
+      throw new Error(
+        preview?.detail ||
+        'Не удалось рассчитать стоимость'
+      );
+    }
+
+    const immediateAmount =
+      preview?.data?.update_summary?.immediate_transaction
+        ?.details?.totals?.total
+      ??
+      preview?.data?.immediate_transaction
+        ?.details?.totals?.total
+      ??
+      preview?.update_summary?.immediate_transaction
+        ?.details?.totals?.total
+      ??
+      0;
+
+    const currency =
+      preview?.data?.currency_code ||
+      preview?.currency_code ||
+      'USD';
+
+    const amountNumber =
+      Number(immediateAmount) / 100;
+
+    const confirmed = window.confirm(
+      `Увеличить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
+      `Сейчас к оплате: ${amountNumber.toFixed(2)} ${currency}\n\n` +
+      `Новая цена со следующего продления: ` +
       `$${nextPrice.toFixed(2)}/мес.\n\n` +
+      `Сейчас списывается только доплата за оставшуюся часть текущего периода.\n\n` +
       `Продолжить?`
-    : `Уменьшить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
-      `Возврата за уже оплаченный текущий период не будет.\n\n` +
-      `Новый лимит и цена вступят в силу со следующего продления.\n\n` +
-      `Новая цена: $${nextPrice.toFixed(2)}/мес.\n\n` +
-      `Продолжить?`
-);
+    );
 
-if (!confirmed) {
-  return;
+    if (!confirmed) {
+      return;
+    }
+
+  } catch (error: any) {
+    console.error(
+      'SUBSCRIPTION PREVIEW ERROR:',
+      error
+    );
+
+    alert(
+      error?.message ||
+      'Не удалось рассчитать сумму'
+    );
+
+    return;
+  }
 }
-
 setSavingServiceLimit(true);
   setSavingServiceLimit(true);
 
