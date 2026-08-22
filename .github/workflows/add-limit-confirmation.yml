@@ -1,4 +1,4 @@
-name: Add service limit payment confirmation
+name: Add clear service limit confirmation
 
 on:
   push:
@@ -9,30 +9,39 @@ permissions:
 
 jobs:
   patch:
-    if: github.event.head_commit.message != 'Add service limit confirmation'
+    if: github.event.head_commit.message != 'Add clear service limit confirmation'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Patch confirmation
+      - name: Patch service limit confirmation
         shell: python
         run: |
           from pathlib import Path
+          import re
+
           p = Path('frontend/src/main.tsx')
           s = p.read_text(encoding='utf-8')
 
+          # Add modal state once.
+          if 'serviceLimitConfirm' not in s:
+              state_pattern = re.compile(
+                  r"(const \[savingServiceLimit, setSavingServiceLimit\] = useState\(false\);)"
+              )
+              state_replacement = (
+                  r"\1\n"
+                  "\n"
+                  "  const [serviceLimitConfirm, setServiceLimitConfirm] = useState<null | {\n"
+                  "    limit: number;\n"
+                  "    price: number;\n"
+                  "    isUpgrade: boolean;\n"
+                  "  }>(null);"
+              )
+              s, count = state_pattern.subn(state_replacement, s, count=1)
+              if count != 1:
+                  raise SystemExit('savingServiceLimit state not found')
+
           old = '''const changeServiceLimit = async () => {
-  const limit = Number(newServiceLimit);
-
-  if (!Number.isInteger(limit) || limit < 10) {
-    alert('Введите корректный лимит услуг');
-    return;
-  }
-
-  setSavingServiceLimit(true);
-'''
-
-          new = '''const changeServiceLimit = async () => {
   const limit = Number(newServiceLimit);
 
   if (!Number.isInteger(limit) || limit < 10) {
@@ -78,10 +87,170 @@ jobs:
   setSavingServiceLimit(true);
 '''
 
-          if old not in s:
-              raise SystemExit('changeServiceLimit target not found')
+          new = '''const changeServiceLimit = async (confirmed = false) => {
+  const limit = Number(newServiceLimit);
 
-          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+  if (!Number.isInteger(limit) || limit < 10) {
+    alert('Введите корректный лимит услуг');
+    return;
+  }
+
+  if (limit === serviceLimit) {
+    alert('Этот лимит уже установлен');
+    return;
+  }
+
+  const priceByLimit: Record<number, number> = {
+    10: 7.99,
+    20: 12.98,
+    30: 15.98,
+    50: 19.98,
+    100: 27.98
+  };
+
+  const nextPrice = priceByLimit[limit];
+  const isUpgrade = limit > serviceLimit;
+
+  if (!nextPrice) {
+    alert('Недопустимый лимит');
+    return;
+  }
+
+  if (!confirmed) {
+    setServiceLimitConfirm({
+      limit,
+      price: nextPrice,
+      isUpgrade
+    });
+    return;
+  }
+
+  setServiceLimitConfirm(null);
+  setSavingServiceLimit(true);
+'''
+
+          if old not in s:
+              raise SystemExit('changeServiceLimit confirmation block not found')
+
+          s = s.replace(old, new, 1)
+
+          # Add a clear native-looking confirmation modal before the admin bottom nav.
+          modal_marker = '<nav className="admin-bottom-nav">'
+          if 'className="service-limit-confirm-overlay"' not in s:
+              modal = '''{serviceLimitConfirm && (
+  <div
+    className="subscription-modal-overlay service-limit-confirm-overlay"
+    onClick={() => setServiceLimitConfirm(null)}
+  >
+    <div
+      className="subscription-modal"
+      onClick={e => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="subscription-modal-close"
+        onClick={() => setServiceLimitConfirm(null)}
+      >
+        ×
+      </button>
+
+      <span className="personal-eyebrow">
+        BOOKLY PRO
+      </span>
+
+      <h2>
+        {serviceLimitConfirm.isUpgrade
+          ? 'Увеличение лимита'
+          : 'Уменьшение лимита'}
+      </h2>
+
+      <p style={{ marginBottom: 8 }}>
+        <strong>
+          {serviceLimitConfirm.isUpgrade
+            ? `Лимит: ${serviceLimit} → ${serviceLimitConfirm.limit} услуг`
+            : `Лимит: ${serviceLimit} → ${serviceLimitConfirm.limit} услуг`}
+        </strong>
+      </p>
+
+      {serviceLimitConfirm.isUpgrade ? (
+        <>
+          <p className="muted">
+            Новая стоимость подписки со следующего
+            продления: <strong>${serviceLimitConfirm.price.toFixed(2)}/мес.</strong>
+          </p>
+
+          <p className="muted">
+            Сейчас будет списана только
+            пропорциональная доплата за оставшиеся
+            дни текущего оплаченного периода.
+          </p>
+
+          <p className="muted">
+            Её точную сумму автоматически рассчитает
+            Paddle. Поэтому сейчас сумма может быть
+            меньше полной доплаты за месяц.
+          </p>
+
+          <p style={{ marginTop: 16 }}>
+            <strong>
+              После следующего продления — ${serviceLimitConfirm.price.toFixed(2)}/мес.
+            </strong>
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="muted">
+            Новая стоимость со следующего продления:
+            <strong> ${serviceLimitConfirm.price.toFixed(2)}/мес.</strong>
+          </p>
+
+          <p className="muted">
+            Сейчас возврата за уже оплаченный период
+            не будет. Текущий доступ сохранится до
+            конца оплаченного периода.
+          </p>
+
+          <p className="muted">
+            С нового продления будет применён новый
+            лимит и новая цена.
+          </p>
+        </>
+      )}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 10,
+          marginTop: 22
+        }}
+      >
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => setServiceLimitConfirm(null)}
+        >
+          Отмена
+        </button>
+
+        <button
+          type="button"
+          className="primary"
+          onClick={() => changeServiceLimit(true)}
+        >
+          Подтвердить
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+'''
+              if modal_marker not in s:
+                  raise SystemExit('admin bottom nav marker not found')
+              s = s.replace(modal_marker, modal + modal_marker, 1)
+
+          p.write_text(s, encoding='utf-8')
 
       - name: Validate frontend
         run: |
@@ -95,5 +264,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/add-limit-confirmation.yml
           git add frontend/src/main.tsx
-          git commit -m 'Add service limit confirmation'
+          git commit -m 'Add clear service limit confirmation'
           git push
