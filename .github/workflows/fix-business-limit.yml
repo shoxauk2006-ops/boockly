@@ -1,0 +1,46 @@
+name: Fix Bookly business selection
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch frontend and backend
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+
+          old = """    if (!selected) {\n      selected = normalized[0] || null;\n    }\n\n    if (selected) {\n"""
+          new = """    if (!selected) {\n      selected = normalized[0] || null;\n    }\n\n    if (selected) {\n      try {\n        localStorage.setItem(\n          'bookly_active_business_id',\n          String(selected.id)\n        );\n      } catch {}\n\n"""
+          if old not in s:
+              raise SystemExit('Frontend target block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          p = Path('backend/app.py')
+          s = p.read_text()
+
+          old = '''        business = owner_business(\n            db,\n            owner_id\n        )\n\n        if not business:\n            raise HTTPException(\n                404,\n                "Business not found"\n            )\n\n        subscription = owner_subscription(\n'''
+          new = '''        business = owner_business(\n            db,\n            owner_id\n        )\n\n        # Если сохранённый X-Bookly-Business-Id устарел,\n        # автоматически выбираем первый бизнес владельца.\n        if not business:\n            business = (\n                db.query(Business)\n                .filter(\n                    Business.owner_telegram_id == owner_id\n                )\n                .order_by(Business.id.asc())\n                .first()\n            )\n\n        if not business:\n            raise HTTPException(\n                404,\n                "Business not found"\n            )\n\n        subscription = owner_subscription(\n'''
+          if old not in s:
+              raise SystemExit('Backend target block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx backend/app.py
+          git commit -m "Fix active business selection for service limits" || exit 0
+          git push
