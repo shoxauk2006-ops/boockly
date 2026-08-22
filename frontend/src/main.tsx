@@ -3018,38 +3018,37 @@ const [newBusinessHours, setNewBusinessHours] =
         <span>{t('nav.settings')}</span>
         <b>→</b>
       </button>
+        <div className="card" style={{ marginTop: 16 }}>
+      <h3>Лимит услуг</h3>
+
+      <p className="muted">
+        Текущий лимит: {serviceLimit} услуг
+      </p>
+
+      <input
+        type="number"
+        min="10"
+        step="1"
+        value={newServiceLimit}
+        onChange={e =>
+          setNewServiceLimit(
+            Number(e.target.value)
+          )
+        }
+      />
+
+      <button
+        className="primary full"
+        disabled={savingServiceLimit}
+        onClick={changeServiceLimit}
+      >
+        {savingServiceLimit
+          ? 'Сохранение...'
+          : 'Изменить лимит'}
+      </button>
     </div>
   </div>
-<div className="card" style={{ marginTop: 16 }}>
-  <h3>Лимит услуг</h3>
-
-  <p className="muted">
-    Текущий лимит: {serviceLimit} услуг
-  </p>
-
-  <input
-    type="number"
-    min="10"
-    step="1"
-    value={newServiceLimit}
-    onChange={e =>
-      setNewServiceLimit(
-        Number(e.target.value)
-      )
-    }
-  />
-
-  <button
-    className="primary full"
-    disabled={savingServiceLimit}
-    onClick={changeServiceLimit}
-  >
-    {savingServiceLimit
-      ? 'Сохранение...'
-      : 'Изменить лимит'}
-  </button>
-</div>
-    )}
+)}
 
 <nav className="admin-bottom-nav">
 
