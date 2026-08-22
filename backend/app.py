@@ -3058,20 +3058,6 @@ async def paddle_webhook(
 # Неуспешный платёж
 # ---------------------------------------------------------
 
-elif event_type == "transaction.payment_failed":
-
-    if (
-        subscription.expires_at
-        and
-        subscription.expires_at
-        > datetime.utcnow()
-    ):
-
-        subscription.active = True
-
-    else:
-
-        subscription.active = False
 @app.post("/payments/webhook/{provider}")
 def payment_webhook(
     provider: str,
