@@ -2364,51 +2364,17 @@ def _paddle_update_bookly_subscription(
             "Paddle subscription ID is missing"
         )
 
-    current = _paddle_request(
-        "GET",
-        f"/subscriptions/{subscription_id}"
-    )
+    # Всегда строим подписку заново:
+    # Bookly Pro + нужный Extra Services.
+    # Старую цену $9.99 таким образом заменяем
+    # на новую базовую цену $7.99.
 
-    items = (
-        current
-        .get("data", {})
-        .get("items", [])
-    )
-
-    new_items = []
-    base_replaced = False
-
-    for item in items:
-        price = item.get("price") or {}
-        price_id = (
-            item.get("price_id")
-            or price.get("id")
-        )
-
-        if price_id in PADDLE_SERVICE_ADDON_IDS:
-            continue
-
-        if not base_replaced:
-            new_items.append({
-                "price_id": PADDLE_BOOKLY_BASE_PRICE_ID,
-                "quantity": 1
-            })
-            base_replaced = True
-            continue
-
-        new_items.append({
-            "price_id": price_id,
-            "quantity": item.get("quantity") or 1
-        })
-
-    if not base_replaced:
-        new_items.insert(
-            0,
-            {
-                "price_id": PADDLE_BOOKLY_BASE_PRICE_ID,
-                "quantity": 1
-            }
-        )
+    new_items = [
+        {
+            "price_id": PADDLE_BOOKLY_BASE_PRICE_ID,
+            "quantity": 1
+        }
+    ]
 
     addon_price_id = (
         PADDLE_SERVICE_ADDON_PRICE_IDS.get(
@@ -2417,24 +2383,34 @@ def _paddle_update_bookly_subscription(
     )
 
     if addon_price_id:
-        new_items.append({
-            "price_id": addon_price_id,
-            "quantity": 1
-        })
+        new_items.append(
+            {
+                "price_id": addon_price_id,
+                "quantity": 1
+            }
+        )
 
-    proration_mode = (
-        "prorated_immediately"
-        if new_limit > old_limit
-        else "prorated_next_billing_period"
-    )
+    # Повышение лимита — берём разницу сразу.
+    # Понижение — переносим перерасчёт на следующий
+    # billing period.
+    if new_limit > old_limit:
+        proration_mode = (
+            "prorated_immediately"
+        )
+    else:
+        proration_mode = (
+            "prorated_next_billing_period"
+        )
 
     return _paddle_request(
         "PATCH",
         f"/subscriptions/{subscription_id}",
         {
             "items": new_items,
-            "proration_billing_mode": proration_mode,
-            "on_payment_failure": "prevent_change"
+            "proration_billing_mode":
+                proration_mode,
+            "on_payment_failure":
+                "prevent_change"
         }
     )
 
