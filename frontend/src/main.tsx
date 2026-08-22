@@ -67,7 +67,58 @@ const localizedDays = (
   t('days.sat'),
   t('days.sun')
 ];
+function BooklyAlertModal({
+  open,
+  message,
+  onClose
+}: {
+  open: boolean;
+  message: string;
+  onClose: () => void;
+}) {
+  if (!open) {
+    return null;
+  }
 
+  return (
+    <div
+      className="subscription-modal-overlay"
+      onClick={onClose}
+    >
+      <div
+        className="subscription-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="subscription-modal-close"
+          onClick={onClose}
+        >
+          ×
+        </button>
+
+        <span className="personal-eyebrow">
+          BOOKLY
+        </span>
+
+        <h2>Сообщение</h2>
+
+        <p className="muted">
+          {message}
+        </p>
+
+        <button
+          type="button"
+          className="primary full"
+          onClick={onClose}
+          style={{ marginTop: 16 }}
+        >
+          Понятно
+        </button>
+      </div>
+    </div>
+  );
+}
 function App(){
     const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = useMemo(() => createTranslator(language), [language]);
