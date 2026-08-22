@@ -63,7 +63,7 @@ PADDLE_BOOKLY_BASE_PRICE_ID = os.getenv(
 PADDLE_SERVICE_ADDON_PRICE_IDS = {
     20: os.getenv(
         "PADDLE_SERVICE_ADDON_10_PRICE_ID",
-        "pri_01m0mhcv9673d4xm8tf3yh5bph"
+        "pri_01m0mhf9rdee684tyd3mg3xp8p"
     ),
     30: os.getenv(
         "PADDLE_SERVICE_ADDON_20_PRICE_ID",
