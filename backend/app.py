@@ -57,13 +57,13 @@ SERVICE_ADDONS = {
 
 PADDLE_BOOKLY_BASE_PRICE_ID = os.getenv(
     "PADDLE_BOOKLY_BASE_PRICE_ID",
-    "pri_01m0mgjzfy19gn941zebpa9vn"
+    "pri_01kzxgbt08rm3pk2p5eaywgbsy"
 )
 
 PADDLE_SERVICE_ADDON_PRICE_IDS = {
     20: os.getenv(
         "PADDLE_SERVICE_ADDON_10_PRICE_ID",
-        "pri_01m0mhf9rdee684tyd3mg3xp8p"
+        "pri_01m0mhcv9673d4xm8tf3yh5bph"
     ),
     30: os.getenv(
         "PADDLE_SERVICE_ADDON_20_PRICE_ID",
