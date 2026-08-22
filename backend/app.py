@@ -1046,6 +1046,9 @@ class ServiceIn(BaseModel):
     duration_min: int = Field(gt=0, le=480)
     active: bool = True
 
+class SubscriptionLimitChangeIn(BaseModel):
+    services_limit: int
+
 class WorkingHourIn(BaseModel):
     weekday: int = Field(ge=0, le=6)
     start: time
@@ -1076,7 +1079,6 @@ class AdminBookingIn(BaseModel):
     client_phone: str = ""
     day: date
     start: time
-
 # ---------- common ----------
 @app.get("/health")
 def health(): return {"ok": True, "service": "bookly"}
@@ -2270,7 +2272,145 @@ PADDLE_API_BASE = os.getenv(
     "https://api.paddle.com"
 )
 
+@app.post("/admin/subscription/change-limit")
+def change_subscription_limit(
+    x: SubscriptionLimitChangeIn,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
 
+    owner_id = int(
+        user["id"]
+    )
+
+    allowed_limits = {
+        10,
+        20,
+        30,
+        50,
+        100
+    }
+
+    if x.services_limit not in allowed_limits:
+        raise HTTPException(
+            400,
+            "Недопустимый лимит услуг"
+        )
+
+    with SessionLocal() as db:
+
+        business = owner_business(
+            db,
+            owner_id
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        subscription = owner_subscription(
+            db,
+            business.id
+        )
+
+        if not subscription:
+            raise HTTPException(
+                400,
+                "Subscription not found"
+            )
+
+        if not subscription.active:
+            raise HTTPException(
+                400,
+                "Active subscription required"
+            )
+
+        # Текущий лимит
+        current_limit = (
+            subscription.current_services_limit
+            or 10
+        )
+
+        # Если пользователь выбрал
+        # тот же самый лимит —
+        # отменяем запланированное изменение.
+        if x.services_limit == current_limit:
+
+            subscription.pending_services_limit = None
+            subscription.pending_price = None
+
+            db.commit()
+
+            return {
+                "ok": True,
+                "current_services_limit":
+                    current_limit,
+                "current_price":
+                    float(
+                        subscription.current_price
+                        or 7.99
+                    ),
+                "pending_services_limit":
+                    None,
+                "pending_price":
+                    None
+            }
+
+        # -----------------------------------------------------
+        # Рассчитываем будущую цену
+        # -----------------------------------------------------
+
+        price_by_limit = {
+            10: 7.99,
+            20: 12.98,
+            30: 15.98,
+            50: 19.98,
+            100: 27.98
+        }
+
+        new_price = price_by_limit[
+            x.services_limit
+        ]
+
+        # -----------------------------------------------------
+        # Изменение только запланированное.
+        #
+        # Текущий лимит НЕ меняется.
+        # Деньги сейчас НЕ списываются.
+        # -----------------------------------------------------
+
+        subscription.pending_services_limit = (
+            x.services_limit
+        )
+
+        subscription.pending_price = (
+            new_price
+        )
+
+        db.commit()
+
+        return {
+            "ok": True,
+
+            "current_services_limit":
+                current_limit,
+
+            "current_price":
+                float(
+                    subscription.current_price
+                    or 7.99
+                ),
+
+            "pending_services_limit":
+                x.services_limit,
+
+            "pending_price":
+                new_price
+        }
 @app.post("/admin/subscription/cancel")
 def cancel_subscription(
     x_telegram_init_data: str = Header(default="")
