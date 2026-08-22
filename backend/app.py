@@ -28,6 +28,7 @@ from sqlalchemy import (
     Integer,
     BigInteger,
     Boolean,
+    Float,
     Date,
     Time,
     DateTime,
