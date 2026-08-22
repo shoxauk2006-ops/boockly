@@ -1548,6 +1548,8 @@ const [newBusinessHours, setNewBusinessHours] =
     50: 19.98,
     100: 27.98
   };
+    
+  const nextPrice = priceByLimit[limit];
 
   const newPrice = priceByLimit[limit];
 
