@@ -2306,6 +2306,18 @@ def change_subscription_limit(
             owner_id
         )
 
+        # Если сохранённый X-Bookly-Business-Id устарел,
+        # автоматически выбираем первый бизнес владельца.
+        if not business:
+            business = (
+                db.query(Business)
+                .filter(
+                    Business.owner_telegram_id == owner_id
+                )
+                .order_by(Business.id.asc())
+                .first()
+            )
+
         if not business:
             raise HTTPException(
                 404,

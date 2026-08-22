@@ -1388,6 +1388,13 @@ const [newBusinessHours, setNewBusinessHours] =
     }
 
     if (selected) {
+      try {
+        localStorage.setItem(
+          'bookly_active_business_id',
+          String(selected.id)
+        );
+      } catch {}
+
       
 
       setBusiness(selected);
