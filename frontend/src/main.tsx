@@ -1397,6 +1397,36 @@ const [newBusinessHours, setNewBusinessHours] =
 
       
 
+      // Загружаем актуальный лимит подписки с сервера.
+      try {
+        const businessResponse = await fetch(
+          API + '/admin/business',
+          { headers: headers() }
+        );
+
+        if (businessResponse.ok) {
+          const businessData =
+            await businessResponse.json();
+
+          const savedLimit = Number(
+            businessData?.services_limit
+          );
+
+          if (
+            Number.isInteger(savedLimit) &&
+            savedLimit >= 10
+          ) {
+            setServiceLimit(savedLimit);
+            setNewServiceLimit(savedLimit);
+          }
+        }
+      } catch (error) {
+        console.error(
+          'LOAD SERVICE LIMIT ERROR:',
+          error
+        );
+      }
+
       setBusiness(selected);
       return selected;
     }
