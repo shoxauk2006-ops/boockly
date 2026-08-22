@@ -1567,11 +1567,6 @@ const [newBusinessHours, setNewBusinessHours] =
       `Новый лимит и цена вступят в силу с следующего периода.\n\n` +
       `Новая цена: $${newPrice.toFixed(2)}/мес.`;
 
-  const confirmed = window.confirm(message);
-
-  if (!confirmed) {
-    return;
-  }
 
   setSavingServiceLimit(true);
 
