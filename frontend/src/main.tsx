@@ -1536,6 +1536,43 @@ const [newBusinessHours, setNewBusinessHours] =
     return;
   }
 
+  if (limit === serviceLimit) {
+    alert('Лимит уже установлен на этом уровне');
+    return;
+  }
+
+  const priceByLimit: Record<number, number> = {
+    10: 7.99,
+    20: 12.98,
+    30: 15.98,
+    50: 19.98,
+    100: 27.98
+  };
+
+  const newPrice = priceByLimit[limit];
+
+  if (!newPrice) {
+    alert('Недопустимый лимит');
+    return;
+  }
+
+  const isUpgrade = limit > serviceLimit;
+
+  const message = isUpgrade
+    ? `Изменить лимит с ${serviceLimit} на ${limit} услуг?\n\n` +
+      `Новая цена: $${newPrice.toFixed(2)}/мес.\n\n` +
+      `Paddle сразу рассчитает доплату за оставшуюся часть текущего периода и попросит подтвердить списание.`
+    : `Уменьшить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
+      `Возврата за текущий оплаченный период не будет.\n` +
+      `Новый лимит и цена вступят в силу с следующего периода.\n\n` +
+      `Новая цена: $${newPrice.toFixed(2)}/мес.`;
+
+  const confirmed = window.confirm(message);
+
+  if (!confirmed) {
+    return;
+  }
+
   setSavingServiceLimit(true);
 
   try {
