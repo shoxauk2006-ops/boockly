@@ -4397,10 +4397,7 @@ function Subscription({
     )}
   </>
 )}
-      
-    </div>
-  );
-}
+
   if (paymentFailed) {
     return (
       <div className="card subscription">
