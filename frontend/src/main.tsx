@@ -1234,6 +1234,9 @@ function Admin({
   const [serviceLimit, setServiceLimit] = useState(10);
   const [newServiceLimit, setNewServiceLimit] = useState(10);
   const [savingServiceLimit, setSavingServiceLimit] = useState(false);
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
+  const [limitPreview, setLimitPreview] = useState<any>(null);
+  const [limitSaving, setLimitSaving] = useState(false);
   
 
   const [loading, setLoading] = useState(true);
@@ -1548,6 +1551,58 @@ const [newBusinessHours, setNewBusinessHours] =
     50: 19.98,
     100: 27.98
   };
+  const confirmServiceLimitChange = async () => {
+  if (!limitPreview) {
+    return;
+  }
+
+  const limit = Number(limitPreview.limit);
+
+  setLimitSaving(true);
+
+  try {
+    const response = await fetch(
+      API + '/admin/subscription/change-limit',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          services_limit: limit
+        })
+      }
+    );
+
+    const data = await response
+      .json()
+      .catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail ||
+        'Не удалось изменить лимит услуг'
+      );
+    }
+
+    setServiceLimit(limit);
+    setNewServiceLimit(limit);
+    setLimitModalOpen(false);
+    setLimitPreview(null);
+
+    alert('Лимит услуг изменён');
+  } catch (error: any) {
+    console.error(
+      'CHANGE SERVICE LIMIT ERROR:',
+      error
+    );
+
+    alert(
+      error?.message ||
+      'Не удалось изменить лимит услуг'
+    );
+  } finally {
+    setLimitSaving(false);
+  }
+};
     
   const nextPrice = priceByLimit[limit];
 
@@ -1616,18 +1671,17 @@ if (isUpgrade) {
     const amountNumber =
       Number(immediateAmount) / 100;
 
-    const confirmed = window.confirm(
-      `Увеличить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
-      `Сейчас к оплате: ${amountNumber.toFixed(2)} ${currency}\n\n` +
-      `Новая цена со следующего продления: ` +
-      `$${nextPrice.toFixed(2)}/мес.\n\n` +
-      `Сейчас списывается только доплата за оставшуюся часть текущего периода.\n\n` +
-      `Продолжить?`
-    );
+   setLimitPreview({
+  limit,
+  currentLimit: serviceLimit,
+  amount: amountNumber,
+  currency,
+  nextPrice
+});
 
-    if (!confirmed) {
-      return;
-    }
+setLimitModalOpen(true);
+
+return;
 
   } catch (error: any) {
     console.error(
@@ -3195,7 +3249,104 @@ setSavingServiceLimit(true);
   </div>
 </div>
 )}
+{limitModalOpen && limitPreview && (
+  <div
+    className="subscription-modal-overlay"
+    onClick={() => {
+      setLimitModalOpen(false);
+      setLimitPreview(null);
+    }}
+  >
+    <div
+      className="subscription-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="subscription-modal-close"
+        onClick={() => {
+          setLimitModalOpen(false);
+          setLimitPreview(null);
+        }}
+      >
+        ×
+      </button>
 
+      <span className="personal-eyebrow">
+        BOOKLY PRO
+      </span>
+
+      <h2>Изменение лимита услуг</h2>
+
+      <p>
+        Лимит:
+        {' '}
+        <strong>
+          {limitPreview.currentLimit}
+          {' → '}
+          {limitPreview.limit}
+        </strong>
+      </p>
+
+      <div className="card">
+        <p>
+          <strong>Сейчас к оплате</strong>
+        </p>
+
+        <h2>
+          {limitPreview.amount.toFixed(2)}
+          {' '}
+          {limitPreview.currency}
+        </h2>
+
+        <p className="muted">
+          Это доплата за оставшиеся дни
+          текущего оплаченного периода.
+        </p>
+
+        <p className="muted">
+          Со следующего продления:
+          {' '}
+          <strong>
+            ${limitPreview.nextPrice.toFixed(2)}/мес.
+          </strong>
+        </p>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 10,
+          marginTop: 16
+        }}
+      >
+        <button
+          type="button"
+          className="ghost"
+          disabled={limitSaving}
+          onClick={() => {
+            setLimitModalOpen(false);
+            setLimitPreview(null);
+          }}
+        >
+          Отмена
+        </button>
+
+        <button
+          type="button"
+          className="primary"
+          disabled={limitSaving}
+          onClick={confirmServiceLimitChange}
+        >
+          {limitSaving
+            ? 'Обработка...'
+            : 'Подтвердить'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 <nav className="admin-bottom-nav">
 
   <button
