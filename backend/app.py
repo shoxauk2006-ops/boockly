@@ -2888,20 +2888,50 @@ async def paddle_webhook(
                 "received": True
             }
 
-        b.payment_provider = "paddle"
+                # ---------------------------------------------------------
+        # Подписка принадлежит конкретному бизнесу
+        # ---------------------------------------------------------
 
-        # Никогда не сохраняем txn_...
-        # как subscription ID.
-        if subscription_id.startswith(
-            "sub_"
-        ):
-            b.external_subscription_id = (
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id == b.id
+            )
+            .first()
+        )
+
+        # Если подписки ещё нет — создаём её
+        if not subscription:
+
+            subscription = Subscription(
+                business_id=b.id,
+                owner_telegram_id=b.owner_telegram_id,
+                plan="pro",
+                active=False,
+                status="inactive",
+                current_services_limit=10,
+                current_price=7.99
+            )
+
+            db.add(subscription)
+            db.flush()
+
+        # ---------------------------------------------------------
+        # Paddle subscription ID
+        # ---------------------------------------------------------
+
+        if subscription_id.startswith("sub_"):
+
+            subscription.external_subscription_id = (
                 subscription_id
             )
 
-        # Сохраняем статус.
-                # Проверяем, есть ли у подписки
-        # запланированная отмена.
+        subscription.payment_provider = "paddle"
+
+        # ---------------------------------------------------------
+        # Запланированная отмена
+        # ---------------------------------------------------------
+
         scheduled_change = (
             data.get(
                 "scheduled_change",
@@ -2922,18 +2952,19 @@ async def paddle_webhook(
             )
         )
 
-        # Если Paddle уже запланировал отмену,
-        # сохраняем подписку активной до этой даты,
-        # но в Bookly помечаем автопродление
-        # как отменённое.
         if scheduled_action == "cancel":
 
-            b.subscription_status = "cancelled"
-            b.subscription_active = True
+            subscription.status = "cancelled"
+
+            # Подписка остаётся активной
+            # до окончания оплаченного периода.
+            subscription.active = True
 
             if scheduled_effective_at:
+
                 try:
-                    b.subscription_expires_at = (
+
+                    subscription.expires_at = (
                         datetime.fromisoformat(
                             scheduled_effective_at.replace(
                                 "Z",
@@ -2943,49 +2974,13 @@ async def paddle_webhook(
                             tzinfo=None
                         )
                     )
+
                 except ValueError:
                     pass
 
-        # Обычные события подписки.
-                scheduled_change = (
-            data.get(
-                "scheduled_change",
-                {}
-            )
-            or {}
-        )
-
-        scheduled_action = (
-            scheduled_change.get(
-                "action"
-            )
-        )
-
-        scheduled_effective_at = (
-            scheduled_change.get(
-                "effective_at"
-            )
-        )
-
-        if scheduled_action == "cancel":
-
-            b.subscription_status = "cancelled"
-            b.subscription_active = True
-
-            if scheduled_effective_at:
-                try:
-                    b.subscription_expires_at = (
-                        datetime.fromisoformat(
-                            scheduled_effective_at.replace(
-                                "Z",
-                                "+00:00"
-                            )
-                        ).replace(
-                            tzinfo=None
-                        )
-                    )
-                except ValueError:
-                    pass
+        # ---------------------------------------------------------
+        # Успешная подписка / успешное продление
+        # ---------------------------------------------------------
 
         elif event_type in {
             "transaction.completed",
@@ -2995,9 +2990,10 @@ async def paddle_webhook(
         }:
 
             if status:
-                b.subscription_status = status
 
-            b.subscription_active = (
+                subscription.status = status
+
+            subscription.active = (
                 status
                 not in {
                     "canceled",
@@ -3007,8 +3003,10 @@ async def paddle_webhook(
             )
 
             if next_billed_at:
+
                 try:
-                    b.subscription_expires_at = (
+
+                    subscription.expires_at = (
                         datetime.fromisoformat(
                             next_billed_at.replace(
                                 "Z",
@@ -3018,35 +3016,82 @@ async def paddle_webhook(
                             tzinfo=None
                         )
                     )
+
                 except ValueError:
                     pass
+
+            # -----------------------------------------------------
+            # Применяем запланированное изменение тарифа
+            #
+            # Например:
+            #
+            # current = 10 / $7.99
+            # pending = 30 / $15.98
+            #
+            # После успешного продления:
+            #
+            # current = 30 / $15.98
+            # pending = None
+            # -----------------------------------------------------
+
+            if subscription.pending_services_limit is not None:
+
+                subscription.current_services_limit = (
+                    subscription.pending_services_limit
+                )
+
+                subscription.pending_services_limit = None
+
+            if subscription.pending_price is not None:
+
+                subscription.current_price = (
+                    subscription.pending_price
+                )
+
+                subscription.pending_price = None
+
+        # ---------------------------------------------------------
+        # Отмена / пауза
+        # ---------------------------------------------------------
 
         elif event_type in {
             "subscription.canceled",
             "subscription.paused"
         }:
+
             if (
-                b.subscription_expires_at
+                subscription.expires_at
                 and
-                b.subscription_expires_at
+                subscription.expires_at
                 > datetime.utcnow()
             ):
-                b.subscription_active = True
+
+                subscription.active = True
+
             else:
-                b.subscription_active = False
+
+                subscription.active = False
+
+        # ---------------------------------------------------------
+        # Неуспешный платёж
+        # ---------------------------------------------------------
 
         elif event_type == (
             "transaction.payment_failed"
         ):
+
             if (
-                b.subscription_expires_at
+                subscription.expires_at
                 and
-                b.subscription_expires_at
+                subscription.expires_at
                 > datetime.utcnow()
             ):
-                b.subscription_active = True
+
+                subscription.active = True
+
             else:
-                b.subscription_active = False
+
+                subscription.active = False
 
         db.commit()
 
