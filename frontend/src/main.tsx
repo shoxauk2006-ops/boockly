@@ -1570,7 +1570,7 @@ const [newBusinessHours, setNewBusinessHours] =
       `Новая цена: $${newPrice.toFixed(2)}/мес.`;
 
 
-const isUpgrade = limit > serviceLimit;
+
 
 if (isUpgrade) {
   try {
