@@ -2429,9 +2429,9 @@ def preview_subscription_limit(
         alias="X-Telegram-Init-Data"
     )
 ):
-    user = verify_telegram_init_data(
-        x_telegram_init_data
-    )
+    user = telegram_user(
+    x_telegram_init_data
+)
 
     with SessionLocal() as db:
 
