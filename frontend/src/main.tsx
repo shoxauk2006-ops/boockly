@@ -1551,56 +1551,7 @@ const [newBusinessHours, setNewBusinessHours] =
     50: 19.98,
     100: 27.98
   };
-  const confirmServiceLimitChange = async () => {
-  if (!limitPreview) {
-    return;
-  }
-
-  const limit = Number(limitPreview.limit);
-
-  setLimitSaving(true);
-
-  try {
-    const response = await fetch(
-      API + '/admin/subscription/change-limit',
-      {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify({
-          services_limit: limit
-        })
-      }
-    );
-
-    const data = await response
-      .json()
-      .catch(() => null);
-
-    if (!response.ok) {
-      throw new Error(
-        data?.detail ||
-        'Не удалось изменить лимит услуг'
-      );
-    }
-
-    setServiceLimit(limit);
-    setNewServiceLimit(limit);
-    setLimitModalOpen(false);
-    setLimitPreview(null);
-  } catch (error: any) {
-    console.error(
-      'CHANGE SERVICE LIMIT ERROR:',
-      error
-    );
-
-    alert(
-      error?.message ||
-      'Не удалось изменить лимит услуг'
-    );
-  } finally {
-    setLimitSaving(false);
-  }
-};
+ 
     
   const nextPrice = priceByLimit[limit];
 
@@ -1735,6 +1686,56 @@ setSavingServiceLimit(true);
     );
   } finally {
     setSavingServiceLimit(false);
+  }
+};
+const confirmServiceLimitChange = async () => {
+  if (!limitPreview) {
+    return;
+  }
+
+  const limit = Number(limitPreview.limit);
+
+  setLimitSaving(true);
+
+  try {
+    const response = await fetch(
+      API + '/admin/subscription/change-limit',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          services_limit: limit
+        })
+      }
+    );
+
+    const data = await response
+      .json()
+      .catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail ||
+        'Не удалось изменить лимит услуг'
+      );
+    }
+
+    setServiceLimit(limit);
+    setNewServiceLimit(limit);
+    setLimitModalOpen(false);
+    setLimitPreview(null);
+  } catch (error: any) {
+    console.error(
+      'CHANGE SERVICE LIMIT ERROR:',
+      error
+    );
+
+    alert(
+      error?.message ||
+      'Не удалось изменить лимит услуг'
+    );
+  } finally {
+    setLimitSaving(false);
   }
 };
   const load = async () => {
