@@ -599,6 +599,9 @@ setInfoSection={setInfoSection}
             <li>
               Уведомления о новых записях
             </li>
+            <li>
+               До 10 услуг в базовом тарифе
+           </li>
           </ul>
 
           <p className="muted">
@@ -4205,7 +4208,10 @@ function Subscription({
               )}
             </b>
           </p>
-        </div>
+          <div>
+  <span>Лимит услуг</span>
+  <strong>10 услуг</strong>
+</div>
 
         <span className="pill ok">
           {t(
