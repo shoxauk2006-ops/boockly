@@ -69,10 +69,12 @@ const localizedDays = (
 ];
 function BooklyAlertModal({
   open,
+  title,
   message,
   onClose
 }: {
   open: boolean;
+  title: string;
   message: string;
   onClose: () => void;
 }) {
@@ -101,17 +103,7 @@ function BooklyAlertModal({
           BOOKLY
         </span>
 
-        <h2>
-  {message.includes('Недостаточно средств')
-    ? 'Недостаточно средств'
-    : message.includes('Срок действия карты')
-      ? 'Карта недействительна'
-      : message.includes('проверку платежа')
-        ? 'Не удалось подтвердить платёж'
-        : message.includes('Платёж отклонён')
-          ? 'Платёж отклонён'
-          : 'Сообщение'}
-</h2>
+        <h2>{title}</h2>
 
         <p className="muted">
           {message}
@@ -151,8 +143,14 @@ function App(){
   useState<'help' | 'rules'>('help');
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertModalMessage, setAlertModalMessage] = useState('');
+  const [alertModalTitle, setAlertModalTitle] =
+  useState('Сообщение');
 
-  const showBooklyAlert = (message: string) => {
+  const showBooklyAlert = (
+  message: string,
+  title = 'Сообщение'
+) => {
+  setAlertModalTitle(title);
   setAlertModalMessage(message);
   setAlertModalOpen(true);
 };
@@ -467,6 +465,7 @@ setInfoSection={setInfoSection}
 )}
 <BooklyAlertModal
   open={alertModalOpen}
+  title={alertModalTitle}
   message={alertModalMessage}
   onClose={() => {
     setAlertModalOpen(false);
