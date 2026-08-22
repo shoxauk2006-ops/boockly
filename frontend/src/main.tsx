@@ -1802,16 +1802,20 @@ const confirmServiceLimitChange = async () => {
     setLimitModalOpen(false);
     setLimitPreview(null);
   } catch (error: any) {
-    console.error(
-      'CHANGE SERVICE LIMIT ERROR:',
-      error
-    );
+  console.error(
+    'CHANGE SERVICE LIMIT ERROR:',
+    error
+  );
 
-    alert(
+  setLimitPreview({
+    ...limitPreview,
+    paymentError:
       error?.message ||
-      'Не удалось изменить лимит услуг'
-    );
-  } finally {
+      'Не удалось выполнить оплату. Проверьте баланс карты или способ оплаты.'
+  });
+
+  setLimitModalOpen(true);
+} finally {
     setLimitSaving(false);
   }
 };
