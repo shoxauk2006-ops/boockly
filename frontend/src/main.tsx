@@ -1810,10 +1810,59 @@ const confirmServiceLimitChange = async () => {
   setLimitModalOpen(false);
   setLimitPreview(null);
 
-  alert(
-    error?.message ||
-    'Не удалось выполнить оплату. Проверьте баланс карты или способ оплаты.'
-  );
+  const rawMessage =
+    error?.message || '';
+
+  let paymentMessage =
+    'Не удалось выполнить оплату.';
+
+  if (
+    rawMessage.includes(
+      'subscription_payment_declined'
+    )
+  ) {
+    paymentMessage =
+      'Платёж отклонён.';
+  } else if (
+    rawMessage.includes(
+      'not_enough_balance'
+    )
+  ) {
+    paymentMessage =
+      'Недостаточно средств на карте.';
+  } else if (
+    rawMessage.includes(
+      'expired_card'
+    )
+  ) {
+    paymentMessage =
+      'Срок действия карты истёк.';
+  } else if (
+    rawMessage.includes(
+      'authentication_failed'
+    )
+  ) {
+    paymentMessage =
+      'Не удалось пройти проверку платежа.';
+  } else if (
+    rawMessage.includes(
+      'blocked_card'
+    )
+  ) {
+    paymentMessage =
+      'Эта карта заблокирована или недоступна для оплаты.';
+  } else if (
+    rawMessage.includes(
+      'declined_not_retryable'
+    )
+  ) {
+    paymentMessage =
+      'Банк отклонил платёж, и повторная попытка невозможна.';
+  } else if (rawMessage) {
+    paymentMessage = rawMessage;
+  }
+
+  alert(paymentMessage);
 } finally {
     setLimitSaving(false);
   }
