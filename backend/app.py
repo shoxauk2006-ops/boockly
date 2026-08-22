@@ -11,7 +11,7 @@ from typing import Optional
 from contextvars import ContextVar
 from urllib.parse import parse_qsl
 from urllib import request as urllib_request
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 
 from fastapi import (
     FastAPI,
@@ -54,6 +54,34 @@ SERVICE_ADDONS = {
     50: 11.99,
     100: 19.99,
 }
+
+PADDLE_BOOKLY_BASE_PRICE_ID = os.getenv(
+    "PADDLE_BOOKLY_BASE_PRICE_ID",
+    "pri_01m0mgjzfy19gn941zebpa9vn"
+)
+
+PADDLE_SERVICE_ADDON_PRICE_IDS = {
+    20: os.getenv(
+        "PADDLE_SERVICE_ADDON_10_PRICE_ID",
+        "pri_01m0mhcv9673d4xm8tf3yh5bph"
+    ),
+    30: os.getenv(
+        "PADDLE_SERVICE_ADDON_20_PRICE_ID",
+        "pri_01m0mhf9rdee684tyd3mg3xp8p"
+    ),
+    50: os.getenv(
+        "PADDLE_SERVICE_ADDON_40_PRICE_ID",
+        "pri_01m0mhhh2k5cts13j9h3agt7bj"
+    ),
+    100: os.getenv(
+        "PADDLE_SERVICE_ADDON_90_PRICE_ID",
+        "pri_01m0mhk1wq5brdkew92q3gvk9r"
+    ),
+}
+
+PADDLE_SERVICE_ADDON_IDS = set(
+    PADDLE_SERVICE_ADDON_PRICE_IDS.values()
+)
 
 BOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)
 BOOKLY_REQUEST_USER_ID: ContextVar[Optional[int]] = ContextVar("BOOKLY_REQUEST_USER_ID", default=None)
@@ -2272,6 +2300,149 @@ PADDLE_API_BASE = os.getenv(
     "https://api.paddle.com"
 )
 
+def _paddle_request(
+    method: str,
+    path: str,
+    payload: Optional[dict] = None
+):
+    if not PADDLE_API_KEY:
+        raise HTTPException(
+            500,
+            "Paddle API key is not configured"
+        )
+
+    body = (
+        json.dumps(payload).encode("utf-8")
+        if payload is not None
+        else None
+    )
+
+    req = urllib_request.Request(
+        f"{PADDLE_API_BASE}{path}",
+        data=body,
+        method=method,
+        headers={
+            "Authorization": f"Bearer {PADDLE_API_KEY}",
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+    )
+
+    try:
+        with urllib_request.urlopen(
+            req,
+            timeout=20
+        ) as response:
+            raw = response.read().decode("utf-8")
+            return json.loads(raw) if raw else {}
+    except HTTPError as exc:
+        try:
+            raw = exc.read().decode("utf-8")
+            data = json.loads(raw) if raw else {}
+        except Exception:
+            data = {}
+
+        detail = (
+            data.get("error", {}).get("detail")
+            or data.get("error", {}).get("code")
+            or f"Paddle API error {exc.code}"
+        )
+
+        raise HTTPException(
+            502,
+            f"Paddle: {detail}"
+        )
+    except URLError as exc:
+        raise HTTPException(
+            502,
+            f"Paddle connection error: {exc.reason}"
+        )
+
+def _paddle_update_bookly_subscription(
+    subscription_id: str,
+    new_limit: int,
+    old_limit: int
+):
+    if not subscription_id.startswith("sub_"):
+        raise HTTPException(
+            400,
+            "Paddle subscription ID is missing"
+        )
+
+    current = _paddle_request(
+        "GET",
+        f"/subscriptions/{subscription_id}"
+    )
+
+    items = (
+        current
+        .get("data", {})
+        .get("items", [])
+    )
+
+    new_items = []
+    base_replaced = False
+
+    for item in items:
+        price = item.get("price") or {}
+        price_id = (
+            item.get("price_id")
+            or price.get("id")
+        )
+
+        if price_id in PADDLE_SERVICE_ADDON_IDS:
+            continue
+
+        if not base_replaced:
+            new_items.append({
+                "price_id": PADDLE_BOOKLY_BASE_PRICE_ID,
+                "quantity": 1
+            })
+            base_replaced = True
+            continue
+
+        new_items.append({
+            "price_id": price_id,
+            "quantity": item.get("quantity") or 1
+        })
+
+    if not base_replaced:
+        new_items.insert(
+            0,
+            {
+                "price_id": PADDLE_BOOKLY_BASE_PRICE_ID,
+                "quantity": 1
+            }
+        )
+
+    addon_price_id = (
+        PADDLE_SERVICE_ADDON_PRICE_IDS.get(
+            new_limit
+        )
+    )
+
+    if addon_price_id:
+        new_items.append({
+            "price_id": addon_price_id,
+            "quantity": 1
+        })
+
+    proration_mode = (
+        "prorated_immediately"
+        if new_limit > old_limit
+        else "prorated_next_billing_period"
+    )
+
+    return _paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}",
+        {
+            "items": new_items,
+            "proration_billing_mode": proration_mode,
+            "on_payment_failure": "prevent_change"
+        }
+    )
+
 @app.post("/admin/subscription/change-limit")
 def change_subscription_limit(
     x: SubscriptionLimitChangeIn,
@@ -2300,14 +2471,11 @@ def change_subscription_limit(
         )
 
     with SessionLocal() as db:
-
         business = owner_business(
             db,
             owner_id
         )
 
-        # Если сохранённый X-Bookly-Business-Id устарел,
-        # автоматически выбираем первый бизнес владельца.
         if not business:
             business = (
                 db.query(Business)
@@ -2341,40 +2509,22 @@ def change_subscription_limit(
                 "Active subscription required"
             )
 
-        # Текущий лимит
         current_limit = (
             subscription.current_services_limit
             or 10
         )
 
-        # Если пользователь выбрал
-        # тот же самый лимит —
-        # отменяем запланированное изменение.
         if x.services_limit == current_limit:
-
-            subscription.pending_services_limit = None
-            subscription.pending_price = None
-
-            db.commit()
-
             return {
                 "ok": True,
-                "current_services_limit":
-                    current_limit,
-                "current_price":
-                    float(
-                        subscription.current_price
-                        or 7.99
-                    ),
-                "pending_services_limit":
-                    None,
-                "pending_price":
-                    None
+                "current_services_limit": current_limit,
+                "current_price": float(
+                    subscription.current_price
+                    or 7.99
+                ),
+                "pending_services_limit": None,
+                "pending_price": None
             }
-
-        # -----------------------------------------------------
-        # Рассчитываем будущую цену
-        # -----------------------------------------------------
 
         price_by_limit = {
             10: 7.99,
@@ -2388,14 +2538,16 @@ def change_subscription_limit(
             x.services_limit
         ]
 
-                # -----------------------------------------------------
-        # Меняем лимит сразу.
-        # -----------------------------------------------------
+        _paddle_update_bookly_subscription(
+            subscription.external_subscription_id,
+            x.services_limit,
+            current_limit
+        )
 
-        subscription.current_services_limit = x.services_limit
+        subscription.current_services_limit = (
+            x.services_limit
+        )
         subscription.current_price = new_price
-
-        # Старое запланированное изменение больше не нужно.
         subscription.pending_services_limit = None
         subscription.pending_price = None
 
@@ -2403,21 +2555,14 @@ def change_subscription_limit(
 
         return {
             "ok": True,
-
-            "current_services_limit":
-                subscription.current_services_limit,
-
-            "current_price":
-                float(
-                    subscription.current_price
-                    or new_price
-                ),
-
-            "pending_services_limit":
-                None,
-
-            "pending_price":
-                None
+            "current_services_limit": (
+                subscription.current_services_limit
+            ),
+            "current_price": float(
+                subscription.current_price
+            ),
+            "pending_services_limit": None,
+            "pending_price": None
         }
 @app.post("/admin/subscription/cancel")
 def cancel_subscription(
