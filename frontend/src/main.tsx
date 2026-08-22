@@ -3053,9 +3053,8 @@ const [newBusinessHours, setNewBusinessHours] =
           ? 'Сохранение...'
           : 'Изменить лимит'}
       </button>
-        </div>
+         </div>
   </div>
-</div>
 </div>
 )}
 
