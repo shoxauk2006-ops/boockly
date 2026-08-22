@@ -2497,7 +2497,7 @@ def preview_subscription_limit(
             )
 
         result = _paddle_request(
-            "POST",
+           "PATCH",
             (
                 "/subscriptions/"
                 f"{subscription.external_subscription_id}"
