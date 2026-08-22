@@ -1567,7 +1567,29 @@ const [newBusinessHours, setNewBusinessHours] =
       `Новый лимит и цена вступят в силу с следующего периода.\n\n` +
       `Новая цена: $${newPrice.toFixed(2)}/мес.`;
 
+const isUpgrade = limit > serviceLimit;
 
+const confirmed = window.confirm(
+  isUpgrade
+    ? `Увеличить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
+      `Новая стоимость: $${nextPrice.toFixed(2)}/мес.\n\n` +
+      `Сейчас будет списана только доплата за оставшиеся дни текущего оплаченного периода. ` +
+      `Сумму автоматически рассчитает Paddle.\n\n` +
+      `Начиная со следующего продления подписки, стоимость составит ` +
+      `$${nextPrice.toFixed(2)}/мес.\n\n` +
+      `Продолжить?`
+    : `Уменьшить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
+      `Возврата за уже оплаченный текущий период не будет.\n\n` +
+      `Новый лимит и новая цена вступят в силу со следующего продления:\n` +
+      `$${nextPrice.toFixed(2)}/мес.\n\n` +
+      `Продолжить?`
+);
+
+if (!confirmed) {
+  return;
+}
+
+setSavingServiceLimit(true);
   setSavingServiceLimit(true);
 
   try {
