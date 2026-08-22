@@ -47,6 +47,10 @@ engine = create_engine(DB_URL, connect_args={"check_same_thread": False} if DB_U
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 PRO_PRICE = 7.99
+PADDLE_WEBHOOK_SECRET = os.getenv(
+    "PADDLE_WEBHOOK_SECRET",
+    ""
+)
 
 SERVICE_ADDONS = {
     20: 4.99,
