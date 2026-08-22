@@ -3057,6 +3057,7 @@ const [newBusinessHours, setNewBusinessHours] =
   </div>
 </div>
 </div>
+</div>
 )}
 
 <nav className="admin-bottom-nav">
