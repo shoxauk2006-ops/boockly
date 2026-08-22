@@ -1587,8 +1587,6 @@ const [newBusinessHours, setNewBusinessHours] =
     setNewServiceLimit(limit);
     setLimitModalOpen(false);
     setLimitPreview(null);
-
-    alert('Лимит услуг изменён');
   } catch (error: any) {
     console.error(
       'CHANGE SERVICE LIMIT ERROR:',
