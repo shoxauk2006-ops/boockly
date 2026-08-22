@@ -1231,6 +1231,10 @@ function Admin({
   const [hours, setHours] = useState<any[]>([]);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [serviceLimit, setServiceLimit] = useState(10);
+  const [newServiceLimit, setNewServiceLimit] = useState(10);
+  const [savingServiceLimit, setSavingServiceLimit] = useState(false);
+  
 
   const [loading, setLoading] = useState(true);
 
@@ -1487,7 +1491,55 @@ const [newBusinessHours, setNewBusinessHours] =
       );
     }
   };
+  const changeServiceLimit = async () => {
+  const limit = Number(newServiceLimit);
 
+  if (!Number.isInteger(limit) || limit < 10) {
+    alert('Введите корректный лимит услуг');
+    return;
+  }
+
+  setSavingServiceLimit(true);
+
+  try {
+    const response = await fetch(
+      API + '/admin/subscription/change-limit',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          services_limit: limit
+        })
+      }
+    );
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail ||
+        'Не удалось изменить лимит услуг'
+      );
+    }
+
+    setServiceLimit(limit);
+    setNewServiceLimit(limit);
+
+    alert('Лимит услуг изменён');
+  } catch (error: any) {
+    console.error(
+      'CHANGE SERVICE LIMIT ERROR:',
+      error
+    );
+
+    alert(
+      error?.message ||
+      'Не удалось изменить лимит услуг'
+    );
+  } finally {
+    setSavingServiceLimit(false);
+  }
+};
   const load = async () => {
     if (!initData()) {
       setLoading(false);
@@ -2968,7 +3020,36 @@ const [newBusinessHours, setNewBusinessHours] =
       </button>
     </div>
   </div>
-)}
+<div className="card" style={{ marginTop: 16 }}>
+  <h3>Лимит услуг</h3>
+
+  <p className="muted">
+    Текущий лимит: {serviceLimit} услуг
+  </p>
+
+  <input
+    type="number"
+    min="10"
+    step="1"
+    value={newServiceLimit}
+    onChange={e =>
+      setNewServiceLimit(
+        Number(e.target.value)
+      )
+    }
+  />
+
+  <button
+    className="primary full"
+    disabled={savingServiceLimit}
+    onClick={changeServiceLimit}
+  >
+    {savingServiceLimit
+      ? 'Сохранение...'
+      : 'Изменить лимит'}
+  </button>
+</div>
+    )}
 
 <nav className="admin-bottom-nav">
 
