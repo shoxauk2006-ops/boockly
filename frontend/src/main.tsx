@@ -4351,7 +4351,7 @@ function Subscription({
                 )}
               </span>
               <strong>
-                $9.99 / месяц
+                $7.99 / месяц
               </strong>
             </div>
 
