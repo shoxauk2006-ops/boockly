@@ -146,6 +146,17 @@ function App(){
   setAlertModalMessage(message);
   setAlertModalOpen(true);
 };
+  useEffect(() => {
+  const nativeAlert = window.alert;
+
+  window.alert = (message?: any) => {
+    showBooklyAlert(String(message ?? ''));
+  };
+
+  return () => {
+    window.alert = nativeAlert;
+  };
+}, []);
   const [emailCopied,setEmailCopied]=useState(false);
   useEffect(()=>{
     const telegram = tg();
