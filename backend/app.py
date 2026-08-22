@@ -2388,37 +2388,37 @@ def change_subscription_limit(
             x.services_limit
         ]
 
+                # -----------------------------------------------------
+        # Меняем лимит сразу.
         # -----------------------------------------------------
-# Меняем лимит сразу.
-# -----------------------------------------------------
 
-subscription.current_services_limit = x.services_limit
-subscription.current_price = new_price
+        subscription.current_services_limit = x.services_limit
+        subscription.current_price = new_price
 
-# Старое запланированное изменение больше не нужно.
-subscription.pending_services_limit = None
-subscription.pending_price = None
+        # Старое запланированное изменение больше не нужно.
+        subscription.pending_services_limit = None
+        subscription.pending_price = None
 
-db.commit()
+        db.commit()
 
-return {
-    "ok": True,
+        return {
+            "ok": True,
 
-    "current_services_limit":
-        subscription.current_services_limit,
+            "current_services_limit":
+                subscription.current_services_limit,
 
-    "current_price":
-        float(
-            subscription.current_price
-            or new_price
-        ),
+            "current_price":
+                float(
+                    subscription.current_price
+                    or new_price
+                ),
 
-    "pending_services_limit":
-        None,
+            "pending_services_limit":
+                None,
 
-    "pending_price":
-        None
-}
+            "pending_price":
+                None
+        }
 @app.post("/admin/subscription/cancel")
 def cancel_subscription(
     x_telegram_init_data: str = Header(default="")
