@@ -1807,14 +1807,13 @@ const confirmServiceLimitChange = async () => {
     error
   );
 
-  setLimitPreview({
-    ...limitPreview,
-    paymentError:
-      error?.message ||
-      'Не удалось выполнить оплату. Проверьте баланс карты или способ оплаты.'
-  });
+  setLimitModalOpen(false);
+  setLimitPreview(null);
 
-  setLimitModalOpen(true);
+  alert(
+    error?.message ||
+    'Не удалось выполнить оплату. Проверьте баланс карты или способ оплаты.'
+  );
 } finally {
     setLimitSaving(false);
   }
