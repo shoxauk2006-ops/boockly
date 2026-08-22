@@ -4398,7 +4398,7 @@ function Subscription({
   </>
 )}
 
-        >
+                >
           {t(
             'owner.openAccess',
             'Открыть доступ'
@@ -4408,7 +4408,8 @@ function Subscription({
       </div>
     );
   }
- if (paymentFailed) {
+
+  if (paymentFailed) {
     return (
       <div className="card subscription">
 
