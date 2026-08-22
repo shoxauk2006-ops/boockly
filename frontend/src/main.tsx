@@ -101,7 +101,17 @@ function BooklyAlertModal({
           BOOKLY
         </span>
 
-        <h2>Сообщение</h2>
+        <h2>
+  {message.includes('Недостаточно средств')
+    ? 'Недостаточно средств'
+    : message.includes('Срок действия карты')
+      ? 'Карта недействительна'
+      : message.includes('проверку платежа')
+        ? 'Не удалось подтвердить платёж'
+        : message.includes('Платёж отклонён')
+          ? 'Платёж отклонён'
+          : 'Сообщение'}
+</h2>
 
         <p className="muted">
           {message}
