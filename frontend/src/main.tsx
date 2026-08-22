@@ -139,6 +139,13 @@ function App(){
   const [infoModal,setInfoModal]=useState(false);
   const [infoSection, setInfoSection] =
   useState<'help' | 'rules'>('help');
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertModalMessage, setAlertModalMessage] = useState('');
+
+  const showBooklyAlert = (message: string) => {
+  setAlertModalMessage(message);
+  setAlertModalOpen(true);
+};
   const [emailCopied,setEmailCopied]=useState(false);
   useEffect(()=>{
     const telegram = tg();
@@ -437,6 +444,14 @@ setInfoSection={setInfoSection}
     />
   </>
 )}
+<BooklyAlertModal
+  open={alertModalOpen}
+  message={alertModalMessage}
+  onClose={() => {
+    setAlertModalOpen(false);
+    setAlertModalMessage('');
+  }}
+/>
 {infoModal && (
   <div
     className="subscription-modal-overlay"
