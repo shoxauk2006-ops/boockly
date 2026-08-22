@@ -1,0 +1,36 @@
+name: One-time JSX cleanup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fix extra JSX closing tag
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+          old = "</div>\n</div>\n</div>\n</div>\n)}\n\n<nav className=\"admin-bottom-nav\">"
+          new = "</div>\n</div>\n</div>\n)}\n\n<nav className=\"admin-bottom-nav\">"
+          if s.count(old) != 1:
+              raise SystemExit(f'Expected exactly one target, found {s.count(old)}')
+          p.write_text(s.replace(old, new, 1))
+          PY
+
+      - name: Commit fix and remove this workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/one-time-fix-main-tsx.yml
+          git add frontend/src/main.tsx
+          git commit -m "Fix extra JSX closing tag"
+          git push
