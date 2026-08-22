@@ -4397,6 +4397,9 @@ function Subscription({
     )}
   </>
 )}
+    </div>
+  );
+}
 
   if (paymentFailed) {
     return (
