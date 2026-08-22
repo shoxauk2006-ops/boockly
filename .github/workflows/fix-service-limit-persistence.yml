@@ -1,4 +1,4 @@
-name: Fix service limit persistence
+name: Fix service limit loader
 
 on:
   push:
@@ -10,134 +10,37 @@ permissions:
 
 jobs:
   fix:
-    if: github.event.head_commit.message != 'Fix service limit persistence'
+    if: github.event.head_commit.message != 'Fix service limit loader'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Patch service limit persistence
+      - name: Patch frontend loader
         shell: python
         run: |
           from pathlib import Path
 
-          backend = Path('backend/app.py')
-          text = backend.read_text(encoding='utf-8')
-
-          old = '''        # -----------------------------------------------------
-        # Изменение только запланированное.
-        #
-        # Текущий лимит НЕ меняется.
-        # Деньги сейчас НЕ списываются.
-        # -----------------------------------------------------
-
-        subscription.pending_services_limit = (
-            x.services_limit
-        )
-
-        subscription.pending_price = (
-            new_price
-        )
-
-        db.commit()
-
-        return {
-            "ok": True,
-
-            "current_services_limit":
-                current_limit,
-
-            "current_price":
-                float(
-                    subscription.current_price
-                    or 7.99
-                ),
-
-            "pending_services_limit":
-                x.services_limit,
-
-            "pending_price":
-                new_price
-        }'''
-
-          new = '''        # Изменяем текущий лимит сразу.
-        # Это административное изменение тарифа;
-        # после обновления страницы значение берётся
-        # из базы данных, а не из состояния React.
-        subscription.current_services_limit = x.services_limit
-        subscription.current_price = new_price
-        subscription.pending_services_limit = None
-        subscription.pending_price = None
-
-        db.commit()
-
-        return {
-            "ok": True,
-            "current_services_limit": x.services_limit,
-            "current_price": float(new_price),
-            "pending_services_limit": None,
-            "pending_price": None
-        }'''
-
-          if old not in text:
-              raise SystemExit('Backend service-limit block not found')
-          backend.write_text(text.replace(old, new, 1), encoding='utf-8')
-
           frontend = Path('frontend/src/main.tsx')
           text = frontend.read_text(encoding='utf-8')
 
-          old = '''      if (selected) {
-        await loadBusinessData(selected);
-      }
+          old = '''      setBusiness(selected);\n      return selected;'''
 
-      setLoading(false);'''
-
-          new = '''      if (selected) {
-        try {
-          const subscriptionResponse = await fetch(
-            API + '/admin/business',
-            {
-              headers: headers()
-            }
-          );
-
-          if (subscriptionResponse.ok) {
-            const subscriptionBusiness =
-              await subscriptionResponse.json();
-
-            const savedLimit = Number(
-              subscriptionBusiness?.services_limit
-            );
-
-            if (
-              Number.isInteger(savedLimit) &&
-              savedLimit >= 10
-            ) {
-              setServiceLimit(savedLimit);
-              setNewServiceLimit(savedLimit);
-            }
-          }
-        } catch (error) {
-          console.error(
-            'LOAD SERVICE LIMIT ERROR:',
-            error
-          );
-        }
-
-        await loadBusinessData(selected);
-      }
-
-      setLoading(false);'''
+          new = '''      // Загружаем актуальный лимит подписки с сервера.\n      try {\n        const businessResponse = await fetch(\n          API + '/admin/business',\n          { headers: headers() }\n        );\n\n        if (businessResponse.ok) {\n          const businessData =\n            await businessResponse.json();\n\n          const savedLimit = Number(\n            businessData?.services_limit\n          );\n\n          if (\n            Number.isInteger(savedLimit) &&\n            savedLimit >= 10\n          ) {\n            setServiceLimit(savedLimit);\n            setNewServiceLimit(savedLimit);\n          }\n        }\n      } catch (error) {\n        console.error(\n          'LOAD SERVICE LIMIT ERROR:',\n          error\n        );\n      }\n\n      setBusiness(selected);\n      return selected;'''
 
           if old not in text:
-              raise SystemExit('Frontend load block not found')
-          frontend.write_text(text.replace(old, new, 1), encoding='utf-8')
+              raise SystemExit('Frontend loadBusinesses target not found')
 
-      - name: Commit fix and remove one-time workflow
+          frontend.write_text(
+              text.replace(old, new, 1),
+              encoding='utf-8'
+          )
+
+      - name: Commit fix and remove workflow
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm -f .github/workflows/fix-service-limit-persistence.yml
-          git add backend/app.py frontend/src/main.tsx .github/workflows/fix-service-limit-persistence.yml
-          git commit -m "Fix service limit persistence"
+          git add frontend/src/main.tsx .github/workflows/fix-service-limit-persistence.yml
+          git commit -m "Fix service limit loader"
           git push
