@@ -2413,7 +2413,96 @@ def _paddle_update_bookly_subscription(
                 "prevent_change"
         }
     )
+@app.post("/admin/subscription/preview-limit")
+def preview_subscription_limit(
+    x: SubscriptionLimitChangeIn,
+    x_telegram_init_data: str = Header(
+        default="",
+        alias="X-Telegram-Init-Data"
+    )
+):
+    user = verify_telegram_init_data(
+        x_telegram_init_data
+    )
 
+    with SessionLocal() as db:
+
+        business = (
+            db.query(Business)
+            .filter(
+                Business.owner_telegram_id
+                == int(user["id"])
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id
+                == business.id
+            )
+            .first()
+        )
+
+        if not subscription:
+            raise HTTPException(
+                404,
+                "Subscription not found"
+            )
+
+        if not subscription.external_subscription_id:
+            raise HTTPException(
+                400,
+                "Paddle subscription ID is missing"
+            )
+
+        new_limit = x.services_limit
+
+        new_items = [
+            {
+                "price_id":
+                    PADDLE_BOOKLY_BASE_PRICE_ID,
+                "quantity": 1
+            }
+        ]
+
+        addon_price_id = (
+            PADDLE_SERVICE_ADDON_PRICE_IDS.get(
+                new_limit
+            )
+        )
+
+        if addon_price_id:
+            new_items.append(
+                {
+                    "price_id":
+                        addon_price_id,
+                    "quantity": 1
+                }
+            )
+
+        result = _paddle_request(
+            "POST",
+            (
+                "/subscriptions/"
+                f"{subscription.external_subscription_id}"
+                "/preview"
+            ),
+            {
+                "items": new_items,
+                "proration_billing_mode":
+                    "prorated_immediately"
+            }
+        )
+
+        return result
 @app.post("/admin/subscription/change-limit")
 def change_subscription_limit(
     x: SubscriptionLimitChangeIn,
