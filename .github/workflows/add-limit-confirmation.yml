@@ -1,0 +1,99 @@
+name: Add service limit payment confirmation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message != 'Add service limit confirmation'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch confirmation
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''const changeServiceLimit = async () => {
+  const limit = Number(newServiceLimit);
+
+  if (!Number.isInteger(limit) || limit < 10) {
+    alert('Введите корректный лимит услуг');
+    return;
+  }
+
+  setSavingServiceLimit(true);
+'''
+
+          new = '''const changeServiceLimit = async () => {
+  const limit = Number(newServiceLimit);
+
+  if (!Number.isInteger(limit) || limit < 10) {
+    alert('Введите корректный лимит услуг');
+    return;
+  }
+
+  if (limit === serviceLimit) {
+    alert('Этот лимит уже установлен');
+    return;
+  }
+
+  const priceByLimit: Record<number, number> = {
+    10: 7.99,
+    20: 12.98,
+    30: 15.98,
+    50: 19.98,
+    100: 27.98
+  };
+
+  const nextPrice = priceByLimit[limit];
+  const currentPrice = priceByLimit[serviceLimit] || 7.99;
+  const isUpgrade = limit > serviceLimit;
+
+  const confirmed = window.confirm(
+    isUpgrade
+      ? `Увеличить лимит до ${limit} услуг?\\n\\n` +
+        `Текущая цена: $${currentPrice.toFixed(2)}/мес.\\n` +
+        `Новая цена: $${nextPrice.toFixed(2)}/мес.\\n\\n` +
+        `Paddle сразу рассчитает и спишет доплату за оставшуюся часть текущего периода.\\n\\n` +
+        `Продолжить?`
+      : `Уменьшить лимит до ${limit} услуг?\\n\\n` +
+        `Сейчас возврата денег не будет.\\n` +
+        `Изменение должно вступить в силу со следующего продления.\\n\\n` +
+        `Новая цена: $${nextPrice.toFixed(2)}/мес.\\n\\n` +
+        `Продолжить?`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setSavingServiceLimit(true);
+'''
+
+          if old not in s:
+              raise SystemExit('changeServiceLimit target not found')
+
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+
+      - name: Validate frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Commit patch and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/add-limit-confirmation.yml
+          git add frontend/src/main.tsx
+          git commit -m 'Add service limit confirmation'
+          git push
