@@ -4201,7 +4201,7 @@ function Subscription({
             <b>
               {t(
                 'owner.monthlyPrice',
-                '$9.99 / месяц'
+                '$7.99 / месяц'
               )}
             </b>
           </p>
