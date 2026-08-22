@@ -2322,10 +2322,11 @@ def _paddle_request(
         data=body,
         method=method,
         headers={
-            "Authorization": f"Bearer {PADDLE_API_KEY}",
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+    "Authorization": f"Bearer {PADDLE_API_KEY}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Paddle-Version": "1"
+}
     )
 
     try:
@@ -2335,22 +2336,15 @@ def _paddle_request(
         ) as response:
             raw = response.read().decode("utf-8")
             return json.loads(raw) if raw else {}
-    except HTTPError as exc:
+        except HTTPError as exc:
         try:
             raw = exc.read().decode("utf-8")
-            data = json.loads(raw) if raw else {}
         except Exception:
-            data = {}
-
-        detail = (
-            data.get("error", {}).get("detail")
-            or data.get("error", {}).get("code")
-            or f"Paddle API error {exc.code}"
-        )
+            raw = ""
 
         raise HTTPException(
             502,
-            f"Paddle: {detail}"
+            f"Paddle API error {exc.code}: {raw[:3000]}"
         )
     except URLError as exc:
         raise HTTPException(
