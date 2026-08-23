@@ -28,4 +28,7 @@ function repairAdminJsx(): Plugin {
 
 export default defineConfig({
   plugins: [repairAdminJsx()],
+  build: {
+    cssMinify: 'esbuild', // Добавили этот блок, чтобы убрать ошибку минификатора CSS
+  },
 });
