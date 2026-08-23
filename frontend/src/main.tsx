@@ -4433,7 +4433,7 @@ function Subscription({
           )}
         </p>
 
-        <button
+                <button
           type="button"
           className="primary full"
           onClick={() =>
@@ -4442,6 +4442,16 @@ function Subscription({
               business.id
             )
           }
+        >
+          {t(
+            'owner.openAccess',
+            'Открыть доступ'
+          )}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="card subscription">
 
