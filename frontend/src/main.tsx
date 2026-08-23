@@ -2311,7 +2311,35 @@ const confirmServiceLimitChange = async () => {
                         {day.name}
                       </strong>
 
-                      
+                      <label
+  style={{
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    cursor: 'pointer'
+  }}
+>
+  <input
+    type="checkbox"
+    checked={day.enabled}
+    onChange={e => {
+      const next = [
+        ...newBusinessHours
+      ];
+
+      next[index] = {
+        ...next[index],
+        enabled: e.target.checked
+      };
+
+      setNewBusinessHours(next);
+    }}
+  />
+
+  <span>
+    Работаю
+  </span>
+</label>
     
                     </div>
 
