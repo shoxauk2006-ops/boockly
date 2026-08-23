@@ -4894,32 +4894,7 @@ if (
 }
 
 window.Paddle.Checkout.open({
-  window.Paddle.Checkout.open({
-    const items = [
-  {
-    priceId:
-      'pri_01kzxgbt08rm3pk2p5eaywgbsy',
-    quantity: 1
-  }
-];
 
-const addonPriceIds: Record<number, string> = {
-  20: 'pri_01m0mhcv9673d4xm8tf3yh5bph',
-  30: 'pri_01m0mhf9rdee684tyd3mg3xp8p',
-  50: 'pri_01m0mhhh2k5cts13j9h3agt7bj',
-  100: 'pri_01m0mhk1wq5brdkew92q3gvk9r'
-};
-
-if (
-  servicesLimit > 10 &&
-  addonPriceIds[servicesLimit]
-) {
-  items.push({
-    priceId:
-      addonPriceIds[servicesLimit],
-    quantity: 1
-  });
-}
     customData: {
       telegram_user_id:
         String(ownerId),
