@@ -4380,7 +4380,7 @@ function Subscription({
             )}
           </p>
 
-          <button
+                    <button
             type="button"
             className="subscription-danger-button"
             onClick={async () => {
@@ -4395,8 +4395,8 @@ function Subscription({
           </button>
                 </div>
             </div>
-          </>
-        )}
+          )}
+        </>
       </div>
     );
   }
