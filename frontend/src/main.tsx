@@ -561,7 +561,7 @@ setInfoSection={setInfoSection}
           </p>
 
           <p className="muted">
-            6. Управляйте записями в админке.
+            6. Управляйте записями.
           </p>
 
           <p className="muted">
