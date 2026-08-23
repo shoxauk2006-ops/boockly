@@ -4380,7 +4380,7 @@ function Subscription({
             )}
           </p>
 
-                    <button
+                              <button
             type="button"
             className="subscription-danger-button"
             onClick={async () => {
@@ -4393,10 +4393,11 @@ function Subscription({
               'Отменить автопродление'
             )}
           </button>
-                </div>
-            </div>
-          )}
-        </>
+        </div>
+      </div>
+    )}
+  </>
+)}
       </div>
     );
   }
