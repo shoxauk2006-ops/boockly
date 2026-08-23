@@ -4065,6 +4065,10 @@ function Subscription({
     ) && active;
   const [subscriptionModal, setSubscriptionModal] =
   useState(false);
+  const [serviceLimitOptionsOpen, setServiceLimitOptionsOpen] =
+  useState(false);
+  const [selectedServiceLimit, setSelectedServiceLimit] =
+  useState(10);
   const [changingServiceLimit, setChangingServiceLimit] =
   useState(false);
 
@@ -4536,7 +4540,7 @@ const changeServiceLimit = async (
         price: '$7.99 / месяц'
       },
       {
-        limit: 50,
+        limit: 40,
         price: '$11.99 / месяц'
       },
       {
@@ -4724,99 +4728,146 @@ const changeServiceLimit = async (
     borderTop: '1px solid #eee'
   }}
 >
-  <strong>
-    Увеличить лимит услуг
-  </strong>
-
-  <p
-    className="muted"
-    style={{ marginTop: 6 }}
-  >
-    Выберите лимит услуг для подписки.
-  </p>
-
-  <div
+  <button
+    type="button"
+    onClick={() =>
+      setServiceLimitOptionsOpen(
+        !serviceLimitOptionsOpen
+      )
+    }
     style={{
-      display: 'grid',
-      gap: 10,
-      marginTop: 12
+      width: '100%',
+      padding: '8px 0',
+      border: 'none',
+      background: 'transparent',
+      color: '#111',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      fontSize: 16,
+      fontWeight: 600,
+      cursor: 'pointer'
     }}
   >
-    <button
-      type="button"
-      className="subscription-manage-button"
-      onClick={() =>
-        checkout(
-          'paddle',
-          business.id,
-          10
-        )
-      }
-    >
-      <span>До 10 услуг</span>
-      <strong>$7.99 / месяц</strong>
-    </button>
+    <span>Увеличить лимит услуг</span>
+    <span style={{ fontSize: 20 }}>
+      {serviceLimitOptionsOpen ? '⌃' : '›'}
+    </span>
+  </button>
 
-    <button
-      type="button"
-      className="subscription-manage-button"
-      onClick={() =>
-        checkout(
-          'paddle',
-          business.id,
-          20
-        )
-      }
+  {serviceLimitOptionsOpen && (
+    <div
+      style={{
+        display: 'grid',
+        gap: 8,
+        marginTop: 12
+      }}
     >
-      <span>До 20 услуг</span>
-      <strong>$12.98 / месяц</strong>
-    </button>
+      {[
+        {
+          limit: 20,
+          addon: 4.99,
+          total: 12.98
+        },
+        {
+          limit: 30,
+          addon: 7.99,
+          total: 15.98
+        },
+        {
+          limit: 40,
+          addon: 11.99,
+          total: 19.98
+        },
+        {
+          limit: 100,
+          addon: 19.99,
+          total: 27.98
+        }
+      ].map(option => {
+        const selected =
+          selectedServiceLimit === option.limit;
 
-    <button
-      type="button"
-      className="subscription-manage-button"
-      onClick={() =>
-        checkout(
-          'paddle',
-          business.id,
-          30
-        )
-      }
-    >
-      <span>До 30 услуг</span>
-      <strong>$15.98 / месяц</strong>
-    </button>
+        return (
+          <button
+            key={option.limit}
+            type="button"
+            onClick={() =>
+              setSelectedServiceLimit(
+                option.limit
+              )
+            }
+            style={{
+              width: '100%',
+              padding: '13px 14px',
+              borderRadius: 12,
+              border: selected
+                ? '2px solid #111'
+                : '1px solid #ddd',
+              background: selected
+                ? '#f5f5f5'
+                : '#fff',
+              color: '#111',
+              textAlign: 'left',
+              cursor: 'pointer'
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 12
+              }}
+            >
+              <strong>
+                До {option.limit} услуг
+              </strong>
 
-    <button
-      type="button"
-      className="subscription-manage-button"
-      onClick={() =>
-        checkout(
-          'paddle',
-          business.id,
-          50
-        )
-      }
-    >
-      <span>До 50 услуг</span>
-      <strong>$19.98 / месяц</strong>
-    </button>
+              <span
+                style={{
+                  fontWeight: 700
+                }}
+              >
+                {selected ? '✓' : '○'}
+              </span>
+            </div>
 
-    <button
-      type="button"
-      className="subscription-manage-button"
-      onClick={() =>
-        checkout(
-          'paddle',
-          business.id,
-          100
-        )
-      }
-    >
-      <span>До 100 услуг</span>
-      <strong>$27.98 / месяц</strong>
-    </button>
-  </div>
+            <div
+              className="muted"
+              style={{ marginTop: 5 }}
+            >
+              +${option.addon.toFixed(2)} / месяц
+            </div>
+
+            <div
+              style={{
+                marginTop: 3,
+                fontSize: 13
+              }}
+            >
+              Итого: ${option.total.toFixed(2)} / месяц
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  )}
+
+  <button
+    type="button"
+    className="primary full"
+    style={{ marginTop: 16 }}
+    onClick={() =>
+      checkout(
+        'paddle',
+        business.id,
+        selectedServiceLimit
+      )
+    }
+  >
+    Оплатить подписку
+  </button>
 </div>
       
 
@@ -4878,7 +4929,7 @@ const items = [
 const addonPriceIds: Record<number, string> = {
   20: 'pri_01m0mhcv9673d4xm8tf3yh5bph',
   30: 'pri_01m0mhf9rdee684tyd3mg3xp8p',
-  50: 'pri_01m0mhhh2k5cts13j9h3agt7bj',
+  40: 'pri_01m0mhh2k5cts13j9h3agkt7bj',
   100: 'pri_01m0mhk1wq5brdkew92q3gvk9r'
 };
 
@@ -4894,7 +4945,7 @@ if (
 }
 
 window.Paddle.Checkout.open({
-
+    items,
     customData: {
       telegram_user_id:
         String(ownerId),
