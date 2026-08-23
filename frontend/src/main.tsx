@@ -4392,12 +4392,13 @@ function Subscription({
               'Отменить автопродление'
             )}
           </button>
-        </div>
+                </div>
             </div>
-    )}
-    </div>
-  );
-}
+          </>
+        )}
+      </div>
+    );
+  }
     
 
   if (paymentFailed) {
