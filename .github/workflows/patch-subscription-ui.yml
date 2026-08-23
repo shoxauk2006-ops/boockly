@@ -1,0 +1,69 @@
+name: Patch subscription UI
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch subscription UI
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('frontend/src/main.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          old = """  const [subscriptionModal, setSubscriptionModal] =\n  useState(false);\n  const [changingServiceLimit, setChangingServiceLimit] ="""
+          new = """  const [subscriptionModal, setSubscriptionModal] =\n  useState(false);\n  const [serviceLimitOptionsOpen, setServiceLimitOptionsOpen] =\n  useState(false);\n  const [selectedServiceLimit, setSelectedServiceLimit] =\n  useState(10);\n  const [changingServiceLimit, setChangingServiceLimit] ="""
+          if text.count(old) != 1:
+              raise SystemExit('Subscription state block not found exactly once')
+          text = text.replace(old, new, 1)
+
+          text = text.replace(
+              "50: 'pri_01m0mhhh2k5cts13j9h3agt7bj',",
+              "40: 'pri_01m0mhh2k5cts13j9h3agkt7bj',"
+          )
+
+          old_active = """      {\n        limit: 50,\n        price: '$11.99 / месяц'\n      },"""
+          new_active = """      {\n        limit: 40,\n        price: '$11.99 / месяц'\n      },"""
+          if text.count(old_active) != 1:
+              raise SystemExit('Active 50-service option not found exactly once')
+          text = text.replace(old_active, new_active, 1)
+
+          inactive_marker = """          'owner.payToUnlock',"""
+          marker_pos = text.index(inactive_marker)
+          section_start = text.index("<div\n  style={{\n    marginTop: 20,", marker_pos)
+          section_end_marker = """      \n\n    </div>\n  );\n}\nfunction checkout("""
+          section_end = text.index(section_end_marker, section_start)
+
+          new_section = """<div\n  style={{\n    marginTop: 20,\n    paddingTop: 20,\n    borderTop: '1px solid #eee'\n  }}\n>\n  <button\n    type=\"button\"\n    onClick={() =>\n      setServiceLimitOptionsOpen(\n        !serviceLimitOptionsOpen\n      )\n    }\n    style={{\n      width: '100%',\n      padding: '8px 0',\n      border: 'none',\n      background: 'transparent',\n      color: '#111',\n      display: 'flex',\n      alignItems: 'center',\n      justifyContent: 'space-between',\n      fontSize: 16,\n      fontWeight: 600,\n      cursor: 'pointer'\n    }}\n  >\n    <span>Увеличить лимит услуг</span>\n    <span style={{ fontSize: 20 }}>\n      {serviceLimitOptionsOpen ? '⌃' : '›'}\n    </span>\n  </button>\n\n  {serviceLimitOptionsOpen && (\n    <div\n      style={{\n        display: 'grid',\n        gap: 8,\n        marginTop: 12\n      }}\n    >\n      {[\n        {\n          limit: 20,\n          addon: 4.99,\n          total: 12.98\n        },\n        {\n          limit: 30,\n          addon: 7.99,\n          total: 15.98\n        },\n        {\n          limit: 40,\n          addon: 11.99,\n          total: 19.98\n        },\n        {\n          limit: 100,\n          addon: 19.99,\n          total: 27.98\n        }\n      ].map(option => {\n        const selected =\n          selectedServiceLimit === option.limit;\n\n        return (\n          <button\n            key={option.limit}\n            type=\"button\"\n            onClick={() =>\n              setSelectedServiceLimit(\n                option.limit\n              )\n            }\n            style={{\n              width: '100%',\n              padding: '13px 14px',\n              borderRadius: 12,\n              border: selected\n                ? '2px solid #111'\n                : '1px solid #ddd',\n              background: selected\n                ? '#f5f5f5'\n                : '#fff',\n              color: '#111',\n              textAlign: 'left',\n              cursor: 'pointer'\n            }}\n          >\n            <div\n              style={{\n                display: 'flex',\n                justifyContent: 'space-between',\n                alignItems: 'center',\n                gap: 12\n              }}\n            >\n              <strong>\n                До {option.limit} услуг\n              </strong>\n\n              <span\n                style={{\n                  fontWeight: 700\n                }}\n              >\n                {selected ? '✓' : '○'}\n              </span>\n            </div>\n\n            <div\n              className=\"muted\"\n              style={{ marginTop: 5 }}\n            >\n              +${option.addon.toFixed(2)} / месяц\n            </div>\n\n            <div\n              style={{\n                marginTop: 3,\n                fontSize: 13\n              }}\n            >\n              Итого: ${option.total.toFixed(2)} / месяц\n            </div>\n          </button>\n        );\n      })}\n    </div>\n  )}\n\n  <button\n    type=\"button\"\n    className=\"primary full\"\n    style={{ marginTop: 16 }}\n    onClick={() =>\n      checkout(\n        'paddle',\n        business.id,\n        selectedServiceLimit\n      )\n    }\n  >\n    Оплатить подписку\n  </button>\n</div>\n"""
+
+          text = text[:section_start] + new_section + text[section_end:]
+
+          old_open = """window.Paddle.Checkout.open({\n\n    customData: {"""
+          new_open = """window.Paddle.Checkout.open({\n    items,\n    customData: {"""
+          if text.count(old_open) != 1:
+              raise SystemExit('Paddle Checkout.open block not found exactly once')
+          text = text.replace(old_open, new_open, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit changes and remove patch workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx .github/workflows/patch-subscription-ui.yml
+          git rm .github/workflows/patch-subscription-ui.yml
+          git commit -m "Refine subscription limit pricing flow"
+          git push origin main
