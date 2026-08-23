@@ -4065,6 +4065,128 @@ function Subscription({
     ) && active;
   const [subscriptionModal, setSubscriptionModal] =
   useState(false);
+  const [changingServiceLimit, setChangingServiceLimit] =
+  useState(false);
+
+const changeServiceLimit = async (
+  newLimit: number
+) => {
+  if (changingServiceLimit) {
+    return;
+  }
+
+  try {
+    setChangingServiceLimit(true);
+
+    const previewResponse = await fetch(
+      API + '/admin/subscription/preview-limit',
+      {
+        method: 'POST',
+        headers: {
+          ...headers(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          services_limit: newLimit
+        })
+      }
+    );
+
+    const previewData =
+      await previewResponse
+        .json()
+        .catch(() => null);
+
+    if (!previewResponse.ok) {
+      throw new Error(
+        previewData?.detail ||
+          'Не удалось рассчитать стоимость изменения лимита'
+      );
+    }
+
+    const result =
+      previewData?.data?.update_summary?.result;
+
+    const immediateAmount =
+      result?.amount
+        ? Number(result.amount) / 100
+        : null;
+
+    const recurringTotal =
+      previewData?.data
+        ?.recurring_transaction_details
+        ?.totals
+        ?.total
+        ? Number(
+            previewData.data
+              .recurring_transaction_details
+              .totals.total
+          ) / 100
+        : null;
+
+    const paymentText =
+      immediateAmount !== null
+        ? `Сейчас к оплате: $${immediateAmount.toFixed(2)}`
+        : 'Стоимость изменения будет рассчитана Paddle.';
+
+    const nextText =
+      recurringTotal !== null
+        ? `Со следующего продления: $${recurringTotal.toFixed(2)}/мес.`
+        : '';
+
+    const confirmed = window.confirm(
+      `Изменить лимит услуг на ${newLimit}?\n\n` +
+      `${paymentText}\n` +
+      `${nextText}`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const response = await fetch(
+      API + '/admin/subscription/change-limit',
+      {
+        method: 'POST',
+        headers: {
+          ...headers(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          services_limit: newLimit
+        })
+      }
+    );
+
+    const data =
+      await response
+        .json()
+        .catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail ||
+          'Не удалось изменить лимит услуг'
+      );
+    }
+
+    alert(
+      `Лимит услуг изменён на ${newLimit}.`
+    );
+
+    setSubscriptionModal(false);
+
+    window.location.reload();
+
+  } catch (e: any) {
+    alert(
+      e?.message ||
+        'Не удалось изменить лимит услуг'
+    );
+  } finally {
+    setChangingServiceLimit(false);
+  }
+};
 
   const expiresAt =
     business?.subscription_expires_at
@@ -4379,6 +4501,83 @@ function Subscription({
               'Отмена отключит следующее автоматическое списание. Доступ к Bookly Pro сохранится до конца оплаченного периода.'
             )}
           </p>
+          <div
+  style={{
+    marginTop: 20,
+    paddingTop: 20,
+    borderTop: '1px solid #eee'
+  }}
+>
+  <strong>
+    Увеличить лимит услуг
+  </strong>
+
+  <p
+    className="muted"
+    style={{ marginTop: 6 }}
+  >
+    Выберите новый лимит услуг.
+  </p>
+
+  <div
+    style={{
+      display: 'grid',
+      gap: 10,
+      marginTop: 12
+    }}
+  >
+    {[
+      {
+        limit: 20,
+        price: '$4.99 / месяц'
+      },
+      {
+        limit: 30,
+        price: '$7.99 / месяц'
+      },
+      {
+        limit: 50,
+        price: '$11.99 / месяц'
+      },
+      {
+        limit: 100,
+        price: '$19.99 / месяц'
+      }
+    ]
+      .filter(
+        option =>
+          option.limit >
+          (business?.services_limit || 10)
+      )
+      .map(option => (
+        <button
+          key={option.limit}
+          type="button"
+          className="subscription-manage-button"
+          disabled={changingServiceLimit}
+          onClick={() =>
+            changeServiceLimit(
+              option.limit
+            )
+          }
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%'
+          }}
+        >
+          <span>
+            До {option.limit} услуг
+          </span>
+
+          <strong>
+            {option.price}
+          </strong>
+        </button>
+      ))}
+  </div>
+</div>
 
                               <button
             type="button"
