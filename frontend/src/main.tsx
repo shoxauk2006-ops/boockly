@@ -4192,7 +4192,7 @@ function Subscription({
       }
     };
 
-  if (active && !paymentFailed) {
+    if (active && !paymentFailed) {
   return (
     <div className="card subscription">
 
@@ -4209,9 +4209,10 @@ function Subscription({
             </b>
           </p>
           <div>
-  <span>Лимит услуг</span>
-  <strong>10 услуг</strong>
-</div>
+            <span>Лимит услуг</span>
+            <strong>10 услуг</strong>
+          </div>
+        </div>
 
         <span className="pill ok">
           {t(
