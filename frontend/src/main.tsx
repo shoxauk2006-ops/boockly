@@ -4291,18 +4291,7 @@ const changeServiceLimit = async (
         )}
       </div>
 
-      {cancelledButActive ? (
-  <button
-    type="button"
-    className="subscription-manage-button"
-    onClick={resumeSubscription}
-  >
-    {t(
-      'owner.resumeSubscription',
-      'Возобновить подписку'
-    )}
-  </button>
-) : (
+      
   <>
     <button
       type="button"
@@ -4457,19 +4446,35 @@ const changeServiceLimit = async (
   </div>
 </div>
 
-                              <button
-            type="button"
-            className="subscription-danger-button"
-            onClick={async () => {
-              setSubscriptionModal(false);
-              await cancelSubscription();
-            }}
-          >
-            {t(
-              'owner.cancelSubscription',
-              'Отменить автопродление'
-            )}
-          </button>
+                              {cancelledButActive ? (
+  <button
+    type="button"
+    className="subscription-manage-button"
+    onClick={async () => {
+      setSubscriptionModal(false);
+      await resumeSubscription();
+    }}
+  >
+    {t(
+      'owner.resumeSubscription',
+      'Возобновить подписку'
+    )}
+  </button>
+) : (
+  <button
+    type="button"
+    className="subscription-danger-button"
+    onClick={async () => {
+      setSubscriptionModal(false);
+      await cancelSubscription();
+    }}
+  >
+    {t(
+      'owner.cancelSubscription',
+      'Отменить автопродление'
+    )}
+  </button>
+)}
         </div>
       </div>
     )}
