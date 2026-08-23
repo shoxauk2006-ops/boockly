@@ -4717,22 +4717,108 @@ const changeServiceLimit = async (
     )}
   </li>
 </ul>
+<div
+  style={{
+    marginTop: 20,
+    paddingTop: 20,
+    borderTop: '1px solid #eee'
+  }}
+>
+  <strong>
+    Увеличить лимит услуг
+  </strong>
 
-      <button
-        type="button"
-        className="primary full"
-        onClick={() =>
-          checkout(
-            'paddle',
-            business.id
-          )
-        }
-      >
-        {t(
-          'owner.openAccess',
-          'Открыть доступ'
-        )}
-      </button>
+  <p
+    className="muted"
+    style={{ marginTop: 6 }}
+  >
+    Выберите лимит услуг для подписки.
+  </p>
+
+  <div
+    style={{
+      display: 'grid',
+      gap: 10,
+      marginTop: 12
+    }}
+  >
+    <button
+      type="button"
+      className="subscription-manage-button"
+      onClick={() =>
+        checkout(
+          'paddle',
+          business.id,
+          10
+        )
+      }
+    >
+      <span>До 10 услуг</span>
+      <strong>$7.99 / месяц</strong>
+    </button>
+
+    <button
+      type="button"
+      className="subscription-manage-button"
+      onClick={() =>
+        checkout(
+          'paddle',
+          business.id,
+          20
+        )
+      }
+    >
+      <span>До 20 услуг</span>
+      <strong>$12.98 / месяц</strong>
+    </button>
+
+    <button
+      type="button"
+      className="subscription-manage-button"
+      onClick={() =>
+        checkout(
+          'paddle',
+          business.id,
+          30
+        )
+      }
+    >
+      <span>До 30 услуг</span>
+      <strong>$15.98 / месяц</strong>
+    </button>
+
+    <button
+      type="button"
+      className="subscription-manage-button"
+      onClick={() =>
+        checkout(
+          'paddle',
+          business.id,
+          50
+        )
+      }
+    >
+      <span>До 50 услуг</span>
+      <strong>$19.98 / месяц</strong>
+    </button>
+
+    <button
+      type="button"
+      className="subscription-manage-button"
+      onClick={() =>
+        checkout(
+          'paddle',
+          business.id,
+          100
+        )
+      }
+    >
+      <span>До 100 услуг</span>
+      <strong>$27.98 / месяц</strong>
+    </button>
+  </div>
+</div>
+      
 
     </div>
   );
