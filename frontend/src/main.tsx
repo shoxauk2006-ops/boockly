@@ -4230,34 +4230,34 @@ function Subscription({
       </p>
 
       <ul>
-        <li>
-          {t(
-            'owner.unlimitedBookings',
-            'Безлимитные записи'
-          )}
-        </li>
+  <li>
+    {t(
+      'owner.clientLink',
+      'Клиентская страница и ссылка'
+    )}
+  </li>
 
-        <li>
-          {t(
-            'owner.clientLink',
-            'Клиентская страница и ссылка'
-          )}
-        </li>
+  <li>
+    {t(
+      'owner.qrCode',
+      'QR-код бизнеса'
+    )}
+  </li>
 
-        <li>
-          {t(
-            'owner.telegramNotifications',
-            'Telegram-уведомления'
-          )}
-        </li>
+  <li>
+    {t(
+      'owner.servicesLimit',
+      'Увеличенный лимит услуг'
+    )}
+  </li>
 
-        <li>
-          {t(
-            'owner.scheduleAndBlocks',
-            'График и блокировки'
-          )}
-        </li>
-      </ul>
+  <li>
+    {t(
+      'owner.telegramNotifications',
+      'Уведомления в Telegram'
+    )}
+  </li>
+</ul>
 
       <div className="success">
         <strong>
@@ -4490,34 +4490,34 @@ function Subscription({
       </p>
 
       <ul>
-        <li>
-          {t(
-            'owner.unlimitedBookings',
-            'Безлимитные записи'
-          )}
-        </li>
+  <li>
+    {t(
+      'owner.clientLink',
+      'Клиентская страница и ссылка'
+    )}
+  </li>
 
-        <li>
-          {t(
-            'owner.clientLink',
-            'Клиентская страница и ссылка'
-          )}
-        </li>
+  <li>
+    {t(
+      'owner.qrCode',
+      'QR-код бизнеса'
+    )}
+  </li>
 
-        <li>
-          {t(
-            'owner.telegramNotifications',
-            'Telegram-уведомления'
-          )}
-        </li>
+  <li>
+    {t(
+      'owner.servicesLimit',
+      'Увеличенный лимит услуг'
+    )}
+  </li>
 
-        <li>
-          {t(
-            'owner.scheduleAndBlocks',
-            'График и блокировки'
-          )}
-        </li>
-      </ul>
+  <li>
+    {t(
+      'owner.telegramNotifications',
+      'Уведомления в Telegram'
+    )}
+  </li>
+</ul>
 
       <button
         type="button"
