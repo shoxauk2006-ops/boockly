@@ -4247,7 +4247,7 @@ function Subscription({
   <li>
     {t(
       'owner.servicesLimit',
-      'Увеличенный лимит услуг'
+      'До 10 услуг'
     )}
   </li>
 
@@ -4507,7 +4507,7 @@ function Subscription({
   <li>
     {t(
       'owner.servicesLimit',
-      'Увеличенный лимит услуг'
+      'До 10 услуг'
     )}
   </li>
 
