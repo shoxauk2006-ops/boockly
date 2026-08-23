@@ -4393,10 +4393,11 @@ function Subscription({
             )}
           </button>
         </div>
-      </div>
+            </div>
     )}
-  </>
-)}
+    </div>
+  );
+}
     
 
   if (paymentFailed) {
