@@ -6454,7 +6454,7 @@ if (!businessId) {
       const availabilityResponse =
         await fetch(
           API +
-            `/businesses/${business.id}/availability?service_id=${selectedServiceId}&day=${selectedDay}`
+            `/businesses/${businessId}/availability?service_id=${selectedServiceId}&day=${selectedDay}`
         );
 
       const data =
@@ -6505,10 +6505,11 @@ if (!businessId) {
       );
     }
   }, [
-    serviceId,
-    day,
-    showForm
-  ]);
+  serviceId,
+  day,
+  showForm,
+  businessId
+]);
 
   const createBooking =
     async (
