@@ -1083,7 +1083,7 @@ class ServiceIn(BaseModel):
     max_digits=18
 )
     currency: str = "UZS"
-    duration_min: int = Field(gt=0, le=480)
+    duration_min: int = Field(gt=0, le=1440)
     active: bool = True
 
 class SubscriptionLimitChangeIn(BaseModel):
