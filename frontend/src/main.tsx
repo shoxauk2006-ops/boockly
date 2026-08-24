@@ -3356,6 +3356,7 @@ borderTopColor: '#d32f2f',
       {tab === 'bookings' && (
         <Bookings
           bookings={bookings}
+          reload={load}
           t={t}
         />
       )}
