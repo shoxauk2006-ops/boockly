@@ -144,11 +144,11 @@ function App(){
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertModalMessage, setAlertModalMessage] = useState('');
   const [alertModalTitle, setAlertModalTitle] =
-  useState('Сообщение');
+  useState('Bookly');
 
   const showBooklyAlert = (
   message: string,
-  title = 'Сообщение'
+  title = 'Bookly'
 ) => {
   setAlertModalTitle(title);
   setAlertModalMessage(message);
