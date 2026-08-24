@@ -7600,24 +7600,25 @@ setTimezone(
             method: 'PUT',
             headers: headers(),
             body: JSON.stringify({
-              name: name.trim(),
-              business_image:
-                businessImage || '',
-              description:
-                description.trim(),
-              address:
-                address.trim(),
-              phone:
-                phone.trim(),
-              latitude:
-                latitude === ''
-                  ? null
-                  : Number(latitude),
-              longitude:
-                longitude === ''
-                  ? null
-                  : Number(longitude)
-            })
+  name: name.trim(),
+  business_image:
+    businessImage || '',
+  description:
+    description.trim(),
+  address:
+    address.trim(),
+  phone:
+    phone.trim(),
+  latitude:
+    latitude === ''
+      ? null
+      : Number(latitude),
+  longitude:
+    longitude === ''
+      ? null
+      : Number(longitude),
+  timezone
+})
           }
         );
 
@@ -7910,6 +7911,80 @@ setTimezone(
           }
         />
 
+        <div
+  style={{
+    marginTop: 12,
+    marginBottom: 12
+  }}
+>
+  <label
+    style={{
+      display: 'block',
+      marginBottom: 8,
+      fontWeight: 600
+    }}
+  >
+    Часовой пояс бизнеса
+  </label>
+
+  <select
+    value={timezone}
+    onChange={e =>
+      setTimezone(
+        e.target.value
+      )
+    }
+  >
+    <option value="Asia/Tashkent">
+      Ташкент (UTC+5)
+    </option>
+
+    <option value="Asia/Almaty">
+      Алматы (UTC+5)
+    </option>
+
+    <option value="Asia/Dubai">
+      Дубай (UTC+4)
+    </option>
+
+    <option value="Europe/Moscow">
+      Москва (UTC+3)
+    </option>
+
+    <option value="Europe/Istanbul">
+      Стамбул (UTC+3)
+    </option>
+
+    <option value="Europe/London">
+      Лондон (UTC+0)
+    </option>
+
+    <option value="Europe/Berlin">
+      Берлин (UTC+1)
+    </option>
+
+    <option value="America/New_York">
+      Нью-Йорк (UTC-5)
+    </option>
+
+    <option value="America/Los_Angeles">
+      Лос-Анджелес (UTC-8)
+    </option>
+  </select>
+
+  <p
+    className="muted"
+    style={{
+      marginTop: 8,
+      marginBottom: 0
+    }}
+  >
+    Время работы и записи указываются по этому
+    часовому поясу. Клиенты будут видеть это же
+    время.
+  </p>
+</div>
+        
         <div className="two">
           <input
             placeholder={t('settings.latitudeOptional')}
