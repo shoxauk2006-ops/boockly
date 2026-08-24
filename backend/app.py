@@ -3383,6 +3383,36 @@ async def paddle_webhook(
 
                 subscription.active = False
 
+                # ---------------------------------------------------------
+        # Синхронизируем статус подписки с Business
+        # ---------------------------------------------------------
+
+        b.subscription_active = bool(
+            subscription.active
+        )
+
+        b.subscription_expires_at = (
+            subscription.expires_at
+        )
+
+        b.subscription_status = (
+            "active"
+            if subscription.active
+            else (
+                subscription.status
+                or "inactive"
+            )
+        )
+
+        b.payment_provider = (
+            subscription.payment_provider
+            or "paddle"
+        )
+
+        b.external_subscription_id = (
+            subscription.external_subscription_id
+        )
+
         db.commit()
 
     return {
