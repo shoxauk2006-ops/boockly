@@ -7429,6 +7429,9 @@ function Settings({
   const [saving, setSaving] =
     useState(false);
 
+  const [deletingBusiness, setDeletingBusiness] =
+  useState(false);
+
   const [qrDataUrl, setQrDataUrl] =
     useState('');
 
