@@ -5729,13 +5729,13 @@ function checkout(
 const items = [
   {
     priceId:
-      'pri_01kzxgbt08rm3pk2p5eaywgbsy',
+      'pri_01kzwxx7zeytn8sqxfvpt0a8ys',
     quantity: 1
   }
 ];
 
 const addonPriceIds: Record<number, string> = {
-  20: 'pri_01m0mhcv9673d4xm8tf3yh5bph',
+  20: 'pri_01m0sy8kj4zw2ag1qe907zhdns',
   30: 'pri_01m0mhf9rdee684tyd3mg3xp8p',
   40: 'pri_01m0mhh2k5cts13j9h3agkt7bj',
   100: 'pri_01m0mhk1wq5brdkew92q3gvk9r'
