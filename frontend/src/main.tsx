@@ -6125,8 +6125,8 @@ useEffect(() => {
         display: 'inline-block',
         width: 14,
         height: 14,
-        border: '2px solid rgba(255,255,255,0.35)',
-        borderTopColor: '#fff',
+        border: '2px solid rgba(211,47,47,0.25)',
+        borderTopColor: '#d32f2f',
         borderRadius: '50%',
         animation:
           'bookly-spin .8s linear infinite'
