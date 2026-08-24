@@ -1569,8 +1569,6 @@ const filteredTimezones =
       );
     }
   );
-    }
-  ).slice(0, 50);
 
 const [newBusinessHours, setNewBusinessHours] =
   useState([
