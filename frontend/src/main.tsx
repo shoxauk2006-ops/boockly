@@ -9880,6 +9880,23 @@ function Client({
       ? t('client.savedBusiness')
       : t('client.saveBusiness')}
   </button>
+        <p
+  className="muted"
+  style={{
+    marginTop: 10,
+    marginBottom: 8,
+    fontSize: 13
+  }}
+>
+  Часовой пояс:{' '}
+  {business.timezone
+    ? formatGMTOffset(
+        getTimeZoneOffsetMinutes(
+          business.timezone
+        )
+      )
+    : 'GMT+0'}
+</p>
   <p
     className="muted"
     style={{
