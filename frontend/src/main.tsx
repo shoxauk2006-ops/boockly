@@ -4900,8 +4900,11 @@ function Services({
   const [savingService, setSavingService] =
   useState(false);
 
-  const [deletingService, setDeletingService] =
-  useState(false);
+  const serviceFormRef =
+  useRef<HTMLDivElement | null>(null);
+
+  const [deletingServiceId, setDeletingServiceId] =
+  useState<number | null>(null);
 
   const [f, setF] = useState({
     name: '',
@@ -5312,63 +5315,89 @@ alert(
       'UZS'
     );
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
+    requestAnimationFrame(() => {
+  const element =
+    serviceFormRef.current;
+
+  if (!element) {
+    return;
+  }
+
+  const top =
+    element.getBoundingClientRect().top +
+    window.scrollY -
+    16;
+
+  window.scrollTo({
+    top,
+    behavior: 'smooth'
+  });
+});
   };
 
   const remove = async (
-    id: number
-  ) => {
-    const confirmed =
-      window.confirm(
-        t(
-          'owner.confirmDeleteService',
-          'Удалить эту услугу?'
-        )
+  id: number
+) => {
+  const confirmed =
+    window.confirm(
+      t(
+        'owner.confirmDeleteService',
+        'Удалить эту услугу?'
+      )
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setDeletingServiceId(id);
+
+  try {
+    const response =
+      await fetch(
+        API +
+          `/admin/services/${id}`,
+        {
+          method: 'DELETE',
+          headers: headers()
+        }
       );
 
-    if (!confirmed) {
-      return;
-    }
-    
-    setDeletingService(true);
+    const data =
+      await response
+        .json()
+        .catch(() => null);
 
-    try {
-      const response =
-        await fetch(
-          API +
-            `/admin/services/${id}`,
-          {
-            method: 'DELETE',
-            headers: headers()
-          }
-        );
-
-      if (!response.ok) {
-        alert(
+    if (!response.ok) {
+      throw new Error(
+        data?.detail ||
           t(
             'owner.deleteServiceError',
             'Не удалось удалить услугу'
           )
-        );
-        return;
-      }
+      );
+    }
 
-      reload();
-    } catch (e: any) {
-  alert(
-    e?.message ||
-    t(
-      'owner.deleteServiceError',
-      'Не удалось удалить услугу'
-    )
-  );
-} finally {
-  setDeletingService(false);
-}
-  };
+    await reload();
+
+    alert(
+      t(
+        'owner.serviceDeleted',
+        '✅ Услуга удалена'
+      )
+    );
+  } catch (e: any) {
+    alert(
+      e?.message ||
+        t(
+          'owner.deleteServiceError',
+          'Не удалось удалить услугу'
+        )
+    );
+  } finally {
+    setDeletingServiceId(null);
+  }
+};
 
   return (
     <div>
@@ -5438,11 +5467,14 @@ alert(
 </button>
       </div>
 
-      <div className="card">
-        <h2>
-          {editingId
-            ? t('owner.editService')
-            : t('owner.addService')}
+      <div
+  className="card"
+  ref={serviceFormRef}
+>
+  <h2>
+    {editingId
+      ? t('owner.editService')
+      : t('owner.addService')}
         </h2>
 
         <input
@@ -5662,14 +5694,43 @@ alert(
 
               <button
   className="danger"
-  disabled={deletingService}
+  disabled={
+    deletingServiceId ===
+    service.id
+  }
   onClick={() =>
     remove(
       service.id
     )
   }
 >
-  {deletingService ? (
+  {deletingServiceId ===
+  service.id ? (
+    <>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 14,
+          height: 14,
+          border:
+            '2px solid rgba(176,0,32,0.25)',
+          borderTopColor:
+            '#b00020',
+          borderRadius: '50%',
+          animation:
+            'bookly-spin .8s linear infinite',
+          marginRight: 8,
+          verticalAlign: '-2px'
+        }}
+      />
+      Удаление...
+    </>
+  ) : (
+    t(
+      'owner.delete'
+    )
+  )}
+</button>
     <>
       <span
         style={{
