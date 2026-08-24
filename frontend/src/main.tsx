@@ -5608,7 +5608,7 @@ alert(
     </option>
 
     {Array.from(
-      { length: 9 },
+      { length: 25 },
       (_, i) => i + 1
     ).map(hour => (
       <option
