@@ -5572,24 +5572,94 @@ alert(
           )}
         </select>
 
-        <input
-          type="number"
-          min="1"
-          max="480"
-          placeholder={
-            t('owner.duration')
-          }
-          value={
-            f.duration_min
-          }
-          onChange={e =>
-            setF({
-              ...f,
-              duration_min:
-                e.target.value
-            })
-          }
-        />
+        <select
+  value={f.duration_min}
+  onChange={e =>
+    setF({
+      ...f,
+      duration_min: e.target.value
+    })
+  }
+>
+  <option value="">
+    {t(
+      'owner.duration',
+      'Длительность'
+    )}
+  </option>
+
+  <option value="15">
+    15 минут
+  </option>
+
+  <option value="30">
+    30 минут
+  </option>
+
+  <option value="45">
+    45 минут
+  </option>
+
+  <option value="60">
+    1 час
+  </option>
+
+  <option value="75">
+    1 час 15 минут
+  </option>
+
+  <option value="90">
+    1 час 30 минут
+  </option>
+
+  <option value="105">
+    1 час 45 минут
+  </option>
+
+  <option value="120">
+    2 часа
+  </option>
+
+  <option value="135">
+    2 часа 15 минут
+  </option>
+
+  <option value="150">
+    2 часа 30 минут
+  </option>
+
+  <option value="165">
+    2 часа 45 минут
+  </option>
+
+  <option value="180">
+    3 часа
+  </option>
+
+  <option value="210">
+    3 часа 30 минут
+  </option>
+
+  <option value="240">
+    4 часа
+  </option>
+
+  <option value="300">
+    5 часов
+  </option>
+
+  <option value="360">
+    6 часов
+  </option>
+
+  <option value="420">
+    7 часов
+  </option>
+
+  <option value="480">
+    8 часов
+  </option>
+</select>
 
         <div className="two">
           <button
