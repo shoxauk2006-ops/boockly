@@ -6299,9 +6299,11 @@ useEffect(() => {
 
 function Bookings({
   bookings,
+  reload,
   t
 }: {
   bookings: any[];
+  reload: () => Promise<void>;
   t: (key: string, fallback?: string) => string;
 }) {
   const [showForm, setShowForm] =
@@ -6360,37 +6362,76 @@ function Bookings({
     );
 
   useEffect(() => {
-    if (!showForm) return;
+  if (!showForm) {
+    return;
+  }
 
-    fetch(
-      API + '/admin/services',
-      {
-        headers: headers()
-      }
-    )
-      .then(r =>
-        r.ok ? r.json() : []
-      )
-      .then(data => {
+  const loadBookingData =
+    async () => {
+      try {
+        const [
+          servicesResponse,
+          businessResponse
+        ] = await Promise.all([
+          fetch(
+            API + '/admin/services',
+            {
+              headers: headers()
+            }
+          ),
+          fetch(
+            API + '/admin/business',
+            {
+              headers: headers()
+            }
+          )
+        ]);
+
+        const servicesData =
+          servicesResponse.ok
+            ? await servicesResponse.json()
+            : [];
+
+        const businessData =
+          businessResponse.ok
+            ? await businessResponse.json()
+            : null;
+
+        const nextServices =
+          Array.isArray(
+            servicesData
+          )
+            ? servicesData
+            : [];
+
         setServices(
-          Array.isArray(data)
-            ? data
-            : []
+          nextServices
         );
 
+        if (businessData?.id) {
+          setBusinessId(
+            Number(businessData.id)
+          );
+        }
+
         if (
-          data?.length &&
+          nextServices.length &&
           !serviceId
         ) {
           setServiceId(
-            String(data[0].id)
+            String(
+              nextServices[0].id
+            )
           );
         }
-      })
-      .catch(() => {
+      } catch {
         setServices([]);
-      });
-  }, [showForm]);
+        setBusinessId(null);
+      }
+    };
+
+  loadBookingData();
+}, [showForm]);
 
   const loadSlots = async (
   selectedServiceId: string,
@@ -6406,26 +6447,10 @@ function Bookings({
     setError('');
 
     try {
-      const businessResponse =
-        await fetch(
-          API +
-            '/admin/business',
-          {
-            headers: headers()
-          }
-        );
-
-      if (!businessResponse.ok) {
-        throw new Error(
-          t(
-            'owner.businessLoadError'
-          )
-        );
-      }
-
-      const business =
-        await businessResponse.json();
-
+      
+if (!businessId) {
+  return;
+}
       const availabilityResponse =
         await fetch(
           API +
@@ -6547,17 +6572,19 @@ function Bookings({
           );
         }
 
-        alert(
-          t(
-            'owner.bookingAdded'
-          )
-        );
+        await reload();
 
-        setClientName('');
-        setClientPhone('');
-        setSelectedSlot('');
-        setShowForm(false);
-        setSlots([]);
+alert(
+  t(
+    'owner.bookingAdded'
+  )
+);
+
+setClientName('');
+setClientPhone('');
+setSelectedSlot('');
+setShowForm(false);
+setSlots([]);
 
       } catch (e: any) {
         console.error(
@@ -8149,6 +8176,9 @@ function Client({
 
   const [services, setServices] =
     useState<any[]>([]);
+
+  const [businessId, setBusinessId] =
+  useState<number | null>(null);
 
   const [selected, setSelected] =
     useState<any>(null);
