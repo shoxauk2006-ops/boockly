@@ -5665,17 +5665,37 @@ function Services({
               </button>
 
               <button
-                className="danger"
-                onClick={() =>
-                  remove(
-                    service.id
-                  )
-                }
-              >
-                {t(
-                  'owner.delete'
-                )}
-              </button>
+  className="danger"
+  disabled={deletingService}
+  onClick={() =>
+    remove(
+      service.id
+    )
+  }
+>
+  {deletingService ? (
+    <>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 14,
+          height: 14,
+          border: '2px solid rgba(255,255,255,0.35)',
+          borderTopColor: '#fff',
+          borderRadius: '50%',
+          animation: 'bookly-spin .8s linear infinite',
+          marginRight: 8,
+          verticalAlign: '-2px'
+        }}
+      />
+      Удаление...
+    </>
+  ) : (
+    t(
+      'owner.delete'
+    )
+  )}
+</button>
             </div>
           </div>
         )
@@ -5700,7 +5720,13 @@ function Hours({
     end: '18:00'
   });
 
+  const [savingHours, setSavingHours] =
+  useState(false);
+
   const add = async () => {
+  setSavingHours(true);
+
+  try {
     await fetch(
       API + '/admin/hours',
       {
@@ -5714,8 +5740,10 @@ function Hours({
     );
 
     reload();
-  };
-
+  } finally {
+    setSavingHours(false);
+  }
+};
   return (
     <div className="card">
       <h2>
@@ -5776,11 +5804,31 @@ function Hours({
       </div>
 
       <button
-        className="primary full"
-        onClick={add}
-      >
-        {t('owner.addInterval')}
-      </button>
+  className="primary full"
+  disabled={savingHours}
+  onClick={add}
+>
+  {savingHours ? (
+    <>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 14,
+          height: 14,
+          border: '2px solid rgba(255,255,255,0.35)',
+          borderTopColor: '#fff',
+          borderRadius: '50%',
+          animation: 'bookly-spin .8s linear infinite',
+          marginRight: 8,
+          verticalAlign: '-2px'
+        }}
+      />
+      Сохранение...
+    </>
+  ) : (
+    t('owner.addInterval')
+  )}
+</button>
 
       {days.map(
         (d, i) => {
