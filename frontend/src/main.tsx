@@ -7836,6 +7836,43 @@ function Settings({
       business?.longitude ?? ''
     );
 
+  const [settingsTimezone, setSettingsTimezone] =
+  useState(
+    business?.timezone ||
+      Intl.DateTimeFormat()
+        .resolvedOptions()
+        .timeZone ||
+      'Asia/Tashkent'
+  );
+
+const [settingsTimezoneSearch, setSettingsTimezoneSearch] =
+  useState('');
+
+const [settingsTimezonePickerOpen, setSettingsTimezonePickerOpen] =
+  useState(false);
+
+const filteredSettingsTimezones =
+  useMemo(() => {
+    const search =
+      settingsTimezoneSearch
+        .trim()
+        .toLowerCase();
+
+    if (!search) {
+      return TIMEZONE_BY_OFFSET;
+    }
+
+    return TIMEZONE_BY_OFFSET.filter(
+      item =>
+        item.label
+          .toLowerCase()
+          .includes(search) ||
+        item.zone
+          .toLowerCase()
+          .includes(search)
+    );
+  }, [settingsTimezoneSearch]);
+
     
   const [businessImage, setBusinessImage] =
     useState(
@@ -7905,6 +7942,16 @@ function Settings({
   business?.longitude ?? ''
 );
 
+    setSettingsTimezone(
+  business?.timezone ||
+    Intl.DateTimeFormat()
+      .resolvedOptions()
+      .timeZone ||
+    'Asia/Tashkent'
+);
+
+setSettingsTimezoneSearch('');
+setSettingsTimezonePickerOpen(false);
 }, [business]);
   
     const handleBusinessImage = (
@@ -8027,6 +8074,8 @@ function Settings({
     longitude === ''
       ? null
       : Number(longitude),
+              
+    timezone: settingsTimezone,
 })
           }
         );
@@ -8341,6 +8390,157 @@ function Settings({
             }
           />
         </div>
+
+        <div
+  style={{
+    marginTop: 14
+  }}
+>
+  <label
+    style={{
+      display: 'block',
+      marginBottom: 8,
+      fontWeight: 600
+    }}
+  >
+    Часовой пояс бизнеса
+  </label>
+
+  <div
+    style={{
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center'
+    }}
+  >
+    <div
+      style={{
+        flex: 1,
+        padding: '11px 12px',
+        border: '1px solid #e5e7eb',
+        borderRadius: 12,
+        background: '#f8f9fa',
+        fontWeight: 600
+      }}
+    >
+      {getTimeZoneLabel(
+        settingsTimezone
+      )}
+
+      <span
+        style={{
+          float: 'right',
+          color: '#16a34a'
+        }}
+      >
+        ✓
+      </span>
+    </div>
+
+    <button
+      type="button"
+      className="ghost"
+      onClick={() => {
+        setSettingsTimezonePickerOpen(
+          !settingsTimezonePickerOpen
+        );
+
+        if (!settingsTimezonePickerOpen) {
+          setSettingsTimezoneSearch('');
+        }
+      }}
+    >
+      {settingsTimezonePickerOpen
+        ? 'Скрыть'
+        : 'Изменить'}
+    </button>
+  </div>
+
+  {settingsTimezonePickerOpen && (
+    <div
+      style={{
+        marginTop: 10,
+        padding: 12,
+        border: '1px solid #e5e7eb',
+        borderRadius: 16,
+        background: '#fff'
+      }}
+    >
+      <input
+        type="text"
+        placeholder="Найти город или часовой пояс..."
+        value={settingsTimezoneSearch}
+        onChange={e =>
+          setSettingsTimezoneSearch(
+            e.target.value
+          )
+        }
+      />
+
+      <div
+        style={{
+          maxHeight: 320,
+          overflowY: 'auto',
+          marginTop: 8,
+          border: '1px solid #e5e7eb',
+          borderRadius: 12
+        }}
+      >
+        {filteredSettingsTimezones.map(
+          item => (
+            <button
+              key={item.zone}
+              type="button"
+              onClick={() => {
+                setSettingsTimezone(
+                  item.zone
+                );
+                setSettingsTimezonePickerOpen(
+                  false
+                );
+                setSettingsTimezoneSearch('');
+              }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent:
+                  'space-between',
+                textAlign: 'left',
+                padding: '11px 12px',
+                border: 0,
+                borderBottom:
+                  '1px solid #f1f1f1',
+                background:
+                  item.zone ===
+                  settingsTimezone
+                    ? '#f5f5f5'
+                    : '#fff',
+                color: '#111'
+              }}
+            >
+              <span>
+                {item.label}
+              </span>
+
+              {item.zone ===
+                settingsTimezone && (
+                <span
+                  style={{
+                    fontWeight: 700,
+                    color: '#16a34a'
+                  }}
+                >
+                  ✓
+                </span>
+              )}
+            </button>
+          )
+        )}
+      </div>
+    </div>
+  )}
+</div>
 
                 <button
           className="primary full"
