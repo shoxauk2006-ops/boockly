@@ -5909,19 +5909,30 @@ function Blocks({
     end: '15:00',
     reason: ''
   });
-
+  
+const [savingBlock, setSavingBlock] =
+  useState(false);
+  
   const add = async () => {
+  setSavingBlock(true);
+
+  try {
     await fetch(
       API + '/admin/blocks',
       {
         method: 'POST',
         headers: headers(),
-        body: JSON.stringify(f)
+        body: JSON.stringify({
+          ...
+        })
       }
     );
 
     reload();
-  };
+  } finally {
+    setSavingBlock(false);
+  }
+};
 
   return (
     <div className="card">
