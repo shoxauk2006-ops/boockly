@@ -121,6 +121,39 @@ function BooklyAlertModal({
     </div>
   );
 }
+const TIMEZONE_OPTIONS = [
+  ['Asia/Tashkent', 'Ташкент'],
+  ['Asia/Almaty', 'Алматы'],
+  ['Asia/Bishkek', 'Бишкек'],
+  ['Asia/Dhaka', 'Дакка'],
+  ['Asia/Karachi', 'Карачи'],
+  ['Asia/Kolkata', 'Калькутта'],
+  ['Asia/Dubai', 'Дубай'],
+  ['Asia/Riyadh', 'Эр-Рияд'],
+  ['Asia/Tehran', 'Тегеран'],
+  ['Asia/Baghdad', 'Багдад'],
+  ['Asia/Jerusalem', 'Иерусалим'],
+  ['Asia/Baku', 'Баку'],
+  ['Asia/Tbilisi', 'Тбилиси'],
+  ['Europe/Moscow', 'Москва'],
+  ['Europe/Istanbul', 'Стамбул'],
+  ['Europe/Kiev', 'Киев'],
+  ['Europe/Berlin', 'Берлин'],
+  ['Europe/Paris', 'Париж'],
+  ['Europe/London', 'Лондон'],
+  ['Europe/Rome', 'Рим'],
+  ['Europe/Madrid', 'Мадрид'],
+  ['Africa/Cairo', 'Каир'],
+  ['Africa/Johannesburg', 'Йоханнесбург'],
+  ['America/New_York', 'Нью-Йорк'],
+  ['America/Chicago', 'Чикаго'],
+  ['America/Denver', 'Денвер'],
+  ['America/Los_Angeles', 'Лос-Анджелес'],
+  ['America/Toronto', 'Торонто'],
+  ['America/Sao_Paulo', 'Сан-Паулу'],
+  ['Australia/Sydney', 'Сидней'],
+  ['Pacific/Auckland', 'Окленд']
+];
 const getTimeZoneLabel = (
   timeZone: string
 ) => {
@@ -2439,20 +2472,58 @@ const confirmServiceLimitChange = async () => {
               )}
             </div>
 
-            <p
-  className="muted"
+            <div
   style={{
-    marginTop: 8,
+    marginTop: 12,
     marginBottom: 0
   }}
 >
-  Часовой пояс бизнеса: {
-    newBusinessTimezone ===
-    'Asia/Tashkent'
-      ? 'Ташкент (UTC+5)'
-      : newBusinessTimezone
-  }
-</p>
+  <label
+    style={{
+      display: 'block',
+      marginBottom: 8,
+      fontWeight: 600
+    }}
+  >
+    Часовой пояс бизнеса
+  </label>
+
+  <select
+    value={newBusinessTimezone}
+    onChange={e =>
+      setNewBusinessTimezone(
+        e.target.value
+      )
+    }
+  >
+    {TIMEZONE_OPTIONS.map(
+      ([value, label]) => (
+        <option
+          key={value}
+          value={value}
+        >
+          {label} — {
+            getTimeZoneLabel(
+              value
+            )
+          }
+        </option>
+      )
+    )}
+  </select>
+
+  <p
+    className="muted"
+    style={{
+      marginTop: 8,
+      marginBottom: 0
+    }}
+  >
+    По умолчанию выбран часовой пояс
+    вашего устройства. Вы можете изменить
+    его вручную.
+  </p>
+</div>
           </div>
 
           <label
