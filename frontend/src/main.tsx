@@ -195,6 +195,112 @@ const getTimeZoneLabel = (
     return timeZone;
   }
 };
+const getTimeZoneOffsetMinutes = (
+  timeZone: string
+) => {
+  try {
+    const parts =
+      new Intl.DateTimeFormat(
+        'en-US',
+        {
+          timeZone,
+          timeZoneName: 'longOffset'
+        }
+      ).formatToParts(
+        new Date()
+      );
+
+    const value =
+      parts.find(
+        part =>
+          part.type ===
+          'timeZoneName'
+      )?.value || '';
+
+    const match = value.match(
+      /GMT([+-])(\d{1,2})(?::(\d{2}))?$/
+    );
+
+    if (!match) {
+      return 0;
+    }
+
+    const sign =
+      match[1] === '-' ? -1 : 1;
+
+    const hours =
+      Number(match[2]);
+
+    const minutes =
+      Number(match[3] || 0);
+
+    return sign * (
+      hours * 60 + minutes
+    );
+  } catch {
+    return 0;
+  }
+};
+
+const formatGMTOffset = (
+  minutes: number
+) => {
+  if (minutes === 0) {
+    return 'GMT+0';
+  }
+
+  const sign =
+    minutes < 0 ? '-' : '+';
+
+  const absolute =
+    Math.abs(minutes);
+
+  const hours =
+    Math.floor(
+      absolute / 60
+    );
+
+  const mins =
+    absolute % 60;
+
+  return mins
+    ? `GMT${sign}${hours}:${String(
+        mins
+      ).padStart(2, '0')}`
+    : `GMT${sign}${hours}`;
+};
+
+const TIMEZONE_BY_OFFSET =
+  Array.from(
+    new Set(
+      ALL_TIMEZONES.map(
+        (zone: string) =>
+          getTimeZoneOffsetMinutes(zone)
+      )
+    )
+  )
+    .sort(
+      (a, b) => a - b
+    )
+    .map(offset => {
+      const zone =
+        ALL_TIMEZONES.find(
+          (item: string) =>
+            getTimeZoneOffsetMinutes(
+              item
+            ) === offset
+        ) || '';
+
+      return {
+        zone,
+        offset,
+        label: `${formatGMTOffset(
+          offset
+        )} — ${
+          getTimeZoneLabel(zone)
+        }`
+      };
+    });
 function App(){
     const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = useMemo(() => createTranslator(language), [language]);
@@ -1438,104 +1544,29 @@ function Admin({
   
   const [timezonePickerOpen, setTimezonePickerOpen] =
   useState(false);
-  
-  const getTimeZoneOffsetMinutes = (
-  timeZone: string
-) => {
-  try {
-    const parts =
-      new Intl.DateTimeFormat(
-        'en-US',
-        {
-          timeZone,
-          timeZoneName: 'longOffset'
-        }
-      ).formatToParts(
-        new Date()
-      );
 
-    const value =
-      parts.find(
-        part =>
-          part.type ===
-          'timeZoneName'
-      )?.value || '';
+  const filteredTimezones =
+  useMemo(() => {
+    const search =
+      timezoneSearch
+        .trim()
+        .toLowerCase();
 
-    const match = value.match(
-      /GMT([+-])(\d{1,2})(?::(\d{2}))?$/
-    );
-
-    if (!match) {
-      return 0;
+    if (!search) {
+      return TIMEZONE_BY_OFFSET;
     }
 
-    const sign =
-      match[1] === '-' ? -1 : 1;
-
-    const hours =
-      Number(match[2]);
-
-    const minutes =
-      Number(match[3] || 0);
-
-    return sign * (
-      hours * 60 +
-      minutes
+    return TIMEZONE_BY_OFFSET.filter(
+      item =>
+        item.label
+          .toLowerCase()
+          .includes(search) ||
+        item.zone
+          .toLowerCase()
+          .includes(search)
     );
-  } catch {
-    return 0;
-  }
-};
-
-const formatGMTOffset = (
-  minutes: number
-) => {
-  if (minutes === 0) {
-    return 'GMT+0';
-  }
-
-  const sign =
-    minutes < 0 ? '-' : '+';
-
-  const absolute =
-    Math.abs(minutes);
-
-  const hours =
-    Math.floor(
-      absolute / 60
-    );
-
-  const mins =
-    absolute % 60;
-
-  return mins
-    ? `GMT${sign}${hours}:${String(
-        mins
-      ).padStart(2, '0')}`
-    : `GMT${sign}${hours}`;
-};
-
-const TIMEZONE_BY_OFFSET =
-  Array.from(
-    new Set(
-      ALL_TIMEZONES.map(
-        (zone: string) =>
-          getTimeZoneOffsetMinutes(zone)
-      )
-    )
-  )
-    .sort(
-      (a, b) => a - b
-    )
-    .map(offset => {
-      const zone =
-        ALL_TIMEZONES.find(
-          (item: string) =>
-            getTimeZoneOffsetMinutes(
-              item
-            ) === offset
-        ) || '';
-
+  }, [timezoneSearch]);
+  
       return {
         zone,
         offset,
