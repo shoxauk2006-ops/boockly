@@ -4906,6 +4906,14 @@ function Services({
   const [deletingServiceId, setDeletingServiceId] =
   useState<number | null>(null);
 
+  const durationHours =
+  Math.floor(
+    Number(f.duration_min || 0) / 60
+  );
+
+const durationMinutes =
+  Number(f.duration_min || 0) % 60;
+
   const [f, setF] = useState({
   name: '',
   description: '',
@@ -5572,94 +5580,79 @@ alert(
           )}
         </select>
 
-        <select
-  value={f.duration_min}
-  onChange={e =>
-    setF({
-      ...f,
-      duration_min: e.target.value
-    })
-  }
+        <div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 9
+  }}
 >
-  <option value="">
-    {t(
-      'owner.duration',
-      'Длительность'
-    )}
-  </option>
+  <select
+    value={durationHours}
+    onChange={e => {
+      const hours = Number(
+        e.target.value
+      );
 
-  <option value="15">
-    15 минут
-  </option>
+      setF({
+        ...f,
+        duration_min: String(
+          hours * 60 +
+            durationMinutes
+        )
+      });
+    }}
+  >
+    <option value="0">
+      0 часов
+    </option>
 
-  <option value="30">
-    30 минут
-  </option>
+    {Array.from(
+      { length: 9 },
+      (_, i) => i + 1
+    ).map(hour => (
+      <option
+        key={hour}
+        value={hour}
+      >
+        {hour}{' '}
+        {hour === 1
+          ? 'час'
+          : hour < 5
+            ? 'часа'
+            : 'часов'}
+      </option>
+    ))}
+  </select>
 
-  <option value="45">
-    45 минут
-  </option>
+  <select
+    value={durationMinutes}
+    onChange={e => {
+      const minutes =
+        Number(e.target.value);
 
-  <option value="60">
-    1 час
-  </option>
-
-  <option value="75">
-    1 час 15 минут
-  </option>
-
-  <option value="90">
-    1 час 30 минут
-  </option>
-
-  <option value="105">
-    1 час 45 минут
-  </option>
-
-  <option value="120">
-    2 часа
-  </option>
-
-  <option value="135">
-    2 часа 15 минут
-  </option>
-
-  <option value="150">
-    2 часа 30 минут
-  </option>
-
-  <option value="165">
-    2 часа 45 минут
-  </option>
-
-  <option value="180">
-    3 часа
-  </option>
-
-  <option value="210">
-    3 часа 30 минут
-  </option>
-
-  <option value="240">
-    4 часа
-  </option>
-
-  <option value="300">
-    5 часов
-  </option>
-
-  <option value="360">
-    6 часов
-  </option>
-
-  <option value="420">
-    7 часов
-  </option>
-
-  <option value="480">
-    8 часов
-  </option>
-</select>
+      setF({
+        ...f,
+        duration_min: String(
+          durationHours * 60 +
+            minutes
+        )
+      });
+    }}
+  >
+    {Array.from(
+      { length: 60 },
+      (_, i) => i
+    ).map(minute => (
+      <option
+        key={minute}
+        value={minute}
+      >
+        {minute} минут
+      </option>
+    ))}
+  </select>
+</div>
 
         <div className="two">
           <button
