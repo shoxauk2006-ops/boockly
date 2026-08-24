@@ -4907,12 +4907,12 @@ function Services({
   useState<number | null>(null);
 
   const [f, setF] = useState({
-    name: '',
-    description: '',
-    price: '',
-    currency: 'UZS',
-    duration_min: '30'
-  });
+  name: '',
+  description: '',
+  price: '',
+  currency: 'UZS',
+  duration_min: ''
+});
 
   useEffect(() => {
     setBusinessPhone(
@@ -5080,7 +5080,7 @@ function Services({
       description: '',
       price: '',
       currency: 'UZS',
-      duration_min: '30'
+      duration_min: ''
     });
 
     setCurrencySearch('');
