@@ -1439,9 +1439,117 @@ function Admin({
   const [timezonePickerOpen, setTimezonePickerOpen] =
   useState(false);
   
-  const filteredTimezones =
-  ALL_TIMEZONES.filter(
-    (zone: string) => {
+  const getTimeZoneOffsetMinutes = (
+  timeZone: string
+) => {
+  try {
+    const parts =
+      new Intl.DateTimeFormat(
+        'en-US',
+        {
+          timeZone,
+          timeZoneName: 'longOffset'
+        }
+      ).formatToParts(
+        new Date()
+      );
+
+    const value =
+      parts.find(
+        part =>
+          part.type ===
+          'timeZoneName'
+      )?.value || '';
+
+    const match = value.match(
+      /GMT([+-])(\d{1,2})(?::(\d{2}))?$/
+    );
+
+    if (!match) {
+      return 0;
+    }
+
+    const sign =
+      match[1] === '-' ? -1 : 1;
+
+    const hours =
+      Number(match[2]);
+
+    const minutes =
+      Number(match[3] || 0);
+
+    return sign * (
+      hours * 60 +
+      minutes
+    );
+  } catch {
+    return 0;
+  }
+};
+
+const formatGMTOffset = (
+  minutes: number
+) => {
+  if (minutes === 0) {
+    return 'GMT+0';
+  }
+
+  const sign =
+    minutes < 0 ? '-' : '+';
+
+  const absolute =
+    Math.abs(minutes);
+
+  const hours =
+    Math.floor(
+      absolute / 60
+    );
+
+  const mins =
+    absolute % 60;
+
+  return mins
+    ? `GMT${sign}${hours}:${String(
+        mins
+      ).padStart(2, '0')}`
+    : `GMT${sign}${hours}`;
+};
+
+const TIMEZONE_BY_OFFSET =
+  Array.from(
+    new Set(
+      ALL_TIMEZONES.map(
+        (zone: string) =>
+          getTimeZoneOffsetMinutes(zone)
+      )
+    )
+  )
+    .sort(
+      (a, b) => a - b
+    )
+    .map(offset => {
+      const zone =
+        ALL_TIMEZONES.find(
+          (item: string) =>
+            getTimeZoneOffsetMinutes(
+              item
+            ) === offset
+        ) || '';
+
+      return {
+        zone,
+        offset,
+        label: `${formatGMTOffset(
+          offset
+        )} — ${
+          getTimeZoneLabel(zone)
+        }`
+      };
+    });
+
+const filteredTimezones =
+  TIMEZONE_BY_OFFSET.filter(
+    item => {
       const search =
         timezoneSearch
           .trim()
@@ -1451,19 +1559,16 @@ function Admin({
         return true;
       }
 
-      const city =
-        zone
-          .split('/')
-          .pop()
-          ?.replace(/_/g, ' ')
-          .toLowerCase() || '';
-
       return (
-        zone
+        item.label
           .toLowerCase()
           .includes(search) ||
-        city.includes(search)
+        item.zone
+          .toLowerCase()
+          .includes(search)
       );
+    }
+  );
     }
   ).slice(0, 50);
 
@@ -2645,13 +2750,13 @@ const confirmServiceLimitChange = async () => {
       }}
     >
       {filteredTimezones.map(
-        (zone: string) => (
+  item => (
           <button
-            key={zone}
+            key={item.zone}
             type="button"
             onClick={() => {
               setNewBusinessTimezone(
-                zone
+                item.zone
               );
               setTimezonePickerOpen(
                 false
@@ -2679,11 +2784,12 @@ const confirmServiceLimitChange = async () => {
             }}
           >
             <span>
-              {getTimeZoneLabel(zone)}
+              {item.label}
             </span>
-
-            {zone ===
-              newBusinessTimezone && (
+            
+             item.zone ===
+             newBusinessTimezone && (
+            
               <span
                 style={{
                   fontWeight: 700,
