@@ -290,6 +290,17 @@ const TIMEZONE_BY_OFFSET =
               item
             ) === offset
         ) || '';
+      
+              return {
+        zone,
+        offset,
+        label: `${formatGMTOffset(
+          offset
+        )} — ${
+          getTimeZoneLabel(zone)
+        }`
+      };
+    });
 
 function App(){
     const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
