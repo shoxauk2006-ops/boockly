@@ -6559,8 +6559,6 @@ function Bookings({
         setShowForm(false);
         setSlots([]);
 
-        window.location.reload();
-
       } catch (e: any) {
         console.error(
           'ADMIN CREATE BOOKING ERROR:',
@@ -6942,12 +6940,32 @@ function Bookings({
           </h3>
 
           {slotsLoading && (
-            <p className="muted">
-              {t(
-                'owner.loadingSlots'
-              )}
-            </p>
-          )}
+  <p
+    className="muted"
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8
+    }}
+  >
+    <span
+      style={{
+        display: 'inline-block',
+        width: 14,
+        height: 14,
+        border: '2px solid #ddd',
+        borderTopColor: '#111',
+        borderRadius: '50%',
+        animation:
+          'bookly-spin .8s linear infinite'
+      }}
+    />
+    {t(
+      'owner.loadingSlots',
+      'Загружаем свободное время...'
+    )}
+  </p>
+)}
 
           {!slotsLoading &&
   serviceId &&
@@ -6963,20 +6981,37 @@ function Bookings({
   {slots.map(
     time => (
       <button
-        key={time}
-        type="button"
-        disabled={saving}
-        className={
-          selectedSlot === time
-            ? 'primary'
-            : ''
-        }
-        onClick={() =>
-          setSelectedSlot(time)
-        }
-      >
-        {time}
-      </button>
+  key={time}
+  type="button"
+  disabled={saving}
+  onClick={() =>
+    setSelectedSlot(time)
+  }
+  style={{
+    background:
+      selectedSlot === time
+        ? '#111'
+        : '#fff',
+    color:
+      selectedSlot === time
+        ? '#fff'
+        : '#111',
+    border:
+      selectedSlot === time
+        ? '2px solid #111'
+        : '1px solid #ddd',
+    fontWeight:
+      selectedSlot === time
+        ? 700
+        : 500,
+    transition:
+      'all .15s ease'
+  }}
+>
+  {selectedSlot === time
+    ? `✓ ${time}`
+    : time}
+</button>
     )
   )}
 </div>
