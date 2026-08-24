@@ -1586,13 +1586,54 @@ def admin_hours(x_telegram_init_data: str = Header(default="")):
         return db.query(WorkingHour).filter_by(business_id=b.id).order_by(WorkingHour.weekday,WorkingHour.start).all()
 
 @app.post("/admin/hours")
-def admin_add_hour(x: WorkingHourIn, x_telegram_init_data: str = Header(default="")):
-    user=telegram_user(x_telegram_init_data)
-    if x.start >= x.end: raise HTTPException(400,"Start must be before end")
+def admin_add_hour(
+    x: WorkingHourIn,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    if x.start >= x.end:
+        raise HTTPException(
+            400,
+            "Start must be before end"
+        )
+
     with SessionLocal() as db:
-        b=owner_business(db,int(user["id"]))
-        if not b: raise HTTPException(400,"Create business first")
-        h=WorkingHour(business_id=b.id,**x.model_dump());db.add(h);db.commit();db.refresh(h);return h
+        b = owner_business(
+            db,
+            int(user["id"])
+        )
+
+        if not b:
+            raise HTTPException(
+                400,
+                "Create business first"
+            )
+
+        existing = (
+            db.query(WorkingHour)
+            .filter(
+                WorkingHour.business_id == b.id,
+                WorkingHour.weekday == x.weekday
+            )
+            .all()
+        )
+
+        for item in existing:
+            db.delete(item)
+
+        h = WorkingHour(
+            business_id=b.id,
+            **x.model_dump()
+        )
+
+        db.add(h)
+        db.commit()
+        db.refresh(h)
+
+        return h
 
 @app.delete("/admin/hours/{hour_id}")
 def admin_delete_hour(hour_id:int,x_telegram_init_data:str=Header(default="")):
