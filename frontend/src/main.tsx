@@ -2712,11 +2712,6 @@ const confirmServiceLimitChange = async () => {
   </div>
 )}
 
-        
-      </div>
-    </div>
-  )}
-
   <p
     className="muted"
     style={{
