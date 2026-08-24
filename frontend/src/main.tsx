@@ -1356,6 +1356,7 @@ function Admin({
   const [newBusinessTimezone, setNewBusinessTimezone] =
   useState(
     Intl.DateTimeFormat().resolvedOptions().timeZone ||
+      'Asia/Tashkent'
   );
 
 const [newBusinessHours, setNewBusinessHours] =
