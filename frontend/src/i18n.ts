@@ -114,7 +114,7 @@ const ru: TranslationMap = {
   'owner.serviceDescription': 'Описание',
   'owner.price': 'Цена',
   'owner.searchCurrency': 'Поиск валюты',
-  'owner.duration': 'Длительность в минутах',
+  'owner.duration': 'Длительность',
   'owner.saveChanges': 'Сохранить изменения',
   'owner.addServiceButton': '+ Добавить услугу',
   'owner.minutes': 'мин',
