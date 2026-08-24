@@ -5953,6 +5953,8 @@ useEffect(() => {
     );
 
     await reload();
+    
+    alert('Блокировка добавлена');
   } finally {
     setSavingBlock(false);
   }
