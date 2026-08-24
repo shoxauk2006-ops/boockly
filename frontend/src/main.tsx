@@ -1538,16 +1538,6 @@ function Admin({
   
   }, [timezoneSearch]);
   
-      return {
-        zone,
-        offset,
-        label: `${formatGMTOffset(
-          offset
-        )} — ${
-          getTimeZoneLabel(zone)
-        }`
-      };
-    });
 
 const filteredTimezones =
   TIMEZONE_BY_OFFSET.filter(
