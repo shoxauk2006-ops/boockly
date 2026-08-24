@@ -5719,22 +5719,67 @@ function Hours({
   useState(false);
 
   const add = async () => {
+  const weekday = Number(f.weekday);
+
+  const existingHours = hours.filter(
+    h => h.weekday === weekday
+  );
+
+  if (existingHours.length > 0) {
+    const dayName =
+      days[weekday] || 'Этот день';
+
+    const currentSchedule =
+      existingHours
+        .map(
+          h =>
+            `${h.start.slice(0, 5)}–${h.end.slice(0, 5)}`
+        )
+        .join(', ');
+
+    alert(
+      `График уже добавлен\n\n` +
+      `${dayName}: ${currentSchedule}\n\n` +
+      `Чтобы изменить график этого дня, ` +
+      `выберите другой интервал и нажмите "добавить интервал"` +
+      `кнопкой ×.`
+    );
+
+    return;
+  }
+
   setSavingHours(true);
 
   try {
-    await fetch(
+    const response = await fetch(
       API + '/admin/hours',
       {
         method: 'POST',
         headers: headers(),
         body: JSON.stringify({
           ...f,
-          weekday: Number(f.weekday)
+          weekday
         })
       }
     );
 
-    reload();
+    if (!response.ok) {
+      throw new Error(
+        'Не удалось добавить график'
+      );
+    }
+
+    await reload();
+
+    alert(
+      `График добавлен\n\n` +
+      `${days[weekday]}: ${f.start}–${f.end}`
+    );
+  } catch (e: any) {
+    alert(
+      e?.message ||
+        'Не удалось добавить график'
+    );
   } finally {
     setSavingHours(false);
   }
