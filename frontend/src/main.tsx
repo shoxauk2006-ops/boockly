@@ -5898,7 +5898,7 @@ function Blocks({
   t
 }: {
   blocks: any[];
-  reload: () => void;
+  reload: () => Promise<void>;
   t: (key: string, fallback?: string) => string;
 }) {
   const [f, setF] = useState({
@@ -5931,7 +5931,7 @@ const [savingBlock, setSavingBlock] =
       }
     );
 
-    reload();
+    await reload();
   } finally {
     setSavingBlock(false);
   }
