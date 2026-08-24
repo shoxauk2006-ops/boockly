@@ -374,9 +374,11 @@ telegram?.ready();
    const initializePaddle = () => {
      if (!window.Paddle) return;
 
-     window.Paddle.Initialize({
-     token
-     });
+     window.Paddle.Environment.set('sandbox');
+
+window.Paddle.Initialize({
+  token
+});
    };
 
    if (window.Paddle) {
