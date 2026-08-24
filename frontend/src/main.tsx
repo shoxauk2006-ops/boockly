@@ -6980,26 +6980,7 @@ function Bookings({
     )
   )}
 </div>
-  {slots.map(
-    time => (
-      <button
-        key={time}
-        type="button"
-        disabled={saving}
-        className={
-          selectedSlot === time
-            ? 'primary'
-            : ''
-        }
-        onClick={() =>
-          setSelectedSlot(time)
-        }
-      >
-        {time}
-      </button>
-    )
-  )}
-</div>
+  
 
           <h3>
             {t(
