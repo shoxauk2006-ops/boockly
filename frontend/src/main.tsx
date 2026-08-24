@@ -1435,7 +1435,10 @@ function Admin({
 
   const [timezoneSearch, setTimezoneSearch] =
   useState('');
-
+  
+  const [timezonePickerOpen, setTimezonePickerOpen] =
+  useState(false);
+  
   const filteredTimezones =
   ALL_TIMEZONES.filter(
     (zone: string) => {
@@ -2528,90 +2531,148 @@ const confirmServiceLimitChange = async () => {
   </label>
 
   <div
-  style={{
-    position: 'relative'
-  }}
->
-  <input
-    type="text"
-    placeholder="Найти город или часовой пояс..."
-    value={timezoneSearch}
-    onChange={e =>
-      setTimezoneSearch(
-        e.target.value
-      )
-    }
-  />
-
-  {timezoneSearch.trim() && (
+    style={{
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center'
+    }}
+  >
     <div
       style={{
-        maxHeight: 240,
-        overflowY: 'auto',
-        marginTop: 6,
-        border: '1px solid #e5e5e5',
+        flex: 1,
+        padding: '11px 12px',
+        border: '1px solid #e5e7eb',
         borderRadius: 12,
-        background: '#fff'
+        background: '#f8f9fa',
+        fontWeight: 600
       }}
     >
-      {filteredTimezones.map(
-        (zone: string) => (
-          <button
-            key={zone}
-            type="button"
-            onClick={() => {
-              setNewBusinessTimezone(
-                zone
-              );
-              setTimezoneSearch('');
-            }}
+      {getTimeZoneLabel(
+        newBusinessTimezone
+      )}
+
+      <span
+        style={{
+          float: 'right',
+          color: '#16a34a'
+        }}
+      >
+        ✓
+      </span>
+    </div>
+
+    <button
+      type="button"
+      className="ghost"
+      onClick={() => {
+        setTimezonePickerOpen(
+          !timezonePickerOpen
+        );
+
+        if (!timezonePickerOpen) {
+          setTimezoneSearch('');
+        }
+      }}
+      style={{
+        whiteSpace: 'nowrap'
+      }}
+    >
+      {timezonePickerOpen
+        ? 'Скрыть'
+        : 'Изменить'}
+    </button>
+  </div>
+
+  {timezonePickerOpen && (
+    <div
+      style={{
+        marginTop: 8
+      }}
+    >
+      <input
+        type="text"
+        placeholder="Найти город или часовой пояс..."
+        value={timezoneSearch}
+        onChange={e =>
+          setTimezoneSearch(
+            e.target.value
+          )
+        }
+      />
+
+      <div
+        style={{
+          maxHeight: 240,
+          overflowY: 'auto',
+          marginTop: 6,
+          border: '1px solid #e5e5e5',
+          borderRadius: 12,
+          background: '#fff'
+        }}
+      >
+        {filteredTimezones.map(
+          (zone: string) => (
+            <button
+              key={zone}
+              type="button"
+              onClick={() => {
+                setNewBusinessTimezone(
+                  zone
+                );
+                setTimezonePickerOpen(
+                  false
+                );
+                setTimezoneSearch('');
+              }}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                padding: '10px 12px',
+                border: 0,
+                borderBottom:
+                  '1px solid #f1f1f1',
+                background:
+                  zone ===
+                  newBusinessTimezone
+                    ? '#f3f4f6'
+                    : '#fff',
+                color: '#111',
+                cursor: 'pointer'
+              }}
+            >
+              {getTimeZoneLabel(zone)}
+
+              {zone ===
+                newBusinessTimezone && (
+                <span
+                  style={{
+                    float: 'right',
+                    fontWeight: 700,
+                    color: '#16a34a'
+                  }}
+                >
+                  ✓
+                </span>
+              )}
+            </button>
+          )
+        )}
+
+        {filteredTimezones.length ===
+          0 && (
+          <p
+            className="muted"
             style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '10px 12px',
-              border: 0,
-              borderBottom:
-                '1px solid #f1f1f1',
-              background:
-                zone ===
-                newBusinessTimezone
-                  ? '#f3f4f6'
-                  : '#fff',
-              color: '#111',
-              cursor: 'pointer'
+              padding: 12,
+              margin: 0
             }}
           >
-            {getTimeZoneLabel(zone)}
-
-            {zone ===
-              newBusinessTimezone && (
-              <span
-                style={{
-                  float: 'right',
-                  fontWeight: 700
-                }}
-              >
-                ✓
-              </span>
-            )}
-          </button>
-        )
-      )}
-
-      {filteredTimezones.length === 0 && (
-        <p
-          className="muted"
-          style={{
-            padding: 12,
-            margin: 0
-          }}
-        >
-          Часовой пояс не найден
-        </p>
-      )}
+            Часовой пояс не найден
+          </p>
+        )}
+      </div>
     </div>
   )}
-</div>
 
   <p
     className="muted"
@@ -2625,7 +2686,6 @@ const confirmServiceLimitChange = async () => {
     его вручную.
   </p>
 </div>
-          </div>
 
           <label
             style={{
