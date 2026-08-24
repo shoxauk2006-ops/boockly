@@ -2712,18 +2712,7 @@ const confirmServiceLimitChange = async () => {
   </div>
 )}
 
-        {filteredTimezones.length ===
-          0 && (
-          <p
-            className="muted"
-            style={{
-              padding: 12,
-              margin: 0
-            }}
-          >
-            Часовой пояс не найден
-          </p>
-        )}
+        
       </div>
     </div>
   )}
