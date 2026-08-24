@@ -1001,7 +1001,7 @@ def subscription_limits(subscription):
     """
 
     if not subscription or not subscription.active:
-    return {
+        return {
         "plan": "free",
         "max_services": 10,
         "current_price": 0.0,
