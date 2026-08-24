@@ -4906,21 +4906,21 @@ function Services({
   const [deletingServiceId, setDeletingServiceId] =
   useState<number | null>(null);
 
-  const durationHours =
-  Math.floor(
-    Number(f.duration_min || 0) / 60
-  );
-
-const durationMinutes =
-  Number(f.duration_min || 0) % 60;
-
-  const [f, setF] = useState({
+const [f, setF] = useState({
   name: '',
   description: '',
   price: '',
   currency: 'UZS',
   duration_min: ''
 });
+
+const durationHours =
+  Math.floor(
+    Number(f.duration_min || 0) / 60
+  );
+
+const durationMinutes =
+  Number(f.duration_min || 0) % 60;
 
   useEffect(() => {
     setBusinessPhone(
