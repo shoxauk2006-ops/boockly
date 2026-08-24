@@ -161,33 +161,7 @@ const ALL_TIMEZONES =
     : TIMEZONE_OPTIONS.map(
         ([value]) => value
       );
-const filteredTimezones =
-  ALL_TIMEZONES.filter(
-    (zone: string) => {
-      const search =
-        timezoneSearch
-          .trim()
-          .toLowerCase();
 
-      if (!search) {
-        return false;
-      }
-
-      const city =
-        zone
-          .split('/')
-          .pop()
-          ?.replace(/_/g, ' ')
-          .toLowerCase() || '';
-
-      return (
-        zone
-          .toLowerCase()
-          .includes(search) ||
-        city.includes(search)
-      );
-    }
-  ).slice(0, 50);
 const getTimeZoneLabel = (
   timeZone: string
 ) => {
@@ -1461,6 +1435,34 @@ function Admin({
 
   const [timezoneSearch, setTimezoneSearch] =
   useState('');
+
+  const filteredTimezones =
+  ALL_TIMEZONES.filter(
+    (zone: string) => {
+      const search =
+        timezoneSearch
+          .trim()
+          .toLowerCase();
+
+      if (!search) {
+        return false;
+      }
+
+      const city =
+        zone
+          .split('/')
+          .pop()
+          ?.replace(/_/g, ' ')
+          .toLowerCase() || '';
+
+      return (
+        zone
+          .toLowerCase()
+          .includes(search) ||
+        city.includes(search)
+      );
+    }
+  ).slice(0, 50);
 
 const [newBusinessHours, setNewBusinessHours] =
   useState([
