@@ -1001,13 +1001,13 @@ def subscription_limits(subscription):
     """
 
     if not subscription or not subscription.active:
-        return {
-            "plan": "free",
-            "max_services": 0,
-            "current_price": 0.0,
-            "pending_services": None,
-            "pending_price": None
-        }
+    return {
+        "plan": "free",
+        "max_services": 10,
+        "current_price": 0.0,
+        "pending_services": None,
+        "pending_price": None
+    }
 
     return {
         "plan": subscription.plan or "pro",
@@ -1520,16 +1520,7 @@ def admin_add_service(
             .count()
         )
 
-        # ---------------------------------------------------------
-        # Без активной Pro-подписки услуги создавать нельзя
-        # ---------------------------------------------------------
-
-        if not subscription or not subscription.active:
-            raise HTTPException(
-                403,
-                "Для добавления услуг необходима активная подписка Pro"
-            )
-
+        
         # ---------------------------------------------------------
         # Проверяем текущий лимит
         # ---------------------------------------------------------
