@@ -7419,6 +7419,12 @@ function Settings({
     useState(
       business?.longitude ?? ''
     );
+
+  const [timezone, setTimezone] =
+  useState(
+    business?.timezone ||
+    'Asia/Tashkent'
+  );
     
   const [businessImage, setBusinessImage] =
     useState(
@@ -7482,8 +7488,13 @@ function Settings({
   );
 
   setLongitude(
-    business?.longitude ?? ''
-  );
+  business?.longitude ?? ''
+);
+
+setTimezone(
+  business?.timezone ||
+  'Asia/Tashkent'
+);
 }, [business]);
   
     const handleBusinessImage = (
