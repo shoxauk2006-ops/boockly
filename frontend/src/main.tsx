@@ -121,6 +121,39 @@ function BooklyAlertModal({
     </div>
   );
 }
+const getTimeZoneLabel = (
+  timeZone: string
+) => {
+  try {
+    const city = timeZone
+      .split('/')
+      .pop()
+      ?.replace(/_/g, ' ');
+
+    const parts =
+      new Intl.DateTimeFormat(
+        'en-US',
+        {
+          timeZone,
+          timeZoneName:
+            'shortOffset'
+        }
+      ).formatToParts(
+        new Date()
+      );
+
+    const offset =
+      parts.find(
+        part =>
+          part.type ===
+          'timeZoneName'
+      )?.value || '';
+
+    return `${city || timeZone} (${offset})`;
+  } catch {
+    return timeZone;
+  }
+};
 function App(){
     const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = useMemo(() => createTranslator(language), [language]);
