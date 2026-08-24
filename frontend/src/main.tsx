@@ -6175,6 +6175,9 @@ function Bookings({
 
   const [saving, setSaving] =
     useState(false);
+
+  const [deletingBusiness, setDeletingBusiness] =
+  useState(false);
   
   const [deletingBusiness, setDeletingBusiness] =
   useState(false);
