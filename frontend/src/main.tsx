@@ -6001,6 +6001,9 @@ function Bookings({
 
   const [saving, setSaving] =
     useState(false);
+  
+  const [deletingBusiness, setDeletingBusiness] =
+  useState(false);
 
   const [error, setError] =
     useState('');
@@ -7294,6 +7297,8 @@ function Settings({
     link.click();
   };
   const deleteBusiness = async () => {
+        setDeletingBusiness(true);
+    
     const confirmed = window.confirm(
       'Вы действительно хотите удалить этот бизнес?\n\n' +
       'Все данные бизнеса, включая услуги, график работы, блокировки и записи, будут удалены без возможности восстановления.\n\n' +
