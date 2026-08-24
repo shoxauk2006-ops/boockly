@@ -910,11 +910,7 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   position: relative;
 }
 
-.subscription-modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-}
+
 .subscription-modal-overlay{
   position:fixed;
   inset:0;
@@ -939,8 +935,22 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 
 .subscription-modal-close{
   position:absolute;
-  top:16px;
-  right:16px;
+  top:10px;
+  right:10px;
+  width:30px;
+  height:30px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:#f1f2f4;
+  color:#111;
+  font-size:18px;
+  line-height:30px;
+  text-align:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:5;
 }
 .personal-home-menu{
   position:fixed;
