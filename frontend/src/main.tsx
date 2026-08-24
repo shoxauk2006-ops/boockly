@@ -2406,9 +2406,20 @@ const confirmServiceLimitChange = async () => {
               )}
             </div>
 
-            <p className="muted">
-              Часовой пояс: {newBusinessTimezone}
-            </p>
+            <p
+  className="muted"
+  style={{
+    marginTop: 8,
+    marginBottom: 0
+  }}
+>
+  Часовой пояс бизнеса: {
+    newBusinessTimezone ===
+    'Asia/Tashkent'
+      ? 'Ташкент (UTC+5)'
+      : newBusinessTimezone
+  }
+</p>
           </div>
 
           <label
