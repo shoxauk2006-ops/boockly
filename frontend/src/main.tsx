@@ -3675,6 +3675,167 @@ borderTopColor: '#d32f2f',
     )}
   </div>
 </div>
+            <div
+  style={{
+    marginTop: 12,
+    marginBottom: 0
+  }}
+>
+  <label
+    style={{
+      display: 'block',
+      marginBottom: 8,
+      fontWeight: 600
+    }}
+  >
+    Часовой пояс бизнеса
+  </label>
+
+  <div
+    style={{
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center'
+    }}
+  >
+    <div
+      style={{
+        flex: 1,
+        padding: '11px 12px',
+        border: '1px solid #e5e7eb',
+        borderRadius: 12,
+        background: '#f8f9fa',
+        fontWeight: 600
+      }}
+    >
+      {getTimeZoneLabel(
+        newBusinessTimezone
+      )}
+    </div>
+
+    <button
+      type="button"
+      className="ghost"
+      onClick={() => {
+        setTimezonePickerOpen(
+          !timezonePickerOpen
+        );
+
+        if (!timezonePickerOpen) {
+          setTimezoneSearch('');
+        }
+      }}
+    >
+      {timezonePickerOpen
+        ? 'Скрыть'
+        : 'Изменить'}
+    </button>
+  </div>
+
+  {timezonePickerOpen && (
+    <div
+      style={{
+        marginTop: 10,
+        padding: 12,
+        border: '1px solid #e5e7eb',
+        borderRadius: 16,
+        background: '#fff'
+      }}
+    >
+      <strong
+        style={{
+          display: 'block',
+          marginBottom: 10
+        }}
+      >
+        Выберите часовой пояс
+      </strong>
+
+      <input
+        type="text"
+        placeholder="Найти город или часовой пояс..."
+        value={timezoneSearch}
+        onChange={e =>
+          setTimezoneSearch(
+            e.target.value
+          )
+        }
+      />
+
+      <div
+        style={{
+          maxHeight: 320,
+          overflowY: 'auto',
+          marginTop: 8,
+          border: '1px solid #e5e7eb',
+          borderRadius: 12
+        }}
+      >
+        {filteredTimezones.map(item => (
+          <button
+            key={item.zone}
+            type="button"
+            onClick={() => {
+              setNewBusinessTimezone(
+                item.zone
+              );
+              setTimezonePickerOpen(
+                false
+              );
+              setTimezoneSearch('');
+            }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              justifyContent:
+                'space-between',
+              alignItems: 'center',
+              textAlign: 'left',
+              padding: '11px 12px',
+              border: 0,
+              borderBottom:
+                '1px solid #f1f1f1',
+              background:
+                item.zone ===
+                newBusinessTimezone
+                  ? '#f5f5f5'
+                  : '#fff',
+              color: '#111'
+            }}
+          >
+            <span>
+              {item.label}
+            </span>
+
+            {item.zone ===
+              newBusinessTimezone && (
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: '#16a34a'
+                }}
+              >
+                ✓
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <p
+    className="muted"
+    style={{
+      marginTop: 8,
+      marginBottom: 0
+    }}
+  >
+    По умолчанию выбран часовой пояс
+    вашего устройства. Вы можете изменить
+    его вручную.
+  </p>
+</div>
             <label
               style={{
                 display: 'block',
