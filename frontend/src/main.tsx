@@ -2315,7 +2315,6 @@ const confirmServiceLimitChange = async () => {
   style={{
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
     cursor: 'pointer'
   }}
 >
@@ -2335,10 +2334,6 @@ const confirmServiceLimitChange = async () => {
       setNewBusinessHours(next);
     }}
   />
-
-  <span>
-    Работаю
-  </span>
 </label>
     
                     </div>
