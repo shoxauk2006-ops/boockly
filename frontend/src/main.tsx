@@ -2773,10 +2773,10 @@ const confirmServiceLimitChange = async () => {
               borderBottom:
                 '1px solid #f1f1f1',
               background:
-                zone ===
-                newBusinessTimezone
-                  ? '#f5f5f5'
-                  : '#fff',
+  item.zone ===
+  newBusinessTimezone
+    ? '#f5f5f5'
+    : '#fff',
               color: '#111',
               cursor: 'pointer'
             }}
@@ -2785,18 +2785,17 @@ const confirmServiceLimitChange = async () => {
               {item.label}
             </span>
             
-             item.zone ===
-             newBusinessTimezone && (
-            
-              <span
-                style={{
-                  fontWeight: 700,
-                  color: '#16a34a'
-                }}
-              >
-                ✓
-              </span>
-            )}
+             {item.zone ===
+  newBusinessTimezone && (
+  <span
+    style={{
+      fontWeight: 700,
+      color: '#16a34a'
+    }}
+  >
+    ✓
+  </span>
+)}
           </button>
         )
       )}
