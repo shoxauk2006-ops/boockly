@@ -291,16 +291,6 @@ const TIMEZONE_BY_OFFSET =
             ) === offset
         ) || '';
 
-      return {
-        zone,
-        offset,
-        label: `${formatGMTOffset(
-          offset
-        )} — ${
-          getTimeZoneLabel(zone)
-        }`
-      };
-    });
 function App(){
     const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
   const t = useMemo(() => createTranslator(language), [language]);
@@ -1545,26 +1535,7 @@ function Admin({
   const [timezonePickerOpen, setTimezonePickerOpen] =
   useState(false);
 
-  const filteredTimezones =
-  useMemo(() => {
-    const search =
-      timezoneSearch
-        .trim()
-        .toLowerCase();
-
-    if (!search) {
-      return TIMEZONE_BY_OFFSET;
-    }
-
-    return TIMEZONE_BY_OFFSET.filter(
-      item =>
-        item.label
-          .toLowerCase()
-          .includes(search) ||
-        item.zone
-          .toLowerCase()
-          .includes(search)
-    );
+  
   }, [timezoneSearch]);
   
       return {
