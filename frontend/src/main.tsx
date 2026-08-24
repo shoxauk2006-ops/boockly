@@ -5922,9 +5922,12 @@ const [savingBlock, setSavingBlock] =
       {
         method: 'POST',
         headers: headers(),
-        body: JSON.stringify({
-          ...
-        })
+       body: JSON.stringify({
+  day: f.day,
+  start: f.start,
+  end: f.end,
+  reason: f.reason
+})
       }
     );
 
