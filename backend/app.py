@@ -1603,14 +1603,47 @@ def admin_delete_hour(hour_id:int,x_telegram_init_data:str=Header(default="")):
         db.delete(h);db.commit();return {"ok":True}
 
 @app.get("/admin/blocks")
-def admin_blocks(day: Optional[date]=None,x_telegram_init_data:str=Header(default="")):
-    user=telegram_user(x_telegram_init_data)
+def admin_blocks(
+    day: Optional[date] = None,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
     with SessionLocal() as db:
-        b=owner_business(db,int(user["id"]))
-        if not b:return []
-        q=db.query(BlockedSlot).filter_by(business_id=b.id)
-        if day:q=q.filter_by(day=day)
-        return q.order_by(BlockedSlot.day,BlockedSlot.start).all()
+        b = owner_business(
+            db,
+            int(user["id"])
+        )
+
+        if not b:
+            return []
+
+        # Автоматически удаляем блокировки,
+        # которые относятся к предыдущим дням.
+        today = datetime.now().date()
+
+        db.query(BlockedSlot).filter(
+            BlockedSlot.business_id == b.id,
+            BlockedSlot.day < today
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.commit()
+
+        q = db.query(BlockedSlot).filter_by(
+            business_id=b.id
+        )
+
+        if day:
+            q = q.filter_by(day=day)
+
+        return q.order_by(
+            BlockedSlot.day,
+            BlockedSlot.start
+        ).all()
 
 @app.post("/admin/blocks")
 def admin_block(x:BlockIn,x_telegram_init_data:str=Header(default="")):
