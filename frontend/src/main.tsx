@@ -4879,7 +4879,7 @@ function Services({
   t
 }: {
   services: any[];
-  reload: () => void;
+  reload: () => Promise<void>;
   business: any;
   t: (key: string, fallback?: string) => string;
 }) {
@@ -5252,20 +5252,21 @@ function Services({
           return;
         }
 
-        alert(
-          editingId
-            ? t(
-                'owner.serviceUpdated',
-                '✅ Услуга изменена'
-              )
-            : t(
-                'owner.serviceAdded',
-                '✅ Услуга добавлена'
-              )
-        );
-
         resetForm();
-        reload();
+
+await reload();
+
+alert(
+  editingId
+    ? t(
+        'owner.serviceUpdated',
+        '✅ Услуга изменена'
+      )
+    : t(
+        'owner.serviceAdded',
+        '✅ Услуга добавлена'
+      )
+);
             } catch (e: any) {
         alert(
           e?.message ||
