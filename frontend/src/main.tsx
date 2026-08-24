@@ -5912,6 +5912,9 @@ function Blocks({
   
 const [savingBlock, setSavingBlock] =
   useState(false);
+
+  const [deletingBlockId, setDeletingBlockId] =
+  useState<number | null>(null);
   
   const [currentTime, setCurrentTime] =
   useState(new Date());
@@ -6081,24 +6084,58 @@ useEffect(() => {
             </div>
 
             <button
-              className="danger"
-              onClick={async () => {
-                await fetch(
-                  API +
-                    `/admin/blocks/${b.id}`,
-                  {
-                    method:
-                      'DELETE',
-                    headers:
-                      headers()
-                  }
-                );
+  className="danger"
+  disabled={deletingBlockId === b.id}
+  onClick={async () => {
+    setDeletingBlockId(b.id);
 
-                reload();
-              }}
-            >
-              ×
-            </button>
+    try {
+      const response =
+        await fetch(
+          API +
+            `/admin/blocks/${b.id}`,
+          {
+            method: 'DELETE',
+            headers: headers()
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'Не удалось удалить блокировку'
+        );
+      }
+
+      await reload();
+
+      alert('Блокировка удалена');
+    } catch (e: any) {
+      alert(
+        e?.message ||
+          'Не удалось удалить блокировку'
+      );
+    } finally {
+      setDeletingBlockId(null);
+    }
+  }}
+>
+  {deletingBlockId === b.id ? (
+    <span
+      style={{
+        display: 'inline-block',
+        width: 14,
+        height: 14,
+        border: '2px solid rgba(255,255,255,0.35)',
+        borderTopColor: '#fff',
+        borderRadius: '50%',
+        animation:
+          'bookly-spin .8s linear infinite'
+      }}
+    />
+  ) : (
+    '×'
+  )}
+</button>
           </div>
         )
       )}
