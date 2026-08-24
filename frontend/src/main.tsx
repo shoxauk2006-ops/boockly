@@ -2634,6 +2634,62 @@ const confirmServiceLimitChange = async () => {
                       'common.open'
                     )}
               </button>
+            <button
+  type="button"
+  className="ghost"
+  style={{
+    color: '#d32f2f',
+    borderColor: '#d32f2f'
+  }}
+  onClick={async () => {
+    const confirmed =
+      window.confirm(
+        'Удалить бизнес?\n\n' +
+        'ВНИМАНИЕ! Это действие необратимо.\n\n' +
+        'Все данные этого бизнеса будут безвозвратно удалены, включая услуги, записи, расписание и другие данные.\n\n' +
+        'Активная подписка этого бизнеса также будет удалена и сгорит. Возврат оплаты за подписку не производится.\n\n' +
+        'Вы действительно хотите удалить этот бизнес?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response =
+        await fetch(
+          API +
+            `/admin/business/${item.id}`,
+          {
+            method: 'DELETE',
+            headers: headers()
+          }
+        );
+
+      const data =
+        await response
+          .json()
+          .catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+            'Не удалось удалить бизнес'
+        );
+      }
+
+      reload();
+
+    } catch (e: any) {
+      alert(
+        e?.message ||
+          'Не удалось удалить бизнес'
+      );
+    }
+  }}
+>
+  Удалить
+</button>
             </div>
           ))}
 
