@@ -5991,11 +5991,31 @@ const [savingBlock, setSavingBlock] =
       />
 
       <button
-        className="primary full"
-        onClick={add}
-      >
-        {t('owner.blockTime')}
-      </button>
+  className="primary full"
+  disabled={savingBlock}
+  onClick={add}
+>
+  {savingBlock ? (
+    <>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 14,
+          height: 14,
+          border: '2px solid rgba(255,255,255,0.35)',
+          borderTopColor: '#fff',
+          borderRadius: '50%',
+          animation: 'bookly-spin .8s linear infinite',
+          marginRight: 8,
+          verticalAlign: '-2px'
+        }}
+      />
+      Сохранение...
+    </>
+  ) : (
+    t('owner.blockTime')
+  )}
+</button>
 
       {blocks.map(
         b => (
