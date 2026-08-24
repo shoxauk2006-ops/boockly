@@ -5913,6 +5913,27 @@ function Blocks({
 const [savingBlock, setSavingBlock] =
   useState(false);
   
+  const [currentTime, setCurrentTime] =
+  useState(new Date());
+
+useEffect(() => {
+  const timer = window.setInterval(() => {
+    setCurrentTime(new Date());
+  }, 30000);
+
+  return () => {
+    window.clearInterval(timer);
+  };
+}, []);
+  
+  const isBlockPast = (block: any) => {
+  const endTime = new Date(
+    `${block.day}T${block.end.slice(0, 8)}`
+  );
+
+  return endTime < currentTime;
+};
+  
   const add = async () => {
   setSavingBlock(true);
 
@@ -6023,22 +6044,38 @@ const [savingBlock, setSavingBlock] =
       {blocks.map(
         b => (
           <div
-            className="row line"
-            key={b.id}
-          >
+  className="row line"
+  key={b.id}
+  style={{
+    opacity: isBlockPast(b) ? 0.55 : 1
+  }}
+>
             <div>
               <b>
                 {b.day}
               </b>
 
               <p>
-                {b.start.slice(0, 5)}
-                –
-                {b.end.slice(0, 5)}
+  {b.start.slice(0, 5)}
+  –
+  {b.end.slice(0, 5)}
 
-                {b.reason &&
-                  ` · ${b.reason}`}
-              </p>
+  {b.reason &&
+    ` · ${b.reason}`}
+
+  {isBlockPast(b) && (
+    <span
+      style={{
+        marginLeft: 8,
+        fontSize: 12,
+        fontWeight: 600,
+        opacity: 0.8
+      }}
+    >
+      ✓ Прошедшее
+    </span>
+  )}
+</p>
             </div>
 
             <button
