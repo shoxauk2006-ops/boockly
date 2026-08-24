@@ -6322,6 +6322,9 @@ function Bookings({
 
   const [slots, setSlots] =
     useState<string[]>([]);
+  
+  const [selectedSlot, setSelectedSlot] =
+  useState('');
 
   const [slotsLoading, setSlotsLoading] =
     useState(false);
@@ -6390,9 +6393,10 @@ function Bookings({
   }, [showForm]);
 
   const loadSlots = async (
-    selectedServiceId: string,
-    selectedDay: string
-  ) => {
+  selectedServiceId: string,
+  selectedDay: string
+) => {
+  setSelectedSlot('');
     if (!selectedServiceId) {
       return;
     }
@@ -6551,6 +6555,7 @@ function Bookings({
 
         setClientName('');
         setClientPhone('');
+        setSelectedSlot('');
         setShowForm(false);
         setSlots([]);
 
@@ -6945,33 +6950,28 @@ function Bookings({
           )}
 
           {!slotsLoading &&
-            !slots.length && (
-              <p className="muted">
-                {t(
-                  'owner.noAvailableTime'
-                )}
-              </p>
-            )}
 
           <div className="slots">
-            {slots.map(
-              time => (
-                <button
-                  key={time}
-                  disabled={
-                    saving
-                  }
-                  onClick={() =>
-                    createBooking(
-                      time
-                    )
-                  }
-                >
-                  {time}
-                </button>
-              )
-            )}
-          </div>
+  {slots.map(
+    time => (
+      <button
+        key={time}
+        type="button"
+        disabled={saving}
+        className={
+          selectedSlot === time
+            ? 'primary'
+            : ''
+        }
+        onClick={() =>
+          setSelectedSlot(time)
+        }
+      >
+        {time}
+      </button>
+    )
+  )}
+</div>
 
           <h3>
             {t(
@@ -7012,6 +7012,31 @@ function Bookings({
               )
             }
           />
+          <button
+  type="button"
+  className="primary full"
+  disabled={
+    saving ||
+    !selectedSlot ||
+    !serviceId ||
+    !clientName.trim()
+  }
+  onClick={() =>
+    createBooking(
+      selectedSlot
+    )
+  }
+>
+  {saving
+    ? t(
+        'common.loading',
+        'Загрузка...'
+      )
+    : t(
+        'owner.addBooking',
+        'Добавить запись'
+      )}
+</button>
 
           {error && (
             <div
