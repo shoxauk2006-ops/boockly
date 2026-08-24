@@ -7296,10 +7296,8 @@ function Settings({
 
     link.click();
   };
-  const deleteBusiness = async () => {
-        setDeletingBusiness(true);
-    
-    const confirmed = window.confirm(
+  const deleteBusiness = async () => { 
+     const confirmed = window.confirm(
       'Вы действительно хотите удалить этот бизнес?\n\n' +
       'Все данные бизнеса, включая услуги, график работы, блокировки и записи, будут удалены без возможности восстановления.\n\n' +
       'Подписка при этом НЕ отменяется. Вы сможете создать новый бизнес и продолжить пользоваться активной подпиской.'
@@ -7308,6 +7306,8 @@ function Settings({
     if (!confirmed) {
       return;
     }
+
+    setDeletingBusiness(true);
 
     try {
       const response = await fetch(
@@ -7336,11 +7336,13 @@ function Settings({
 
       reload();
 
-    } catch (e: any) {
+        } catch (e: any) {
       alert(
         e?.message ||
         'Не удалось удалить бизнес'
       );
+    } finally {
+      setDeletingBusiness(false);
     }
   };
   return (
@@ -7503,16 +7505,36 @@ function Settings({
           }}
         >
           <button
-            type="button"
-            className="ghost full"
-            onClick={deleteBusiness}
-            style={{
-              color: '#d32f2f',
-              borderColor: '#d32f2f'
-            }}
-          >
-            Удалить бизнес
-          </button>
+  type="button"
+  className="ghost full"
+  disabled={deletingBusiness}
+  onClick={deleteBusiness}
+  style={{
+    color: '#d32f2f',
+    borderColor: '#d32f2f'
+  }}
+>
+  {deletingBusiness ? (
+    <>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 14,
+          height: 14,
+          border: '2px solid rgba(211,47,47,0.25)',
+          borderTopColor: '#d32f2f',
+          borderRadius: '50%',
+          animation: 'bookly-spin .8s linear infinite',
+          marginRight: 8,
+          verticalAlign: '-2px'
+        }}
+      />
+      Удаление...
+    </>
+  ) : (
+    'Удалить бизнес'
+  )}
+</button>
         </div>
 
       </div>
