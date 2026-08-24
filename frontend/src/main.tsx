@@ -4888,6 +4888,8 @@ function Services({
 
   const [savingBusiness, setSavingBusiness] =
     useState(false);
+  const [savingService, setSavingService] =
+  useState(false);
 
   const [f, setF] = useState({
     name: '',
@@ -5140,6 +5142,7 @@ function Services({
 
   const saveService =
     async () => {
+          setSavingService(true);
       const name =
         f.name.trim();
 
@@ -5251,7 +5254,7 @@ function Services({
 
         resetForm();
         reload();
-      } catch (e: any) {
+            } catch (e: any) {
         alert(
           e?.message ||
           t(
@@ -5259,6 +5262,8 @@ function Services({
             'Не удалось сохранить услугу'
           )
         );
+      } finally {
+        setSavingService(false);
       }
     };
 
@@ -5539,19 +5544,39 @@ function Services({
 
         <div className="two">
           <button
-            className="primary full"
-            onClick={
-              saveService
-            }
-          >
-            {editingId
-              ? t(
-                  'owner.saveChanges'
-                )
-              : t(
-                  'owner.addServiceButton'
-                )}
-          </button>
+  className="primary full"
+  disabled={savingService}
+  onClick={saveService}
+>
+  {savingService ? (
+    <>
+      <span
+        style={{
+          display: 'inline-block',
+          width: 14,
+          height: 14,
+          border: '2px solid rgba(255,255,255,0.35)',
+          borderTopColor: '#fff',
+          borderRadius: '50%',
+          animation: 'bookly-spin .8s linear infinite',
+          marginRight: 8,
+          verticalAlign: '-2px'
+        }}
+      />
+      Сохранение...
+    </>
+  ) : (
+    editingId
+      ? t(
+          'owner.saveChanges',
+          'Сохранить изменения'
+        )
+      : t(
+          'owner.addServiceButton',
+          'Добавить услугу'
+        )
+  )}
+</button>
 
           {editingId && (
             <button
