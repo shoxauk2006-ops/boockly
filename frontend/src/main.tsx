@@ -1535,7 +1535,26 @@ function Admin({
   const [timezonePickerOpen, setTimezonePickerOpen] =
   useState(false);
 
-  
+const filteredTimezones =
+  useMemo(() => {
+    const search =
+      timezoneSearch
+        .trim()
+        .toLowerCase();
+
+    if (!search) {
+      return TIMEZONE_BY_OFFSET;
+    }
+
+    return TIMEZONE_BY_OFFSET.filter(
+      item =>
+        item.label
+          .toLowerCase()
+          .includes(search) ||
+        item.zone
+          .toLowerCase()
+          .includes(search)
+    );
   }, [timezoneSearch]);
 
 const [newBusinessHours, setNewBusinessHours] =
