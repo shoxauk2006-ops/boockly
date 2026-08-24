@@ -5580,6 +5580,16 @@ alert(
           )}
         </select>
 
+<label
+  style={{
+    display: 'block',
+    marginBottom: 8,
+    fontWeight: 600
+  }}
+>
+  Длительность услуги
+</label>
+        
         <div
   style={{
     display: 'grid',
