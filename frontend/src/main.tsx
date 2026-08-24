@@ -6312,6 +6312,9 @@ function Bookings({
   const [services, setServices] =
     useState<any[]>([]);
 
+  const [businessId, setBusinessId] =
+  useState<number | null>(null);
+
   const [serviceId, setServiceId] =
     useState('');
 
