@@ -1537,30 +1537,6 @@ function Admin({
 
   
   }, [timezoneSearch]);
-  
-
-const filteredTimezones =
-  TIMEZONE_BY_OFFSET.filter(
-    item => {
-      const search =
-        timezoneSearch
-          .trim()
-          .toLowerCase();
-
-      if (!search) {
-        return true;
-      }
-
-      return (
-        item.label
-          .toLowerCase()
-          .includes(search) ||
-        item.zone
-          .toLowerCase()
-          .includes(search)
-      );
-    }
-  );
 
 const [newBusinessHours, setNewBusinessHours] =
   useState([
