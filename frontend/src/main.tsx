@@ -154,6 +154,40 @@ const TIMEZONE_OPTIONS = [
   ['Australia/Sydney', 'Сидней'],
   ['Pacific/Auckland', 'Окленд']
 ];
+const ALL_TIMEZONES =
+  typeof (Intl as any).supportedValuesOf ===
+  'function'
+    ? (Intl as any).supportedValuesOf('timeZone')
+    : TIMEZONE_OPTIONS.map(
+        ([value]) => value
+      );
+const filteredTimezones =
+  ALL_TIMEZONES.filter(
+    (zone: string) => {
+      const search =
+        timezoneSearch
+          .trim()
+          .toLowerCase();
+
+      if (!search) {
+        return false;
+      }
+
+      const city =
+        zone
+          .split('/')
+          .pop()
+          ?.replace(/_/g, ' ')
+          .toLowerCase() || '';
+
+      return (
+        zone
+          .toLowerCase()
+          .includes(search) ||
+        city.includes(search)
+      );
+    }
+  ).slice(0, 50);
 const getTimeZoneLabel = (
   timeZone: string
 ) => {
@@ -1425,6 +1459,9 @@ function Admin({
       'Asia/Tashkent'
   );
 
+  const [timezoneSearch, setTimezoneSearch] =
+  useState('');
+
 const [newBusinessHours, setNewBusinessHours] =
   useState([
     {
@@ -2488,29 +2525,91 @@ const confirmServiceLimitChange = async () => {
     Часовой пояс бизнеса
   </label>
 
-  <select
-    value={newBusinessTimezone}
+  <div
+  style={{
+    position: 'relative'
+  }}
+>
+  <input
+    type="text"
+    placeholder="Найти город или часовой пояс..."
+    value={timezoneSearch}
     onChange={e =>
-      setNewBusinessTimezone(
+      setTimezoneSearch(
         e.target.value
       )
     }
-  >
-    {TIMEZONE_OPTIONS.map(
-      ([value, label]) => (
-        <option
-          key={value}
-          value={value}
+  />
+
+  {timezoneSearch.trim() && (
+    <div
+      style={{
+        maxHeight: 240,
+        overflowY: 'auto',
+        marginTop: 6,
+        border: '1px solid #e5e5e5',
+        borderRadius: 12,
+        background: '#fff'
+      }}
+    >
+      {filteredTimezones.map(
+        (zone: string) => (
+          <button
+            key={zone}
+            type="button"
+            onClick={() => {
+              setNewBusinessTimezone(
+                zone
+              );
+              setTimezoneSearch('');
+            }}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              padding: '10px 12px',
+              border: 0,
+              borderBottom:
+                '1px solid #f1f1f1',
+              background:
+                zone ===
+                newBusinessTimezone
+                  ? '#f3f4f6'
+                  : '#fff',
+              color: '#111',
+              cursor: 'pointer'
+            }}
+          >
+            {getTimeZoneLabel(zone)}
+
+            {zone ===
+              newBusinessTimezone && (
+              <span
+                style={{
+                  float: 'right',
+                  fontWeight: 700
+                }}
+              >
+                ✓
+              </span>
+            )}
+          </button>
+        )
+      )}
+
+      {filteredTimezones.length === 0 && (
+        <p
+          className="muted"
+          style={{
+            padding: 12,
+            margin: 0
+          }}
         >
-          {label} — {
-            getTimeZoneLabel(
-              value
-            )
-          }
-        </option>
-      )
-    )}
-  </select>
+          Часовой пояс не найден
+        </p>
+      )}
+    </div>
+  )}
+</div>
 
   <p
     className="muted"
