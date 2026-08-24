@@ -4905,6 +4905,9 @@ function Services({
   const [savingService, setSavingService] =
   useState(false);
 
+  const [deletingService, setDeletingService] =
+  useState(false);
+
   const [f, setF] = useState({
     name: '',
     description: '',
@@ -5333,6 +5336,8 @@ function Services({
     if (!confirmed) {
       return;
     }
+    
+    setDeletingService(true);
 
     try {
       const response =
@@ -5357,14 +5362,16 @@ function Services({
 
       reload();
     } catch (e: any) {
-      alert(
-        e?.message ||
-        t(
-          'owner.deleteServiceError',
-          'Не удалось удалить услугу'
-        )
-      );
-    }
+  alert(
+    e?.message ||
+    t(
+      'owner.deleteServiceError',
+      'Не удалось удалить услугу'
+    )
+  );
+} finally {
+  setDeletingService(false);
+}
   };
 
   return (
