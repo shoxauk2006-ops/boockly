@@ -2860,6 +2860,20 @@ def cancel_subscription(
         if not subscription_id.startswith("sub_"):
             raise HTTPException(400, "Invalid Paddle subscription ID")
 
+        # Если ранее была запланирована отмена пакета,
+        # сначала убираем scheduled change Paddle,
+        # чтобы затем можно было запланировать отмену
+        # всей подписки.
+        if subscription.pending_services_limit is not None:
+
+            _paddle_request(
+                "PATCH",
+                f"/subscriptions/{subscription_id}",
+                {
+                    "scheduled_change": None
+                }
+            )
+        
         data = _paddle_request(
             "POST",
             f"/subscriptions/{subscription_id}/cancel",
