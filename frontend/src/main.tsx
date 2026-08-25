@@ -4844,32 +4844,12 @@ function Dashboard({
         )}
       </div>
 
-     <Subscription
+<Subscription
   business={business}
   t={t}
-  onUpdated={async (patch) => {
-    if (!patch) {
-      return;
-    }
-
-    setBusiness((current: any) =>
-      current
-        ? {
-            ...current,
-            ...patch
-          }
-        : current
-    );
-
-    setBusinesses((current: any[]) =>
-      current.map((item: any) =>
-        Number(item.id) === Number(business?.id)
-          ? {
-              ...item,
-              ...patch
-            }
-          : item
-      )
+  onUpdated={async () => {
+    window.dispatchEvent(
+      new CustomEvent('bookly:subscription-updated')
     );
   }}
 />
