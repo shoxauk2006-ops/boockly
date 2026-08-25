@@ -1957,7 +1957,12 @@ const [newBusinessHours, setNewBusinessHours] =
   const limit = Number(newServiceLimit);
 
   if (!Number.isInteger(limit) || limit < 10) {
-    alert('Введите корректный лимит услуг');
+    alert(
+      t(
+        'owner.invalidServiceLimit',
+        'Введите корректный лимит услуг'
+       )
+     );
     return;
   }
 
@@ -1980,7 +1985,12 @@ const [newBusinessHours, setNewBusinessHours] =
   const newPrice = priceByLimit[limit];
 
   if (!newPrice) {
-    alert('Недопустимый лимит');
+    alert(
+  t(
+    'owner.invalidServiceLimitValue',
+    'Недопустимый лимит'
+  )
+);
     return;
   }
 
@@ -2061,9 +2071,12 @@ return;
     );
 
     alert(
-      error?.message ||
-      'Не удалось рассчитать сумму'
-    );
+  error?.message ||
+  t(
+    'owner.limitPreviewError',
+    'Не удалось рассчитать сумму'
+  )
+);
 
     return;
   }
@@ -2095,7 +2108,12 @@ setSavingServiceLimit(true);
     setServiceLimit(limit);
     setNewServiceLimit(limit);
 
-    alert('Лимит услуг изменён');
+    alert(
+  t(
+    'owner.serviceLimitChanged',
+    'Лимит услуг изменён'
+  )
+);
   } catch (error: any) {
     console.error(
       'CHANGE SERVICE LIMIT ERROR:',
@@ -2103,9 +2121,12 @@ setSavingServiceLimit(true);
     );
 
     alert(
-      error?.message ||
-      'Не удалось изменить лимит услуг'
-    );
+  error?.message ||
+  t(
+    'owner.changeServiceLimitError',
+    'Не удалось изменить лимит услуг'
+  )
+);
   } finally {
     setSavingServiceLimit(false);
   }
