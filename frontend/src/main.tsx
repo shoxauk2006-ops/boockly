@@ -5017,6 +5017,8 @@ function Subscription({
     useState(false);
   const [changingServiceLimit, setChangingServiceLimit] =
     useState(false);
+  const [subscriptionActionLoading, setSubscriptionActionLoading] =
+    useState(false);
 
   const expiresAt =
     business?.subscription_expires_at
@@ -5241,6 +5243,8 @@ await refreshAfterChange({
 
     if (!confirmed) return;
 
+    setSubscriptionActionLoading(true);
+
     try {
       const response = await fetch(
         API + '/admin/subscription/cancel',
@@ -5277,6 +5281,8 @@ await refreshAfterChange({
           'Не удалось отменить подписку'
         )
       );
+    } finally {
+      setSubscriptionActionLoading(false);
     }
   };
 
@@ -5289,6 +5295,8 @@ await refreshAfterChange({
     );
 
     if (!confirmed) return;
+
+    setSubscriptionActionLoading(true);
 
     try {
       const response = await fetch(
@@ -5323,6 +5331,8 @@ await refreshAfterChange({
           'Не удалось возобновить подписку'
         )
       );
+    } finally {
+      setSubscriptionActionLoading(false);
     }
   };
 
@@ -5512,7 +5522,7 @@ await refreshAfterChange({
                           key={option.limit}
                           type="button"
                           className="subscription-manage-button"
-                          disabled={changingServiceLimit}
+                          disabled={changingServiceLimit || subscriptionActionLoading}
                           onClick={() => changeServiceLimit(option.limit)}
                           style={{
                             display: 'flex',
@@ -5521,8 +5531,14 @@ await refreshAfterChange({
                             width: '100%'
                           }}
                         >
-                          <span>До {option.limit} услуг</span>
-                          <strong>{option.price}</strong>
+                          {changingServiceLimit ? (
+                            <span className="btn-spinner" />
+                          ) : (
+                            <>
+                              <span>До {option.limit} услуг</span>
+                              <strong>{option.price}</strong>
+                            </>
+                          )}
                         </button>
                       ))}
                   </div>
@@ -5534,25 +5550,35 @@ await refreshAfterChange({
                   <button
                     type="button"
                     className="subscription-manage-button"
-                    disabled={changingServiceLimit}
+                    disabled={changingServiceLimit || subscriptionActionLoading}
                     onClick={resumePackage}
                     style={{ marginTop: 12 }}
                   >
-                    Возобновить пакет
+                    {changingServiceLimit ? (
+                      <>
+                        <span className="btn-spinner" />
+                        Возобновляем…
+                      </>
+                    ) : (
+                      'Возобновить пакет'
+                    )}
                   </button>
                 ) : (
                   <button
                     type="button"
-                    className="ghost full"
-                    disabled={changingServiceLimit}
+                    className="subscription-danger-button"
+                    disabled={changingServiceLimit || subscriptionActionLoading}
                     onClick={cancelPackage}
-                    style={{
-                      marginTop: 12,
-                      color: '#d32f2f',
-                      borderColor: '#d32f2f'
-                    }}
+                    style={{ marginTop: 12 }}
                   >
-                    Отменить пакет
+                    {changingServiceLimit ? (
+                      <>
+                        <span className="btn-spinner" />
+                        Отменяем…
+                      </>
+                    ) : (
+                      'Отменить пакет'
+                    )}
                   </button>
                 )
               )}
@@ -5561,22 +5587,38 @@ await refreshAfterChange({
                 <button
                   type="button"
                   className="subscription-manage-button"
+                  disabled={subscriptionActionLoading || changingServiceLimit}
                   onClick={resumeSubscription}
                 >
-                  {t(
-                    'owner.resumeSubscription',
-                    'Возобновить подписку'
+                  {subscriptionActionLoading ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Возобновляем…
+                    </>
+                  ) : (
+                    t(
+                      'owner.resumeSubscription',
+                      'Возобновить подписку'
+                    )
                   )}
                 </button>
               ) : (
                 <button
                   type="button"
                   className="subscription-danger-button"
+                  disabled={subscriptionActionLoading || changingServiceLimit}
                   onClick={cancelSubscription}
                 >
-                  {t(
-                    'owner.cancelSubscription',
-                    'Отменить автопродление'
+                  {subscriptionActionLoading ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Отменяем…
+                    </>
+                  ) : (
+                    t(
+                      'owner.cancelSubscription',
+                      'Отменить автопродление'
+                    )
                   )}
                 </button>
               )}
