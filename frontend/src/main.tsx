@@ -5783,10 +5783,23 @@ await refreshAfterChange({
             className="success"
             style={{ marginTop: 12 }}
           >
-            <strong>Пакет отменён на следующее продление</strong>
+            <strong>
+  {t(
+    'owner.packageCancelledNextPeriod',
+    'Пакет отменён на следующее продление'
+  )}
+</strong>
             <p className="muted">
-              Сейчас у вас {currentServicesLimit} услуг. До конца оплаченного периода пакет продолжает действовать.
-            </p>
+  {t(
+    'owner.packageStillActive',
+    'Сейчас у вас'
+  )}{' '}
+  {currentServicesLimit}{' '}
+  {t(
+    'owner.servicesUntilPeriodEnd',
+    'услуг. До конца оплаченного периода пакет продолжает действовать.'
+  )}
+</p>
           </div>
         )}
 
@@ -5840,8 +5853,14 @@ await refreshAfterChange({
                 <div>
                   <span>
                     {cancelledButActive
-                      ? 'Доступ до'
-                      : t('owner.nextPayment', 'Следующее списание')}
+  ? t(
+      'owner.accessUntil',
+      'Доступ до'
+    )
+  : t(
+      'owner.nextPayment',
+      'Следующее списание'
+    )}
                   </span>
                   <strong>
                     {expiresAt
@@ -5878,10 +5897,18 @@ await refreshAfterChange({
                     borderTop: '1px solid #eee'
                   }}
                 >
-                  <strong>Увеличить лимит услуг</strong>
+                  <strong>
+  {t(
+    'owner.increaseServiceLimit',
+    'Увеличить лимит услуг'
+  )}
+</strong>
                   <p className="muted" style={{ marginTop: 6 }}>
-                    Выберите новый лимит услуг.
-                  </p>
+  {t(
+    'owner.chooseNewServiceLimit',
+    'Выберите новый лимит услуг.'
+  )}
+</p>
 
                   <div
                     style={{
@@ -5915,7 +5942,17 @@ await refreshAfterChange({
                             <span className="btn-spinner" />
                           ) : (
                             <>
-                              <span>До {option.limit} услуг</span>
+                              <span>
+  {t(
+    'owner.upToServices',
+    'До'
+  )}{' '}
+  {option.limit}{' '}
+  {t(
+    'owner.services',
+    'услуг'
+  )}
+</span>
                               <strong>{option.price}</strong>
                             </>
                           )}
