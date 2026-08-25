@@ -2772,7 +2772,7 @@ def change_subscription_limit(
         # billing period.
         # -----------------------------------------
 
-                if x.services_limit < current_limit:
+        if x.services_limit < current_limit:
 
             subscription.pending_services_limit = (
                 x.services_limit
