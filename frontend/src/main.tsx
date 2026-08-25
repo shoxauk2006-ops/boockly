@@ -2030,9 +2030,14 @@ const [newBusinessHours, setNewBusinessHours] =
   }
 
   if (limit === serviceLimit) {
-    alert('Лимит уже установлен на этом уровне');
-    return;
-  }
+  alert(
+    t(
+      'owner.serviceLimitAlreadySet',
+      'Лимит уже установлен на этом уровне'
+    )
+  );
+  return;
+}
 
   const priceByLimit: Record<number, number> = {
     10: 7.99,
@@ -2060,13 +2065,19 @@ const [newBusinessHours, setNewBusinessHours] =
   const isUpgrade = limit > serviceLimit;
 
   const message = isUpgrade
-    ? `Изменить лимит с ${serviceLimit} на ${limit} услуг?\n\n` +
+  ? t(
+      'owner.increaseLimitConfirm',
+      `Изменить лимит с ${serviceLimit} на ${limit} услуг?\n\n` +
       `Новая цена: $${newPrice.toFixed(2)}/мес.\n\n` +
       `Paddle сразу рассчитает доплату за оставшуюся часть текущего периода и попросит подтвердить списание.`
-    : `Уменьшить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
-      `Возврата за текущий оплаченный период не будет.\n` +
-      `Новый лимит и цена вступят в силу с следующего периода.\n\n` +
-      `Новая цена: $${newPrice.toFixed(2)}/мес.`;
+    )
+    : t(
+    'owner.decreaseLimitConfirm',
+    `Уменьшить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
+    `Возврата за текущий оплаченный период не будет.\n` +
+    `Новый лимит и цена вступят в силу с следующего периода.\n\n` +
+    `Новая цена: $${newPrice.toFixed(2)}/мес.`
+  );
 
 
 
@@ -2090,9 +2101,12 @@ if (isUpgrade) {
 
     if (!previewResponse.ok) {
       throw new Error(
-        preview?.detail ||
-        'Не удалось рассчитать стоимость'
-      );
+  preview?.detail ||
+  t(
+    'owner.limitPriceCalculationError',
+    'Не удалось рассчитать стоимость'
+  )
+);
     }
 
     const immediateAmount =
@@ -2163,9 +2177,12 @@ setSavingServiceLimit(true);
 
     if (!response.ok) {
       throw new Error(
-        data?.detail ||
-        'Не удалось изменить лимит услуг'
-      );
+  data?.detail ||
+  t(
+    'owner.changeServiceLimitError',
+    'Не удалось изменить лимит услуг'
+  )
+);
     }
 
     setServiceLimit(limit);
