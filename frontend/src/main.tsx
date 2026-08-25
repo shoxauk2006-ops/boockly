@@ -84,12 +84,14 @@ function BooklyAlertModal({
   open,
   title,
   message,
-  onClose
+  onClose,
+  t
 }: {
   open: boolean;
   title: string;
   message: string;
   onClose: () => void;
+  t: (key: string, fallback?: string) => string;
 }) {
   if (!open) {
     return null;
@@ -128,7 +130,7 @@ function BooklyAlertModal({
           onClick={onClose}
           style={{ marginTop: 16 }}
         >
-          Понятно
+          {t('common.ok', 'Понятно')}
         </button>
       </div>
     </div>
@@ -139,6 +141,7 @@ function BooklyConfirmModal({
   message,
   onCancel,
   onConfirm
+  t
 }: {
   open: boolean;
   message: string;
@@ -186,7 +189,7 @@ function BooklyConfirmModal({
             type="button"
             onClick={onCancel}
           >
-            Отмена
+           {t('common.cancel', 'Отмена')}
           </button>
 
           <button
@@ -194,7 +197,7 @@ function BooklyConfirmModal({
             className="primary"
             onClick={onConfirm}
           >
-            Подтвердить
+            {t('common.confirm', 'Подтвердить')}
           </button>
         </div>
       </div>
@@ -934,8 +937,8 @@ setInfoSection={setInfoSection}
 
             <li>
   {t(
-    'info.clientQr',
-    'QR-код для клиентов'
+    'info.onlineBookings',
+    'Онлайн-записи'
   )}
 </li>
 
