@@ -842,8 +842,11 @@ setInfoSection={setInfoSection}
           </h2>
 
           <h3>
-            Для владельца бизнеса
-          </h3>
+  {t(
+    'owner.forBusinessOwner',
+    'Для владельца бизнеса'
+  )}
+</h3>
 
           <p className="muted">
             1. Создайте бизнес.
@@ -2539,8 +2542,11 @@ const confirmServiceLimitChange = async () => {
             onClick={() => {
               if (!navigator.geolocation) {
                 alert(
-                  'Геолокация недоступна'
-                );
+  t(
+    'owner.geolocationUnavailable',
+    'Геолокация недоступна'
+  )
+);
                 return;
               }
 
@@ -2567,8 +2573,11 @@ const confirmServiceLimitChange = async () => {
                   );
 
                   alert(
-                    'Не удалось получить местоположение. Проверьте разрешение геолокации.'
-                  );
+  t(
+    'owner.geolocationError',
+    'Не удалось получить местоположение. Проверьте разрешение геолокации.'
+  )
+);
                 },
                 {
                   enableHighAccuracy: true,
@@ -2622,8 +2631,11 @@ const confirmServiceLimitChange = async () => {
             }}
           >
             <h3>
-              График работы
-            </h3>
+  {t(
+    'owner.workingHours',
+    'График работы'
+  )}
+</h3>
 
             <p
               className="muted"
@@ -3604,7 +3616,12 @@ borderTopColor: '#d32f2f',
   className="ghost"
   onClick={() => {
     if (!navigator.geolocation) {
-      alert('Геолокация недоступна');
+      alert(
+  t(
+    'owner.geolocationUnavailable',
+    'Геолокация недоступна'
+  )
+);
       return;
     }
 
@@ -3616,19 +3633,17 @@ borderTopColor: '#d32f2f',
         setNewBusinessLatitude(latitude);
         setNewBusinessLongitude(longitude);
 
-        alert(
-          `Местоположение получено\n\n` +
-          `Широта: ${latitude.toFixed(6)}\n` +
-          `Долгота: ${longitude.toFixed(6)}`
-        );
+        `Местоположение получено
       },
       error => {
         console.error('Geolocation error:', error);
 
         alert(
-          'Не удалось получить местоположение. ' +
-          'Проверь разрешение геолокации.'
-        );
+  t(
+    'owner.geolocationError',
+    'Не удалось получить местоположение. Проверьте разрешение геолокации.'
+  )
+);
       },
       {
         enableHighAccuracy: true,
@@ -3681,8 +3696,11 @@ borderTopColor: '#d32f2f',
   }}
 >
   <h3>
-    График работы
-  </h3>
+  {t(
+    'owner.workingHours',
+    'График работы'
+  )}
+</h3>
 
   <p
     className="muted"
@@ -4145,14 +4163,20 @@ borderTopColor: '#d32f2f',
       </h2>
 
       <p className="muted">
-        Отлично. Теперь подготовьте бизнес к запуску.
+        {t(
+  'owner.setupIntro',
+  'Отлично. Теперь подготовьте бизнес к запуску.'
+)}
       </p>
     </div>
 
     <div style={{ marginTop: 18 }}>
       <h3>
-        Что нужно сделать
-      </h3>
+  {t(
+    'owner.setupChecklist',
+    'Что нужно сделать'
+  )}
+</h3>
 
       <div
         style={{
@@ -4277,8 +4301,11 @@ borderTopColor: '#d32f2f',
       }}
     >
       <strong>
-        Как это работает
-      </strong>
+  {t(
+    'owner.howItWorks',
+    'Как это работает'
+  )}
+</strong>
 
       <p className="muted">
         Сначала полностью настройте бизнес:
@@ -9098,12 +9125,18 @@ setSettingsTimezonePickerOpen(false);
         </h2>
         <div className="business-photo-settings">
   <strong>
-    Фото бизнеса
-  </strong>
+  {t(
+    'owner.businessPhoto',
+    'Фото бизнеса'
+  )}
+</strong>
 
   <p className="muted">
-    Добавьте фотографию, которая будет отображаться у клиентов.
-  </p>
+  {t(
+    'owner.businessPhotoHint',
+    'Добавьте фотографию, которая будет отображаться у клиентов.'
+  )}
+</p>
 
   {businessImage ? (
     <img
