@@ -2884,14 +2884,21 @@ def cancel_subscription(
         scheduled_change = paddle_data.get("scheduled_change") or {}
         effective_at = scheduled_change.get("effective_at")
 
-        subscription.status = "cancelled"
+                subscription.status = "cancelled"
         subscription.active = True
+
+        business.subscription_status = "cancelled"
+        business.subscription_active = True
 
         if effective_at:
             try:
-                subscription.expires_at = datetime.fromisoformat(
+                expires_at = datetime.fromisoformat(
                     effective_at.replace("Z", "+00:00")
                 ).replace(tzinfo=None)
+
+                subscription.expires_at = expires_at
+                business.subscription_expires_at = expires_at
+
             except ValueError:
                 pass
 
@@ -2938,6 +2945,9 @@ def resume_subscription(
         paddle_data = data.get("data", {}) or {}
         subscription.status = "active"
         subscription.active = True
+
+        business.subscription_status = "active"
+        business.subscription_active = True
 
         next_billed_at = paddle_data.get("next_billed_at")
         if next_billed_at:
