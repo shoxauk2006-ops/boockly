@@ -2632,13 +2632,14 @@ def preview_subscription_limit(
             else "prorated_next_billing_period"
         )
 
-        price_check = _paddle_request(
-    "GET",
-    f"/prices/{PADDLE_BOOKLY_BASE_PRICE_ID}"
-)
+                price_check = _paddle_request(
+            "GET",
+            f"/prices/{PADDLE_BOOKLY_BASE_PRICE_ID}"
+        )
 
-print("=== PADDLE PRICE CHECK ===")
-print(price_check)
+        print("=== PADDLE PRICE CHECK ===")
+        print(price_check)
+
         result = _paddle_request(
             "PATCH",
             (
@@ -2655,6 +2656,7 @@ print(price_check)
 
         print("=== PADDLE PREVIEW RESULT ===")
         print(result)
+
         print("=== PREVIEW ITEMS ===")
         print(new_items)
 
