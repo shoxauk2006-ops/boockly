@@ -5420,8 +5420,18 @@ const changeServiceLimit = async (
     className="ghost full"
     disabled={changingServiceLimit}
     onClick={() => {
-      changeServiceLimit(10);
-    }}
+  const confirmed = window.confirm(
+    'Отменить дополнительный пакет?\n\n' +
+    'Лимит вернётся к 10 услугам.\n' +
+    'Bookly Pro продолжит действовать.'
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  changeServiceLimit(10);
+}}
     style={{
       marginTop: 12,
       color: '#d32f2f',
