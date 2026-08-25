@@ -2884,7 +2884,7 @@ def cancel_subscription(
         scheduled_change = paddle_data.get("scheduled_change") or {}
         effective_at = scheduled_change.get("effective_at")
 
-                subscription.status = "cancelled"
+        subscription.status = "cancelled"
         subscription.active = True
 
         business.subscription_status = "cancelled"
