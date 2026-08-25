@@ -1160,7 +1160,8 @@ def admin_businesses(
     )
 
     with SessionLocal() as db:
-        return (
+
+        businesses = (
             db.query(Business)
             .filter(
                 Business.owner_telegram_id ==
@@ -1170,6 +1171,66 @@ def admin_businesses(
                 Business.id.asc()
             )
             .all()
+        )
+
+        result = []
+
+        for business in businesses:
+
+            subscription = (
+                db.query(Subscription)
+                .filter(
+                    Subscription.business_id ==
+                    business.id
+                )
+                .first()
+            )
+
+            business_data = {
+                column.name: getattr(
+                    business,
+                    column.name
+                )
+                for column
+                in Business.__table__.columns
+            }
+
+            business_data["services_limit"] = (
+                subscription.current_services_limit
+                if subscription
+                and subscription.active
+                else 0
+            )
+
+            business_data["pending_services_limit"] = (
+                subscription.pending_services_limit
+                if subscription
+                else None
+            )
+
+            business_data["current_price"] = (
+                float(
+                    subscription.current_price
+                )
+                if subscription
+                and subscription.current_price is not None
+                else 0.0
+            )
+
+            business_data["pending_price"] = (
+                float(
+                    subscription.pending_price
+                )
+                if subscription
+                and subscription.pending_price is not None
+                else None
+            )
+
+            result.append(
+                business_data
+            )
+
+        return result
         )
 
 
