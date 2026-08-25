@@ -2691,6 +2691,7 @@ def change_subscription_limit(
         )
 
     with SessionLocal() as db:
+
         business = owner_business(
             db,
             owner_id
@@ -2700,9 +2701,12 @@ def change_subscription_limit(
             business = (
                 db.query(Business)
                 .filter(
-                    Business.owner_telegram_id == owner_id
+                    Business.owner_telegram_id ==
+                    owner_id
                 )
-                .order_by(Business.id.asc())
+                .order_by(
+                    Business.id.asc()
+                )
                 .first()
             )
 
@@ -2737,13 +2741,16 @@ def change_subscription_limit(
         if x.services_limit == current_limit:
             return {
                 "ok": True,
-                "current_services_limit": current_limit,
+                "current_services_limit":
+                    current_limit,
                 "current_price": float(
                     subscription.current_price
                     or 7.99
                 ),
-                "pending_services_limit": None,
-                "pending_price": None
+                "pending_services_limit":
+                    subscription.pending_services_limit,
+                "pending_price":
+                    subscription.pending_price
             }
 
         price_by_limit = {
@@ -2758,6 +2765,52 @@ def change_subscription_limit(
             x.services_limit
         ]
 
+        # -----------------------------------------
+        # ПОНИЖЕНИЕ ЛИМИТА:
+        # пакет продолжает действовать сейчас,
+        # но новое состояние сохраняем на следующий
+        # billing period.
+        # -----------------------------------------
+
+        if x.services_limit < current_limit:
+
+            _paddle_update_bookly_subscription(
+                subscription.external_subscription_id,
+                x.services_limit,
+                current_limit
+            )
+
+            subscription.pending_services_limit = (
+                x.services_limit
+            )
+
+            subscription.pending_price = (
+                new_price
+            )
+
+            db.commit()
+
+            return {
+                "ok": True,
+                "current_services_limit":
+                    current_limit,
+                "current_price": float(
+                    subscription.current_price
+                    or 7.99
+                ),
+                "pending_services_limit":
+                    subscription.pending_services_limit,
+                "pending_price":
+                    float(
+                        subscription.pending_price
+                    )
+            }
+
+        # -----------------------------------------
+        # ПОВЫШЕНИЕ ЛИМИТА:
+        # применяем сразу.
+        # -----------------------------------------
+
         _paddle_update_bookly_subscription(
             subscription.external_subscription_id,
             x.services_limit,
@@ -2767,7 +2820,11 @@ def change_subscription_limit(
         subscription.current_services_limit = (
             x.services_limit
         )
-        subscription.current_price = new_price
+
+        subscription.current_price = (
+            new_price
+        )
+
         subscription.pending_services_limit = None
         subscription.pending_price = None
 
@@ -2775,12 +2832,12 @@ def change_subscription_limit(
 
         return {
             "ok": True,
-            "current_services_limit": (
-                subscription.current_services_limit
-            ),
-            "current_price": float(
-                subscription.current_price
-            ),
+            "current_services_limit":
+                subscription.current_services_limit,
+            "current_price":
+                float(
+                    subscription.current_price
+                ),
             "pending_services_limit": None,
             "pending_price": None
         }
@@ -3407,21 +3464,21 @@ async def paddle_webhook(
             # pending = None
             # -----------------------------------------------------
 
-            if subscription.pending_services_limit is not None:
+            if event_type == "transaction.completed":
 
-                subscription.current_services_limit = (
-                    subscription.pending_services_limit
-                )
+    if subscription.pending_services_limit is not None:
+        subscription.current_services_limit = (
+            subscription.pending_services_limit
+        )
 
-                subscription.pending_services_limit = None
+        subscription.pending_services_limit = None
 
-            if subscription.pending_price is not None:
+    if subscription.pending_price is not None:
+        subscription.current_price = (
+            subscription.pending_price
+        )
 
-                subscription.current_price = (
-                    subscription.pending_price
-                )
-
-                subscription.pending_price = None
+        subscription.pending_price = None
 
         # ---------------------------------------------------------
         # Отмена / пауза
