@@ -20,12 +20,16 @@ declare global { interface Window { Telegram:any } }
 const API=import.meta.env.VITE_API_URL||'http://localhost:8000';
 const BOT_USERNAME=import.meta.env.VITE_BOT_USERNAME||'BooklyBot';
 const tg=()=>window.Telegram?.WebApp;
+// Свой диалог подтверждения на React (не зависит от Telegram/браузера —
+// работает одинаково везде, в отличие от Telegram.WebApp.showConfirm
+// или window.confirm, которые ненадёжны внутри Mini App).
 const confirmAsync = (message: string): Promise<boolean> =>
   new Promise((resolve) => {
-    const telegram = tg();
-    if (telegram?.showConfirm) {
-      telegram.showConfirm(message, (ok: boolean) => resolve(ok));
+    const handler = (window as any).__booklyConfirm;
+    if (handler) {
+      handler(message, resolve);
     } else {
+      // на случай если модалка ещё не смонтировалась — редкий случай
       resolve(window.confirm(message));
     }
   });
@@ -126,6 +130,73 @@ function BooklyAlertModal({
         >
           Понятно
         </button>
+      </div>
+    </div>
+  );
+}
+function BooklyConfirmModal({
+  open,
+  message,
+  onCancel,
+  onConfirm
+}: {
+  open: boolean;
+  message: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div
+      className="subscription-modal-overlay"
+      onClick={onCancel}
+    >
+      <div
+        className="subscription-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="subscription-modal-close"
+          onClick={onCancel}
+        >
+          ×
+        </button>
+
+        <span className="personal-eyebrow">
+          BOOKLY
+        </span>
+
+        <p className="muted">
+          {message}
+        </p>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 8,
+            marginTop: 16
+          }}
+        >
+          <button
+            type="button"
+            onClick={onCancel}
+          >
+            Отмена
+          </button>
+
+          <button
+            type="button"
+            className="primary"
+            onClick={onConfirm}
+          >
+            Подтвердить
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -355,6 +426,33 @@ function App(){
     window.alert = nativeAlert;
   };
 }, []);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmModalMessage, setConfirmModalMessage] = useState('');
+  const confirmResolveRef = useRef<((value: boolean) => void) | null>(null);
+
+  useEffect(() => {
+    (window as any).__booklyConfirm = (
+      message: string,
+      resolve: (value: boolean) => void
+    ) => {
+      confirmResolveRef.current = resolve;
+      setConfirmModalMessage(message);
+      setConfirmModalOpen(true);
+    };
+
+    return () => {
+      delete (window as any).__booklyConfirm;
+    };
+  }, []);
+
+  const resolveConfirmModal = (value: boolean) => {
+    setConfirmModalOpen(false);
+    const resolve = confirmResolveRef.current;
+    confirmResolveRef.current = null;
+    if (resolve) {
+      resolve(value);
+    }
+  };
   const [emailCopied,setEmailCopied]=useState(false);
   useEffect(()=>{
     const telegram = tg();
@@ -672,6 +770,12 @@ setInfoSection={setInfoSection}
     setAlertModalOpen(false);
     setAlertModalMessage('');
   }}
+/>
+<BooklyConfirmModal
+  open={confirmModalOpen}
+  message={confirmModalMessage}
+  onCancel={() => resolveConfirmModal(false)}
+  onConfirm={() => resolveConfirmModal(true)}
 />
 {infoModal && (
   <div
