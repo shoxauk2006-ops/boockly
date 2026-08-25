@@ -861,12 +861,18 @@ setInfoSection={setInfoSection}
           </p>
 
           <p className="muted">
-            4. Настройте график работы.
-          </p>
+  {t(
+    'owner.setupWorkingHours',
+    '4. Настройте график работы.'
+  )}
+</p>
 
           <p className="muted">
-            5. При необходимости создайте блокировки.
-          </p>
+  {t(
+    'owner.setupBlocks',
+    '5. При необходимости создайте блокировки.'
+  )}
+</p>
 
           <p className="muted">
             6. Управляйте записями.
@@ -4045,7 +4051,10 @@ borderTopColor: '#d32f2f',
             {newBusinessImage && (
               <img
                 src={newBusinessImage}
-                alt="Фото бизнеса"
+                alt={t(
+  'owner.businessPhoto',
+  'Фото бизнеса'
+)}
                 style={{
                   width: '100%',
                   maxHeight: 220,
@@ -4308,16 +4317,18 @@ borderTopColor: '#d32f2f',
 </strong>
 
       <p className="muted">
-        Сначала полностью настройте бизнес:
-        информацию, фотографию, услуги, цены,
-        график работы и блокировки.
-      </p>
+  {t(
+    'owner.setupBusinessDescription',
+    'Сначала полностью настройте бизнес: информацию, фотографию, услуги, цены, график работы и блокировки.'
+  )}
+</p>
 
       <p className="muted">
-        После этого бизнес будет готов к работе
-        внутри Bookly. Вы сможете управлять услугами,
-        расписанием и записями.
-      </p>
+  {t(
+    'owner.businessReadyDescription',
+    'После этого бизнес будет готов к работе внутри Bookly. Вы сможете управлять услугами и принимать записи от клиентов.'
+  )}
+</p>
 
       <p className="muted">
         Чтобы клиенты могли найти ваш бизнес
@@ -9102,12 +9113,14 @@ setSettingsTimezonePickerOpen(false);
 
     link.click();
   };
-  const deleteBusiness = async () => { 
-     const confirmed = await confirmAsync(
-      'Вы действительно хотите удалить этот бизнес?\n\n' +
+  const confirmed = await confirmAsync(
+  t(
+    'owner.deleteBusinessConfirm',
+    'Вы действительно хотите удалить этот бизнес?\n\n' +
       'Все данные бизнеса, включая услуги, график работы, блокировки и записи, будут удалены без возможности восстановления.\n\n' +
       'Подписка при этом НЕ отменяется. Вы сможете создать новый бизнес и продолжить пользоваться активной подпиской.'
-    );
+  )
+);
 
     if (!confirmed) {
       return;
