@@ -2560,8 +2560,8 @@ def preview_subscription_limit(
     )
 ):
     user = telegram_user(
-    x_telegram_init_data
-)
+        x_telegram_init_data
+    )
 
     with SessionLocal() as db:
 
@@ -2628,11 +2628,13 @@ def preview_subscription_limit(
 
         proration_mode = (
             "prorated_immediately"
-            if new_limit > subscription.current_services_limit
-            else "prorated_next_billing_period"
+            if new_limit >
+            subscription.current_services_limit
+            else
+            "prorated_next_billing_period"
         )
 
-         price_check = _paddle_request(
+        price_check = _paddle_request(
             "GET",
             f"/prices/{PADDLE_BOOKLY_BASE_PRICE_ID}"
         )
