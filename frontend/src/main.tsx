@@ -4693,218 +4693,6 @@ function Dashboard({
     }
   };
 
-  const printQrCard = () => {
-  if (!business.subscription_active || !qrDataUrl) {
-    return;
-  }
-
-  const printWindow = window.open(
-    '',
-    '_blank',
-    'width=900,height=1100'
-  );
-
-  if (!printWindow) {
-    return;
-  }
-
-  const businessName = String(
-    business?.name || 'Bookly'
-  )
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  printWindow.document.write(`
-    <!doctype html>
-    <html lang="ru">
-      <head>
-        <meta charset="UTF-8" />
-
-        <title>
-          ${businessName} — Bookly QR
-        </title>
-
-        <style>
-          * {
-            box-sizing: border-box;
-          }
-
-          html,
-          body {
-            margin: 0;
-            padding: 0;
-            background: #f3f4f6;
-            font-family:
-              Inter,
-              -apple-system,
-              BlinkMacSystemFont,
-              "Segoe UI",
-              sans-serif;
-          }
-
-          body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-          }
-
-          .sheet {
-            width: 148mm;
-            min-height: 210mm;
-            background: #fff;
-            border-radius: 10mm;
-            padding: 18mm 14mm;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-          }
-
-          .brand {
-            font-size: 18px;
-            font-weight: 900;
-            letter-spacing: .18em;
-            margin-bottom: 10mm;
-          }
-
-          .business {
-            font-size: 25px;
-            font-weight: 800;
-            line-height: 1.15;
-            margin-bottom: 5mm;
-            max-width: 115mm;
-            overflow-wrap: anywhere;
-          }
-
-          .eyebrow {
-            font-size: 12px;
-            font-weight: 700;
-            color: #7b818a;
-            margin-bottom: 10mm;
-          }
-
-          .qr-wrap {
-            width: 92mm;
-            height: 92mm;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8mm;
-            border: 1px solid #e5e7eb;
-            border-radius: 8mm;
-            background: #fff;
-          }
-
-          .qr {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-          }
-
-          .title {
-            margin-top: 10mm;
-            font-size: 23px;
-            font-weight: 800;
-          }
-
-          .subtitle {
-            margin-top: 4mm;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #717780;
-            max-width: 105mm;
-          }
-
-          .footer {
-            margin-top: 12mm;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: .12em;
-            color: #9aa0a8;
-            text-transform: uppercase;
-          }
-
-          @page {
-            size: A5 portrait;
-            margin: 0;
-          }
-
-          @media print {
-            html,
-            body {
-              background: #fff;
-            }
-
-            body {
-              padding: 0;
-            }
-
-            .sheet {
-              width: 148mm;
-              min-height: 210mm;
-              border-radius: 0;
-            }
-          }
-        </style>
-      </head>
-
-      <body>
-
-        <div class="sheet">
-
-          <div class="brand">
-            BOOKLY
-          </div>
-
-          <div class="business">
-            ${businessName}
-          </div>
-
-          <div class="eyebrow">
-            Онлайн-запись
-          </div>
-
-          <div class="qr-wrap">
-            <img
-              class="qr"
-              src="${qrDataUrl}"
-              alt="QR-код"
-            />
-          </div>
-
-          <div class="title">
-            Запишитесь онлайн
-          </div>
-
-          <div class="subtitle">
-            Наведите камеру телефона
-            на QR-код и выберите удобное
-            время для записи.
-          </div>
-
-          <div class="footer">
-            BOOKLY
-          </div>
-
-        </div>
-
-        <script>
-          window.onload = function () {
-            setTimeout(function () {
-              window.print();
-            }, 250);
-          };
-        <\/script>
-
-      </body>
-    </html>
-  `);
-
-  printWindow.document.close();
-};
 
   const copyLink = async () => {
     if (!business.subscription_active) {
@@ -5129,6 +4917,15 @@ function Dashboard({
 >
   Скачать макет для печати
 </button>
+
+        <button
+  type="button"
+  className="admin-action-button admin-download-button"
+  onClick={createPrintCard}
+>
+  Скачать макет для печати
+</button>
+        
       </>
     )
   )}
@@ -8598,6 +8395,12 @@ const filteredSettingsTimezones =
   const [qrDataUrl, setQrDataUrl] =
     useState('');
 
+  const [printCardOpen, setPrintCardOpen] =
+  useState(false);
+
+const [printCardDataUrl, setPrintCardDataUrl] =
+  useState('');
+
   const clientLink =
     `https://t.me/${BOT_USERNAME}?startapp=${business.slug}`;
 
@@ -8858,6 +8661,191 @@ setSettingsTimezonePickerOpen(false);
     );
   }
 };
+
+  const createPrintCard = async () => {
+  if (
+    !business.subscription_active ||
+    !qrDataUrl
+  ) {
+    return;
+  }
+
+  const canvas =
+    document.createElement('canvas');
+
+  const width = 1600;
+  const height = 2200;
+
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx =
+    canvas.getContext('2d');
+
+  if (!ctx) {
+    return;
+  }
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+  const qrImage =
+    new Image();
+
+  qrImage.onload = () => {
+    // Верхний логотип
+    ctx.fillStyle = '#111111';
+    ctx.textAlign = 'center';
+
+    ctx.font =
+      '900 72px Arial';
+
+    ctx.fillText(
+      'BOOKLY',
+      width / 2,
+      190
+    );
+
+    // Название бизнеса
+    ctx.font =
+      '800 64px Arial';
+
+    const businessName =
+      String(
+        business?.name ||
+        'Bookly'
+      );
+
+    ctx.fillText(
+      businessName,
+      width / 2,
+      330
+    );
+
+    // Подзаголовок
+    ctx.fillStyle =
+      '#777777';
+
+    ctx.font =
+      '500 34px Arial';
+
+    ctx.fillText(
+      'Онлайн-запись',
+      width / 2,
+      395
+    );
+
+    // Белая карточка вокруг QR
+    ctx.fillStyle =
+      '#ffffff';
+
+    ctx.strokeStyle =
+      '#e5e7eb';
+
+    ctx.lineWidth = 4;
+
+    const cardX = 170;
+    const cardY = 520;
+    const cardW = 1260;
+    const cardH = 1260;
+    const radius = 45;
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+      cardX,
+      cardY,
+      cardW,
+      cardH,
+      radius
+    );
+
+    ctx.fill();
+    ctx.stroke();
+
+    // QR
+    const qrSize = 1050;
+
+    const qrX =
+      (width - qrSize) / 2;
+
+    const qrY =
+      cardY + 105;
+
+    ctx.drawImage(
+      qrImage,
+      qrX,
+      qrY,
+      qrSize,
+      qrSize
+    );
+
+    // Заголовок
+    ctx.fillStyle =
+      '#111111';
+
+    ctx.font =
+      '800 58px Arial';
+
+    ctx.fillText(
+      'Запишитесь онлайн',
+      width / 2,
+      1900
+    );
+
+    // Инструкция
+    ctx.fillStyle =
+      '#707780';
+
+    ctx.font =
+      '500 34px Arial';
+
+    ctx.fillText(
+      'Отсканируйте QR-код',
+      width / 2,
+      1965
+    );
+
+    ctx.fillText(
+      'камерой телефона',
+      width / 2,
+      2020
+    );
+
+    // Footer
+    ctx.fillStyle =
+      '#a0a5ab';
+
+    ctx.font =
+      '700 24px Arial';
+
+    ctx.fillText(
+      'BOOKLY',
+      width / 2,
+      2125
+    );
+
+    const dataUrl =
+      canvas.toDataURL(
+        'image/png',
+        1
+      );
+
+    setPrintCardDataUrl(
+      dataUrl
+    );
+
+    setPrintCardOpen(true);
+  };
+
+  qrImage.src = qrDataUrl;
+};
+  
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(
