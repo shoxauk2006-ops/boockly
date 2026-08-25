@@ -4549,6 +4549,145 @@ function BusinessForm({onSaved, t}:{onSaved:()=>void; t:(key:string,fallback?:st
   );
 }
 
+function QrPrintCard({
+  business,
+  qrDataUrl,
+  open,
+  onClose
+}: {
+  business: any;
+  qrDataUrl: string;
+  open: boolean;
+  onClose: () => void;
+}) {
+  if (!open || !qrDataUrl) {
+    return null;
+  }
+
+  const downloadPrintableQr = async () => {
+    try {
+      const response =
+        await fetch(qrDataUrl);
+
+      const blob =
+        await response.blob();
+
+      const file =
+        new File(
+          [blob],
+          `${business?.slug || 'bookly'}-qr-print.png`,
+          {
+            type: 'image/png'
+          }
+        );
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({
+          files: [file]
+        })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: 'Bookly — QR для печати'
+        });
+
+        return;
+      }
+
+      const url =
+        URL.createObjectURL(blob);
+
+      const link =
+        document.createElement('a');
+
+      link.href = url;
+
+      link.download =
+        `${business?.slug || 'bookly'}-qr-print.png`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1000);
+
+    } catch (error) {
+      console.error(
+        'QR PRINT DOWNLOAD ERROR:',
+        error
+      );
+    }
+  };
+
+  return (
+    <div
+      className="qr-print-overlay"
+      onClick={onClose}
+    >
+      <div
+        className="qr-print-modal"
+        onClick={(e) =>
+          e.stopPropagation()
+        }
+      >
+        <button
+          type="button"
+          className="subscription-modal-close"
+          onClick={onClose}
+        >
+          ×
+        </button>
+
+        <div className="qr-print-sheet">
+          <div className="qr-print-brand">
+            BOOKLY
+          </div>
+
+          <h2>
+            {business?.name || 'Ваш бизнес'}
+          </h2>
+
+          <p>
+            Онлайн-запись
+          </p>
+
+          <div className="qr-print-code">
+            <img
+              src={qrDataUrl}
+              alt="QR-код для записи"
+            />
+          </div>
+
+          <h3>
+            Запишитесь онлайн
+          </h3>
+
+          <span>
+            Отсканируйте QR-код
+            камерой телефона
+          </span>
+
+          <small>
+            powered by Bookly
+          </small>
+        </div>
+
+        <button
+          type="button"
+          className="primary full"
+          onClick={downloadPrintableQr}
+        >
+          Скачать макет
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({
   bookings,
   business,
@@ -4573,6 +4712,9 @@ function Dashboard({
 
   const [qrDataUrl, setQrDataUrl] =
     useState('');
+
+  const [qrPrintOpen, setQrPrintOpen] =
+  useState(false);
 
   useEffect(() => {
     if (!business.subscription_active) {
@@ -4910,6 +5052,13 @@ function Dashboard({
   Скачать QR-код
 </button>
 
+        <button
+  type="button"
+  className="admin-action-button admin-download-button"
+  onClick={() => setQrPrintOpen(true)}
+>
+  Макет для печати
+</button>
         
       </>
     )
@@ -4968,6 +5117,12 @@ function Dashboard({
       new CustomEvent('bookly:subscription-updated')
     );
   }}
+/>
+        <QrPrintCard
+  business={business}
+  qrDataUrl={qrDataUrl}
+  open={qrPrintOpen}
+  onClose={() => setQrPrintOpen(false)}
 />
     </>
   );
