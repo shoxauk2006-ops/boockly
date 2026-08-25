@@ -1202,11 +1202,7 @@ def admin_businesses(
             )
 
             business_data["subscription_status"] = (
-                (
-                    "active"
-                    if subscription.active
-                    else (subscription.status or "inactive")
-                )
+                (subscription.status or "inactive")
                 if subscription
                 else "inactive"
             )
