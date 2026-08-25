@@ -892,6 +892,52 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 
   font-weight:800;
   cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.subscription-manage-button:disabled{
+  opacity:.6;
+  cursor:default;
+}
+
+.subscription-danger-button{
+  width:100%;
+  margin-top:12px;
+  padding:12px 14px;
+
+  border:1px solid rgba(211,47,47,.35);
+  border-radius:13px;
+
+  background:rgba(211,47,47,.1);
+  color:#d32f2f;
+
+  font-weight:800;
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.subscription-danger-button:disabled{
+  opacity:.6;
+  cursor:default;
+}
+
+.btn-spinner{
+  display:inline-block;
+  width:16px;
+  height:16px;
+  border:2px solid currentColor;
+  border-top-color:transparent;
+  border-radius:50%;
+  opacity:.7;
+  animation:booklySpin .7s linear infinite;
 }
 
 .subscription-cancelled-note{
