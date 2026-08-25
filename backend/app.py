@@ -2646,6 +2646,11 @@ def preview_subscription_limit(
             }
         )
 
+        print("=== PADDLE PREVIEW RESULT ===")
+        print(result)
+        print("=== PREVIEW ITEMS ===")
+        print(new_items)
+
         return result
 @app.post("/admin/subscription/change-limit")
 def change_subscription_limit(
