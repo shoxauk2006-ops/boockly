@@ -1419,3 +1419,6 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   letter-spacing:.12em;
   text-transform:uppercase;
 }
+.qr-print-open-button{
+  margin-top:10px;
+}
