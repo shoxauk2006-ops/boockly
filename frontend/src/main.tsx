@@ -4897,7 +4897,8 @@ const currentAddonPrice =
   useState(false);
 
 const changeServiceLimit = async (
-  newLimit: number
+  newLimit: number,
+  skipConfirm = false
 ) => {
   if (changingServiceLimit) {
     return;
@@ -4969,15 +4970,17 @@ const changeServiceLimit = async (
       ? `Со следующего продления: $${recurringTotal.toFixed(2)}/мес.`
       : '';
 
-    const confirmed = window.confirm(
-      `Изменить лимит услуг на ${newLimit}?\n\n` +
-      `${paymentText}\n` +
-      `${nextText}`
-    );
+    if (!skipConfirm) {
+  const confirmed = window.confirm(
+    `Изменить лимит услуг на ${newLimit}?\n\n` +
+    `${paymentText}\n` +
+    `${nextText}`
+  );
 
-    if (!confirmed) {
-      return;
-    }
+  if (!confirmed) {
+    return;
+  }
+}
 
     const response = await fetch(
       API + '/admin/subscription/change-limit',
@@ -5437,7 +5440,7 @@ const changeServiceLimit = async (
     return;
   }
 
-  changeServiceLimit(10);
+  changeServiceLimit(10, true);
 }}
     style={{
       marginTop: 12,
