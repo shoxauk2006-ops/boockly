@@ -1231,7 +1231,7 @@ def admin_businesses(
             )
 
         return result
-        )
+        
 
 
 @app.post("/admin/businesses")
