@@ -5069,7 +5069,10 @@ function Subscription({
         );
       }
 
-      await refreshAfterChange();
+      await refreshAfterChange({
+        subscription_status: 'active',
+        subscription_active: true
+      });
     } catch (e: any) {
       alert(
         e?.message ||
@@ -5110,7 +5113,12 @@ function Subscription({
         );
       }
 
-      await refreshAfterChange();
+await refreshAfterChange({
+  pending_services_limit:
+    data?.pending_services_limit ?? 10,
+  pending_price:
+    data?.pending_price ?? 7.99
+});
     } catch (e: any) {
       alert(
         e?.message ||
@@ -5152,7 +5160,10 @@ function Subscription({
         );
       }
 
-      await refreshAfterChange();
+await refreshAfterChange({
+  pending_services_limit: null,
+  pending_price: null
+});
     } catch (e: any) {
       alert(
         e?.message ||
