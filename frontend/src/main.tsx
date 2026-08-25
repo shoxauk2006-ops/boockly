@@ -4858,6 +4858,26 @@ function Subscription({
     business?.subscription_active ||
     false;
 
+  const currentServicesLimit =
+  Number(
+    business?.services_limit || 10
+  );
+
+const currentPrice =
+  Number(
+    business?.current_price || 7.99
+  );
+
+const addonPrices: Record<number, number> = {
+  20: 4.99,
+  30: 7.99,
+  50: 11.99,
+  100: 19.99
+};
+
+const currentAddonPrice =
+  addonPrices[currentServicesLimit] || 0;
+
   const paymentFailed =
     status === 'past_due' ||
     status === 'unpaid';
