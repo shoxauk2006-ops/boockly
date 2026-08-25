@@ -5132,16 +5132,15 @@ const changeServiceLimit = async (
 
           <p>
             <b>
-              {t(
-                'owner.monthlyPrice',
-                '$7.99 / месяц'
-              )}
+              ${business?.current_price ?? 7.99} / месяц
             </b>
           </p>
           <div>
-            <span>Лимит услуг</span>
-            <strong>10 услуг</strong>
-          </div>
+  <span>Лимит услуг</span>
+  <strong>
+    {business?.services_limit || 10} услуг
+  </strong>
+</div>
         </div>
 
         <span className="pill ok">
@@ -5175,11 +5174,8 @@ const changeServiceLimit = async (
   </li>
 
   <li>
-    {t(
-      'owner.servicesLimit',
-      'До 10 услуг'
-    )}
-  </li>
+  До {business?.services_limit || 10} услуг
+</li>
 
   <li>
     {t(
