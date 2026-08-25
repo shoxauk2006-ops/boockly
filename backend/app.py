@@ -2772,34 +2772,34 @@ def change_subscription_limit(
         # billing period.
         # -----------------------------------------
 
-        if x.services_limit < current_limit:
+                if x.services_limit < current_limit:
 
-    subscription.pending_services_limit = (
-        x.services_limit
-    )
-
-    subscription.pending_price = (
-        new_price
-    )
-
-    db.commit()
-
-    return {
-        "ok": True,
-        "current_services_limit":
-            current_limit,
-        "current_price":
-            float(
-                subscription.current_price
-                or 7.99
-            ),
-        "pending_services_limit":
-            subscription.pending_services_limit,
-        "pending_price":
-            float(
-                subscription.pending_price
+            subscription.pending_services_limit = (
+                x.services_limit
             )
-    }
+
+            subscription.pending_price = (
+                new_price
+            )
+
+            db.commit()
+
+            return {
+                "ok": True,
+                "current_services_limit":
+                    current_limit,
+                "current_price":
+                    float(
+                        subscription.current_price
+                        or 7.99
+                    ),
+                "pending_services_limit":
+                    subscription.pending_services_limit,
+                "pending_price":
+                    float(
+                        subscription.pending_price
+                    )
+            }
 
         # -----------------------------------------
         # ПОВЫШЕНИЕ ЛИМИТА:
