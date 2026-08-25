@@ -4565,9 +4565,172 @@ function QrPrintCard({
   }
 
   const downloadPrintableQr = async () => {
-    try {
+  if (!qrDataUrl) {
+    return;
+  }
+
+  try {
+    const canvas =
+      document.createElement('canvas');
+
+    const width = 1600;
+    const height = 2200;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx =
+      canvas.getContext('2d');
+
+    if (!ctx) {
+      return;
+    }
+
+    ctx.fillStyle = '#ffffff';
+
+    ctx.fillRect(
+      0,
+      0,
+      width,
+      height
+    );
+
+    const qrImage =
+      new Image();
+
+    qrImage.onload = async () => {
+      const businessName =
+        String(
+          business?.name ||
+          'Ваш бизнес'
+        );
+
+      // BOOKLY
+      ctx.fillStyle = '#111';
+
+      ctx.textAlign = 'center';
+
+      ctx.font =
+        '900 72px Arial';
+
+      ctx.fillText(
+        'BOOKLY',
+        width / 2,
+        180
+      );
+
+      // Название бизнеса
+      ctx.font =
+        '800 62px Arial';
+
+      ctx.fillText(
+        businessName,
+        width / 2,
+        320
+      );
+
+      // Подзаголовок
+      ctx.fillStyle = '#777';
+
+      ctx.font =
+        '500 34px Arial';
+
+      ctx.fillText(
+        'Онлайн-запись',
+        width / 2,
+        385
+      );
+
+      // Карточка QR
+      const cardX = 150;
+      const cardY = 500;
+      const cardW = 1300;
+      const cardH = 1300;
+
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 4;
+
+      ctx.beginPath();
+
+      ctx.roundRect(
+        cardX,
+        cardY,
+        cardW,
+        cardH,
+        45
+      );
+
+      ctx.fill();
+      ctx.stroke();
+
+      // QR
+      const qrSize = 1050;
+
+      const qrX =
+        (width - qrSize) / 2;
+
+      const qrY =
+        cardY + 125;
+
+      ctx.drawImage(
+        qrImage,
+        qrX,
+        qrY,
+        qrSize,
+        qrSize
+      );
+
+      // Заголовок
+      ctx.fillStyle = '#111';
+
+      ctx.font =
+        '800 58px Arial';
+
+      ctx.fillText(
+        'Запишитесь онлайн',
+        width / 2,
+        1910
+      );
+
+      // Инструкция
+      ctx.fillStyle = '#707780';
+
+      ctx.font =
+        '500 34px Arial';
+
+      ctx.fillText(
+        'Отсканируйте QR-код',
+        width / 2,
+        1970
+      );
+
+      ctx.fillText(
+        'камерой телефона',
+        width / 2,
+        2025
+      );
+
+      // Footer
+      ctx.fillStyle = '#a0a5ab';
+
+      ctx.font =
+        '700 24px Arial';
+
+      ctx.fillText(
+        'POWERED BY BOOKLY',
+        width / 2,
+        2135
+      );
+
+      const dataUrl =
+        canvas.toDataURL(
+          'image/png',
+          1
+        );
+
       const response =
-        await fetch(qrDataUrl);
+        await fetch(dataUrl);
 
       const blob =
         await response.blob();
@@ -4590,7 +4753,8 @@ function QrPrintCard({
       ) {
         await navigator.share({
           files: [file],
-          title: 'Bookly — QR для печати'
+          title:
+            'Bookly — QR для печати'
         });
 
         return;
@@ -4608,20 +4772,25 @@ function QrPrintCard({
         `${business?.slug || 'bookly'}-qr-print.png`;
 
       document.body.appendChild(link);
+
       link.click();
+
       document.body.removeChild(link);
 
       setTimeout(() => {
         URL.revokeObjectURL(url);
       }, 1000);
+    };
 
-    } catch (error) {
-      console.error(
-        'QR PRINT DOWNLOAD ERROR:',
-        error
-      );
-    }
-  };
+    qrImage.src = qrDataUrl;
+
+  } catch (error) {
+    console.error(
+      'QR PRINT DOWNLOAD ERROR:',
+      error
+    );
+  }
+};
 
   return (
     <div
@@ -5054,7 +5223,7 @@ function Dashboard({
 
         <button
   type="button"
-  className="admin-action-button admin-download-button"
+  className="admin-action-button admin-download-button qr-print-open-button"
   onClick={() => setQrPrintOpen(true)}
 >
   Макет для печати
