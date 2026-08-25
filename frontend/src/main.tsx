@@ -5013,6 +5013,11 @@ function Subscription({
     currentServicesLimit > 10 &&
     pendingServicesLimit === 10;
 
+  const displayedMonthlyPrice =
+  packageCancellationPending
+    ? 7.99
+    : currentPrice;
+
   const [subscriptionModal, setSubscriptionModal] =
     useState(false);
   const [changingServiceLimit, setChangingServiceLimit] =
@@ -5343,7 +5348,7 @@ await refreshAfterChange({
           <div>
             <h3>Bookly Pro</h3>
             <p>
-              <b>${currentPrice.toFixed(2)} / месяц</b>
+              <b>${displayedMonthlyPrice.toFixed(2)} / месяц</b>
             </p>
             <div>
               <span>Лимит услуг</span>
@@ -5453,7 +5458,7 @@ await refreshAfterChange({
                     {t('owner.price', 'Стоимость')}
                   </span>
                   <strong>
-                    ${currentPrice.toFixed(2)} / месяц
+                    ${displayedMonthlyPrice.toFixed(2)} / месяц
                   </strong>
                 </div>
 
