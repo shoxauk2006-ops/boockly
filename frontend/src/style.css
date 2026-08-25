@@ -43,7 +43,6 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   padding-bottom:125px;
   padding-left:0;
   box-sizing:border-box;
-  animation:booklyFade .28s ease;
 }
 
 .personal-home-hero{
@@ -173,6 +172,9 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   flex-direction:column;
   gap:4px;
   align-items:center;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
 }
 
 .personal-bottom-nav button.active{
