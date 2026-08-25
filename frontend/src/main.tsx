@@ -5287,7 +5287,7 @@ const changeServiceLimit = async (
                 )}
               </span>
               <strong>
-                $7.99 / месяц
+                ${currentPrice.toFixed(2)} / месяц
               </strong>
             </div>
 
@@ -5307,6 +5307,28 @@ const changeServiceLimit = async (
               </strong>
             </div>
           </div>
+
+          {currentServicesLimit > 10 && (
+  <div
+    style={{
+      marginTop: 12,
+      padding: 12,
+      borderRadius: 12,
+      background: '#f8f9fa',
+      fontSize: 14,
+      lineHeight: 1.6
+    }}
+  >
+    <div>
+      Bookly Pro — $7.99 / месяц
+    </div>
+
+    <div>
+      Пакет до {currentServicesLimit} услуг — $
+      {currentAddonPrice.toFixed(2)} / месяц
+    </div>
+  </div>
+)}
 
           <p className="muted">
             {t(
@@ -5340,23 +5362,23 @@ const changeServiceLimit = async (
     }}
   >
     {[
-      {
-        limit: 20,
-        price: '$4.99 / месяц'
-      },
-      {
-        limit: 30,
-        price: '$7.99 / месяц'
-      },
-      {
-        limit: 40,
-        price: '$11.99 / месяц'
-      },
-      {
-        limit: 100,
-        price: '$19.99 / месяц'
-      }
-    ]
+  {
+    limit: 20,
+    price: '$4.99 / месяц'
+  },
+  {
+    limit: 30,
+    price: '$7.99 / месяц'
+  },
+  {
+    limit: 50,
+    price: '$11.99 / месяц'
+  },
+  {
+    limit: 100,
+    price: '$19.99 / месяц'
+  }
+]
       .filter(
         option =>
           option.limit >
@@ -5391,6 +5413,24 @@ const changeServiceLimit = async (
       ))}
   </div>
 </div>
+
+          {currentServicesLimit > 10 && (
+  <button
+    type="button"
+    className="ghost full"
+    disabled={changingServiceLimit}
+    onClick={() => {
+      changeServiceLimit(10);
+    }}
+    style={{
+      marginTop: 12,
+      color: '#d32f2f',
+      borderColor: '#d32f2f'
+    }}
+  >
+    Отменить пакет
+  </button>
+)}
 
                               {cancelledButActive ? (
   <button
