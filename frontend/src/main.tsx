@@ -140,13 +140,14 @@ function BooklyConfirmModal({
   open,
   message,
   onCancel,
-  onConfirm
+  onConfirm,
   t
 }: {
   open: boolean;
   message: string;
   onCancel: () => void;
   onConfirm: () => void;
+  t: (key: string, fallback?: string) => string;
 }) {
   if (!open) {
     return null;
@@ -773,12 +774,14 @@ setInfoSection={setInfoSection}
     setAlertModalOpen(false);
     setAlertModalMessage('');
   }}
+  t={t}
 />
 <BooklyConfirmModal
   open={confirmModalOpen}
   message={confirmModalMessage}
   onCancel={() => resolveConfirmModal(false)}
   onConfirm={() => resolveConfirmModal(true)}
+  t={t}
 />
 {infoModal && (
   <div
