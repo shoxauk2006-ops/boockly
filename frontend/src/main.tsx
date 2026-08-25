@@ -4952,15 +4952,22 @@ const changeServiceLimit = async (
           ) / 100
         : null;
 
+    const isRemovingAddon =
+  newLimit < currentServicesLimit;
+
     const paymentText =
-      immediateAmount !== null
-        ? `Сейчас к оплате: $${immediateAmount.toFixed(2)}`
-        : 'Стоимость изменения будет рассчитана Paddle.';
+  isRemovingAddon
+    ? 'Дополнительный пакет будет отключён со следующего продления.'
+    : immediateAmount !== null
+      ? `Сейчас к оплате: $${immediateAmount.toFixed(2)}`
+      : 'Стоимость изменения будет рассчитана Paddle.';
 
     const nextText =
-      recurringTotal !== null
-        ? `Со следующего продления: $${recurringTotal.toFixed(2)}/мес.`
-        : '';
+  isRemovingAddon
+    ? `Со следующего продления: $${currentPrice > 7.99 ? '7.99' : currentPrice.toFixed(2)}/мес.`
+    : recurringTotal !== null
+      ? `Со следующего продления: $${recurringTotal.toFixed(2)}/мес.`
+      : '';
 
     const confirmed = window.confirm(
       `Изменить лимит услуг на ${newLimit}?\n\n` +
