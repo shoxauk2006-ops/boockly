@@ -4847,9 +4847,29 @@ function Dashboard({
      <Subscription
   business={business}
   t={t}
-  onUpdated={async () => {
-    window.dispatchEvent(
-      new CustomEvent('bookly:subscription-updated')
+  onUpdated={async (patch) => {
+    if (!patch) {
+      return;
+    }
+
+    setBusiness((current: any) =>
+      current
+        ? {
+            ...current,
+            ...patch
+          }
+        : current
+    );
+
+    setBusinesses((current: any[]) =>
+      current.map((item: any) =>
+        Number(item.id) === Number(business?.id)
+          ? {
+              ...item,
+              ...patch
+            }
+          : item
+      )
     );
   }}
 />
@@ -4864,7 +4884,9 @@ function Subscription({
 }: {
   business: any;
   t: (key: string, fallback?: string) => string;
-  onUpdated: () => Promise<void>;
+  onUpdated: (
+  patch?: Record<string, any>
+) => Promise<void>;
 }) {
   const status = business?.subscription_status || 'inactive';
   const active = Boolean(business?.subscription_active);
@@ -4908,10 +4930,12 @@ function Subscription({
       ? new Date(business.subscription_expires_at)
       : null;
 
-  const refreshAfterChange = async () => {
-    await onUpdated();
-    setSubscriptionModal(false);
-  };
+  const refreshAfterChange = async (
+  patch?: Record<string, any>
+) => {
+  await onUpdated(patch);
+  setSubscriptionModal(false);
+};
 
   const changeServiceLimit = async (
     newLimit: number
@@ -4994,7 +5018,13 @@ function Subscription({
         );
       }
 
-      await refreshAfterChange();
+      await refreshAfterChange({
+      subscription_status: 'cancelled',
+      subscription_active: true,
+      subscription_expires_at:
+        data?.access_until ||
+        business?.subscription_expires_at
+});
     } catch (e: any) {
       alert(
         e?.message ||
