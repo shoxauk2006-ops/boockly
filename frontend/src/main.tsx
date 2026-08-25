@@ -4910,13 +4910,7 @@ function Dashboard({
   Скачать QR-код
 </button>
 
-        <button
-  type="button"
-  className="admin-action-button admin-download-button"
-  onClick={printQrCard}
->
-  Скачать макет для печати
-</button>
+        
 
         <button
   type="button"
@@ -4974,7 +4968,122 @@ function Dashboard({
           </div>
         )}
       </div>
+{printCardOpen && (
+  <div
+    className="qr-print-modal-overlay"
+    onClick={() =>
+      setPrintCardOpen(false)
+    }
+  >
+    <div
+      className="qr-print-modal"
+      onClick={(e) =>
+        e.stopPropagation()
+      }
+    >
+      <button
+        type="button"
+        className="subscription-modal-close"
+        onClick={() =>
+          setPrintCardOpen(false)
+        }
+      >
+        ×
+      </button>
 
+      <span className="personal-eyebrow">
+        BOOKLY
+      </span>
+
+      <h3>
+        Макет для печати
+      </h3>
+
+      <div className="qr-print-preview">
+        <img
+          src={printCardDataUrl}
+          alt="Макет QR для печати"
+        />
+      </div>
+
+      <button
+        type="button"
+        className="primary full"
+        onClick={async () => {
+          if (!printCardDataUrl) {
+            return;
+          }
+
+          try {
+            const response =
+              await fetch(
+                printCardDataUrl
+              );
+
+            const blob =
+              await response.blob();
+
+            const file =
+              new File(
+                [blob],
+                `${business.slug}-bookly-print.png`,
+                {
+                  type: 'image/png'
+                }
+              );
+
+            if (
+              navigator.share &&
+              navigator.canShare &&
+              navigator.canShare({
+                files: [file]
+              })
+            ) {
+              await navigator.share({
+                files: [file],
+                title:
+                  'Bookly — QR для печати'
+              });
+
+              return;
+            }
+
+            const url =
+              URL.createObjectURL(
+                blob
+              );
+
+            const link =
+              document.createElement('a');
+
+            link.href = url;
+
+            link.download =
+              `${business.slug}-bookly-print.png`;
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            link.remove();
+
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+            }, 1000);
+
+          } catch (e) {
+            console.error(
+              'PRINT QR SAVE ERROR:',
+              e
+            );
+          }
+        }}
+      >
+        Скачать / сохранить
+      </button>
+    </div>
+  </div>
+)}
 <Subscription
   business={business}
   t={t}
