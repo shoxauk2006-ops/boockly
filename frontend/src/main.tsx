@@ -20,6 +20,15 @@ declare global { interface Window { Telegram:any } }
 const API=import.meta.env.VITE_API_URL||'http://localhost:8000';
 const BOT_USERNAME=import.meta.env.VITE_BOT_USERNAME||'BooklyBot';
 const tg=()=>window.Telegram?.WebApp;
+const confirmAsync = (message: string): Promise<boolean> =>
+  new Promise((resolve) => {
+    const telegram = tg();
+    if (telegram?.showConfirm) {
+      telegram.showConfirm(message, (ok: boolean) => resolve(ok));
+    } else {
+      resolve(window.confirm(message));
+    }
+  });
 const initData=()=>tg()?.initData||'';
 const headers = () => {
   const base: Record<string, string> = {
@@ -4964,7 +4973,7 @@ function Subscription({
         newLimit === 50 ? 19.98 :
         27.98;
 
-      const confirmed = window.confirm(
+      const confirmed = await confirmAsync(
         `Увеличить лимит до ${newLimit} услуг?\n\n` +
         `Сейчас к оплате: $${
           (Number(immediateAmount) / 100).toFixed(2)
@@ -5021,7 +5030,7 @@ function Subscription({
   const cancelPackage = async () => {
     if (changingServiceLimit) return;
 
-    const confirmed = window.confirm(
+    const confirmed = await confirmAsync(
       'Отменить дополнительный пакет?\n\n' +
       'Пакет останется доступен до конца оплаченного периода.\n' +
       'Со следующего продления останется базовый лимит 10 услуг.'
@@ -5077,7 +5086,7 @@ function Subscription({
   const resumePackage = async () => {
     if (changingServiceLimit) return;
 
-    const confirmed = window.confirm(
+    const confirmed = await confirmAsync(
       'Возобновить дополнительный пакет?\n\n' +
       'Пакет продолжит действовать и останется в подписке со следующего продления.'
     );
@@ -5119,7 +5128,7 @@ await refreshAfterChange({
   };
 
   const cancelSubscription = async () => {
-    const confirmed = window.confirm(
+    const confirmed = await confirmAsync(
       t(
         'owner.confirmCancelSubscription',
         'Отменить автоматическое продление подписки? Доступ сохранится до конца оплаченного периода.'
@@ -5168,7 +5177,7 @@ await refreshAfterChange({
   };
 
   const resumeSubscription = async () => {
-    const confirmed = window.confirm(
+    const confirmed = await confirmAsync(
       t(
         'owner.confirmResumeSubscription',
         'Возобновить автоматическое продление подписки?'
@@ -6092,7 +6101,7 @@ alert(
   id: number
 ) => {
   const confirmed =
-    window.confirm(
+    await confirmAsync(
       t(
         'owner.confirmDeleteService',
         'Удалить эту услугу?'
@@ -7953,7 +7962,7 @@ function BookingRow({
       }
 
       const confirmed =
-        window.confirm(
+        await confirmAsync(
           `${t(
             'owner.cancelBookingConfirm'
           )} ${x.client_name}?`
@@ -8529,7 +8538,7 @@ setSettingsTimezonePickerOpen(false);
     link.click();
   };
   const deleteBusiness = async () => { 
-     const confirmed = window.confirm(
+     const confirmed = await confirmAsync(
       'Вы действительно хотите удалить этот бизнес?\n\n' +
       'Все данные бизнеса, включая услуги, график работы, блокировки и записи, будут удалены без возможности восстановления.\n\n' +
       'Подписка при этом НЕ отменяется. Вы сможете создать новый бизнес и продолжить пользоваться активной подпиской.'
@@ -8962,7 +8971,7 @@ function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {
   const cancelBooking =
     async (id: number) => {
       const ok =
-        window.confirm(
+        await confirmAsync(
           t(
             'client.cancelBookingConfirm'
           )
