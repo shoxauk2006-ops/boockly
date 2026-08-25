@@ -1296,3 +1296,42 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   font-weight: 600;
   cursor: pointer;
 }
+.qr-print-modal-overlay{
+  position:fixed;
+  inset:0;
+  z-index:100002;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  background:rgba(0,0,0,.5);
+}
+
+.qr-print-modal{
+  position:relative;
+  width:min(520px,100%);
+  max-height:90vh;
+  overflow-y:auto;
+  padding:22px;
+  background:#fff;
+  border-radius:24px;
+  box-shadow:0 20px 70px rgba(0,0,0,.25);
+}
+
+.qr-print-preview{
+  margin:16px 0;
+  padding:10px;
+  background:#f4f5f6;
+  border-radius:18px;
+  display:flex;
+  justify-content:center;
+}
+
+.qr-print-preview img{
+  display:block;
+  width:100%;
+  max-width:360px;
+  height:auto;
+  border-radius:10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.08);
+}
