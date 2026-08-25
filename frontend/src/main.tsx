@@ -377,7 +377,16 @@ telegram?.ready();
      window.Paddle.Environment.set('sandbox');
 
 window.Paddle.Initialize({
-  token
+  token,
+  eventCallback: (event: any) => {
+    if (event?.name === 'checkout.completed') {
+      window.setTimeout(() => {
+        window.dispatchEvent(
+          new CustomEvent('bookly:subscription-updated')
+        );
+      }, 1500);
+    }
+  }
 });
    };
 
@@ -2122,25 +2131,25 @@ const confirmServiceLimitChange = async () => {
       load();
     };
 
-    window.addEventListener(
-      'focus',
-      refresh
-    );
+    const refreshSubscription = () => {
+      window.setTimeout(() => {
+        load();
+      }, 1200);
+    };
 
-    document.addEventListener(
-      'visibilitychange',
-      refresh
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener(
+      'bookly:subscription-updated',
+      refreshSubscription
     );
 
     return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
       window.removeEventListener(
-        'focus',
-        refresh
-      );
-
-      document.removeEventListener(
-        'visibilitychange',
-        refresh
+        'bookly:subscription-updated',
+        refreshSubscription
       );
     };
   }, []);
@@ -4838,6 +4847,11 @@ function Dashboard({
       <Subscription
         business={business}
         t={t}
+        onUpdated={async () => {
+          window.dispatchEvent(
+            new CustomEvent('bookly:subscription-updated')
+          );
+        }}
       />
     </>
   );
@@ -4845,699 +4859,612 @@ function Dashboard({
 function Stat({n,t}:{n:any,t:string}){return <div className="stat"><strong>{n}</strong><span>{t}</span></div>}
 function Subscription({
   business,
-  t
+  t,
+  onUpdated
 }: {
   business: any;
   t: (key: string, fallback?: string) => string;
+  onUpdated: () => Promise<void>;
 }) {
-  const status =
-    business?.subscription_status ||
-    'inactive';
-
-  const active =
-    business?.subscription_active ||
-    false;
-
-  const currentServicesLimit =
-  Number(
+  const status = business?.subscription_status || 'inactive';
+  const active = Boolean(business?.subscription_active);
+  const currentServicesLimit = Number(
     business?.services_limit || 10
   );
-
-const currentPrice =
-  Number(
+  const pendingServicesLimit = Number(
+    business?.pending_services_limit || 0
+  );
+  const currentPrice = Number(
     business?.current_price || 7.99
   );
 
-const addonPrices: Record<number, number> = {
-  20: 4.99,
-  30: 7.99,
-  50: 11.99,
-  100: 19.99
-};
+  const addonPrices: Record<number, number> = {
+    20: 4.99,
+    30: 7.99,
+    50: 11.99,
+    100: 19.99
+  };
 
-const currentAddonPrice =
-  addonPrices[currentServicesLimit] || 0;
+  const currentAddonPrice =
+    addonPrices[currentServicesLimit] || 0;
 
   const paymentFailed =
-    status === 'past_due' ||
-    status === 'unpaid';
+    status === 'past_due' || status === 'unpaid';
 
   const cancelledButActive =
-    (
-      status === 'cancelled' ||
-      status === 'canceled'
-    ) && active;
+    (status === 'cancelled' || status === 'canceled') && active;
+
+  const packageCancellationPending =
+    currentServicesLimit > 10 &&
+    pendingServicesLimit === 10;
+
   const [subscriptionModal, setSubscriptionModal] =
-  useState(false);
-  const [serviceLimitOptionsOpen, setServiceLimitOptionsOpen] =
-  useState(false);
-  const [selectedServiceLimit, setSelectedServiceLimit] =
-  useState(10);
+    useState(false);
   const [changingServiceLimit, setChangingServiceLimit] =
-  useState(false);
-
-const changeServiceLimit = async (
-  newLimit: number,
-  skipConfirm = false
-) => {
-  if (changingServiceLimit) {
-    return;
-  }
-
-  try {
-    setChangingServiceLimit(true);
-
-    const previewResponse = await fetch(
-      API + '/admin/subscription/preview-limit',
-      {
-        method: 'POST',
-        headers: {
-          ...headers(),
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          services_limit: newLimit
-        })
-      }
-    );
-
-    const previewData =
-      await previewResponse
-        .json()
-        .catch(() => null);
-
-    if (!previewResponse.ok) {
-      throw new Error(
-        previewData?.detail ||
-          'Не удалось рассчитать стоимость изменения лимита'
-      );
-    }
-
-    const result =
-      previewData?.data?.update_summary?.result;
-
-    const immediateAmount =
-      result?.amount
-        ? Number(result.amount) / 100
-        : null;
-
-    const recurringTotal =
-      previewData?.data
-        ?.recurring_transaction_details
-        ?.totals
-        ?.total
-        ? Number(
-            previewData.data
-              .recurring_transaction_details
-              .totals.total
-          ) / 100
-        : null;
-
-    const isRemovingAddon =
-  newLimit < currentServicesLimit;
-
-    const paymentText =
-  isRemovingAddon
-    ? 'Дополнительный пакет будет отключён со следующего продления.'
-    : immediateAmount !== null
-      ? `Сейчас к оплате: $${immediateAmount.toFixed(2)}`
-      : 'Стоимость изменения будет рассчитана Paddle.';
-
-    const nextText =
-  isRemovingAddon
-    ? `Со следующего продления: $${currentPrice > 7.99 ? '7.99' : currentPrice.toFixed(2)}/мес.`
-    : recurringTotal !== null
-      ? `Со следующего продления: $${recurringTotal.toFixed(2)}/мес.`
-      : '';
-
-    if (!skipConfirm) {
-  const confirmed = window.confirm(
-    `Изменить лимит услуг на ${newLimit}?\n\n` +
-    `${paymentText}\n` +
-    `${nextText}`
-  );
-
-  if (!confirmed) {
-    return;
-  }
-}
-
-    const response = await fetch(
-      API + '/admin/subscription/change-limit',
-      {
-        method: 'POST',
-        headers: {
-          ...headers(),
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          services_limit: newLimit
-        })
-      }
-    );
-
-    const data =
-      await response
-        .json()
-        .catch(() => null);
-
-    if (!response.ok) {
-      throw new Error(
-        data?.detail ||
-          'Не удалось изменить лимит услуг'
-      );
-    }
-
-    alert(
-      `Лимит услуг изменён на ${newLimit}.`
-    );
-
-    setSubscriptionModal(false);
-
-    window.location.reload();
-
-  } catch (e: any) {
-    alert(
-      e?.message ||
-        'Не удалось изменить лимит услуг'
-    );
-  } finally {
-    setChangingServiceLimit(false);
-  }
-};
+    useState(false);
 
   const expiresAt =
     business?.subscription_expires_at
-      ? new Date(
-          business.subscription_expires_at
-        )
+      ? new Date(business.subscription_expires_at)
       : null;
 
-  const cancelSubscription =
-    async () => {
-      const confirmed =
-        window.confirm(
-          t(
-            'owner.confirmCancelSubscription',
-            'Отменить автоматическое продление подписки? Доступ сохранится до конца оплаченного периода.'
-          )
-        );
+  const refreshAfterChange = async () => {
+    await onUpdated();
+    setSubscriptionModal(false);
+  };
 
-      if (!confirmed) {
-        return;
-      }
+  const changeServiceLimit = async (
+    newLimit: number
+  ) => {
+    if (changingServiceLimit) return;
 
-      try {
-        const response =
-          await fetch(
-            API +
-              '/admin/subscription/cancel',
-            {
-              method: 'POST',
-              headers: headers()
-            }
-          );
+    setChangingServiceLimit(true);
 
-        const data =
-          await response
-            .json()
-            .catch(() => null);
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-              t(
-                'owner.cancelSubscriptionError',
-                'Не удалось отменить подписку'
-              )
-          );
+    try {
+      const previewResponse = await fetch(
+        API + '/admin/subscription/preview-limit',
+        {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({
+            services_limit: newLimit
+          })
         }
+      );
 
-        alert(
-          t(
-            'owner.subscriptionCancelled',
-            'Автоматическое продление отменено'
-          )
-        );
+      const preview = await previewResponse
+        .json()
+        .catch(() => null);
 
-        window.location.reload();
-
-      } catch (e: any) {
-        alert(
-          e?.message ||
-            t(
-              'owner.cancelSubscriptionError',
-              'Не удалось отменить подписку'
-            )
+      if (!previewResponse.ok) {
+        throw new Error(
+          preview?.detail ||
+          'Не удалось рассчитать стоимость изменения лимита'
         );
       }
-    };
-  const resumeSubscription =
-    async () => {
-      const confirmed =
-        window.confirm(
-          t(
-            'owner.confirmResumeSubscription',
-            'Возобновить автоматическое продление подписки?'
-          )
-        );
 
-      if (!confirmed) {
-        return;
-      }
+      const immediateAmount =
+        preview?.data?.update_summary?.result?.amount ??
+        preview?.data?.immediate_transaction?.details?.totals?.total ??
+        preview?.data?.update_summary?.immediate_transaction?.details?.totals?.total ??
+        0;
 
-      try {
-        const response =
-          await fetch(
-            API +
-              '/admin/subscription/resume',
-            {
-              method: 'POST',
-              headers: headers()
-            }
-          );
+      const recurringTotal =
+        preview?.data?.recurring_transaction_details?.totals?.total ??
+        preview?.data?.next_transaction?.details?.totals?.total ??
+        null;
 
-        const data =
-          await response
-            .json()
-            .catch(() => null);
+      const nextPrice =
+        newLimit === 20 ? 12.98 :
+        newLimit === 30 ? 15.98 :
+        newLimit === 50 ? 19.98 :
+        27.98;
 
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-              t(
-                'owner.resumeSubscriptionError',
-                'Не удалось возобновить подписку'
-              )
-          );
+      const confirmed = window.confirm(
+        `Увеличить лимит до ${newLimit} услуг?\n\n` +
+        `Сейчас к оплате: $${
+          (Number(immediateAmount) / 100).toFixed(2)
+        }\n` +
+        `Со следующего продления: $${
+          recurringTotal !== null
+            ? (Number(recurringTotal) / 100).toFixed(2)
+            : nextPrice.toFixed(2)
+        }/мес.`
+      );
+
+      if (!confirmed) return;
+
+      const response = await fetch(
+        API + '/admin/subscription/change-limit',
+        {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({
+            services_limit: newLimit
+          })
         }
+      );
 
-        alert(
-          t(
-            'owner.subscriptionResumed',
-            'Автоматическое продление возобновлено'
-          )
-        );
+      const data = await response.json().catch(() => null);
 
-        window.location.reload();
-
-            } catch (e: any) {
-        alert(
-          e?.message ||
-            t(
-              'owner.resumeSubscriptionError',
-              'Не удалось возобновить подписку'
-            )
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось изменить лимит услуг'
         );
       }
-    };
 
-    if (active && !paymentFailed) {
-  return (
-    <div className="card subscription">
+      await refreshAfterChange();
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        'Не удалось изменить лимит услуг'
+      );
+    } finally {
+      setChangingServiceLimit(false);
+    }
+  };
 
-      <div className="subscription-head">
-        <div>
-          <h3>Bookly Pro</h3>
+  const cancelPackage = async () => {
+    if (changingServiceLimit) return;
 
-          <p>
-            <b>
-              ${business?.current_price ?? 7.99} / месяц
-            </b>
-          </p>
+    const confirmed = window.confirm(
+      'Отменить дополнительный пакет?\n\n' +
+      'Пакет останется доступен до конца оплаченного периода.\n' +
+      'Со следующего продления останется базовый лимит 10 услуг.'
+    );
+
+    if (!confirmed) return;
+
+    setChangingServiceLimit(true);
+
+    try {
+      const response = await fetch(
+        API + '/admin/subscription/change-limit',
+        {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({
+            services_limit: 10
+          })
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось запланировать отмену пакета'
+        );
+      }
+
+      await refreshAfterChange();
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        'Не удалось отменить пакет'
+      );
+    } finally {
+      setChangingServiceLimit(false);
+    }
+  };
+
+  const resumePackage = async () => {
+    if (changingServiceLimit) return;
+
+    const confirmed = window.confirm(
+      'Возобновить дополнительный пакет?\n\n' +
+      'Пакет продолжит действовать и останется в подписке со следующего продления.'
+    );
+
+    if (!confirmed) return;
+
+    setChangingServiceLimit(true);
+
+    try {
+      const response = await fetch(
+        API + '/admin/subscription/resume-package',
+        {
+          method: 'POST',
+          headers: headers()
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          'Не удалось возобновить пакет'
+        );
+      }
+
+      await refreshAfterChange();
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        'Не удалось возобновить пакет'
+      );
+    } finally {
+      setChangingServiceLimit(false);
+    }
+  };
+
+  const cancelSubscription = async () => {
+    const confirmed = window.confirm(
+      t(
+        'owner.confirmCancelSubscription',
+        'Отменить автоматическое продление подписки? Доступ сохранится до конца оплаченного периода.'
+      )
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        API + '/admin/subscription/cancel',
+        {
+          method: 'POST',
+          headers: headers()
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          t(
+            'owner.cancelSubscriptionError',
+            'Не удалось отменить подписку'
+          )
+        );
+      }
+
+      await refreshAfterChange();
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        t(
+          'owner.cancelSubscriptionError',
+          'Не удалось отменить подписку'
+        )
+      );
+    }
+  };
+
+  const resumeSubscription = async () => {
+    const confirmed = window.confirm(
+      t(
+        'owner.confirmResumeSubscription',
+        'Возобновить автоматическое продление подписки?'
+      )
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        API + '/admin/subscription/resume',
+        {
+          method: 'POST',
+          headers: headers()
+        }
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.detail ||
+          t(
+            'owner.resumeSubscriptionError',
+            'Не удалось возобновить подписку'
+          )
+        );
+      }
+
+      await refreshAfterChange();
+    } catch (e: any) {
+      alert(
+        e?.message ||
+        t(
+          'owner.resumeSubscriptionError',
+          'Не удалось возобновить подписку'
+        )
+      );
+    }
+  };
+
+  if (active && !paymentFailed) {
+    return (
+      <div className="card subscription">
+        <div className="subscription-head">
           <div>
-  <span>Лимит услуг</span>
-  <strong>
-    {business?.services_limit || 10} услуг
-  </strong>
-</div>
-        </div>
-
-        <span className="pill ok">
-          {t(
-            'owner.active',
-            'Активна'
-          )}
-        </span>
-      </div>
-
-      <p>
-        {t(
-          'owner.subscribeAccessText',
-          'Полный доступ к возможностям Bookly Pro'
-        )}
-      </p>
-
-      <ul>
-  <li>
-    {t(
-      'owner.clientLink',
-      'Клиентская страница и ссылка'
-    )}
-  </li>
-
-  <li>
-    {t(
-      'owner.qrCode',
-      'QR-код бизнеса'
-    )}
-  </li>
-
-  <li>
-  До {business?.services_limit || 10} услуг
-</li>
-
-  <li>
-    {t(
-      'owner.telegramNotifications',
-      'Уведомления в Telegram'
-    )}
-  </li>
-</ul>
-
-      <div className="success">
-        <strong>
-          {cancelledButActive
-            ? t(
-                'owner.subscriptionCancelledTitle',
-                'Автопродление отменено'
-              )
-            : t(
-                'owner.booklyActivated',
-                'Bookly Pro активирован'
-              )}
-        </strong>
-
-        {expiresAt && (
-          <p className="muted">
-            {cancelledButActive
-              ? t(
-                  'owner.accessUntil',
-                  'Доступ до'
-                )
-              : t(
-                  'owner.nextPayment',
-                  'Следующее списание'
-                )}
-            :{' '}
-            {expiresAt.toLocaleDateString(
-              getLocale()
-            )}
-          </p>
-        )}
-      </div>
-
-      
-  <>
-    <button
-      type="button"
-      className="subscription-manage-button"
-      onClick={() => setSubscriptionModal(true)}
-    >
-      {t(
-        'owner.manageSubscription',
-        'Управление подпиской'
-      )}
-    </button>
-
-    {subscriptionModal && (
-      <div
-        className="subscription-modal-overlay"
-        onClick={() => setSubscriptionModal(false)}
-      >
-        <div
-          className="subscription-modal"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="subscription-modal-close"
-            onClick={() => setSubscriptionModal(false)}
-          >
-            ×
-          </button>
-
-          <span className="personal-eyebrow">
-            BOOKLY PRO
-          </span>
-
-          <h3>
-            {t(
-              'owner.manageSubscription',
-              'Управление подпиской'
-            )}
-          </h3>
-
-          <div className="subscription-modal-info">
+            <h3>Bookly Pro</h3>
+            <p>
+              <b>${currentPrice.toFixed(2)} / месяц</b>
+            </p>
             <div>
-              <span>
-                {t(
-                  'owner.price',
-                  'Стоимость'
-                )}
-              </span>
+              <span>Лимит услуг</span>
               <strong>
-                ${currentPrice.toFixed(2)} / месяц
-              </strong>
-            </div>
-
-            <div>
-              <span>
-                {t(
-                  'owner.nextPayment',
-                  'Следующее списание'
-                )}
-              </span>
-              <strong>
-                {expiresAt
-                  ? expiresAt.toLocaleDateString(
-                      getLocale()
-                    )
-                  : '—'}
+                {currentServicesLimit} услуг
               </strong>
             </div>
           </div>
 
-          {currentServicesLimit > 10 && (
-  <div
-    style={{
-      marginTop: 12,
-      padding: 12,
-      borderRadius: 12,
-      background: '#f8f9fa',
-      fontSize: 14,
-      lineHeight: 1.6
-    }}
-  >
-    <div>
-      Bookly Pro — $7.99 / месяц
-    </div>
+          <span className="pill ok">
+            {t('owner.active', 'Активна')}
+          </span>
+        </div>
 
-    <div>
-      Пакет до {currentServicesLimit} услуг — $
-      {currentAddonPrice.toFixed(2)} / месяц
-    </div>
-  </div>
-)}
+        <p>
+          {cancelledButActive
+            ? 'Автопродление отменено. Доступ сохраняется до конца оплаченного периода.'
+            : t(
+                'owner.subscribeAccessText',
+                'Полный доступ к возможностям Bookly Pro'
+              )}
+        </p>
 
-          <p className="muted">
-            {t(
-              'owner.cancelSubscriptionDescription',
-              'Отмена отключит следующее автоматическое списание. Доступ к Bookly Pro сохранится до конца оплаченного периода.'
-            )}
-          </p>
+        <ul>
+          <li>{t('owner.clientLink', 'Клиентская страница и ссылка')}</li>
+          <li>{t('owner.qrCode', 'QR-код бизнеса')}</li>
+          <li>До {currentServicesLimit} услуг</li>
+          <li>{t('owner.telegramNotifications', 'Уведомления в Telegram')}</li>
+        </ul>
+
+        <div className="success">
+          <strong>
+            {cancelledButActive
+              ? t(
+                  'owner.subscriptionCancelledTitle',
+                  'Автопродление отменено'
+                )
+              : t(
+                  'owner.booklyActivated',
+                  'Bookly Pro активирован'
+                )}
+          </strong>
+
+          {expiresAt && (
+            <p className="muted">
+              {cancelledButActive
+                ? 'Доступ до:'
+                : t('owner.nextPayment', 'Следующее списание')}
+              {' '}
+              {expiresAt.toLocaleDateString(getLocale())}
+            </p>
+          )}
+        </div>
+
+        {packageCancellationPending && (
           <div
-  style={{
-    marginTop: 20,
-    paddingTop: 20,
-    borderTop: '1px solid #eee'
-  }}
->
-  <strong>
-    Увеличить лимит услуг
-  </strong>
+            className="success"
+            style={{ marginTop: 12 }}
+          >
+            <strong>Пакет отменён на следующее продление</strong>
+            <p className="muted">
+              Сейчас у вас {currentServicesLimit} услуг. До конца оплаченного периода пакет продолжает действовать.
+            </p>
+          </div>
+        )}
 
-  <p
-    className="muted"
-    style={{ marginTop: 6 }}
-  >
-    Выберите новый лимит услуг.
-  </p>
-
-  <div
-    style={{
-      display: 'grid',
-      gap: 10,
-      marginTop: 12
-    }}
-  >
-    {[
-  {
-    limit: 20,
-    price: '$4.99 / месяц'
-  },
-  {
-    limit: 30,
-    price: '$7.99 / месяц'
-  },
-  {
-    limit: 50,
-    price: '$11.99 / месяц'
-  },
-  {
-    limit: 100,
-    price: '$19.99 / месяц'
-  }
-]
-      .filter(
-        option =>
-          option.limit >
-          (business?.services_limit || 10)
-      )
-      .map(option => (
         <button
-          key={option.limit}
           type="button"
           className="subscription-manage-button"
-          disabled={changingServiceLimit}
-          onClick={() =>
-            changeServiceLimit(
-              option.limit
-            )
-          }
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            width: '100%'
-          }}
+          onClick={() => setSubscriptionModal(true)}
         >
-          <span>
-            До {option.limit} услуг
-          </span>
-
-          <strong>
-            {option.price}
-          </strong>
+          {t(
+            'owner.manageSubscription',
+            'Управление подпиской'
+          )}
         </button>
-      ))}
-  </div>
-</div>
 
-          {currentServicesLimit > 10 && (
-  <button
-    type="button"
-    className="ghost full"
-    disabled={changingServiceLimit}
-    onClick={() => {
-  const confirmed = window.confirm(
-    'Отменить дополнительный пакет?\n\n' +
-    'Лимит вернётся к 10 услугам.\n' +
-    'Bookly Pro продолжит действовать.'
-  );
+        {subscriptionModal && (
+          <div
+            className="subscription-modal-overlay"
+            onClick={() => setSubscriptionModal(false)}
+          >
+            <div
+              className="subscription-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="subscription-modal-close"
+                onClick={() => setSubscriptionModal(false)}
+              >
+                ×
+              </button>
 
-  if (!confirmed) {
-    return;
-  }
+              <span className="personal-eyebrow">BOOKLY PRO</span>
 
-  changeServiceLimit(10, true);
-}}
-    style={{
-      marginTop: 12,
-      color: '#d32f2f',
-      borderColor: '#d32f2f'
-    }}
-  >
-    Отменить пакет
-  </button>
-)}
+              <h3>
+                {t(
+                  'owner.manageSubscription',
+                  'Управление подпиской'
+                )}
+              </h3>
 
-                              {cancelledButActive ? (
-  <button
-    type="button"
-    className="subscription-manage-button"
-    onClick={async () => {
-      setSubscriptionModal(false);
-      await resumeSubscription();
-    }}
-  >
-    {t(
-      'owner.resumeSubscription',
-      'Возобновить подписку'
-    )}
-  </button>
-) : (
-  <button
-    type="button"
-    className="subscription-danger-button"
-    onClick={async () => {
-      setSubscriptionModal(false);
-      await cancelSubscription();
-    }}
-  >
-    {t(
-      'owner.cancelSubscription',
-      'Отменить автопродление'
-    )}
-  </button>
-)}
-        </div>
-      </div>
-    )}
-  </>
+              <div className="subscription-modal-info">
+                <div>
+                  <span>
+                    {t('owner.price', 'Стоимость')}
+                  </span>
+                  <strong>
+                    ${currentPrice.toFixed(2)} / месяц
+                  </strong>
+                </div>
+
+                <div>
+                  <span>
+                    {cancelledButActive
+                      ? 'Доступ до'
+                      : t('owner.nextPayment', 'Следующее списание')}
+                  </span>
+                  <strong>
+                    {expiresAt
+                      ? expiresAt.toLocaleDateString(getLocale())
+                      : '—'}
+                  </strong>
+                </div>
+              </div>
+
+              {currentServicesLimit > 10 && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    padding: 12,
+                    borderRadius: 12,
+                    background: '#f8f9fa',
+                    fontSize: 14,
+                    lineHeight: 1.6
+                  }}
+                >
+                  <div>Bookly Pro — $7.99 / месяц</div>
+                  <div>
+                    Пакет до {currentServicesLimit} услуг — $
+                    {currentAddonPrice.toFixed(2)} / месяц
+                  </div>
+                </div>
+              )}
+
+              {!cancelledButActive && !packageCancellationPending && (
+                <div
+                  style={{
+                    marginTop: 20,
+                    paddingTop: 20,
+                    borderTop: '1px solid #eee'
+                  }}
+                >
+                  <strong>Увеличить лимит услуг</strong>
+                  <p className="muted" style={{ marginTop: 6 }}>
+                    Выберите новый лимит услуг.
+                  </p>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 10,
+                      marginTop: 12
+                    }}
+                  >
+                    {[
+                      { limit: 20, price: '$4.99 / месяц' },
+                      { limit: 30, price: '$7.99 / месяц' },
+                      { limit: 50, price: '$11.99 / месяц' },
+                      { limit: 100, price: '$19.99 / месяц' }
+                    ]
+                      .filter(option => option.limit > currentServicesLimit)
+                      .map(option => (
+                        <button
+                          key={option.limit}
+                          type="button"
+                          className="subscription-manage-button"
+                          disabled={changingServiceLimit}
+                          onClick={() => changeServiceLimit(option.limit)}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            width: '100%'
+                          }}
+                        >
+                          <span>До {option.limit} услуг</span>
+                          <strong>{option.price}</strong>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {currentServicesLimit > 10 && !cancelledButActive && (
+                packageCancellationPending ? (
+                  <button
+                    type="button"
+                    className="subscription-manage-button"
+                    disabled={changingServiceLimit}
+                    onClick={resumePackage}
+                    style={{ marginTop: 12 }}
+                  >
+                    Возобновить пакет
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="ghost full"
+                    disabled={changingServiceLimit}
+                    onClick={cancelPackage}
+                    style={{
+                      marginTop: 12,
+                      color: '#d32f2f',
+                      borderColor: '#d32f2f'
+                    }}
+                  >
+                    Отменить пакет
+                  </button>
+                )
+              )}
+
+              {cancelledButActive ? (
+                <button
+                  type="button"
+                  className="subscription-manage-button"
+                  onClick={resumeSubscription}
+                >
+                  {t(
+                    'owner.resumeSubscription',
+                    'Возобновить подписку'
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="subscription-danger-button"
+                  onClick={cancelSubscription}
+                >
+                  {t(
+                    'owner.cancelSubscription',
+                    'Отменить автопродление'
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
-    
 
   if (paymentFailed) {
     return (
       <div className="card subscription">
-
         <div className="subscription-head">
           <div>
-            <h3>
-              Bookly Pro
-            </h3>
-
+            <h3>Bookly Pro</h3>
             <p>
-              <b>
-                {t(
-                  'owner.monthlyPrice'
-                )}
-              </b>
+              <b>{t('owner.monthlyPrice')}</b>
             </p>
           </div>
-
           <span className="pill">
-            {t(
-              'owner.paymentFailed',
-              'Платёж не прошёл'
-            )}
+            {t('owner.paymentFailed', 'Платёж не прошёл')}
           </span>
         </div>
 
-        <p className="muted">
+        <p>
           {t(
             'owner.subscribeAccessText',
             'Активируйте подписку, чтобы открыть полный доступ к Bookly Pro'
           )}
         </p>
 
-                <button
-          type="button"
+        <button
           className="primary full"
-          onClick={() =>
-            checkout(
-              'paddle',
-              business.id
-            )
-          }
+          onClick={() => checkout('paddle', business.id)}
         >
-          {t(
-            'owner.openAccess',
-            'Открыть доступ'
-          )}
+          {t('owner.openAccess', 'Открыть доступ')}
         </button>
       </div>
     );
@@ -5545,219 +5472,33 @@ const changeServiceLimit = async (
 
   return (
     <div className="card subscription">
-
       <div className="subscription-head">
         <div>
-          <h3>
-            Bookly Pro
-          </h3>
-
-          <p>
-            <b>
-              {t(
-                'owner.monthlyPrice'
-              )}
-            </b>
-          </p>
+          <h3>Bookly Pro</h3>
+          <p><b>{t('owner.monthlyPrice')}</b></p>
         </div>
-
         <span className="pill">
-          {t(
-            'owner.inactive',
-            'Неактивна'
-          )}
+          {t('owner.inactive', 'Неактивна')}
         </span>
       </div>
 
       <p>
         {t(
           'owner.payToUnlock',
-          'Оплатите подписку, чтобы открыть доступ к безлимитным записям и всем функциям Bookly Pro.'
+          'Оплатите подписку, чтобы открыть доступ к функциям Bookly Pro.'
         )}
       </p>
 
-      <ul>
-  <li>
-    {t(
-      'owner.clientLink',
-      'Клиентская страница и ссылка'
-    )}
-  </li>
-
-  <li>
-    {t(
-      'owner.qrCode',
-      'QR-код бизнеса'
-    )}
-  </li>
-
-  <li>
-    {t(
-      'owner.servicesLimit',
-      'До 10 услуг'
-    )}
-  </li>
-
-  <li>
-    {t(
-      'owner.telegramNotifications',
-      'Уведомления в Telegram'
-    )}
-  </li>
-</ul>
-<div
-  style={{
-    marginTop: 20,
-    paddingTop: 20,
-    borderTop: '1px solid #eee'
-  }}
->
-  <button
-    type="button"
-    onClick={() =>
-      setServiceLimitOptionsOpen(
-        !serviceLimitOptionsOpen
-      )
-    }
-    style={{
-      width: '100%',
-      padding: '8px 0',
-      border: 'none',
-      background: 'transparent',
-      color: '#111',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      fontSize: 16,
-      fontWeight: 600,
-      cursor: 'pointer'
-    }}
-  >
-    <span>Увеличить лимит услуг</span>
-    <span style={{ fontSize: 20 }}>
-      {serviceLimitOptionsOpen ? '⌃' : '›'}
-    </span>
-  </button>
-
-  {serviceLimitOptionsOpen && (
-    <div
-      style={{
-        display: 'grid',
-        gap: 8,
-        marginTop: 12
-      }}
-    >
-      {[
-        {
-          limit: 20,
-          addon: 4.99,
-          total: 12.98
-        },
-        {
-          limit: 30,
-          addon: 7.99,
-          total: 15.98
-        },
-        {
-          limit: 40,
-          addon: 11.99,
-          total: 19.98
-        },
-        {
-          limit: 100,
-          addon: 19.99,
-          total: 27.98
-        }
-      ].map(option => {
-        const selected =
-          selectedServiceLimit === option.limit;
-
-        return (
-          <button
-            key={option.limit}
-            type="button"
-            onClick={() =>
-              setSelectedServiceLimit(
-                option.limit
-              )
-            }
-            style={{
-              width: '100%',
-              padding: '13px 14px',
-              borderRadius: 12,
-              border: selected
-                ? '2px solid #111'
-                : '1px solid #ddd',
-              background: selected
-                ? '#f5f5f5'
-                : '#fff',
-              color: '#111',
-              textAlign: 'left',
-              cursor: 'pointer'
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 12
-              }}
-            >
-              <strong>
-                До {option.limit} услуг
-              </strong>
-
-              <span
-                style={{
-                  fontWeight: 700
-                }}
-              >
-                {selected ? '✓' : '○'}
-              </span>
-            </div>
-
-            <div
-              className="muted"
-              style={{ marginTop: 5 }}
-            >
-              +${option.addon.toFixed(2)} / месяц
-            </div>
-
-            <div
-              style={{
-                marginTop: 3,
-                fontSize: 13
-              }}
-            >
-              Итого: ${option.total.toFixed(2)} / месяц
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  )}
-
-  <button
-    type="button"
-    className="primary full"
-    style={{ marginTop: 16 }}
-    onClick={() =>
-      checkout(
-        'paddle',
-        business.id,
-        selectedServiceLimit
-      )
-    }
-  >
-    Оплатить подписку
-  </button>
-</div>
-      
-
+      <button
+        className="primary full"
+        onClick={() => checkout('paddle', business.id)}
+      >
+        {t('owner.openAccess', 'Открыть доступ')}
+      </button>
     </div>
   );
 }
+
 function checkout(
   provider: string,
   businessId?: number,
@@ -5805,7 +5546,7 @@ function checkout(
 const items = [
   {
     priceId:
-      'pri_01kzwxx7zeytn8sqxfvpt0a8ys',
+      'pri_01m0vqh7n3x8h7da02fpjm3wkd',
     quantity: 1
   }
 ];
@@ -5813,7 +5554,7 @@ const items = [
 const addonPriceIds: Record<number, string> = {
   20: 'pri_01m0sy8kj4zw2ag1qe907zhdns',
   30: 'pri_01m0mhf9rdee684tyd3mg3xp8p',
-  40: 'pri_01m0mhh2k5cts13j9h3agkt7bj',
+  50: 'pri_01m0mhhh2k5cts13j9h3agt7bj',
   100: 'pri_01m0mhk1wq5brdkew92q3gvk9r'
 };
 
@@ -10211,5 +9952,4 @@ createRoot(
 ).render(
   <App />
 );
-
 
