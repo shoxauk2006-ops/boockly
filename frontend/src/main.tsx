@@ -4844,11 +4844,13 @@ function Dashboard({
         )}
       </div>
 
-      <Subscription
+     <Subscription
   business={business}
   t={t}
   onUpdated={async () => {
-    await load();
+    window.dispatchEvent(
+      new CustomEvent('bookly:subscription-updated')
+    );
   }}
 />
     </>
