@@ -4693,6 +4693,219 @@ function Dashboard({
     }
   };
 
+  const printQrCard = () => {
+  if (!business.subscription_active || !qrDataUrl) {
+    return;
+  }
+
+  const printWindow = window.open(
+    '',
+    '_blank',
+    'width=900,height=1100'
+  );
+
+  if (!printWindow) {
+    return;
+  }
+
+  const businessName = String(
+    business?.name || 'Bookly'
+  )
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="ru">
+      <head>
+        <meta charset="UTF-8" />
+
+        <title>
+          ${businessName} — Bookly QR
+        </title>
+
+        <style>
+          * {
+            box-sizing: border-box;
+          }
+
+          html,
+          body {
+            margin: 0;
+            padding: 0;
+            background: #f3f4f6;
+            font-family:
+              Inter,
+              -apple-system,
+              BlinkMacSystemFont,
+              "Segoe UI",
+              sans-serif;
+          }
+
+          body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+          }
+
+          .sheet {
+            width: 148mm;
+            min-height: 210mm;
+            background: #fff;
+            border-radius: 10mm;
+            padding: 18mm 14mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+          }
+
+          .brand {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: .18em;
+            margin-bottom: 10mm;
+          }
+
+          .business {
+            font-size: 25px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 5mm;
+            max-width: 115mm;
+            overflow-wrap: anywhere;
+          }
+
+          .eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            color: #7b818a;
+            margin-bottom: 10mm;
+          }
+
+          .qr-wrap {
+            width: 92mm;
+            height: 92mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8mm;
+            border: 1px solid #e5e7eb;
+            border-radius: 8mm;
+            background: #fff;
+          }
+
+          .qr {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+
+          .title {
+            margin-top: 10mm;
+            font-size: 23px;
+            font-weight: 800;
+          }
+
+          .subtitle {
+            margin-top: 4mm;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #717780;
+            max-width: 105mm;
+          }
+
+          .footer {
+            margin-top: 12mm;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            color: #9aa0a8;
+            text-transform: uppercase;
+          }
+
+          @page {
+            size: A5 portrait;
+            margin: 0;
+          }
+
+          @media print {
+            html,
+            body {
+              background: #fff;
+            }
+
+            body {
+              padding: 0;
+            }
+
+            .sheet {
+              width: 148mm;
+              min-height: 210mm;
+              border-radius: 0;
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+
+        <div class="sheet">
+
+          <div class="brand">
+            BOOKLY
+          </div>
+
+          <div class="business">
+            ${businessName}
+          </div>
+
+          <div class="eyebrow">
+            Онлайн-запись
+          </div>
+
+          <div class="qr-wrap">
+            <img
+              class="qr"
+              src="${qrDataUrl}"
+              alt="QR-код"
+            />
+          </div>
+
+          <div class="title">
+            Запишитесь онлайн
+          </div>
+
+          <div class="subtitle">
+            Наведите камеру телефона
+            на QR-код и выберите удобное
+            время для записи.
+          </div>
+
+          <div class="footer">
+            BOOKLY
+          </div>
+
+        </div>
+
+        <script>
+          window.onload = function () {
+            setTimeout(function () {
+              window.print();
+            }, 250);
+          };
+        <\/script>
+
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+};
+
   const copyLink = async () => {
     if (!business.subscription_active) {
       return;
@@ -4907,6 +5120,14 @@ function Dashboard({
   onClick={downloadQr}
 >
   Скачать QR-код
+</button>
+
+        <button
+  type="button"
+  className="admin-action-button admin-download-button"
+  onClick={printQrCard}
+>
+  Скачать макет для печати
 </button>
       </>
     )
