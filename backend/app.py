@@ -1195,6 +1195,40 @@ def admin_businesses(
                 in Business.__table__.columns
             }
 
+            business_data["subscription_active"] = (
+                bool(subscription.active)
+                if subscription
+                else False
+            )
+
+            business_data["subscription_status"] = (
+                (
+                    "active"
+                    if subscription.active
+                    else (subscription.status or "inactive")
+                )
+                if subscription
+                else "inactive"
+            )
+
+            business_data["subscription_expires_at"] = (
+                subscription.expires_at
+                if subscription
+                else None
+            )
+
+            business_data["payment_provider"] = (
+                subscription.payment_provider
+                if subscription
+                else ""
+            )
+
+            business_data["external_subscription_id"] = (
+                subscription.external_subscription_id
+                if subscription
+                else ""
+            )
+
             business_data["services_limit"] = (
                 subscription.current_services_limit
                 if subscription
@@ -2438,6 +2472,7 @@ PADDLE_API_BASE = os.getenv(
     "https://api.paddle.com"
 )
 
+
 def _paddle_request(
     method: str,
     path: str,
@@ -2468,33 +2503,76 @@ def _paddle_request(
     )
 
     try:
-        with urllib_request.urlopen(
-            req,
-            timeout=20
-        ) as response:
+        with urllib_request.urlopen(req, timeout=20) as response:
             raw = response.read().decode("utf-8")
             return json.loads(raw) if raw else {}
-
     except HTTPError as exc:
         try:
             raw = exc.read().decode("utf-8")
         except Exception:
             raw = ""
-
         raise HTTPException(
             502,
             f"Paddle API error {exc.code}: {raw[:3000]}"
         )
-
     except URLError as exc:
         raise HTTPException(
             502,
             f"Paddle connection error: {exc.reason}"
         )
+
+
+def _bookly_subscription_items(services_limit: int):
+    if services_limit not in {10, 20, 30, 50, 100}:
+        raise HTTPException(400, "Недопустимый лимит услуг")
+
+    items = [
+        {
+            "price_id": PADDLE_BOOKLY_BASE_PRICE_ID,
+            "quantity": 1
+        }
+    ]
+
+    addon_price_id = PADDLE_SERVICE_ADDON_PRICE_IDS.get(
+        services_limit
+    )
+
+    if addon_price_id:
+        items.append(
+            {
+                "price_id": addon_price_id,
+                "quantity": 1
+            }
+        )
+
+    return items
+
+
+def _bookly_detect_limit_from_items(items) -> Optional[int]:
+    detected = 10
+
+    for item in items or []:
+        price_id = str(
+            item.get("price_id")
+            or (item.get("price") or {}).get("id")
+            or ""
+        )
+
+        for limit, addon_id in PADDLE_SERVICE_ADDON_PRICE_IDS.items():
+            if price_id == addon_id:
+                detected = max(detected, limit)
+
+    return detected
+
+
+def _bookly_subscription_price(services_limit: int) -> float:
+    return calculate_subscription_price(services_limit)
+
+
 def _paddle_update_bookly_subscription(
     subscription_id: str,
     new_limit: int,
-    old_limit: int
+    proration_mode: str
 ):
     if not subscription_id.startswith("sub_"):
         raise HTTPException(
@@ -2502,55 +2580,17 @@ def _paddle_update_bookly_subscription(
             "Paddle subscription ID is missing"
         )
 
-    # Всегда строим подписку заново:
-    # Bookly Pro + нужный Extra Services.
-    # Старую цену $9.99 таким образом заменяем
-    # на новую базовую цену $7.99.
-
-    new_items = [
-        {
-            "price_id": PADDLE_BOOKLY_BASE_PRICE_ID,
-            "quantity": 1
-        }
-    ]
-
-    addon_price_id = (
-        PADDLE_SERVICE_ADDON_PRICE_IDS.get(
-            new_limit
-        )
-    )
-
-    if addon_price_id:
-        new_items.append(
-            {
-                "price_id": addon_price_id,
-                "quantity": 1
-            }
-        )
-
-    # Повышение лимита — берём разницу сразу.
-    # Понижение — переносим перерасчёт на следующий
-    # billing period.
-    if new_limit > old_limit:
-        proration_mode = (
-            "prorated_immediately"
-        )
-    else:
-        proration_mode = (
-            "prorated_next_billing_period"
-        )
-
     return _paddle_request(
         "PATCH",
         f"/subscriptions/{subscription_id}",
         {
-            "items": new_items,
-            "proration_billing_mode":
-                proration_mode,
-            "on_payment_failure":
-                "prevent_change"
+            "items": _bookly_subscription_items(new_limit),
+            "proration_billing_mode": proration_mode,
+            "on_payment_failure": "prevent_change"
         }
     )
+
+
 @app.post("/admin/subscription/preview-limit")
 def preview_subscription_limit(
     x: SubscriptionLimitChangeIn,
@@ -2559,41 +2599,22 @@ def preview_subscription_limit(
         alias="X-Telegram-Init-Data"
     )
 ):
-    user = telegram_user(
-        x_telegram_init_data
-    )
+    user = telegram_user(x_telegram_init_data)
+
+    if x.services_limit not in {20, 30, 50, 100}:
+        raise HTTPException(
+            400,
+            "Preview доступен только для увеличения лимита"
+        )
 
     with SessionLocal() as db:
-
-        business = (
-            db.query(Business)
-            .filter(
-                Business.owner_telegram_id
-                == int(user["id"])
-            )
-            .first()
-        )
-
+        business = owner_business(db, int(user["id"]))
         if not business:
-            raise HTTPException(
-                404,
-                "Business not found"
-            )
+            raise HTTPException(404, "Business not found")
 
-        subscription = (
-            db.query(Subscription)
-            .filter(
-                Subscription.business_id
-                == business.id
-            )
-            .first()
-        )
-
+        subscription = owner_subscription(db, business.id)
         if not subscription:
-            raise HTTPException(
-                404,
-                "Subscription not found"
-            )
+            raise HTTPException(404, "Subscription not found")
 
         if not subscription.external_subscription_id:
             raise HTTPException(
@@ -2601,370 +2622,200 @@ def preview_subscription_limit(
                 "Paddle subscription ID is missing"
             )
 
-        new_limit = x.services_limit
-
-        new_items = [
-            {
-                "price_id":
-                    PADDLE_BOOKLY_BASE_PRICE_ID,
-                "quantity": 1
-            }
-        ]
-
-        addon_price_id = (
-            PADDLE_SERVICE_ADDON_PRICE_IDS.get(
-                new_limit
-            )
-        )
-
-        if addon_price_id:
-            new_items.append(
-                {
-                    "price_id":
-                        addon_price_id,
-                    "quantity": 1
-                }
+        current_limit = subscription.current_services_limit or 10
+        if x.services_limit <= current_limit:
+            raise HTTPException(
+                400,
+                "Новый лимит должен быть больше текущего"
             )
 
-        proration_mode = (
-            "prorated_immediately"
-            if new_limit >
-            subscription.current_services_limit
-            else
-            "prorated_next_billing_period"
-        )
-
-        price_check = _paddle_request(
-            "GET",
-            f"/prices/{PADDLE_BOOKLY_BASE_PRICE_ID}"
-        )
-
-        print("=== PADDLE PRICE CHECK ===")
-        print(price_check)
-
-        result = _paddle_request(
+        return _paddle_request(
             "PATCH",
-            (
-                "/subscriptions/"
-                f"{subscription.external_subscription_id}"
-                "/preview"
-            ),
+            f"/subscriptions/{subscription.external_subscription_id}/preview",
             {
-                "items": new_items,
-                "proration_billing_mode":
-                    proration_mode
+                "items": _bookly_subscription_items(x.services_limit),
+                "proration_billing_mode": "prorated_immediately"
             }
         )
 
-        print("=== PADDLE PREVIEW RESULT ===")
-        print(result)
 
-        print("=== PREVIEW ITEMS ===")
-        print(new_items)
-
-        return result
 @app.post("/admin/subscription/change-limit")
 def change_subscription_limit(
     x: SubscriptionLimitChangeIn,
     x_telegram_init_data: str = Header(default="")
 ):
-    user = telegram_user(
-        x_telegram_init_data
-    )
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
 
-    owner_id = int(
-        user["id"]
-    )
-
-    allowed_limits = {
-        10,
-        20,
-        30,
-        50,
-        100
-    }
-
-    if x.services_limit not in allowed_limits:
-        raise HTTPException(
-            400,
-            "Недопустимый лимит услуг"
-        )
+    if x.services_limit not in {10, 20, 30, 50, 100}:
+        raise HTTPException(400, "Недопустимый лимит услуг")
 
     with SessionLocal() as db:
-
-        business = owner_business(
-            db,
-            owner_id
-        )
-
+        business = owner_business(db, owner_id)
         if not business:
-            business = (
-                db.query(Business)
-                .filter(
-                    Business.owner_telegram_id ==
-                    owner_id
-                )
-                .order_by(
-                    Business.id.asc()
-                )
-                .first()
-            )
+            raise HTTPException(404, "Business not found")
 
-        if not business:
-            raise HTTPException(
-                404,
-                "Business not found"
-            )
-
-        subscription = owner_subscription(
-            db,
-            business.id
-        )
-
+        subscription = owner_subscription(db, business.id)
         if not subscription:
-            raise HTTPException(
-                400,
-                "Subscription not found"
-            )
+            raise HTTPException(400, "Subscription not found")
 
         if not subscription.active:
-            raise HTTPException(
-                400,
-                "Active subscription required"
-            )
+            raise HTTPException(400, "Active subscription required")
 
-        current_limit = (
-            subscription.current_services_limit
-            or 10
-        )
+        current_limit = subscription.current_services_limit or 10
+        pending_limit = subscription.pending_services_limit
 
         if x.services_limit == current_limit:
+            if pending_limit == current_limit:
+                subscription.pending_services_limit = None
+                subscription.pending_price = None
+                db.commit()
+
             return {
                 "ok": True,
-                "current_services_limit":
-                    current_limit,
-                "current_price": float(
-                    subscription.current_price
-                    or 7.99
-                ),
-                "pending_services_limit":
-                    subscription.pending_services_limit,
-                "pending_price":
-                    subscription.pending_price
+                "current_services_limit": current_limit,
+                "current_price": float(subscription.current_price or 7.99),
+                "pending_services_limit": subscription.pending_services_limit,
+                "pending_price": subscription.pending_price
             }
 
-        price_by_limit = {
-            10: 7.99,
-            20: 12.98,
-            30: 15.98,
-            50: 19.98,
-            100: 27.98
-        }
+        new_price = _bookly_subscription_price(x.services_limit)
 
-        new_price = price_by_limit[
-            x.services_limit
-        ]
-
-        # -----------------------------------------
-        # ПОНИЖЕНИЕ ЛИМИТА:
-        # пакет продолжает действовать сейчас,
-        # но новое состояние сохраняем на следующий
-        # billing period.
-        # -----------------------------------------
-
-        if x.services_limit < current_limit:
-
-            subscription.pending_services_limit = (
-                x.services_limit
+        # Upgrade: change immediately and bill prorated amount now.
+        if x.services_limit > current_limit:
+            _paddle_update_bookly_subscription(
+                subscription.external_subscription_id,
+                x.services_limit,
+                "prorated_immediately"
             )
 
-            subscription.pending_price = (
-                new_price
-            )
-
+            subscription.current_services_limit = x.services_limit
+            subscription.current_price = new_price
+            subscription.pending_services_limit = None
+            subscription.pending_price = None
             db.commit()
 
             return {
                 "ok": True,
-                "current_services_limit":
-                    current_limit,
-                "current_price":
-                    float(
-                        subscription.current_price
-                        or 7.99
-                    ),
-                "pending_services_limit":
-                    subscription.pending_services_limit,
-                "pending_price":
-                    float(
-                        subscription.pending_price
-                    )
+                "current_services_limit": x.services_limit,
+                "current_price": float(new_price),
+                "pending_services_limit": None,
+                "pending_price": None
             }
 
-        # -----------------------------------------
-        # ПОВЫШЕНИЕ ЛИМИТА:
-        # применяем сразу.
-        # -----------------------------------------
-
+        # Downgrade / addon cancellation: keep current access now,
+        # schedule the cheaper item set for the next renewal.
         _paddle_update_bookly_subscription(
             subscription.external_subscription_id,
             x.services_limit,
-            current_limit
+            "prorated_next_billing_period"
         )
 
-        subscription.current_services_limit = (
-            x.services_limit
-        )
-
-        subscription.current_price = (
-            new_price
-        )
-
-        subscription.pending_services_limit = None
-        subscription.pending_price = None
-
+        subscription.pending_services_limit = x.services_limit
+        subscription.pending_price = new_price
         db.commit()
 
         return {
             "ok": True,
-            "current_services_limit":
-                subscription.current_services_limit,
-            "current_price":
-                float(
-                    subscription.current_price
-                ),
+            "current_services_limit": current_limit,
+            "current_price": float(subscription.current_price or 7.99),
+            "pending_services_limit": x.services_limit,
+            "pending_price": float(new_price)
+        }
+
+
+@app.post("/admin/subscription/resume-package")
+def resume_subscription_package(
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
+
+    with SessionLocal() as db:
+        business = owner_business(db, owner_id)
+        if not business:
+            raise HTTPException(404, "Business not found")
+
+        subscription = owner_subscription(db, business.id)
+        if not subscription:
+            raise HTTPException(400, "Subscription not found")
+
+        current_limit = subscription.current_services_limit or 10
+        if current_limit <= 10 or subscription.pending_services_limit is None:
+            return {
+                "ok": True,
+                "current_services_limit": current_limit,
+                "pending_services_limit": None,
+                "pending_price": None
+            }
+
+        if not subscription.external_subscription_id:
+            raise HTTPException(
+                400,
+                "Paddle subscription ID is missing"
+            )
+
+        # Restore the currently active item set and cancel the
+        # scheduled downgrade without creating a charge.
+        _paddle_update_bookly_subscription(
+            subscription.external_subscription_id,
+            current_limit,
+            "do_not_bill"
+        )
+
+        subscription.pending_services_limit = None
+        subscription.pending_price = None
+        db.commit()
+
+        return {
+            "ok": True,
+            "current_services_limit": current_limit,
+            "current_price": float(subscription.current_price or 7.99),
             "pending_services_limit": None,
             "pending_price": None
         }
+
+
 @app.post("/admin/subscription/cancel")
 def cancel_subscription(
     x_telegram_init_data: str = Header(default="")
 ):
-    user = telegram_user(
-        x_telegram_init_data
-    )
-
-    owner_id = int(
-        user["id"]
-    )
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
 
     with SessionLocal() as db:
-
-        business = owner_business(
-            db,
-            owner_id
-        )
-
+        business = owner_business(db, owner_id)
         if not business:
-            raise HTTPException(
-                404,
-                "Business not found"
-            )
+            raise HTTPException(404, "Business not found")
 
-        subscription = owner_subscription(
-            db,
-            business.id
-        )
-
+        subscription = owner_subscription(db, business.id)
         if not subscription:
-            raise HTTPException(
-                400,
-                "Subscription not found"
-            )
+            raise HTTPException(400, "Subscription not found")
 
         subscription_id = (
             subscription.external_subscription_id or ""
         ).strip()
-
         if not subscription_id.startswith("sub_"):
-            raise HTTPException(
-                400,
-                "Invalid Paddle subscription ID"
-            )
+            raise HTTPException(400, "Invalid Paddle subscription ID")
 
-        payload = json.dumps({
-            "scheduled_change": {
-                "action": "cancel",
-                "effective_at": "next_billing_period"
-            }
-        }).encode("utf-8")
-
-        req = urllib_request.Request(
-            f"{PADDLE_API_BASE}/subscriptions/{subscription_id}",
-            data=payload,
-            headers={
-                "Authorization":
-                    f"Bearer {PADDLE_API_KEY}",
-                "Content-Type":
-                    "application/json",
-                "Paddle-Version":
-                    "1"
-            },
-            method="PATCH"
+        data = _paddle_request(
+            "POST",
+            f"/subscriptions/{subscription_id}/cancel",
+            {"effective_from": "next_billing_period"}
         )
 
-        try:
-            with urllib_request.urlopen(
-                req,
-                timeout=20
-            ) as response:
-
-                data = json.loads(
-                    response.read().decode("utf-8")
-                )
-
-        except Exception as e:
-
-            error_body = ""
-
-            if hasattr(e, "read"):
-                try:
-                    error_body = (
-                        e.read().decode("utf-8")
-                    )
-                except Exception:
-                    pass
-
-            raise HTTPException(
-                502,
-                f"Paddle cancellation failed: {error_body[:1000]}"
-            )
-
-        paddle_data = data.get(
-            "data",
-            {}
-        )
-
-        scheduled_change = (
-            paddle_data.get(
-                "scheduled_change"
-            )
-            or {}
-        )
-
-        effective_at = (
-            scheduled_change.get(
-                "effective_at"
-            )
-        )
+        paddle_data = data.get("data", {}) or {}
+        scheduled_change = paddle_data.get("scheduled_change") or {}
+        effective_at = scheduled_change.get("effective_at")
 
         subscription.status = "cancelled"
-
-        # Доступ сохраняется до конца оплаченного периода
         subscription.active = True
 
         if effective_at:
             try:
-                subscription.expires_at = (
-                    datetime.fromisoformat(
-                        effective_at.replace(
-                            "Z",
-                            "+00:00"
-                        )
-                    ).replace(
-                        tzinfo=None
-                    )
-                )
+                subscription.expires_at = datetime.fromisoformat(
+                    effective_at.replace("Z", "+00:00")
+                ).replace(tzinfo=None)
             except ValueError:
                 pass
 
@@ -2973,265 +2824,127 @@ def cancel_subscription(
         return {
             "ok": True,
             "cancelled": True,
-            "already_scheduled": False,
-            "subscription_id":
-                subscription_id,
-            "access_until":
+            "access_until": (
                 subscription.expires_at.isoformat()
-                if subscription.expires_at
-                else None
+                if subscription.expires_at else None
+            )
         }
+
+
 @app.post("/admin/subscription/resume")
 def resume_subscription(
     x_telegram_init_data: str = Header(default="")
 ):
-    user = telegram_user(
-        x_telegram_init_data
-    )
-
-    owner_id = int(
-        user["id"]
-    )
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
 
     with SessionLocal() as db:
-
-        business = owner_business(
-            db,
-            owner_id
-        )
-
+        business = owner_business(db, owner_id)
         if not business:
-            raise HTTPException(
-                404,
-                "Business not found"
-            )
+            raise HTTPException(404, "Business not found")
 
-        subscription = owner_subscription(
-            db,
-            business.id
-        )
-
+        subscription = owner_subscription(db, business.id)
         if not subscription:
-            raise HTTPException(
-                400,
-                "Subscription not found"
-            )
+            raise HTTPException(400, "Subscription not found")
 
         subscription_id = (
             subscription.external_subscription_id or ""
         ).strip()
-
         if not subscription_id.startswith("sub_"):
-            raise HTTPException(
-                400,
-                "Invalid Paddle subscription ID"
-            )
+            raise HTTPException(400, "Invalid Paddle subscription ID")
 
-        payload = json.dumps({
-            "scheduled_change": None
-        }).encode("utf-8")
-
-        req = urllib_request.Request(
-            f"{PADDLE_API_BASE}/subscriptions/{subscription_id}",
-            data=payload,
-            headers={
-                "Authorization":
-                    f"Bearer {PADDLE_API_KEY}",
-                "Content-Type":
-                    "application/json",
-                "Paddle-Version":
-                    "1"
-            },
-            method="PATCH"
+        data = _paddle_request(
+            "PATCH",
+            f"/subscriptions/{subscription_id}",
+            {"scheduled_change": None}
         )
 
-        try:
-            with urllib_request.urlopen(
-                req,
-                timeout=20
-            ) as response:
-
-                data = json.loads(
-                    response.read().decode("utf-8")
-                )
-
-        except Exception as e:
-
-            error_body = ""
-
-            if hasattr(e, "read"):
-                try:
-                    error_body = (
-                        e.read().decode("utf-8")
-                    )
-                except Exception:
-                    pass
-
-            raise HTTPException(
-                502,
-                f"Paddle resume failed: {error_body[:1000]}"
-            )
-
-        paddle_data = data.get(
-            "data",
-            {}
-        )
-
+        paddle_data = data.get("data", {}) or {}
         subscription.status = "active"
         subscription.active = True
 
-        next_billed_at = (
-            paddle_data.get(
-                "next_billed_at"
-            )
-        )
-
+        next_billed_at = paddle_data.get("next_billed_at")
         if next_billed_at:
             try:
-                subscription.expires_at = (
-                    datetime.fromisoformat(
-                        next_billed_at.replace(
-                            "Z",
-                            "+00:00"
-                        )
-                    ).replace(
-                        tzinfo=None
-                    )
-                )
+                subscription.expires_at = datetime.fromisoformat(
+                    next_billed_at.replace("Z", "+00:00")
+                ).replace(tzinfo=None)
             except ValueError:
                 pass
 
         db.commit()
+        return {"ok": True, "resumed": True}
 
-        return {
-            "ok": True,
-            "resumed": True
-        }
+
 @app.post("/payments/checkout/{provider}")
-def create_checkout(provider:str,x_telegram_init_data:str=Header(default="")):
-    if provider not in {"uzum","lemonsqueezy"}:raise HTTPException(400,"Unsupported provider")
-    user=telegram_user(x_telegram_init_data); owner_id=int(user["id"])
+def create_checkout(provider: str, x_telegram_init_data: str = Header(default="")):
+    if provider not in {"uzum", "lemonsqueezy"}:
+        raise HTTPException(400, "Unsupported provider")
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
     with SessionLocal() as db:
-        b=owner_business(db,owner_id)
-        if not b: raise HTTPException(400,"Create business first")
-        if provider=="lemonsqueezy":
-            url=lemonsqueezy_checkout(owner_id)
+        b = owner_business(db, owner_id)
+        if not b:
+            raise HTTPException(400, "Create business first")
+        if provider == "lemonsqueezy":
+            url = lemonsqueezy_checkout(owner_id)
             if not url:
-                return {"provider":provider,"amount":9.99,"currency":"USD","status":"not_configured"}
-            b.payment_provider="lemonsqueezy"; db.commit()
-            return {"provider":provider,"amount":9.99,"currency":"USD","status":"ready","url":url}
-        return {"provider":"uzum","amount":9.99,"currency":"USD","status":"not_configured","message":"Uzum merchant credentials are not configured yet."}
+                return {"provider": provider, "amount": 7.99, "currency": "USD", "status": "not_configured"}
+            b.payment_provider = "lemonsqueezy"
+            db.commit()
+            return {"provider": provider, "amount": 7.99, "currency": "USD", "status": "ready", "url": url}
+        return {
+            "provider": "uzum",
+            "amount": 7.99,
+            "currency": "USD",
+            "status": "not_configured",
+            "message": "Uzum merchant credentials are not configured yet."
+        }
+
 
 @app.post("/payments/webhook/paddle")
-async def paddle_webhook(
-    request: Request
-):
+async def paddle_webhook(request: Request):
     raw = await request.body()
-
-    signature_header = request.headers.get(
-        "Paddle-Signature",
-        ""
-    )
+    signature_header = request.headers.get("Paddle-Signature", "")
 
     if not PADDLE_WEBHOOK_SECRET:
-        raise HTTPException(
-            500,
-            "PADDLE_WEBHOOK_SECRET is not configured"
-        )
+        raise HTTPException(500, "PADDLE_WEBHOOK_SECRET is not configured")
 
     parts = dict(
         p.split("=", 1)
         for p in signature_header.split(";")
         if "=" in p
     )
-
-    ts = parts.get(
-        "ts",
-        ""
-    )
-
-    h1 = parts.get(
-        "h1",
-        ""
-    )
+    ts = parts.get("ts", "")
+    h1 = parts.get("h1", "")
 
     if not ts or not h1:
-        raise HTTPException(
-            401,
-            "Invalid Paddle signature header"
-        )
-    try:
-        if abs(
-            int(datetime.utcnow().timestamp()) -
-            int(ts)
-        ) > 5:
-            raise HTTPException(
-                401,
-                "Expired Paddle webhook"
-            )
-    except ValueError:
-        raise HTTPException(
-            401,
-            "Invalid Paddle timestamp"
-        )
-    signed_payload = (
-        f"{ts}:{raw.decode()}"
-    ).encode()
+        raise HTTPException(401, "Invalid Paddle signature header")
 
+    try:
+        if abs(int(datetime.utcnow().timestamp()) - int(ts)) > 5:
+            raise HTTPException(401, "Expired Paddle webhook")
+    except ValueError:
+        raise HTTPException(401, "Invalid Paddle timestamp")
+
+    signed_payload = f"{ts}:{raw.decode()}".encode()
     expected_signature = hmac.new(
         PADDLE_WEBHOOK_SECRET.encode(),
         signed_payload,
         hashlib.sha256
     ).hexdigest()
 
-    if not hmac.compare_digest(
-        expected_signature,
-        h1
-    ):
-        raise HTTPException(
-            401,
-            "Invalid webhook signature"
-        )
+    if not hmac.compare_digest(expected_signature, h1):
+        raise HTTPException(401, "Invalid webhook signature")
 
-    payload = json.loads(
-        raw.decode() or "{}"
-    )
+    payload = json.loads(raw.decode() or "{}")
+    event_type = payload.get("event_type", "")
+    data = payload.get("data", {}) or {}
+    custom = data.get("custom_data", {}) or {}
 
-    event_type = payload.get(
-        "event_type",
-        ""
-    )
-
-    data = payload.get(
-        "data",
-        {}
-    ) or {}
-
-    custom = data.get(
-        "custom_data",
-        {}
-    ) or {}
-
-    owner_id = custom.get(
-        "telegram_user_id"
-    )
-
-    business_id = custom.get(
-        "business_id"
-    )
-
-    status = data.get(
-        "status",
-        ""
-    )
-
-    # В subscription events ID самой data —
-    # это sub_....
-    #
-    # В transaction events data.id —
-    # это txn_...., поэтому берем
-    # отдельное data.subscription_id.
-    subscription_id = ""
+    owner_id = custom.get("telegram_user_id")
+    business_id = custom.get("business_id")
+    status = data.get("status", "")
 
     if event_type in {
         "subscription.created",
@@ -3240,319 +2953,168 @@ async def paddle_webhook(
         "subscription.paused",
         "subscription.canceled"
     }:
-        subscription_id = str(
-            data.get(
-                "id",
-                ""
-            )
-            or ""
-        )
+        subscription_id = str(data.get("id", "") or "")
+    elif event_type.startswith("transaction."):
+        subscription_id = str(data.get("subscription_id", "") or "")
+    else:
+        subscription_id = ""
 
-    elif event_type.startswith(
-        "transaction."
-    ):
-        subscription_id = str(
-            data.get(
-                "subscription_id",
-                ""
-            )
-            or ""
-        )
-
-    billing_period = data.get(
-        "current_billing_period",
-        {}
-    ) or {}
-
+    billing_period = data.get("current_billing_period", {}) or {}
     next_billed_at = (
-        data.get(
-            "next_billed_at"
-        )
-        or
-        billing_period.get(
-            "ends_at"
-        )
+        data.get("next_billed_at")
+        or billing_period.get("ends_at")
     )
 
     with SessionLocal() as db:
+        business = None
 
-        b = None
-
-        # Для новых оплат сначала пытаемся
-        # найти конкретный выбранный бизнес.
         if business_id:
             try:
-                candidate = db.get(
-                    Business,
-                    int(business_id)
-                )
+                candidate = db.get(Business, int(business_id))
+                if candidate and owner_id and candidate.owner_telegram_id == int(owner_id):
+                    business = candidate
+            except (TypeError, ValueError):
+                business = None
 
-                if (
-                    candidate
-                    and owner_id
-                    and candidate.owner_telegram_id
-                    == int(owner_id)
-                ):
-                    b = candidate
+        if not business and owner_id:
+            business = owner_business(db, int(owner_id))
 
-            except (
-                TypeError,
-                ValueError
-            ):
-                b = None
-
-        # Совместимость со старыми платежами.
-        if not b and owner_id:
-            b = owner_business(
-                db,
-                int(owner_id)
-            )
-
-        if not b:
-            return {
-                "received": True
-            }
-
-                # ---------------------------------------------------------
-        # Подписка принадлежит конкретному бизнесу
-        # ---------------------------------------------------------
+        if not business:
+            return {"received": True}
 
         subscription = (
             db.query(Subscription)
-            .filter(
-                Subscription.business_id == b.id
-            )
+            .filter(Subscription.business_id == business.id)
             .first()
         )
 
-        # Если подписки ещё нет — создаём её
         if not subscription:
-
             subscription = Subscription(
-                business_id=b.id,
-                owner_telegram_id=b.owner_telegram_id,
+                business_id=business.id,
+                owner_telegram_id=business.owner_telegram_id,
                 plan="pro",
                 active=False,
                 status="inactive",
                 current_services_limit=10,
                 current_price=7.99
             )
-
             db.add(subscription)
             db.flush()
 
-        # ---------------------------------------------------------
-        # Paddle subscription ID
-        # ---------------------------------------------------------
-
         if subscription_id.startswith("sub_"):
-
-            subscription.external_subscription_id = (
-                subscription_id
-            )
+            subscription.external_subscription_id = subscription_id
 
         subscription.payment_provider = "paddle"
 
-        # ---------------------------------------------------------
-        # Запланированная отмена
-        # ---------------------------------------------------------
+        scheduled_change = data.get("scheduled_change") or {}
+        scheduled_action = scheduled_change.get("action")
+        scheduled_effective_at = scheduled_change.get("effective_at")
 
-        scheduled_change = (
-            data.get(
-                "scheduled_change",
-                {}
-            )
-            or {}
-        )
-
-        scheduled_action = (
-            scheduled_change.get(
-                "action"
-            )
-        )
-
-        scheduled_effective_at = (
-            scheduled_change.get(
-                "effective_at"
-            )
-        )
-
+        # Scheduled cancellation of the whole subscription.
         if scheduled_action == "cancel":
-
             subscription.status = "cancelled"
-
-            # Подписка остаётся активной
-            # до окончания оплаченного периода.
             subscription.active = True
-
             if scheduled_effective_at:
-
                 try:
-
-                    subscription.expires_at = (
-                        datetime.fromisoformat(
-                            scheduled_effective_at.replace(
-                                "Z",
-                                "+00:00"
-                            )
-                        ).replace(
-                            tzinfo=None
-                        )
-                    )
-
+                    subscription.expires_at = datetime.fromisoformat(
+                        scheduled_effective_at.replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
                 except ValueError:
                     pass
 
-        # ---------------------------------------------------------
-        # Успешная подписка / успешное продление
-        # ---------------------------------------------------------
-
-        elif event_type in {
-            "transaction.completed",
-            "subscription.created",
-            "subscription.updated",
-            "subscription.resumed"
-        }:
-
+        elif event_type == "transaction.completed":
             if status:
-
                 subscription.status = status
 
-            subscription.active = (
-                status
-                not in {
-                    "canceled",
-                    "cancelled",
-                    "paused"
-                }
-            )
+            subscription.active = status not in {"canceled", "cancelled", "paused"}
 
             if next_billed_at:
-
                 try:
-
-                    subscription.expires_at = (
-                        datetime.fromisoformat(
-                            next_billed_at.replace(
-                                "Z",
-                                "+00:00"
-                            )
-                        ).replace(
-                            tzinfo=None
-                        )
-                    )
-
+                    subscription.expires_at = datetime.fromisoformat(
+                        next_billed_at.replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
                 except ValueError:
                     pass
 
-            # -----------------------------------------------------
-            # Применяем запланированное изменение тарифа
-            #
-            # Например:
-            #
-            # current = 10 / $7.99
-            # pending = 30 / $15.98
-            #
-            # После успешного продления:
-            #
-            # current = 30 / $15.98
-            # pending = None
-            # -----------------------------------------------------
+            # A completed recurring transaction is the point at which
+            # a pending downgrade becomes the current entitlement.
+            detected_limit = _bookly_detect_limit_from_items(
+                data.get("items") or data.get("line_items")
+            )
 
-            if event_type == "transaction.completed":
+            if subscription.pending_services_limit is not None:
+                detected_limit = subscription.pending_services_limit
 
-                if subscription.pending_services_limit is not None:
-                    subscription.current_services_limit = (
-                        subscription.pending_services_limit
-                    )
+            subscription.current_services_limit = detected_limit
+            subscription.current_price = _bookly_subscription_price(detected_limit)
+            subscription.pending_services_limit = None
+            subscription.pending_price = None
 
-                    subscription.pending_services_limit = None
+        elif event_type == "subscription.created":
+            if status:
+                subscription.status = status
+            subscription.active = status not in {"canceled", "cancelled", "paused"}
 
-                if subscription.pending_price is not None:
-                    subscription.current_price = (
-                        subscription.pending_price
-                    )
+            detected_limit = _bookly_detect_limit_from_items(data.get("items"))
+            subscription.current_services_limit = detected_limit
+            subscription.current_price = _bookly_subscription_price(detected_limit)
 
-                    subscription.pending_price = None
+            if next_billed_at:
+                try:
+                    subscription.expires_at = datetime.fromisoformat(
+                        next_billed_at.replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
+                except ValueError:
+                    pass
 
-        # ---------------------------------------------------------
-        # Отмена / пауза
-        # ---------------------------------------------------------
+        elif event_type == "subscription.resumed":
+            subscription.status = "active"
+            subscription.active = True
+            if next_billed_at:
+                try:
+                    subscription.expires_at = datetime.fromisoformat(
+                        next_billed_at.replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
+                except ValueError:
+                    pass
 
-        elif event_type in {
-            "subscription.canceled",
-            "subscription.paused"
-        }:
-
+        elif event_type == "subscription.canceled":
             if (
                 subscription.expires_at
-                and
-                subscription.expires_at
-                > datetime.utcnow()
+                and subscription.expires_at > datetime.utcnow()
             ):
-
                 subscription.active = True
-
+                subscription.status = "cancelled"
             else:
-
                 subscription.active = False
+                subscription.status = "cancelled"
 
-        # ---------------------------------------------------------
-        # Неуспешный платёж
-        # ---------------------------------------------------------
+        elif event_type == "subscription.paused":
+            subscription.active = False
+            subscription.status = "paused"
 
-        elif event_type == (
-            "transaction.payment_failed"
-        ):
-
+        elif event_type == "transaction.payment_failed":
             if (
                 subscription.expires_at
-                and
-                subscription.expires_at
-                > datetime.utcnow()
+                and subscription.expires_at > datetime.utcnow()
             ):
-
                 subscription.active = True
-
             else:
-
                 subscription.active = False
 
-                # ---------------------------------------------------------
-        # Синхронизируем статус подписки с Business
-        # ---------------------------------------------------------
-
-        b.subscription_active = bool(
-            subscription.active
-        )
-
-        b.subscription_expires_at = (
-            subscription.expires_at
-        )
-
-        b.subscription_status = (
+        business.subscription_active = bool(subscription.active)
+        business.subscription_expires_at = subscription.expires_at
+        business.subscription_status = (
             "active"
             if subscription.active
-            else (
-                subscription.status
-                or "inactive"
-            )
+            else (subscription.status or "inactive")
         )
-
-        b.payment_provider = (
-            subscription.payment_provider
-            or "paddle"
-        )
-
-        b.external_subscription_id = (
-            subscription.external_subscription_id
-        )
+        business.payment_provider = subscription.payment_provider or "paddle"
+        business.external_subscription_id = subscription.external_subscription_id
 
         db.commit()
 
-    return {
-        "received": True
-    }
+    return {"received": True}
 
 # ---------------------------------------------------------
 # Неуспешный платёж
