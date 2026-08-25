@@ -2626,7 +2626,7 @@ def preview_subscription_limit(
                 }
             )
 
-                        proration_mode = (
+        proration_mode = (
             "prorated_immediately"
             if new_limit > subscription.current_services_limit
             else "prorated_next_billing_period"
