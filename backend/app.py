@@ -3459,21 +3459,21 @@ async def paddle_webhook(
             # pending = None
             # -----------------------------------------------------
 
-            if event_type == "transaction.completed":
+                        if event_type == "transaction.completed":
 
-    if subscription.pending_services_limit is not None:
-        subscription.current_services_limit = (
-            subscription.pending_services_limit
-        )
+                if subscription.pending_services_limit is not None:
+                    subscription.current_services_limit = (
+                        subscription.pending_services_limit
+                    )
 
-        subscription.pending_services_limit = None
+                    subscription.pending_services_limit = None
 
-    if subscription.pending_price is not None:
-        subscription.current_price = (
-            subscription.pending_price
-        )
+                if subscription.pending_price is not None:
+                    subscription.current_price = (
+                        subscription.pending_price
+                    )
 
-        subscription.pending_price = None
+                    subscription.pending_price = None
 
         # ---------------------------------------------------------
         # Отмена / пауза
