@@ -5019,11 +5019,14 @@ function Subscription({
       }
 
       await refreshAfterChange({
-      subscription_status: 'cancelled',
-      subscription_active: true,
-      subscription_expires_at:
-        data?.access_until ||
-        business?.subscription_expires_at
+  services_limit:
+    data?.current_services_limit ?? newLimit,
+  current_price:
+    data?.current_price ?? nextPrice,
+  pending_services_limit:
+    data?.pending_services_limit ?? null,
+  pending_price:
+    data?.pending_price ?? null
 });
     } catch (e: any) {
       alert(
@@ -5070,9 +5073,17 @@ function Subscription({
       }
 
       await refreshAfterChange({
-        subscription_status: 'active',
-        subscription_active: true
-      });
+  services_limit:
+    data?.current_services_limit ??
+    currentServicesLimit,
+  current_price:
+    data?.current_price ??
+    currentPrice,
+  pending_services_limit:
+    data?.pending_services_limit ?? 10,
+  pending_price:
+    data?.pending_price ?? 7.99
+});
     } catch (e: any) {
       alert(
         e?.message ||
@@ -5114,10 +5125,8 @@ function Subscription({
       }
 
 await refreshAfterChange({
-  pending_services_limit:
-    data?.pending_services_limit ?? 10,
-  pending_price:
-    data?.pending_price ?? 7.99
+  pending_services_limit: null,
+  pending_price: null
 });
     } catch (e: any) {
       alert(
@@ -5161,8 +5170,11 @@ await refreshAfterChange({
       }
 
 await refreshAfterChange({
-  pending_services_limit: null,
-  pending_price: null
+  subscription_status: 'cancelled',
+  subscription_active: true,
+  subscription_expires_at:
+    data?.access_until ||
+    business?.subscription_expires_at
 });
     } catch (e: any) {
       alert(
@@ -5206,7 +5218,10 @@ await refreshAfterChange({
         );
       }
 
-      await refreshAfterChange();
+      await refreshAfterChange({
+        subscription_status: 'active',
+        subscription_active: true
+      });
     } catch (e: any) {
       alert(
         e?.message ||
