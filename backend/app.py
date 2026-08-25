@@ -2703,24 +2703,86 @@ def change_subscription_limit(
                 "pending_price": None
             }
 
-        # Downgrade / addon cancellation: keep current access now,
-        # schedule the cheaper item set for the next renewal.
+                # Downgrade / addon cancellation:
+        # текущий пакет остаётся активным до конца периода,
+        # а более низкий лимит становится действующим
+        # только со следующего продления.
+
+        # Если это изменение уже было запланировано,
+        # второй раз в Paddle его не отправляем.
+        if subscription.pending_services_limit == x.services_limit:
+            return {
+                "ok": True,
+                "current_services_limit": current_limit,
+                "current_price": float(
+                    subscription.current_price or 7.99
+                ),
+                "pending_services_limit": (
+                    subscription.pending_services_limit
+                ),
+                "pending_price": (
+                    float(subscription.pending_price)
+                    if subscription.pending_price is not None
+                    else None
+                )
+            }
+
+        # Если вся основная подписка уже отменена
+        # на конец оплаченного периода, в Paddle ничего
+        # дополнительно менять не нужно.
+        if subscription.status in {
+            "cancelled",
+            "canceled"
+        }:
+            subscription.pending_services_limit = (
+                x.services_limit
+            )
+            subscription.pending_price = new_price
+
+            db.commit()
+
+            return {
+                "ok": True,
+                "current_services_limit": current_limit,
+                "current_price": float(
+                    subscription.current_price or 7.99
+                ),
+                "pending_services_limit": (
+                    x.services_limit
+                ),
+                "pending_price": float(
+                    new_price
+                )
+            }
+
+        # Обычная отмена пакета:
+        # пакет остаётся активным сейчас,
+        # изменение биллинга переносится на следующий период.
         _paddle_update_bookly_subscription(
             subscription.external_subscription_id,
             x.services_limit,
             "prorated_next_billing_period"
         )
 
-        subscription.pending_services_limit = x.services_limit
+        subscription.pending_services_limit = (
+            x.services_limit
+        )
         subscription.pending_price = new_price
+
         db.commit()
 
         return {
             "ok": True,
             "current_services_limit": current_limit,
-            "current_price": float(subscription.current_price or 7.99),
-            "pending_services_limit": x.services_limit,
-            "pending_price": float(new_price)
+            "current_price": float(
+                subscription.current_price or 7.99
+            ),
+            "pending_services_limit": (
+                x.services_limit
+            ),
+            "pending_price": float(
+                new_price
+            )
         }
 
 
