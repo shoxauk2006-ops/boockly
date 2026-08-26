@@ -1,0 +1,48 @@
+name: Round business photos
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply round photo styles
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/style.css')
+          s = p.read_text()
+          marker = '/* Bookly round business photo */'
+          if marker in s:
+              raise SystemExit('already applied')
+          s += '''\n\n/* Bookly round business photo */\n.business-photo-preview {\n  width: 96px !important;\n  height: 96px !important;\n  min-width: 96px !important;\n  min-height: 96px !important;\n  display: block !important;\n  object-fit: cover !important;\n  object-position: center !important;\n  border: 0 !important;\n  border-radius: 50% !important;\n  box-shadow: none !important;\n}\n#root.bookly-client-root .card img {\n  width: 72px !important;\n  height: 72px !important;\n  min-width: 72px !important;\n  min-height: 72px !important;\n  display: block !important;\n  object-fit: cover !important;\n  object-position: center !important;\n  border: 0 !important;\n  border-radius: 50% !important;\n  box-shadow: none !important;\n}\n#bookly-personal-shell img {\n  border-radius: 50% !important;\n}\n'''
+          p.write_text(s)
+          PY
+
+      - name: Validate
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s = Path('frontend/src/style.css').read_text()
+          assert '/* Bookly round business photo */' in s
+          assert '.business-photo-preview' in s
+          assert '#root.bookly-client-root .card img' in s
+          assert 'border-radius: 50% !important' in s
+          print('round photo styles OK')
+          PY
+
+      - name: Commit and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/round-business-photo.yml
+          git add frontend/src/style.css
+          git commit -m "Make business photos circular"
+          git push
