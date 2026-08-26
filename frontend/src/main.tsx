@@ -2760,7 +2760,10 @@ alert(paymentMessage);
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Открыть на карте
+{t(
+  'common.openOnMap',
+  'Открыть на карте'
+)}
                 </a>
               </div>
             )}
@@ -3842,7 +3845,10 @@ borderTopColor: '#d32f2f',
         target="_blank"
         rel="noopener noreferrer"
       >
-        Открыть на карте
+{t(
+  'common.openOnMap',
+  'Открыть на карте'
+)}
       </a>
     </div>
   )}
@@ -5427,7 +5433,10 @@ function Dashboard({
   className="admin-action-button admin-download-button"
   onClick={downloadQr}
 >
-  Скачать QR-код
+  {t(
+  'settings.downloadQr',
+  'Скачать QR-код'
+)}
 </button>
 
         <button
@@ -7752,17 +7761,28 @@ useEffect(() => {
 
       if (!response.ok) {
         throw new Error(
-          'Не удалось удалить блокировку'
-        );
+  t(
+    'owner.deleteBlockError',
+    'Не удалось удалить блокировку'
+  )
+);
       }
 
       await reload();
 
-      alert('Блокировка удалена');
+      alert(
+  t(
+    'owner.blockDeleted',
+    'Блокировка удалена'
+  )
+);
     } catch (e: any) {
       alert(
         e?.message ||
-          'Не удалось удалить блокировку'
+  t(
+    'owner.deleteBlockError',
+    'Не удалось удалить блокировку'
+  )
       );
     } finally {
       setDeletingBlockId(null);
@@ -9314,20 +9334,29 @@ const deleteBusiness = async () => {
       if (!response.ok) {
         throw new Error(
           data?.detail ||
-          'Не удалось удалить бизнес'
+t(
+  'owner.deleteBusinessError',
+  'Не удалось удалить бизнес'
+)
         );
       }
 
       alert(
-        'Бизнес успешно удалён.'
-      );
+  t(
+    'owner.businessDeleted',
+    'Бизнес успешно удалён.'
+  )
+);
 
       reload();
 
         } catch (e: any) {
       alert(
         e?.message ||
-        'Не удалось удалить бизнес'
+t(
+  'owner.deleteBusinessError',
+  'Не удалось удалить бизнес'
+)
       );
     } finally {
       setDeletingBusiness(false);
@@ -9674,10 +9703,16 @@ const deleteBusiness = async () => {
           verticalAlign: '-2px'
         }}
       />
-      Удаление...
+      {t(
+  'owner.deleting',
+  'Удаление...'
+)}
     </>
   ) : (
-    'Удалить бизнес'
+    t(
+  'owner.deleteBusiness',
+  'Удалить бизнес'
+)
   )}
 </button>
         </div>
