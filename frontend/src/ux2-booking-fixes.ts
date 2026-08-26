@@ -1,43 +1,14 @@
 const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
 
-const CANCEL_LABELS = new Set([
-  'Отменить',
-  'Cancel',
-  'Bekor qilish',
-  'İptal',
-  'إلغاء'
-]);
-
-const BACK_LABELS = new Set([
-  '← Назад',
-  'Назад',
-  '← Back',
-  'Back',
-  '← Orqaga',
-  'Orqaga',
-  '← Geri',
-  'Geri',
-  '← رجوع',
-  'رجوع'
-]);
-
-const ADMIN_LABELS = new Set([
-  'Открыть админ-панель',
-  'Open admin panel',
-  'Admin panelni ochish',
-  'Yönetim panelini aç',
-  'فتح لوحة الإدارة'
-]);
-
-const SLOT_LOADING_LABELS = new Set([
-  'Загружаем свободное время...',
-  'Loading available time...',
-  'Bo‘sh vaqt yuklanmoqda...',
-  'Uygun saatler yükleniyor...',
-  'جارٍ تحميل الأوقات المتاحة...'
-]);
+const CANCEL_LABELS = new Set(['Отменить', 'Cancel', 'Bekor qilish', 'İptal', 'إلغاء']);
+const CONFIRM_LABELS = new Set(['Подтвердить', 'Confirm', 'Tasdiqlash', 'Onayla', 'تأكيد']);
+const DISMISS_LABELS = new Set(['Отмена', 'Cancel', 'Bekor qilish', 'İptal', 'إلغاء']);
+const BACK_LABELS = new Set(['← Назад','Назад','← Back','Back','← Orqaga','Orqaga','← Geri','Geri','← رجوع','رجوع']);
+const ADMIN_LABELS = new Set(['Открыть админ-панель','Open admin panel','Admin panelni ochish','Yönetim panelini aç','فتح لوحة الإدارة']);
+const SLOT_LOADING_LABELS = new Set(['Загружаем свободное время...','Loading available time...','Bo‘sh vaqt yuklanmoqda...','Uygun saatler yükleniyor...','جارٍ تحميل الأوقات المتاحة...']);
 
 const restoreKey = 'bookly_restore_admin_after_booking_cancel';
+const pendingKey = 'bookly_pending_admin_cancel';
 
 function buttonText(button: HTMLButtonElement) {
   return normalize(button.textContent || '');
@@ -55,23 +26,15 @@ function restoreAdminAfterReload() {
   let attempts = 0;
   const run = () => {
     attempts += 1;
-
     const adminButton = findButton(ADMIN_LABELS);
     if (adminButton) {
       adminButton.click();
       return;
     }
-
     const backButton = findButton(BACK_LABELS);
-    if (backButton) {
-      backButton.click();
-    }
-
-    if (attempts < 30) {
-      window.setTimeout(run, 200);
-    }
+    if (backButton) backButton.click();
+    if (attempts < 30) window.setTimeout(run, 200);
   };
-
   window.setTimeout(run, 250);
 }
 
@@ -95,10 +58,8 @@ function ensureSlotSpinner() {
     if (element.dataset.booklySlotSpinner === '1') continue;
     const text = normalize(element.textContent || '');
     if (!SLOT_LOADING_LABELS.has(text)) continue;
-
     element.dataset.booklySlotSpinner = '1';
     element.classList.add('bookly-slot-loading');
-
     const spinner = document.createElement('span');
     spinner.className = 'bookly-slot-spinner';
     spinner.setAttribute('aria-hidden', 'true');
@@ -114,8 +75,17 @@ function init() {
 
     const label = buttonText(button);
     if (button.closest('.booking') && CANCEL_LABELS.has(label)) {
-      sessionStorage.setItem(restoreKey, '1');
+      sessionStorage.setItem(pendingKey, '1');
       return;
+    }
+
+    if (sessionStorage.getItem(pendingKey) === '1') {
+      if (button.closest('.subscription-modal') && CONFIRM_LABELS.has(label)) {
+        sessionStorage.removeItem(pendingKey);
+        sessionStorage.setItem(restoreKey, '1');
+      } else if (button.closest('.subscription-modal') && DISMISS_LABELS.has(label)) {
+        sessionStorage.removeItem(pendingKey);
+      }
     }
 
     if (button.classList.contains('client-service-button')) {
@@ -123,15 +93,8 @@ function init() {
     }
   }, true);
 
-  const observer = new MutationObserver(() => {
-    ensureSlotSpinner();
-  });
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    characterData: true
-  });
-
+  const observer = new MutationObserver(ensureSlotSpinner);
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
   ensureSlotSpinner();
   restoreAdminAfterReload();
 }
