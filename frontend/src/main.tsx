@@ -250,18 +250,19 @@ const getTimeZoneLabel = (
   timeZone: string
 ) => {
   try {
-    const city = timeZone
-      .split('/')
-      .pop()
-      ?.replace(/_/g, ' ');
+    const city =
+      timeZone
+        .split('/')
+        .pop()
+        ?.replace(/_/g, ' ') ||
+      timeZone;
 
     const parts =
       new Intl.DateTimeFormat(
-        'en-US',
+        getLocale(),
         {
           timeZone,
-          timeZoneName:
-            'shortOffset'
+          timeZoneName: 'shortOffset'
         }
       ).formatToParts(
         new Date()
@@ -274,7 +275,7 @@ const getTimeZoneLabel = (
           'timeZoneName'
       )?.value || '';
 
-    return `${city || timeZone} (${offset})`;
+    return `${city} (${offset})`;
   } catch {
     return timeZone;
   }
