@@ -10306,21 +10306,27 @@ function Client({
         return;
       }
 
-            alert(
-  t('client.bookingSuccess')
-);
+                  alert(
+        t('client.bookingSuccess')
+      );
 
-window.scrollTo({
-  top: 0,
-  behavior: 'smooth'
-});
+      setSelectedTime('');
 
-setSelectedTime('');
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        });
 
-await loadSlots(
-  selected,
-  day
-);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 100);
+
+      await loadSlots(
+        selected,
+        day
+      );
     } catch (e) {
       console.error(
         'BOOKING ERROR:',
