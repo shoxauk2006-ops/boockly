@@ -3766,31 +3766,47 @@ borderTopColor: '#d32f2f',
     }
 
     navigator.geolocation.getCurrentPosition(
-      position => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+  position => {
+    const latitude =
+      position.coords.latitude;
 
-        setNewBusinessLatitude(latitude);
-        setNewBusinessLongitude(longitude);
+    const longitude =
+      position.coords.longitude;
 
-        `Местоположение получено
-      },
-      error => {
-        console.error('Geolocation error:', error);
-
-        alert(
-  t(
-    'owner.geolocationError',
-    'Не удалось получить местоположение. Проверьте разрешение геолокации.'
-  )
-);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      }
+    setNewBusinessLatitude(
+      latitude
     );
+
+    setNewBusinessLongitude(
+      longitude
+    );
+
+    alert(
+      t(
+        'owner.locationDetected',
+        'Местоположение получено'
+      )
+    );
+  },
+  error => {
+    console.error(
+      'Geolocation error:',
+      error
+    );
+
+    alert(
+      t(
+        'owner.geolocationError',
+        'Не удалось получить местоположение. Проверьте разрешение геолокации.'
+      )
+    );
+  },
+  {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0
+  }
+);
   }}
 >
   📍 Определить местоположение
