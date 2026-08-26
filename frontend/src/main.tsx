@@ -2260,11 +2260,13 @@ const confirmServiceLimitChange = async () => {
       .json()
       .catch(() => null);
 
-    if (!response.ok) {
-      throw new Error(
-        data?.detail ||
-        'Не удалось изменить лимит услуг'
-      );
+    throw new Error(
+  data?.detail ||
+  t(
+    'owner.changeServiceLimitError',
+    'Не удалось изменить лимит услуг'
+  )
+);
     }
 
     setServiceLimit(limit);
