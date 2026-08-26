@@ -1,0 +1,54 @@
+name: i18n pass 3b
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    if: github.event.head_commit.message == 'Trigger i18n pass 3b'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply remaining subscription translations
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+          main = Path('frontend/src/main.tsx')
+          i18n = Path('frontend/src/i18n.ts')
+          s = main.read_text(encoding='utf-8')
+          s = s.replace('Возобновляем…', "{t('owner.resuming', 'Возобновляем…')}")
+          s = s.replace('Отменяем…', "{t('owner.cancellingAction', 'Отменяем…')}")
+          main.write_text(s, encoding='utf-8')
+
+          src = i18n.read_text(encoding='utf-8')
+          additions = {
+            'ru': {'owner.resuming':'Возобновляем…','owner.cancellingAction':'Отменяем…'},
+            'en': {'owner.resuming':'Resuming…','owner.cancellingAction':'Cancelling…'},
+            'uz': {'owner.resuming':'Davom ettirilmoqda…','owner.cancellingAction':'Bekor qilinmoqda…'},
+            'tr': {'owner.resuming':'Devam ettiriliyor…','owner.cancellingAction':'İptal ediliyor…'},
+            'ar': {'owner.resuming':'جارٍ الاستئناف…','owner.cancellingAction':'جارٍ الإلغاء…'},
+          }
+          for locale, vals in additions.items():
+              m = re.search(rf"const {locale}: TranslationMap = \{{(?P<body>.*?)\n\}};", src, re.S)
+              if not m:
+                  raise SystemExit(f'locale block not found: {locale}')
+              body = m.group('body')
+              inserts=[]
+              for key, value in vals.items():
+                  if re.search(rf"['\"]{re.escape(key)}['\"]\s*:", body) is None:
+                      inserts.append(f"  '{key}': {value!r},")
+              if inserts:
+                  replacement = m.group(0)[:-3] + '\n' + '\n'.join(inserts) + '\n};'
+                  src = src[:m.start()] + replacement + src[m.end():]
+          i18n.write_text(src, encoding='utf-8')
+          PY
+      - name: Remove temporary workflow
+        run: |
+          git config user.name "bookly-bot"
+          git config user.email "actions@users.noreply.github.com"
+          rm -f .github/workflows/i18n-pass-3b.yml .i18n-pass-3b-trigger
+          git add frontend/src/main.tsx frontend/src/i18n.ts .github/workflows/i18n-pass-3b.yml .i18n-pass-3b-trigger
+          git commit -m "Apply safe third i18n cleanup pass"
+          git push
