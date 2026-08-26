@@ -1436,3 +1436,33 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   box-shadow: none !important;
   background: #f3f4f6;
 }
+
+
+/* Bookly round business photo */
+.business-photo-preview {
+  width: 96px !important;
+  height: 96px !important;
+  min-width: 96px !important;
+  min-height: 96px !important;
+  display: block !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}
+#root.bookly-client-root .card img {
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  min-height: 72px !important;
+  display: block !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+}
+#bookly-personal-shell img {
+  border-radius: 50% !important;
+}
