@@ -621,7 +621,10 @@ const openClient = (
     setMenuOpen(false);
   }}
 >
-  ℹ️ Как работает Bookly
+  ℹ️ {t(
+  'info.howBooklyWorks',
+  'Как работает Bookly'
+)}
 </button>
 
 <button
@@ -631,7 +634,10 @@ const openClient = (
     setMenuOpen(false);
   }}
 >
-  📄 Правила и контакты
+  📄 {t(
+  'info.rulesAndContacts',
+  'Правила и контакты'
+)}
 </button>
 
             <button onClick={()=>{
@@ -1097,8 +1103,14 @@ setInfoSection={setInfoSection}
                 }}
               >
                 {emailCopied
-                  ? '✓ Скопировано'
-                  : 'Скопировать'}
+  ? `✓ ${t(
+      'common.copied',
+      'Скопировано'
+    )}`
+  : t(
+      'common.copy',
+      'Скопировать'
+    )}
               </button>
             </div>
           </div>
