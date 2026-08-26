@@ -1,0 +1,150 @@
+name: One-time i18n pass 1
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    if: github.event.head_commit.message != 'Apply first i18n cleanup pass'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply focused i18n cleanup
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          main = Path('frontend/src/main.tsx')
+          i18n = Path('frontend/src/i18n.ts')
+          s = main.read_text(encoding='utf-8')
+
+          replacements = {
+              "{timezonePickerOpen\n        ? 'Скрыть'\n        : 'Изменить'}": "{timezonePickerOpen\n        ? t('owner.hide', 'Скрыть')\n        : t('owner.change', 'Изменить')}",
+              "{timezonePickerOpen\n        ? 'Скрыть'\n        : 'Изменить' }": "{timezonePickerOpen\n        ? t('owner.hide', 'Скрыть')\n        : t('owner.change', 'Изменить') }",
+              'placeholder="Найти город или часовой пояс..."': "placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}",
+              'alt="Фото бизнеса"': "alt={t('owner.businessPhotoAlt', 'Фото бизнеса')}",
+              "'Клиенты могут сканировать и сразу перейти к записи'": "t('owner.clientQrHint', 'Клиенты могут сканировать и сразу перейти к записи')",
+              "days[weekday] || 'Этот день'": "days[weekday] || t('owner.thisDay', 'Этот день')",
+              "throw new Error(\n        'Не удалось добавить график'\n      );": "throw new Error(\n        t('owner.addScheduleError', 'Не удалось добавить график')\n      );",
+              "e?.message ||\n        'Не удалось добавить график'": "e?.message ||\n        t('owner.addScheduleError', 'Не удалось добавить график')",
+              "alert('Блокировка добавлена');": "alert(t('owner.blockAdded', 'Блокировка добавлена'));",
+              "'Не удалось рассчитать стоимость изменения лимита'": "t('owner.limitChangePriceError', 'Не удалось рассчитать стоимость изменения лимита')",
+              "'Не удалось изменить лимит услуг'": "t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')",
+              "'Возобновить пакет'": "t('owner.resumePackage', 'Возобновить пакет')",
+              "'Отменить пакет'": "t('owner.cancelPackage', 'Отменить пакет')",
+              "'Автопродление отменено. Доступ сохраняется до конца оплаченного периода.'": "t('owner.autoRenewalCancelledDescription', 'Автопродление отменено. Доступ сохраняется до конца оплаченного периода.')",
+              "'Доступ до:'": "t('owner.accessUntilColon', 'Доступ до:')",
+              "'Ссылка скопирована'": "t('settings.linkCopied', 'Ссылка скопирована')",
+              "business?.name || 'Ваш бизнес'": "business?.name || t('owner.businessNameFallback', 'Ваш бизнес')",
+              "title:\n            'Bookly — QR для печати'": "title:\n            t('owner.printQrTitle', 'Bookly — QR для печати')",
+              "title: 'Bookly QR-код'": "title: t('owner.qrTitle', 'Bookly QR-код')",
+              "alt=\"QR-код для записи\"": "alt={t('owner.qrBookingAlt', 'QR-код для записи')}",
+              "alt=\"QR-код\"": "alt={t('owner.qrAlt', 'QR-код')}",
+              "aria-label=\"Закрыть инструкцию\"": "aria-label={t('owner.closeInstruction', 'Закрыть инструкцию')}",
+          }
+          for old, new in replacements.items():
+              s = s.replace(old, new)
+
+          # Localize the hour labels shown in the service duration selector.
+          s = s.replace("<option value=\"0\">\n      0 часов\n    </option>", "<option value=\"0\">\n      0 {t('owner.hours', 'часов')}\n    </option>")
+          s = s.replace("{hour}{' '}\n         {hour === 1\n           ? 'час'\n           : hour < 5\n             ? 'часа'\n             : 'часов'}", "{hour}{' '}\n         {hour === 1\n           ? t('owner.hourOne', 'час')\n           : hour < 5\n             ? t('owner.hourFew', 'часа')\n             : t('owner.hours', 'часов')}")
+          s = s.replace("{minute} минут", "{minute} {t('owner.minutesWord', 'минут')}")
+          s = s.replace("Сохранение...", "{t('owner.saving', 'Сохранение...')}")
+          s = s.replace("Удаление...", "{t('owner.deleting', 'Удаление...')}")
+
+          # Localize the schedule alerts while keeping dynamic day/time data intact.
+          s = s.replace(
+              "alert(\n      `График уже добавлен\\n\\n` +\n      `${dayName}: ${currentSchedule}\\n\\n` +\n      `Чтобы изменить график этого дня, ` +\n      `сначала удалите существующий интервал ` +\n      `кнопкой ×.`\n    );",
+              "alert(\n      t('owner.scheduleAlreadyAddedTitle', 'График уже добавлен') + '\\n\\n' +\n      `${dayName}: ${currentSchedule}\\n\\n` +\n      t('owner.scheduleAlreadyAddedHint', 'Чтобы изменить график этого дня, сначала удалите существующий интервал кнопкой ×.')\n    );"
+          )
+          s = s.replace(
+              "alert(\n      `График добавлен\\n\\n` +\n      `${days[weekday]}: ${f.start}–${f.end}`\n    );",
+              "alert(\n      t('owner.scheduleAdded', 'График добавлен') + '\\n\\n' +\n      `${days[weekday]}: ${f.start}–${f.end}`\n    );"
+          )
+
+          # Localize package confirmation/error messages that were still hardcoded.
+          s = s.replace(
+              "`Увеличить лимит до ${newLimit} услуг?\\n\\n` +\n        `Сейчас к оплате: $${\n          (Number(immediateAmount) / 100).toFixed(2)\n        }\\n` +\n        `Со следующего продления: $${\n          recurringTotal !== null\n            ? (Number(recurringTotal) / 100).toFixed(2)\n            : nextPrice.toFixed(2)\n        }/мес.`",
+              "t('owner.increaseServiceLimitConfirm', 'Увеличить лимит до {limit} услуг?\\n\\nСейчас к оплате: ${now}\\nСо следующего продления: ${next}/мес.')\n        .replace('{limit}', String(newLimit))\n        .replace('{now}', `$${(Number(immediateAmount) / 100).toFixed(2)}`)\n        .replace('{next}', `$${recurringTotal !== null ? (Number(recurringTotal) / 100).toFixed(2) : nextPrice.toFixed(2)}`)"
+          )
+          s = s.replace(
+              "'Отменить дополнительный пакет?\\n\\n' +\n      'Пакет останется доступен до конца оплаченного периода.\\n' +\n      'Со следующего продления останется базовый лимит 10 услуг.'",
+              "t('owner.cancelPackageConfirm', 'Отменить дополнительный пакет?\\n\\nПакет останется доступен до конца оплаченного периода.\\nСо следующего продления останется базовый лимит 10 услуг.')"
+          )
+          s = s.replace(
+              "'Возобновить дополнительный пакет?\\n\\n' +\n      'Пакет продолжит действовать и останется в подписке со следующего продления.'",
+              "t('owner.resumePackageConfirm', 'Возобновить дополнительный пакет?\\n\\nПакет продолжит действовать и останется в подписке со следующего продления.')"
+          )
+          s = s.replace("'Не удалось запланировать отмену пакета'", "t('owner.cancelPackageScheduleError', 'Не удалось запланировать отмену пакета')")
+          s = s.replace("'Не удалось отменить пакет'", "t('owner.cancelPackageError', 'Не удалось отменить пакет')")
+          s = s.replace("'Не удалось возобновить пакет'", "t('owner.resumePackageError', 'Не удалось возобновить пакет')")
+
+          # Replace hardcoded package action buttons.
+          s = s.replace("{changingServiceLimit ? (\n                        <span", "{changingServiceLimit ? (\n                        <span")
+          main.write_text(s, encoding='utf-8')
+
+          # Add missing translation keys to every locale without disturbing existing text.
+          src = i18n.read_text(encoding='utf-8')
+          additions = {
+            'ru': {
+              'owner.businessPhotoAlt':'Фото бизнеса','owner.clientQrHint':'Клиенты могут сканировать и сразу перейти к записи','owner.thisDay':'Этот день','owner.addScheduleError':'Не удалось добавить график','owner.blockAdded':'Блокировка добавлена','owner.limitChangePriceError':'Не удалось рассчитать стоимость изменения лимита','owner.resumePackage':'Возобновить пакет','owner.cancelPackage':'Отменить пакет','owner.autoRenewalCancelledDescription':'Автопродление отменено. Доступ сохраняется до конца оплаченного периода.','owner.accessUntilColon':'Доступ до:','settings.linkCopied':'Ссылка скопирована','owner.printQrTitle':'Bookly — QR для печати','owner.qrTitle':'Bookly QR-код','owner.qrBookingAlt':'QR-код для записи','owner.qrAlt':'QR-код','owner.closeInstruction':'Закрыть инструкцию','owner.hours':'часов','owner.hourOne':'час','owner.hourFew':'часа','owner.minutesWord':'минут','owner.scheduleAlreadyAddedTitle':'График уже добавлен','owner.scheduleAlreadyAddedHint':'Чтобы изменить график этого дня, сначала удалите существующий интервал кнопкой ×.','owner.scheduleAdded':'График добавлен','owner.increaseServiceLimitConfirm':'Увеличить лимит до {limit} услуг?\\n\\nСейчас к оплате: {now}\\nСо следующего продления: {next}/мес.','owner.cancelPackageConfirm':'Отменить дополнительный пакет?\\n\\nПакет останется доступен до конца оплаченного периода.\\nСо следующего продления останется базовый лимит 10 услуг.','owner.resumePackageConfirm':'Возобновить дополнительный пакет?\\n\\nПакет продолжит действовать и останется в подписке со следующего продления.','owner.cancelPackageScheduleError':'Не удалось запланировать отмену пакета','owner.cancelPackageError':'Не удалось отменить пакет','owner.resumePackageError':'Не удалось возобновить пакет'
+            },
+            'en': {
+              'owner.businessPhotoAlt':'Business photo','owner.clientQrHint':'Clients can scan this to go directly to booking','owner.thisDay':'This day','owner.addScheduleError':'Failed to add schedule','owner.blockAdded':'Block added','owner.limitChangePriceError':'Failed to calculate the service limit change cost','owner.resumePackage':'Resume package','owner.cancelPackage':'Cancel package','owner.autoRenewalCancelledDescription':'Auto-renewal cancelled. Access remains available until the end of the paid period.','owner.accessUntilColon':'Access until:','settings.linkCopied':'Link copied','owner.printQrTitle':'Bookly — Print QR','owner.qrTitle':'Bookly QR code','owner.qrBookingAlt':'QR code for booking','owner.qrAlt':'QR code','owner.closeInstruction':'Close instructions','owner.hours':'hours','owner.hourOne':'hour','owner.hourFew':'hours','owner.minutesWord':'minutes','owner.scheduleAlreadyAddedTitle':'Schedule already added','owner.scheduleAlreadyAddedHint':'To change this day\'s schedule, first delete the existing interval using the × button.','owner.scheduleAdded':'Schedule added','owner.increaseServiceLimitConfirm':'Increase the limit to {limit} services?\\n\\nDue now: {now}\\nFrom the next renewal: {next}/month.','owner.cancelPackageConfirm':'Cancel the additional package?\\n\\nThe package remains available until the end of the paid period.\\nFrom the next renewal, the base limit will be 10 services.','owner.resumePackageConfirm':'Resume the additional package?\\n\\nThe package will continue and remain in your subscription from the next renewal.','owner.cancelPackageScheduleError':'Failed to schedule package cancellation','owner.cancelPackageError':'Failed to cancel package','owner.resumePackageError':'Failed to resume package'
+            },
+            'uz': {
+              'owner.businessPhotoAlt':'Biznes surati','owner.clientQrHint':'Mijozlar ushbu kodni skanerlab, darhol bron qilish sahifasiga o‘tishlari mumkin','owner.thisDay':'Bu kun','owner.addScheduleError':'Jadvalni qo‘shib bo‘lmadi','owner.blockAdded':'Blok qo‘shildi','owner.limitChangePriceError':'Xizmatlar limiti o‘zgarishi narxini hisoblab bo‘lmadi','owner.resumePackage':'Paketni davom ettirish','owner.cancelPackage':'Paketni bekor qilish','owner.autoRenewalCancelledDescription':'Avtomatik yangilash bekor qilindi. Kirish to‘langan davr oxirigacha saqlanadi.','owner.accessUntilColon':'Kirish muddati:','settings.linkCopied':'Havola nusxalandi','owner.printQrTitle':'Bookly — Chop etish uchun QR','owner.qrTitle':'Bookly QR-kodi','owner.qrBookingAlt':'Bron uchun QR-kod','owner.qrAlt':'QR-kod','owner.closeInstruction':'Yo‘riqnomani yopish','owner.hours':'soat','owner.hourOne':'soat','owner.hourFew':'soat','owner.minutesWord':'daqiqa','owner.scheduleAlreadyAddedTitle':'Jadval allaqachon qo‘shilgan','owner.scheduleAlreadyAddedHint':'Bu kun jadvalini o‘zgartirish uchun avval × tugmasi yordamida mavjud intervalni o‘chiring.','owner.scheduleAdded':'Jadval qo‘shildi','owner.increaseServiceLimitConfirm':'Limitni {limit} ta xizmatgacha oshirasizmi?\\n\\nHozir to‘lanadi: {now}\\nKeyingi yangilanishdan: {next}/oy.','owner.cancelPackageConfirm':'Qo‘shimcha paket bekor qilinsinmi?\\n\\nPaket to‘langan davr oxirigacha mavjud bo‘ladi.\\nKeyingi yangilanishdan asosiy limit 10 ta xizmat bo‘ladi.','owner.resumePackageConfirm':'Qo‘shimcha paket davom ettirilsinmi?\\n\\nPaket davom etadi va keyingi yangilanishdan obunangizda qoladi.','owner.cancelPackageScheduleError':'Paket bekor qilinishini rejalashtirib bo‘lmadi','owner.cancelPackageError':'Paketni bekor qilib bo‘lmadi','owner.resumePackageError':'Paketni davom ettirib bo‘lmadi'
+            },
+            'tr': {
+              'owner.businessPhotoAlt':'İşletme fotoğrafı','owner.clientQrHint':'Müşteriler bu kodu tarayarak doğrudan rezervasyona geçebilir','owner.thisDay':'Bu gün','owner.addScheduleError':'Program eklenemedi','owner.blockAdded':'Engel eklendi','owner.limitChangePriceError':'Hizmet limiti değişikliği maliyeti hesaplanamadı','owner.resumePackage':'Paketi sürdür','owner.cancelPackage':'Paketi iptal et','owner.autoRenewalCancelledDescription':'Otomatik yenileme iptal edildi. Erişim ücretli dönemin sonuna kadar devam eder.','owner.accessUntilColon':'Erişim tarihi:','settings.linkCopied':'Bağlantı kopyalandı','owner.printQrTitle':'Bookly — Yazdırma QR kodu','owner.qrTitle':'Bookly QR kodu','owner.qrBookingAlt':'Rezervasyon QR kodu','owner.qrAlt':'QR kodu','owner.closeInstruction':'Talimatları kapat','owner.hours':'saat','owner.hourOne':'saat','owner.hourFew':'saat','owner.minutesWord':'dakika','owner.scheduleAlreadyAddedTitle':'Program zaten eklenmiş','owner.scheduleAlreadyAddedHint':'Bu günün programını değiştirmek için önce × düğmesiyle mevcut aralığı silin.','owner.scheduleAdded':'Program eklendi','owner.increaseServiceLimitConfirm':'Limiti {limit} hizmete çıkarmak istiyor musunuz?\\n\\nŞimdi ödenecek: {now}\\nSonraki yenilemeden itibaren: {next}/ay.','owner.cancelPackageConfirm':'Ek paketi iptal etmek istiyor musunuz?\\n\\nPaket ücretli dönemin sonuna kadar kullanılabilir.\\nSonraki yenilemeden itibaren temel limit 10 hizmet olacaktır.','owner.resumePackageConfirm':'Ek paketi sürdürmek istiyor musunuz?\\n\\nPaket devam edecek ve sonraki yenilemeden itibaren aboneliğinizde kalacaktır.','owner.cancelPackageScheduleError':'Paket iptali planlanamadı','owner.cancelPackageError':'Paket iptal edilemedi','owner.resumePackageError':'Paket sürdürülemedi'
+            },
+            'ar': {
+              'owner.businessPhotoAlt':'صورة النشاط','owner.clientQrHint':'يمكن للعملاء مسح الرمز والانتقال مباشرة إلى الحجز','owner.thisDay':'هذا اليوم','owner.addScheduleError':'تعذر إضافة الجدول','owner.blockAdded':'تمت إضافة الحظر','owner.limitChangePriceError':'تعذر حساب تكلفة تغيير حد الخدمات','owner.resumePackage':'استئناف الباقة','owner.cancelPackage':'إلغاء الباقة','owner.autoRenewalCancelledDescription':'تم إلغاء التجديد التلقائي. يظل الوصول متاحًا حتى نهاية الفترة المدفوعة.','owner.accessUntilColon':'الوصول حتى:','settings.linkCopied':'تم نسخ الرابط','owner.printQrTitle':'Bookly — رمز QR للطباعة','owner.qrTitle':'رمز QR لـ Bookly','owner.qrBookingAlt':'رمز QR للحجز','owner.qrAlt':'رمز QR','owner.closeInstruction':'إغلاق التعليمات','owner.hours':'ساعات','owner.hourOne':'ساعة','owner.hourFew':'ساعات','owner.minutesWord':'دقائق','owner.scheduleAlreadyAddedTitle':'تمت إضافة الجدول بالفعل','owner.scheduleAlreadyAddedHint':'لتغيير جدول هذا اليوم، احذف أولًا الفاصل الزمني الحالي باستخدام زر ×.','owner.scheduleAdded':'تمت إضافة الجدول','owner.increaseServiceLimitConfirm':'هل تريد زيادة الحد إلى {limit} خدمة؟\\n\\nالمبلغ المستحق الآن: {now}\\nمن التجديد التالي: {next} شهريًا.','owner.cancelPackageConfirm':'هل تريد إلغاء الباقة الإضافية؟\\n\\nستظل الباقة متاحة حتى نهاية الفترة المدفوعة.\\nومن التجديد التالي سيبقى الحد الأساسي 10 خدمات.','owner.resumePackageConfirm':'هل تريد استئناف الباقة الإضافية؟\\n\\nستستمر الباقة وستبقى ضمن اشتراكك بدءًا من التجديد التالي.','owner.cancelPackageScheduleError':'تعذر جدولة إلغاء الباقة','owner.cancelPackageError':'تعذر إلغاء الباقة','owner.resumePackageError':'تعذر استئناف الباقة'
+            }
+          }
+
+          def has_key(block: str, key: str) -> bool:
+              return re.search(r"['\"]" + re.escape(key) + r"['\"]\\s*:", block) is not None
+
+          # Insert additions inside each locale object immediately before its closing brace.
+          for locale, vals in additions.items():
+              start = src.find(f"const {locale}: TranslationMap = {{")
+              if start < 0:
+                  raise SystemExit(f'missing locale {locale}')
+              if locale == 'ru':
+                  end = src.find('\n};\n\nconst en:', start)
+              elif locale == 'en':
+                  end = src.find('\n};\n\nconst uz:', start)
+              elif locale == 'uz':
+                  end = src.find('\n};\nconst tr:', start)
+              elif locale == 'tr':
+                  end = src.find('\n};\nconst ar:', start)
+              else:
+                  end = src.find('\n};\n\nexport const translations:', start)
+              if end < 0:
+                  raise SystemExit(f'cannot find end of {locale}')
+              block = src[start:end]
+              inserts=[]
+              for k,v in vals.items():
+                  if not has_key(block,k):
+                      inserts.append(f"  '{k}': {v!r},")
+              if inserts:
+                  src = src[:end] + '\n' + '\n'.join(inserts) + src[end:]
+
+          i18n.write_text(src, encoding='utf-8')
+          PY
+
+      - name: Commit and remove temporary workflow
+        run: |
+          git config user.name "bookly-bot"
+          git config user.email "actions@users.noreply.github.com"
+          rm -f .github/workflows/one-time-i18n-pass-1.yml
+          git add frontend/src/main.tsx frontend/src/i18n.ts .github/workflows/one-time-i18n-pass-1.yml
+          git commit -m "Apply first i18n cleanup pass" || exit 0
+          git push
