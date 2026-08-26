@@ -1466,3 +1466,45 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 #bookly-personal-shell img {
   border-radius: 50% !important;
 }
+/* === Round business photo: client + admin === */
+
+/* Client: business photo inside the business card */
+#bookly-personal-shell .bookly-business-card img,
+#bookly-personal-shell .card img {
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  min-height: 72px !important;
+
+  display: block !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  border-radius: 50% !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+
+  overflow: hidden !important;
+  background: #f3f4f6 !important;
+}
+
+/* Admin: business photo preview */
+.business-photo-preview {
+  width: 100px !important;
+  height: 100px !important;
+
+  display: block !important;
+
+  object-fit: cover !important;
+  object-position: center !important;
+
+  border-radius: 50% !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+
+  overflow: hidden !important;
+  background: #f3f4f6 !important;
+}
