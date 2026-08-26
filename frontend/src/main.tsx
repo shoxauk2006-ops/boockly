@@ -6047,11 +6047,9 @@ await refreshAfterChange({
 </div>
 
 <div>
-  {t('owner.packageUpToServices')}
-  }{' '}
+  {t('owner.packageUpToServices')}{' '}
   {currentServicesLimit}{' '}
-  {t('owner.services')}
-  {' '}
+  {t('owner.services')}{' '}
   — ${currentAddonPrice.toFixed(2)}{' '}
   {t('owner.perMonth')}
 </div>
