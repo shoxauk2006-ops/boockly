@@ -1,0 +1,37 @@
+name: Fix i18n main syntax
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.event.head_commit.message == 'Trigger i18n main syntax fix'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair only malformed translation fallback
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text(encoding='utf-8')
+          old = "{t(\n  'owner.deleting',\n  '{t('owner.deleting', 'Удаление...')}'\n)}"
+          new = "{t(\n  'owner.deleting',\n  'Удаление...'\n)}"
+          if s.count(old) != 1:
+              raise SystemExit(f'Expected exactly one malformed fallback, found {s.count(old)}')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Build frontend
+        run: |
+          npm install --prefix frontend --no-audit --no-fund
+          npm run build --prefix frontend
+      - name: Commit and remove temporary files
+        run: |
+          git config user.name 'bookly-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add frontend/src/main.tsx
+          git commit -m 'fix: repair i18n fallback syntax'
+          git rm .github/workflows/fix-i18n-main-syntax.yml .i18n-main-syntax-trigger
+          git commit -m 'chore: remove temporary i18n main syntax files'
+          git push
