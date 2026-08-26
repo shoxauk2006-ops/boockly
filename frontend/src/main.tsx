@@ -6003,11 +6003,29 @@ await refreshAfterChange({
                     lineHeight: 1.6
                   }}
                 >
-                  <div>Bookly Pro — $7.99 / месяц</div>
                   <div>
-                    Пакет до {currentServicesLimit} услуг — $
-                    {currentAddonPrice.toFixed(2)} / месяц
-                  </div>
+  {t(
+    'owner.booklyProMonthly',
+    'Bookly Pro — $7.99 / месяц'
+  )}
+</div>
+
+<div>
+  {t(
+    'owner.packageUpToServices',
+    'Пакет до'
+  )}{' '}
+  {currentServicesLimit}{' '}
+  {t(
+    'owner.services',
+    'услуг'
+  )}{' '}
+  — ${currentAddonPrice.toFixed(2)}{' '}
+  {t(
+    'owner.perMonth',
+    '/ месяц'
+  )}
+</div>
                 </div>
               )}
 
