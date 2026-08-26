@@ -130,7 +130,7 @@ function BooklyAlertModal({
           onClick={onClose}
           style={{ marginTop: 16 }}
         >
-          t('common.ok')
+         {t('common.ok')}
         </button>
       </div>
     </div>
@@ -190,7 +190,7 @@ function BooklyConfirmModal({
             type="button"
             onClick={onCancel}
           >
-           t('common.cancel')
+           {t('common.cancel')}
           </button>
 
           <button
@@ -198,7 +198,7 @@ function BooklyConfirmModal({
             className="primary"
             onClick={onConfirm}
           >
-            t('common.confirm')
+            {t('common.confirm')}
           </button>
         </div>
       </div>
