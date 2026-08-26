@@ -1,0 +1,50 @@
+name: Fix final i18n syntax
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.event.head_commit.message == 'Trigger final i18n syntax repair'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair only i18n syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          i18n = Path('frontend/src/i18n.ts')
+          lines = i18n.read_text(encoding='utf-8').splitlines()
+          changed = 0
+          for i, line in enumerate(lines):
+              if "'owner.businessReadyDescription'" in line and not line.rstrip().endswith(','):
+                  lines[i] = line + ','
+                  changed += 1
+          if changed != 5:
+              raise SystemExit(f'Expected 5 businessReadyDescription separators, changed {changed}')
+          i18n.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+          main = Path('frontend/src/main.tsx')
+          s = main.read_text(encoding='utf-8')
+          old = "{t(\n  'owner.deleting',\n  '{t('owner.deleting', 'Удаление...')}'\n)}"
+          new = "{t(\n  'owner.deleting',\n  'Удаление...'\n)}"
+          if s.count(old) != 1:
+              raise SystemExit(f'Expected exactly one malformed fallback, found {s.count(old)}')
+          main.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Build frontend
+        run: |
+          npm install --prefix frontend --no-audit --no-fund
+          npm run build --prefix frontend
+      - name: Commit only successful i18n syntax fix
+        run: |
+          git config user.name 'bookly-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add frontend/src/i18n.ts frontend/src/main.tsx
+          git commit -m 'fix: repair i18n syntax only'
+          git rm -f .github/workflows/fix-i18n-final-syntax.yml .github/workflows/fix-i18n-main-syntax.yml .i18n-main-syntax-trigger .i18n-syntax-trigger .i18n-syntax-trigger-2 2>/dev/null || true
+          git add -u .github/workflows .
+          git commit -m 'chore: remove temporary i18n repair files' || true
+          git push
