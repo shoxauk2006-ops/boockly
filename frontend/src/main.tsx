@@ -9281,6 +9281,7 @@ setSettingsTimezonePickerOpen(false);
 
     link.click();
   };
+const deleteBusiness = async () => {
   const confirmed = await confirmAsync(
   t(
     'owner.deleteBusinessConfirm',
