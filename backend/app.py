@@ -1835,10 +1835,11 @@ def admin_cancel_booking(
                 {
                     "chat_id": booking.client_telegram_id,
                     "text": (
-                        "❌ <b>Ваша запись отменена</b>\n\n"
+                        "❌ <b>Ваша запись отменена бизнесом</b>\n\n"
                         f"📅 {booking.day.isoformat()}\n"
                         f"🕐 {booking.start.strftime('%H:%M')}–"
-                        f"{booking.end.strftime('%H:%M')}\n\n"
+                        f"{booking.end.strftime('%H:%M')}\n"
+                        f"📞 {business.phone or 'Номер телефона не указан'}\n\n"
                         "Пожалуйста, свяжитесь с бизнесом, "
                         "если хотите выбрать другое время."
                     ),

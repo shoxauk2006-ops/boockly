@@ -8709,6 +8709,9 @@ function BookingRow({
   const [cancelling, setCancelling] =
     useState(false);
 
+  const [cancelled, setCancelled] =
+    useState(x.status === 'cancelled');
+
   const getNowTashkent = () => {
     return new Intl.DateTimeFormat(
       'sv-SE',
@@ -8739,6 +8742,7 @@ function BookingRow({
     `${x.day} ${x.start}`;
 
   const canCancel =
+    !cancelled &&
     x.status ===
       'confirmed' &&
     bookingDateTime >
@@ -8793,6 +8797,8 @@ function BookingRow({
             )
           );
         }
+
+        setCancelled(true);
 
         alert(
           t(
@@ -8878,22 +8884,21 @@ function BookingRow({
       >
 
         <em>
-          {x.status ===
-            'confirmed'
-            ? (
-              canCancel
-                ? t(
-                    'owner.confirmed'
-                  )
-                : t(
-                    'owner.completed'
-                  )
-            )
+          {cancelled
+            ? t(
+                'owner.cancelled'
+              )
             : x.status ===
-                'cancelled'
-              ? t(
-                  'owner.cancelled'
-                )
+              'confirmed'
+              ? (
+                canCancel
+                  ? t(
+                      'owner.confirmed'
+                    )
+                  : t(
+                      'owner.completed'
+                    )
+              )
               : x.status}
         </em>
 
@@ -8907,13 +8912,28 @@ function BookingRow({
               cancelBooking
             }
           >
-            {cancelling
-              ? t(
+            {cancelling ? (
+              <>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 14,
+                    height: 14,
+                    border: '2px solid rgba(255,255,255,0.35)',
+                    borderTopColor: '#fff',
+                    borderRadius: '50%',
+                    animation: 'bookly-spin .8s linear infinite',
+                    marginRight: 8,
+                    verticalAlign: '-2px'
+                  }}
+                />
+                {t(
                   'owner.cancelling'
-                )
-              : t(
-                  'owner.cancel'
                 )}
+              </>
+            ) : t(
+                'owner.cancel'
+              )}
           </button>
         )}
 
