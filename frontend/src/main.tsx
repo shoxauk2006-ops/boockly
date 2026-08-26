@@ -2279,17 +2279,18 @@ const confirmServiceLimitChange = async () => {
     );
 
     const data = await response
-      .json()
-      .catch(() => null);
+  .json()
+  .catch(() => null);
 
-    throw new Error(
-  data?.detail ||
-  t(
-    'owner.changeServiceLimitError',
-    'Не удалось изменить лимит услуг'
-  )
-);
-    }
+if (!response.ok) {
+  throw new Error(
+    data?.detail ||
+    t(
+      'owner.changeServiceLimitError',
+      'Не удалось изменить лимит услуг'
+    )
+  );
+}
 
     setServiceLimit(limit);
     setNewServiceLimit(limit);
