@@ -1,0 +1,80 @@
+name: Verify home nav common i18n
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add missing home nav common translations
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('frontend/src/i18n.ts')
+          s = p.read_text(encoding='utf-8')
+
+          additions = {
+            'uz': {
+              'nav.home':'Bosh sahifa','nav.bookings':'Bronlar','nav.saved':'Saqlanganlar','nav.profile':'Profil','nav.services':'Xizmatlar','nav.more':'Yana','nav.schedule':'Jadval','nav.blocks':'Blokirovkalar','nav.businesses':'Bizneslarim','nav.settings':'Sozlamalar','nav.subscription':'Obuna','nav.admin':'Admin panel',
+              'common.back':'Orqaga','common.open':'Ochish','common.save':'Saqlash','common.copied':'Nusxalandi','common.copy':'Nusxalash','common.cancel':'Bekor qilish','common.delete':'O‘chirish','common.edit':'Tahrirlash','common.close':'Yopish','common.loading':'Yuklanmoqda...','common.ok':'Tushunarli','common.confirm':'Tasdiqlash','common.openOnMap':'Xaritada ochish',
+              'home.title':'Qo‘ng‘iroqlarsiz bron qilish','home.description':'Bookly biznesga to‘g‘ridan-to‘g‘ri Telegram orqali bronlarni qabul qilishga yordam beradi.','home.openAdmin':'Admin panelni ochish','home.openBusiness':'Biznes sahifasini ochish','home.slugPlaceholder':'Biznes havolasi yoki slug','home.emptySaved':'Bu yerda saqlagan bizneslaringiz paydo bo‘ladi.','home.greeting':'Qaytganingizdan xursandmiz','home.manage':'Boshqarish','home.manageBusiness':'Bookly’da biznesingizni boshqaring','home.createBusinessHint':'Bookly’da biznesingizni yarating'
+            },
+            'tr': {
+              'nav.home':'Ana sayfa','nav.bookings':'Rezervasyonlar','nav.saved':'Kaydedilenler','nav.profile':'Profil','nav.services':'Hizmetler','nav.more':'Daha fazla','nav.schedule':'Program','nav.blocks':'Engellemeler','nav.businesses':'İşletmelerim','nav.settings':'Ayarlar','nav.subscription':'Abonelik','nav.admin':'Yönetim paneli',
+              'common.back':'Geri','common.open':'Aç','common.save':'Kaydet','common.copied':'Kopyalandı','common.copy':'Kopyala','common.cancel':'İptal','common.delete':'Sil','common.edit':'Düzenle','common.close':'Kapat','common.loading':'Yükleniyor...','common.ok':'Anladım','common.confirm':'Onayla','common.openOnMap':'Haritada aç',
+              'home.title':'Arama yapmadan rezervasyon','home.description':'Bookly, işletmelerin doğrudan Telegram üzerinden rezervasyon almasına yardımcı olur.','home.openAdmin':'Yönetim panelini aç','home.openBusiness':'İşletme sayfasını aç','home.slugPlaceholder':'İşletme bağlantısı veya slug','home.emptySaved':'Kaydettiğiniz işletmeler burada görünecek.','home.greeting':'Tekrar hoş geldiniz','home.manage':'Yönet','home.manageBusiness':'Bookly’de işletmenizi yönetin','home.createBusinessHint':'Bookly’de işletmenizi oluşturun'
+            },
+            'ar': {
+              'nav.home':'الرئيسية','nav.bookings':'الحجوزات','nav.saved':'المحفوظة','nav.profile':'الملف الشخصي','nav.services':'الخدمات','nav.more':'المزيد','nav.schedule':'الجدول','nav.blocks':'الحظر','nav.businesses':'أعمالي','nav.settings':'الإعدادات','nav.subscription':'الاشتراك','nav.admin':'لوحة الإدارة',
+              'common.back':'رجوع','common.open':'فتح','common.save':'حفظ','common.copied':'تم النسخ','common.copy':'نسخ','common.cancel':'إلغاء','common.delete':'حذف','common.edit':'تعديل','common.close':'إغلاق','common.loading':'جارٍ التحميل...','common.ok':'حسنًا','common.confirm':'تأكيد','common.openOnMap':'فتح على الخريطة',
+              'home.title':'حجز بدون مكالمات','home.description':'يساعد Bookly الأنشطة التجارية على استقبال الحجوزات مباشرةً عبر Telegram.','home.openAdmin':'فتح لوحة الإدارة','home.openBusiness':'فتح صفحة النشاط','home.slugPlaceholder':'رابط النشاط أو slug','home.emptySaved':'ستظهر هنا الأنشطة التي تحفظها.','home.greeting':'مرحبًا بعودتك','home.manage':'إدارة','home.manageBusiness':'أدر نشاطك التجاري عبر Bookly','home.createBusinessHint':'أنشئ نشاطك التجاري في Bookly'
+            }
+          }
+
+          def add_to_obj(src, obj_name, entries):
+              pattern = re.compile(r'(const\s+'+re.escape(obj_name)+r'\s*:\s*TranslationMap\s*=\s*\{)([\s\S]*?)(\n\};)', re.M)
+              m = pattern.search(src)
+              if not m:
+                  raise SystemExit(f'{obj_name} block not found')
+              body = m.group(2)
+              missing = []
+              for k,v in entries.items():
+                  if re.search(r"['\"]"+re.escape(k)+r"['\"]\s*:", body):
+                      continue
+                  missing.append(f"  '{k}': {v!r},\n".replace("'", "'"))
+              if not missing:
+                  return src
+              return src[:m.start(2)] + '\n' + ''.join(missing) + m.group(2) + src[m.end(2):]
+
+          # use JSON-like escaping via repr is not safe for TS double quotes in strings; entries above are simple.
+          for lang, entries in additions.items():
+              s = add_to_obj(s, lang, entries)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Build frontend
+        run: |
+          npm install --prefix frontend --no-audit --no-fund
+          npm run build --prefix frontend
+
+      - name: Commit verified change
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/i18n.ts
+          git commit -m "i18n: translate home nav common for uz tr ar"
+          git push
+          git rm -f .github/workflows/check-home-nav-common-i18n.yml
+          git commit -m "chore: remove temporary i18n verifier"
+          git push
