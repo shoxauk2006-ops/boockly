@@ -8800,8 +8800,6 @@ function BookingRow({
           )
         );
 
-        window.location.reload();
-
       } catch (e: any) {
         console.error(
           'ADMIN CANCEL BOOKING ERROR:',
