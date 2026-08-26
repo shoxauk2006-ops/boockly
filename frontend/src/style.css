@@ -1508,3 +1508,16 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   overflow: hidden !important;
   background: #f3f4f6 !important;
 }
+.bookly-business-avatar {
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  min-height: 72px !important;
+  display: block !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-radius: 50% !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
