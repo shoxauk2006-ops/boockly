@@ -6083,22 +6083,22 @@ await refreshAfterChange({
   { limit: 30, price: '$7.99' },
   { limit: 50, price: '$11.99' },
   { limit: 100, price: '$19.99' }
-]}
-                      .filter(option => option.limit > currentServicesLimit)
-                      .map(option => (
-                        <button
-                          key={option.limit}
-                          type="button"
-                          className="subscription-manage-button"
-                          disabled={changingServiceLimit || subscriptionActionLoading}
-                          onClick={() => changeServiceLimit(option.limit)}
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            width: '100%'
-                          }}
-                        >
+]
+  .filter(option => option.limit > currentServicesLimit)
+  .map(option => (
+    <button
+      key={option.limit}
+      type="button"
+      className="subscription-manage-button"
+      disabled={changingServiceLimit || subscriptionActionLoading}
+      onClick={() => changeServiceLimit(option.limit)}
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%'
+      }}
+    >
                           {changingServiceLimit ? (
                             <span className="btn-spinner" />
                           ) : (
