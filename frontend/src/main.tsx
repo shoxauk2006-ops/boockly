@@ -10307,20 +10307,20 @@ function Client({
       }
 
             alert(
-        t('client.bookingSuccess')
-      );
+  t('client.bookingSuccess')
+);
 
-      setSelectedTime('');
+window.scrollTo({
+  top: 0,
+  behavior: 'smooth'
+});
 
-      await loadSlots(
-        selected,
-        day
-      );
+setSelectedTime('');
 
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+await loadSlots(
+  selected,
+  day
+);
     } catch (e) {
       console.error(
         'BOOKING ERROR:',
