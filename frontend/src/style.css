@@ -1422,3 +1422,17 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 .qr-print-open-button{
   margin-top:10px;
 }
+
+
+/* Bookly client business photo polish */
+#bookly-personal-shell .bookly-business-card img {
+  width: 72px !important;
+  height: 72px !important;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  border: 0 !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  background: #f3f4f6;
+}
