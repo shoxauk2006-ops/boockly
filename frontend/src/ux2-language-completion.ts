@@ -3,7 +3,7 @@ import { Language, translations, detectLanguage, applyLanguageDirection } from '
 type Row = Record<Language,string>;
 const EXTRA: Record<string,Row> = {
   'Главная': {ru:'Главная',en:'Home',uz:'Bosh sahifa',tr:'Ana sayfa',ar:'الرئيسية'},
-  'Сохранённые': {ru:'Сохранённые',en:'Saved',uz:'Saqlanganlar',tr:'Kaydedilenler',ar:'المحفوظات'},
+  'Сохранённые': {ru:'Сохранённые',en:'Saved',uz:'Saqlanganlar',tr:'Kaydedilenler',ar:'المحفوظة'},
   'Профиль': {ru:'Профиль',en:'Profile',uz:'Profil',tr:'Profil',ar:'الملف الشخصي'},
   'Админ-панель': {ru:'Админ-панель',en:'Admin panel',uz:'Admin panel',tr:'Yönetim paneli',ar:'لوحة الإدارة'},
   'Ещё': {ru:'Ещё',en:'More',uz:'Yana',tr:'Daha fazla',ar:'المزيد'},
@@ -13,7 +13,7 @@ const EXTRA: Record<string,Row> = {
   'Рабочие часы': {ru:'Рабочие часы',en:'Working hours',uz:'Ish vaqti',tr:'Çalışma saatleri',ar:'ساعات العمل'},
   'Закрытые интервалы': {ru:'Закрытые интервалы',en:'Blocked intervals',uz:'Bloklangan vaqtlar',tr:'Engellenen aralıklar',ar:'الفترات المغلقة'},
   'Информация и контакты': {ru:'Информация и контакты',en:'Information and contacts',uz:'Ma’lumot va kontaktlar',tr:'Bilgi ve iletişim',ar:'المعلومات وبيانات الاتصال'},
-  'Ваши бронирования': {ru:'Ваши бронирования',en:'Your bookings',uz:'Bronlaringiz',tr:'Randevularınız',ar:'حجozalaringiz'},
+  'Ваши бронирования': {ru:'Ваши бронирования',en:'Your bookings',uz:'Bronlaringiz',tr:'Rezervasyonlarınız',ar:'حجوزاتك'},
   'Ваши сохранённые места': {ru:'Ваши сохранённые места',en:'Your saved places',uz:'Saqlangan joylaringiz',tr:'Kaydettiğiniz yerler',ar:'أماكنك المحفوظة'},
   'Название': {ru:'Название',en:'Name',uz:'Nomi',tr:'Ad',ar:'الاسم'},
   'Описание': {ru:'Описание',en:'Description',uz:'Tavsif',tr:'Açıklama',ar:'الوصف'},
@@ -28,6 +28,18 @@ const EXTRA: Record<string,Row> = {
   'Удалить': {ru:'Удалить',en:'Delete',uz:'O‘chirish',tr:'Sil',ar:'حذف'},
   'Изменить': {ru:'Изменить',en:'Edit',uz:'Tahrirlash',tr:'Düzenle',ar:'تعديل'},
   'Закрыть': {ru:'Закрыть',en:'Close',uz:'Yopish',tr:'Kapat',ar:'إغلاق'},
+  'Ташкент': {ru:'Ташкент',en:'Tashkent',uz:'Toshkent',tr:'Taşkent',ar:'طشقند'},
+  'Алматы': {ru:'Алматы',en:'Almaty',uz:'Olmaota',tr:'Almatı',ar:'ألماتي'},
+  'Бишкек': {ru:'Бишкек',en:'Bishkek',uz:'Bishkek',tr:'Bişkek',ar:'بишкك'},
+  'Дакка': {ru:'Дакка',en:'Dhaka',uz:'Dakha',tr:'Dakka',ar:'دكا'},
+  'Карачи': {ru:'Карачи',en:'Karachi',uz:'Karachi',tr:'Karaçi',ar:'كراتشي'},
+  'Калькутта': {ru:'Калькутта',en:'Kolkata',uz:'Kolkata',tr:'Kalküta',ar:'كولكاتا'},
+  'Дубай': {ru:'Дубай',en:'Dubai',uz:'Dubay',tr:'Dubai',ar:'دبي'},
+  'Эр-Рияд': {ru:'Эр-Рияд',en:'Riyadh',uz:'Ar-Riyod',tr:'Riyad',ar:'الرياض'},
+  'Тегеран': {ru:'Тегеран',en:'Tehran',uz:'Tehron',tr:'Tahran',ar:'طهران'},
+  'Багдад': {ru:'Багдад',en:'Baghdad',uz:'Bag‘dod',tr:'Bağdat',ar:'بغداد'},
+  'Иерусалим': {ru:'Иерусалим',en:'Jerusalem',uz:'Quddus',tr:'Kudüs',ar:'القدس'},
+  'Баку': {ru:'Баку',en:'Baku',uz:'Boku',tr:'Bakü',ar:'باكو'},
 };
 
 const KEYS: Record<string,string> = {
