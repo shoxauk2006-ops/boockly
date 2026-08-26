@@ -10306,7 +10306,7 @@ function Client({
         return;
       }
 
-      alert(
+            alert(
         t('client.bookingSuccess')
       );
 
@@ -10316,6 +10316,11 @@ function Client({
         selected,
         day
       );
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     } catch (e) {
       console.error(
         'BOOKING ERROR:',
