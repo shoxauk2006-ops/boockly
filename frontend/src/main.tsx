@@ -10313,11 +10313,28 @@ function Client({
       setSelectedTime('');
 
       setTimeout(() => {
-  window.scrollTo({
-    top: 0,
-    left: 0,
-    behavior: 'smooth'
-  });
+  const start = window.scrollY;
+  const duration = 500;
+  const startTime = performance.now();
+
+  const animateScroll = (currentTime: number) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    const eased =
+      1 - Math.pow(1 - progress, 3);
+
+    window.scrollTo(
+      0,
+      Math.round(start * (1 - eased))
+    );
+
+    if (progress < 1) {
+      requestAnimationFrame(animateScroll);
+    }
+  };
+
+  requestAnimationFrame(animateScroll);
 }, 100);
 
       await loadSlots(
