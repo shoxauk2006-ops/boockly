@@ -1,0 +1,54 @@
+name: i18n pass 3
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    if: github.event.head_commit.message == 'Trigger i18n pass 3'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace remaining subscription action labels
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('frontend/src/main.tsx')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('t={t}\n}: {', 't={t}\n}: {')
+          s=s.replace('Возобновляем…', "{t('owner.resuming', 'Возобновляем…')}")
+          s=s.replace('Отменяем…', "{t('owner.cancellingAction', 'Отменяем…')}")
+          p.write_text(s,encoding='utf-8')
+
+          i=Path('frontend/src/i18n.ts')
+          src=i.read_text(encoding='utf-8')
+          vals={
+            'ru': {'owner.resuming':'Возобновляем…','owner.cancellingAction':'Отменяем…'},
+            'en': {'owner.resuming':'Resuming…','owner.cancellingAction':'Cancelling…'},
+            'uz': {'owner.resuming':'Davom ettirilmoqda…','owner.cancellingAction':'Bekor qilinmoqda…'},
+            'tr': {'owner.resuming':'Devam ettiriliyor…','owner.cancellingAction':'İptal ediliyor…'},
+            'ar': {'owner.resuming':'جارٍ الاستئناف…','owner.cancellingAction':'جارٍ الإلغاء…'},
+          }
+          import re
+          def has(block,key): return re.search(r"['\"]"+re.escape(key)+r"['\"]\\s*:",block) is not None
+          bounds={'ru':'en','en':'uz','uz':'tr','tr':'ar','ar':None}
+          for loc,items in vals.items():
+            start=src.find(f'const {loc}: TranslationMap = {{')
+            if start<0: raise SystemExit(f'missing {loc}')
+            nxt=bounds[loc]
+            end=src.find(f'\n}};\n{("const " + nxt + ":") if nxt else "export const translations:"}',start)
+            if end<0: raise SystemExit(f'end missing {loc}')
+            block=src[start:end]
+            ins=[f"  '{k}': {v!r}," for k,v in items.items() if not has(block,k)]
+            if ins: src=src[:end]+'\n'+'\n'.join(ins)+src[end:]
+          i.write_text(src,encoding='utf-8')
+          PY
+      - name: Remove temporary workflow
+        run: |
+          git config user.name "bookly-bot"
+          git config user.email "actions@users.noreply.github.com"
+          rm -f .github/workflows/i18n-pass-3.yml .i18n-pass-3-trigger
+          git add frontend/src/main.tsx frontend/src/i18n.ts .github/workflows/i18n-pass-3.yml .i18n-pass-3-trigger
+          git commit -m "Apply third i18n cleanup pass"
+          git push
