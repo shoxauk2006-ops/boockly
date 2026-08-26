@@ -1,0 +1,37 @@
+name: i18n only timezone
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.event.head_commit.message == 'Trigger i18n timezone cleanup'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace direct timezone label
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text(encoding='utf-8')
+          old = '''      <strong>\n        Выберите часовой пояс\n      </strong>'''
+          new = '''      <strong>\n        {t('owner.chooseTimezone', 'Выберите часовой пояс')}\n      </strong>'''
+          if s.count(old) != 1:
+              raise SystemExit(f'expected exactly one timezone label, found {s.count(old)}')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Build frontend
+        run: |
+          npm install --prefix frontend --no-audit --no-fund
+          npm run build --prefix frontend
+      - name: Commit and remove workflow
+        run: |
+          git config user.name 'bookly-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add frontend/src/main.tsx .github/workflows/i18n-only-timezone.yml
+          git commit -m 'fix: translate timezone heading'
+          git rm .github/workflows/i18n-only-timezone.yml
+          git commit -m 'chore: remove temporary i18n workflow'
+          git push
