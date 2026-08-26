@@ -2727,7 +2727,7 @@ alert(paymentMessage);
               );
             }}
           >
-            📍 Определить местоположение
+            📍 {t('owner.detectLocation')}
           </button>
 
           {newBusinessLatitude !== null &&
@@ -4157,9 +4157,7 @@ borderTopColor: '#d32f2f',
       marginBottom: 0
     }}
   >
-    По умолчанию выбран часовой пояс
-    вашего устройства. Вы можете изменить
-    его вручную.
+    {t('owner.deviceTimezoneHint')}
   </p>
 </div>
             <label
@@ -6047,7 +6045,7 @@ await refreshAfterChange({
                   <div>
   {t(
     'owner.booklyProMonthly',
-    'Bookly Pro — $7.99 / месяц'
+    'Bookly Pro — $7.99 /{t('owner.perMonth')}'
   )}
 </div>
 
@@ -6099,10 +6097,10 @@ await refreshAfterChange({
                     }}
                   >
                     {[
-                      { limit: 20, price: '$4.99 / месяц' },
-                      { limit: 30, price: '$7.99 / месяц' },
-                      { limit: 50, price: '$11.99 / месяц' },
-                      { limit: 100, price: '$19.99 / месяц' }
+                      { limit: 20, price: '$4.99 /{t('owner.perMonth')} },
+                      { limit: 30, price: '$7.99 / {t('owner.perMonth')} },
+                      { limit: 50, price: '$11.99 / {t('owner.perMonth')} },
+                      { limit: 100, price: '$19.99 /{t('owner.perMonth')} }
                     ]
                       .filter(option => option.limit > currentServicesLimit)
                       .map(option => (
@@ -6131,7 +6129,7 @@ await refreshAfterChange({
   {option.limit}{' '}
   {t(
     'owner.services',
-    'услуг'
+    '{t('owner.services')}'
   )}
 </span>
                               <strong>{option.price}</strong>
@@ -7085,7 +7083,7 @@ alert(
     fontWeight: 600
   }}
 >
-  Длительность услуги
+  {t('owner.serviceDuration')}
 </label>
         
         <div
@@ -9469,7 +9467,7 @@ t(
         setBusinessImage('');
       }}
     >
-      Удалить
+      {t('common.delete')}
     </button>
   )}
 
