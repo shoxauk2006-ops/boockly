@@ -1,0 +1,38 @@
+name: Fix i18n syntax
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.event.head_commit.message == 'Trigger i18n syntax fix'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix only the missing comma
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/i18n.ts')
+          s = p.read_text(encoding='utf-8')
+          old = "  'owner.setupIntro':'Отлично. Теперь подготовьте бизнес к запуску.','owner.setupChecklist':'Что нужно сделать','owner.howItWorks':'Как это работает','owner.setupBusinessDescription':'Сначала полностью настройте бизнес: информацию, фотографию, услуги, цены, график работы и блокировки.','owner.businessReadyDescription':'После этого бизнес будет готов к работе внутри Bookly. Вы сможете управлять услугами и принимать записи от клиентов.'\n  'owner.businessPhotoAlt': 'Фото бизнеса',"
+          new = "  'owner.setupIntro':'Отлично. Теперь подготовьте бизнес к запуску.','owner.setupChecklist':'Что нужно сделать','owner.howItWorks':'Как это работает','owner.setupBusinessDescription':'Сначала полностью настройте бизнес: информацию, фотографию, услуги, цены, график работы и блокировки.','owner.businessReadyDescription':'После этого бизнес будет готов к работе внутри Bookly. Вы сможете управлять услугами и принимать записи от клиентов.',\n  'owner.businessPhotoAlt': 'Фото бизнеса',"
+          if s.count(old) != 1:
+              raise SystemExit(f'Expected exactly one target, found {s.count(old)}')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Build frontend
+        run: |
+          npm install --prefix frontend --no-audit --no-fund
+          npm run build --prefix frontend
+      - name: Commit and remove workflow
+        run: |
+          git config user.name 'bookly-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add frontend/src/i18n.ts
+          git commit -m 'fix: repair i18n syntax'
+          git rm .github/workflows/fix-i18n-syntax.yml
+          git add .github/workflows/fix-i18n-syntax.yml
+          git commit -m 'chore: remove temporary i18n syntax workflow'
+          git push
