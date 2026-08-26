@@ -3544,6 +3544,7 @@ borderTopColor: '#d32f2f',
   <img
   src={business.business_image}
   alt={business.name}
+  className="bookly-business-avatar"
   style={{
     width: '90px',
     height: '90px',
@@ -9436,6 +9437,7 @@ t(
       src={businessImage}
       className="business-photo-preview"
       alt="Business"
+      className="bookly-business-avatar"
     />
   ) : (
     <div className="business-photo-empty">
@@ -10497,6 +10499,7 @@ function Client({
         src={business.business_image}
         alt={business.name}
         className="client-business-thumb"
+        className="bookly-business-avatar"
       />
     )}
 
