@@ -6043,10 +6043,7 @@ await refreshAfterChange({
                   }}
                 >
                   <div>
-  {t(
-    'owner.booklyProMonthly',
-    'Bookly Pro — $7.99 /{t('owner.perMonth')}'
-  )}
+  {t('owner.booklyProMonthly')}
 </div>
 
 <div>
@@ -6097,11 +6094,11 @@ await refreshAfterChange({
                     }}
                   >
                     {[
-                      { limit: 20, price: '$4.99 /{t('owner.perMonth')} },
-                      { limit: 30, price: '$7.99 / {t('owner.perMonth')} },
-                      { limit: 50, price: '$11.99 / {t('owner.perMonth')} },
-                      { limit: 100, price: '$19.99 /{t('owner.perMonth')} }
-                    ]
+  { limit: 20, price: '$4.99' },
+  { limit: 30, price: '$7.99' },
+  { limit: 50, price: '$11.99' },
+  { limit: 100, price: '$19.99' }
+]}
                       .filter(option => option.limit > currentServicesLimit)
                       .map(option => (
                         <button
@@ -6127,12 +6124,11 @@ await refreshAfterChange({
     'До'
   )}{' '}
   {option.limit}{' '}
-  {t(
-    'owner.services',
-    '{t('owner.services')}'
-  )}
+  {t('owner.services')}
 </span>
-                              <strong>{option.price}</strong>
+                              <strong>
+  {option.price} {t('owner.perMonth')}
+</strong>
                             </>
                           )}
                         </button>
