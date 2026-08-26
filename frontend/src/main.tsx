@@ -6155,7 +6155,7 @@ await refreshAfterChange({
                     {changingServiceLimit ? (
                       <>
                         <span className="btn-spinner" />
-                        Возобновляем…
+                        {t('owner.resuming', 'Возобновляем…')}
                       </>
                     ) : (
                       t('owner.resumePackage', 'Возобновить пакет')
@@ -6172,7 +6172,7 @@ await refreshAfterChange({
                     {changingServiceLimit ? (
                       <>
                         <span className="btn-spinner" />
-                        Отменяем…
+                        {t('owner.cancellingAction', 'Отменяем…')}
                       </>
                     ) : (
                       t('owner.cancelPackage', 'Отменить пакет')
@@ -6191,7 +6191,7 @@ await refreshAfterChange({
                   {subscriptionActionLoading ? (
                     <>
                       <span className="btn-spinner" />
-                      Возобновляем…
+                      {t('owner.resuming', 'Возобновляем…')}
                     </>
                   ) : (
                     t(
@@ -6210,7 +6210,7 @@ await refreshAfterChange({
                   {subscriptionActionLoading ? (
                     <>
                       <span className="btn-spinner" />
-                      Отменяем…
+                      {t('owner.cancellingAction', 'Отменяем…')}
                     </>
                   ) : (
                     t(

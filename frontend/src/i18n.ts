@@ -69,6 +69,8 @@ const ru: TranslationMap = {
   'days.friFull': 'Пятница',
   'days.satFull': 'Суббота',
   'days.sunFull': 'Воскресенье',
+  'owner.resuming': 'Возобновляем…',
+  'owner.cancellingAction': 'Отменяем…',
 };
 
 const en: TranslationMap = {
@@ -122,6 +124,8 @@ const en: TranslationMap = {
   'days.friFull': 'Friday',
   'days.satFull': 'Saturday',
   'days.sunFull': 'Sunday',
+  'owner.resuming': 'Resuming…',
+  'owner.cancellingAction': 'Cancelling…',
 };
 
 const uz: TranslationMap = {
@@ -168,6 +172,8 @@ const uz: TranslationMap = {
   'days.friFull': 'Juma',
   'days.satFull': 'Shanba',
   'days.sunFull': 'Yakshanba',
+  'owner.resuming': 'Davom ettirilmoqda…',
+  'owner.cancellingAction': 'Bekor qilinmoqda…',
 };
 const tr: TranslationMap = {
   ...en,
@@ -212,6 +218,8 @@ const tr: TranslationMap = {
   'days.friFull': 'Cuma',
   'days.satFull': 'Cumartesi',
   'days.sunFull': 'Pazar',
+  'owner.resuming': 'Devam ettiriliyor…',
+  'owner.cancellingAction': 'İptal ediliyor…',
 };
 const ar: TranslationMap = {
   ...en,
@@ -255,6 +263,8 @@ const ar: TranslationMap = {
   'days.friFull': 'الجمعة',
   'days.satFull': 'السبت',
   'days.sunFull': 'الأحد',
+  'owner.resuming': 'جارٍ الاستئناف…',
+  'owner.cancellingAction': 'جارٍ الإلغاء…',
 };
 
 export const translations: Record<Language, TranslationMap> = {ru,en,uz,tr,ar};
