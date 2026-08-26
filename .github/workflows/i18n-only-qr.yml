@@ -1,0 +1,105 @@
+name: i18n only qr
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.event.head_commit.message == 'Trigger i18n QR cleanup'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Translate QR text only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          main = Path('frontend/src/main.tsx')
+          s = main.read_text(encoding='utf-8')
+
+          replacements = {
+              "'Bookly — QR для печати'": "t('owner.qrPrintTitle', 'Bookly — QR для печати')",
+              "'Онлайн-запись'": "t('owner.qrOnlineBooking', 'Онлайн-запись')",
+              "'Запишитесь онлайн'": "t('owner.qrBookOnline', 'Запишитесь онлайн')",
+              "'Отсканируйте QR-код'": "t('owner.qrScanCode', 'Отсканируйте QR-код')",
+              "'камерой телефона'": "t('owner.qrPhoneCamera', 'камерой телефона')",
+          }
+
+          for old, new in replacements.items():
+              count = s.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one QR text {old}, found {count}')
+              s = s.replace(old, new, 1)
+
+          main.write_text(s, encoding='utf-8')
+
+          i18n = Path('frontend/src/i18n.ts')
+          src = i18n.read_text(encoding='utf-8')
+          additions = {
+              'ru': {
+                  'owner.qrPrintTitle': 'Bookly — QR для печати',
+                  'owner.qrOnlineBooking': 'Онлайн-запись',
+                  'owner.qrBookOnline': 'Запишитесь онлайн',
+                  'owner.qrScanCode': 'Отсканируйте QR-код',
+                  'owner.qrPhoneCamera': 'камерой телефона',
+              },
+              'en': {
+                  'owner.qrPrintTitle': 'Bookly — QR for printing',
+                  'owner.qrOnlineBooking': 'Online booking',
+                  'owner.qrBookOnline': 'Book online',
+                  'owner.qrScanCode': 'Scan the QR code',
+                  'owner.qrPhoneCamera': 'with your phone camera',
+              },
+              'uz': {
+                  'owner.qrPrintTitle': 'Bookly — chop etish uchun QR',
+                  'owner.qrOnlineBooking': 'Onlayn bron qilish',
+                  'owner.qrBookOnline': 'Onlayn bron qiling',
+                  'owner.qrScanCode': 'QR-kodni skanerlang',
+                  'owner.qrPhoneCamera': 'telefon kamerasi bilan',
+              },
+              'tr': {
+                  'owner.qrPrintTitle': 'Bookly — Yazdırma için QR',
+                  'owner.qrOnlineBooking': 'Online rezervasyon',
+                  'owner.qrBookOnline': 'Online rezervasyon yapın',
+                  'owner.qrScanCode': 'QR kodunu tarayın',
+                  'owner.qrPhoneCamera': 'telefon kameranızla',
+              },
+              'ar': {
+                  'owner.qrPrintTitle': 'Bookly — رمز QR للطباعة',
+                  'owner.qrOnlineBooking': 'الحجز عبر الإنترنت',
+                  'owner.qrBookOnline': 'احجز عبر الإنترنت',
+                  'owner.qrScanCode': 'امسح رمز QR',
+                  'owner.qrPhoneCamera': 'بكاميرا هاتفك',
+              },
+          }
+
+          for locale, values in additions.items():
+              match = re.search(rf"const {locale}: TranslationMap = \{{(?P<body>.*?)\n\}};", src, re.S)
+              if not match:
+                  raise SystemExit(f'locale block not found: {locale}')
+              body = match.group('body')
+              inserts = []
+              for key, value in values.items():
+                  if re.search(rf"['\"]{re.escape(key)}['\"]\s*:", body) is None:
+                      inserts.append(f"  '{key}': {value!r},")
+              if inserts:
+                  replacement = match.group(0)[:-3] + '\n' + '\n'.join(inserts) + '\n};'
+                  src = src[:match.start()] + replacement + src[match.end():]
+
+          i18n.write_text(src, encoding='utf-8')
+          PY
+      - name: Build frontend
+        run: |
+          npm install --prefix frontend --no-audit --no-fund
+          npm run build --prefix frontend
+      - name: Commit and remove workflow
+        run: |
+          git config user.name 'bookly-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add frontend/src/main.tsx frontend/src/i18n.ts
+          git commit -m 'fix: translate QR print text'
+          git rm .github/workflows/i18n-only-qr.yml
+          git commit -m 'chore: remove temporary i18n workflow'
+          git push
