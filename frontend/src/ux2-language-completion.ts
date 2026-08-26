@@ -28,7 +28,6 @@ const EXTRA: Record<string,Row> = {
   'Удалить': {ru:'Удалить',en:'Delete',uz:'O‘chirish',tr:'Sil',ar:'حذف'},
   'Изменить': {ru:'Изменить',en:'Edit',uz:'Tahrirlash',tr:'Düzenle',ar:'تعديل'},
   'Закрыть': {ru:'Закрыть',en:'Close',uz:'Yopish',tr:'Kapat',ar:'إغلاق'},
-
   'Настройка бизнеса': {ru:'Настройка бизнеса',en:'Business setup',uz:'Biznesni sozlash',tr:'İşletme kurulumu',ar:'إعداد النشاط'},
   'Выполните основные шаги настройки.': {ru:'Выполните основные шаги настройки.',en:'Complete the main setup steps.',uz:'Asosiy sozlash bosqichlarini bajaring.',tr:'Ana kurulum adımlarını tamamlayın.',ar:'أكمل خطوات الإعداد الأساسية.'},
   'Эта инструкция доступна на всех вкладках.': {ru:'Эта инструкция доступна на всех вкладках.',en:'This guide is available on all tabs.',uz:'Bu yo‘riqnoma barcha bo‘limlarda mavjud.',tr:'Bu rehber tüm sekmelerde kullanılabilir.',ar:'هذا الدليل متاح في جميع علامات التبويب.'},
@@ -95,7 +94,7 @@ const EXTRA: Record<string,Row> = {
   'Онлайн-запись': {ru:'Онлайн-запись',en:'Online booking',uz:'Onlayn bron',tr:'Online rezervasyon',ar:'حجز عبر الإنترنت'},
   'Запишитесь онлайн': {ru:'Запишитесь онлайн',en:'Book online',uz:'Onlayn bron qiling',tr:'Online rezervasyon yapın',ar:'احجز عبر الإنترنت'},
   'Отсканируйте QR-код': {ru:'Отсканируйте QR-код',en:'Scan the QR code',uz:'QR-kodni skanerlang',tr:'QR kodunu tarayın',ar:'امسح رمز QR'},
-  'камерой телефона': {ru:'камерой телефона',en:'with your phone camera',uz:'telefon kamerasi bilan',tr:'telefon kameranızla',ar:'بكاميرا الهاتف'},
+  'камерой телефона': {ru:'камерой телефона',en:'with your phone camera',uz:'telefon kamerasi bilan',tr:'telefon kameranızla',ar:'بكامера الهاتف'},
   'Клиенты могут сканировать и сразу перейти к записи': {ru:'Клиенты могут сканировать и сразу перейти к записи',en:'Clients can scan and go straight to booking',uz:'Mijozlar skanerlab darhol bron qilishga o‘tishlari mumkin',tr:'Müşteriler tarayıp doğrudan rezervasyona geçebilir',ar:'يمكن للعملاء المسح والانتقال مباشرةً للحجز'},
   'QR-код для записи': {ru:'QR-код для записи',en:'QR code for booking',uz:'Bron uchun QR-kod',tr:'Rezervasyon için QR kodu',ar:'رمز QR للحجز'},
   'Bookly QR-код': {ru:'Bookly QR-код',en:'Bookly QR code',uz:'Bookly QR-kodi',tr:'Bookly QR kodu',ar:'رمز QR لـ Bookly'},
@@ -109,7 +108,6 @@ const EXTRA: Record<string,Row> = {
   'Доступ до:': {ru:'Доступ до:',en:'Access until:',uz:'Kirish muddati:',tr:'Erişim tarihi:',ar:'الوصول حتى:'},
   'Возобновляем…': {ru:'Возобновляем…',en:'Resuming…',uz:'Davom ettirilmoqda…',tr:'Sürdürülüyor…',ar:'جارٍ الاستئناف…'},
   'Отменяем…': {ru:'Отменяем…',en:'Cancelling…',uz:'Bekor qilinmoqda…',tr:'İptal ediliyor…',ar:'جارٍ الإلغاء…'},
-
   'Ташкент': {ru:'Ташкент',en:'Tashkent',uz:'Toshkent',tr:'Taşkent',ar:'طشقند'},
   'Алматы': {ru:'Алматы',en:'Almaty',uz:'Olmaota',tr:'Almatı',ar:'ألماتي'},
   'Бишкек': {ru:'Бишкек',en:'Bishkek',uz:'Bishkek',tr:'Bişkek',ar:'بишкك'},
@@ -188,8 +186,40 @@ const run=()=>{
   });
 };
 
+const scrollToClientDatePicker=()=>{
+  let attempts=0;
+  const findAndScroll=()=>{
+    attempts+=1;
+    const dateInput=Array.from(document.querySelectorAll('input[type="date"]')).find((element)=>{
+      const html=element as HTMLElement;
+      return html.offsetParent !== null;
+    }) as HTMLElement | undefined;
+
+    if(dateInput){
+      const target=dateInput.closest('.card') as HTMLElement | null;
+      (target || dateInput).scrollIntoView({behavior:'smooth',block:'start'});
+      return;
+    }
+
+    if(attempts<30){
+      window.setTimeout(findAndScroll,100);
+    }
+  };
+
+  window.setTimeout(findAndScroll,50);
+};
+
 let queued=false;
 const schedule=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;run();});};
+
+document.addEventListener('click',(event)=>{
+  const target=event.target as HTMLElement | null;
+  const serviceButton=target?.closest('.client-service-button');
+  if(serviceButton){
+    scrollToClientDatePicker();
+  }
+},true);
+
 new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});
 run();
 setInterval(run,1000);
