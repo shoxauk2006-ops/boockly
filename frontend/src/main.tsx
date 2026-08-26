@@ -1803,49 +1803,49 @@ const [newBusinessHours, setNewBusinessHours] =
   useState([
     {
       weekday: 0,
-      name: 'Понедельник',
+      name: t('days.monFull', 'Понедельник'),
       enabled: true,
       start: '09:00',
       end: '18:00'
     },
     {
       weekday: 1,
-      name: 'Вторник',
+      name: t('days.tueFull', 'Вторник'),
       enabled: true,
       start: '09:00',
       end: '18:00'
     },
     {
       weekday: 2,
-      name: 'Среда',
+      name: t('days.wedFull', 'Среда'),
       enabled: true,
       start: '09:00',
       end: '18:00'
     },
     {
       weekday: 3,
-      name: 'Четверг',
+      name: t('days.thuFull', 'Четверг'),
       enabled: true,
       start: '09:00',
       end: '18:00'
     },
     {
       weekday: 4,
-      name: 'Пятница',
+      name: t('days.friFull', 'Пятница'),
       enabled: true,
       start: '09:00',
       end: '18:00'
     },
     {
       weekday: 5,
-      name: 'Суббота',
+      name: t('days.satFull', 'Суббота'),
       enabled: false,
       start: '09:00',
       end: '18:00'
     },
     {
       weekday: 6,
-      name: 'Воскресенье',
+      name: t('days.sunFull', 'Воскресенье'),
       enabled: false,
       start: '09:00',
       end: '18:00'
@@ -3006,7 +3006,7 @@ alert(paymentMessage);
       }}
     >
       <strong>
-        Выберите часовой пояс
+        {t('owner.chooseTimezone', 'Выберите часовой пояс')}
       </strong>
 
       <button
@@ -5913,7 +5913,7 @@ await refreshAfterChange({
         <ul>
           <li>{t('owner.clientLink', 'Клиентская страница и ссылка')}</li>
           <li>{t('owner.qrCode', 'QR-код бизнеса')}</li>
-          <li>До {currentServicesLimit} услуг</li>
+          <li>{t('owner.upToServices', 'До')} {currentServicesLimit} {t('owner.services', 'услуг')}</li>
           <li>{t('owner.telegramNotifications', 'Уведомления в Telegram')}</li>
         </ul>
 
@@ -7125,10 +7125,10 @@ alert(
       >
         {hour}{' '}
         {hour === 1
-          ? 'час'
+          ? t('owner.hourOne', 'час')
           : hour < 5
-            ? 'часа'
-            : 'часов'}
+            ? t('owner.hourFew', 'часа')
+            : t('owner.hours', 'часов')}
       </option>
     ))}
   </select>

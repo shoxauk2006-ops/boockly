@@ -62,6 +62,13 @@ const ru: TranslationMap = {
   'owner.cancelPackageScheduleError': 'Не удалось запланировать отмену пакета',
   'owner.cancelPackageError': 'Не удалось отменить пакет',
   'owner.resumePackageError': 'Не удалось возобновить пакет',
+  'days.monFull': 'Понедельник',
+  'days.tueFull': 'Вторник',
+  'days.wedFull': 'Среда',
+  'days.thuFull': 'Четверг',
+  'days.friFull': 'Пятница',
+  'days.satFull': 'Суббота',
+  'days.sunFull': 'Воскресенье',
 };
 
 const en: TranslationMap = {
@@ -108,6 +115,13 @@ const en: TranslationMap = {
   'owner.cancelPackageScheduleError': 'Failed to schedule package cancellation',
   'owner.cancelPackageError': 'Failed to cancel package',
   'owner.resumePackageError': 'Failed to resume package',
+  'days.monFull': 'Monday',
+  'days.tueFull': 'Tuesday',
+  'days.wedFull': 'Wednesday',
+  'days.thuFull': 'Thursday',
+  'days.friFull': 'Friday',
+  'days.satFull': 'Saturday',
+  'days.sunFull': 'Sunday',
 };
 
 const uz: TranslationMap = {
@@ -147,6 +161,13 @@ const uz: TranslationMap = {
   'owner.cancelPackageScheduleError': 'Paket bekor qilinishini rejalashtirib bo‘lmadi',
   'owner.cancelPackageError': 'Paketni bekor qilib bo‘lmadi',
   'owner.resumePackageError': 'Paketni davom ettirib bo‘lmadi',
+  'days.monFull': 'Dushanba',
+  'days.tueFull': 'Seshanba',
+  'days.wedFull': 'Chorshanba',
+  'days.thuFull': 'Payshanba',
+  'days.friFull': 'Juma',
+  'days.satFull': 'Shanba',
+  'days.sunFull': 'Yakshanba',
 };
 const tr: TranslationMap = {
   ...en,
@@ -184,6 +205,13 @@ const tr: TranslationMap = {
   'owner.cancelPackageScheduleError': 'Paket iptali planlanamadı',
   'owner.cancelPackageError': 'Paket iptal edilemedi',
   'owner.resumePackageError': 'Paket sürdürülemedi',
+  'days.monFull': 'Pazartesi',
+  'days.tueFull': 'Salı',
+  'days.wedFull': 'Çarşamba',
+  'days.thuFull': 'Perşembe',
+  'days.friFull': 'Cuma',
+  'days.satFull': 'Cumartesi',
+  'days.sunFull': 'Pazar',
 };
 const ar: TranslationMap = {
   ...en,
@@ -220,6 +248,13 @@ const ar: TranslationMap = {
   'owner.cancelPackageScheduleError': 'تعذر جدولة إلغاء الباقة',
   'owner.cancelPackageError': 'تعذر إلغاء الباقة',
   'owner.resumePackageError': 'تعذر استئناف الباقة',
+  'days.monFull': 'الاثنين',
+  'days.tueFull': 'الثلاثاء',
+  'days.wedFull': 'الأربعاء',
+  'days.thuFull': 'الخميس',
+  'days.friFull': 'الجمعة',
+  'days.satFull': 'السبت',
+  'days.sunFull': 'الأحد',
 };
 
 export const translations: Record<Language, TranslationMap> = {ru,en,uz,tr,ar};
