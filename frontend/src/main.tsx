@@ -2791,8 +2791,8 @@ alert(paymentMessage);
                       }}
                     >
                       <strong>
-                        {day.name}
-                      </strong>
+  {localizedDays(t)[day.weekday]}
+</strong>
 
                       <label
   style={{
@@ -3858,8 +3858,8 @@ borderTopColor: '#d32f2f',
             }}
           >
             <strong>
-              {day.name}
-            </strong>
+  {localizedDays(t)[day.weekday]}
+</strong>
 
             <label
   style={{
