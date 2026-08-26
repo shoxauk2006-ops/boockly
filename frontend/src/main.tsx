@@ -2217,17 +2217,19 @@ setSavingServiceLimit(true);
       }
     );
 
-    const data = await response.json().catch(() => null);
+    const data = await response
+  .json()
+  .catch(() => null);
 
-    if (!response.ok) {
-      throw new Error(
-  data?.detail ||
-  t(
-    'owner.changeServiceLimitError',
-    'Не удалось изменить лимит услуг'
-  )
-);
-    }
+if (!response.ok) {
+  throw new Error(
+    data?.detail ||
+    t(
+      'owner.changeServiceLimitError',
+      'Не удалось изменить лимит услуг'
+    )
+  );
+}
 
     setServiceLimit(limit);
     setNewServiceLimit(limit);
