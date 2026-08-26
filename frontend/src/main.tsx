@@ -6047,20 +6047,13 @@ await refreshAfterChange({
 </div>
 
 <div>
-  {t(
-    'owner.packageUpToServices',
-    'Пакет до'
-  )}{' '}
+  {t('owner.packageUpToServices')}
+  }{' '}
   {currentServicesLimit}{' '}
-  {t(
-    'owner.services',
-    'услуг'
-  )}{' '}
+  {t('owner.services')}
+  {' '}
   — ${currentAddonPrice.toFixed(2)}{' '}
-  {t(
-    'owner.perMonth',
-    '/ месяц'
-  )}
+  {t('owner.perMonth')}
 </div>
                 </div>
               )}
@@ -6074,16 +6067,10 @@ await refreshAfterChange({
                   }}
                 >
                   <strong>
-  {t(
-    'owner.increaseServiceLimit',
-    'Увеличить лимит услуг'
-  )}
+  'owner.increaseServiceLimit',
 </strong>
                   <p className="muted" style={{ marginTop: 6 }}>
-  {t(
-    'owner.chooseNewServiceLimit',
-    'Выберите новый лимит услуг.'
-  )}
+  {t('owner.chooseNewServiceLimit')}
 </p>
 
                   <div
@@ -6119,10 +6106,8 @@ await refreshAfterChange({
                           ) : (
                             <>
                               <span>
-  {t(
-    'owner.upToServices',
-    'До'
-  )}{' '}
+  {t('owner.upToServices')}
+                                {' '}
   {option.limit}{' '}
   {t('owner.services')}
 </span>
