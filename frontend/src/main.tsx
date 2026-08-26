@@ -2226,7 +2226,7 @@ if (!response.ok) {
     data?.detail ||
     t(
       'owner.changeServiceLimitError',
-      'Не удалось изменить лимит услуг'
+      t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
     )
   );
 }
@@ -2250,7 +2250,7 @@ if (!response.ok) {
   error?.message ||
   t(
     'owner.changeServiceLimitError',
-    'Не удалось изменить лимит услуг'
+    t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
   )
 );
   } finally {
@@ -2287,7 +2287,7 @@ if (!response.ok) {
     data?.detail ||
     t(
       'owner.changeServiceLimitError',
-      'Не удалось изменить лимит услуг'
+      t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
     )
   );
 }
@@ -2979,8 +2979,8 @@ alert(paymentMessage);
       }}
     >
       {timezonePickerOpen
-        ? 'Скрыть'
-        : 'Изменить'}
+        ? t('owner.hide', 'Скрыть')
+        : t('owner.change', 'Изменить')}
     </button>
   </div>
 
@@ -3026,7 +3026,7 @@ alert(paymentMessage);
 
     <input
       type="text"
-      placeholder="Найти город или часовой пояс..."
+      placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
       value={timezoneSearch}
       onChange={e =>
         setTimezoneSearch(
@@ -3187,8 +3187,8 @@ alert(paymentMessage);
       }}
     >
       {timezonePickerOpen
-        ? 'Скрыть'
-        : 'Изменить'}
+        ? t('owner.hide', 'Скрыть')
+        : t('owner.change', 'Изменить')}
     </button>
   </div>
 
@@ -3204,7 +3204,7 @@ alert(paymentMessage);
     >
       <input
         type="text"
-        placeholder="Найти город или часовой пояс..."
+        placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
         value={timezoneSearch}
         onChange={e =>
           setTimezoneSearch(
@@ -3329,8 +3329,8 @@ alert(paymentMessage);
       }}
     >
       {timezonePickerOpen
-        ? 'Скрыть'
-        : 'Изменить'}
+        ? t('owner.hide', 'Скрыть')
+        : t('owner.change', 'Изменить')}
     </button>
   </div>
 
@@ -3355,7 +3355,7 @@ alert(paymentMessage);
 
       <input
         type="text"
-        placeholder="Найти город или часовой пояс..."
+        placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
         value={timezoneSearch}
         onChange={e =>
           setTimezoneSearch(
@@ -3484,7 +3484,7 @@ alert(paymentMessage);
           {newBusinessImage && (
             <img
               src={newBusinessImage}
-              alt="Фото бизнеса"
+              alt={t('owner.businessPhotoAlt', 'Фото бизнеса')}
               style={{
                 width: '100%',
                 maxHeight: 220,
@@ -4053,8 +4053,8 @@ borderTopColor: '#d32f2f',
       }}
     >
       {timezonePickerOpen
-        ? 'Скрыть'
-        : 'Изменить'}
+        ? t('owner.hide', 'Скрыть')
+        : t('owner.change', 'Изменить')}
     </button>
   </div>
 
@@ -4079,7 +4079,7 @@ borderTopColor: '#d32f2f',
 
       <input
         type="text"
-        placeholder="Найти город или часовой пояс..."
+        placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
         value={timezoneSearch}
         onChange={e =>
           setTimezoneSearch(
@@ -4282,7 +4282,7 @@ borderTopColor: '#d32f2f',
     <button
       type="button"
       onClick={() => setBusinessCreatedNotice(false)}
-      aria-label="Закрыть инструкцию"
+      aria-label={t('owner.closeInstruction', 'Закрыть инструкцию')}
       style={{
         position: 'absolute',
         top: 12,
@@ -4970,7 +4970,7 @@ function QrPrintCard({
         await navigator.share({
           files: [file],
           title:
-            'Bookly — QR для печати'
+            t('owner.printQrTitle', 'Bookly — QR для печати')
         });
 
         return;
@@ -5033,7 +5033,7 @@ function QrPrintCard({
           </div>
 
           <h2>
-            {business?.name || 'Ваш бизнес'}
+            {business?.name || t('owner.businessNameFallback', 'Ваш бизнес')}
           </h2>
 
           <p>
@@ -5043,7 +5043,7 @@ function QrPrintCard({
           <div className="qr-print-code">
             <img
               src={qrDataUrl}
-              alt="QR-код для записи"
+              alt={t('owner.qrBookingAlt', 'QR-код для записи')}
             />
           </div>
 
@@ -5166,7 +5166,7 @@ function Dashboard({
       ) {
         await navigator.share({
           files: [file],
-          title: 'Bookly QR-код'
+          title: t('owner.qrTitle', 'Bookly QR-код')
         });
 
         return;
@@ -5234,7 +5234,7 @@ function Dashboard({
       alert(
         t(
           'settings.copyLink',
-          'Ссылка скопирована'
+          t('settings.linkCopied', 'Ссылка скопирована')
         )
       );
     } catch {
@@ -5413,7 +5413,7 @@ function Dashboard({
           'owner.activateForQR',
           'Активируйте подписку, чтобы получить QR-код'
         )
-      : 'Клиенты могут сканировать и сразу перейти к записи'}
+      : t('owner.clientQrHint', 'Клиенты могут сканировать и сразу перейти к записи')}
   </small>
 
   {subscriptionLocked ? (
@@ -5425,7 +5425,7 @@ function Dashboard({
       <>
         <img
           src={qrDataUrl}
-          alt="QR-код"
+          alt={t('owner.qrAlt', 'QR-код')}
           className="admin-home-qr"
         />
 
@@ -5609,7 +5609,7 @@ function Subscription({
       if (!previewResponse.ok) {
         throw new Error(
           preview?.detail ||
-          'Не удалось рассчитать стоимость изменения лимита'
+          t('owner.limitChangePriceError', 'Не удалось рассчитать стоимость изменения лимита')
         );
       }
 
@@ -5631,15 +5631,10 @@ function Subscription({
         27.98;
 
       const confirmed = await confirmAsync(
-        `Увеличить лимит до ${newLimit} услуг?\n\n` +
-        `Сейчас к оплате: $${
-          (Number(immediateAmount) / 100).toFixed(2)
-        }\n` +
-        `Со следующего продления: $${
-          recurringTotal !== null
-            ? (Number(recurringTotal) / 100).toFixed(2)
-            : nextPrice.toFixed(2)
-        }/мес.`
+        t('owner.increaseServiceLimitConfirm', 'Увеличить лимит до {limit} услуг?\n\nСейчас к оплате: ${now}\nСо следующего продления: ${next}/мес.')
+        .replace('{limit}', String(newLimit))
+        .replace('{now}', `$${(Number(immediateAmount) / 100).toFixed(2)}`)
+        .replace('{next}', `$${recurringTotal !== null ? (Number(recurringTotal) / 100).toFixed(2) : nextPrice.toFixed(2)}`)
       );
 
       if (!confirmed) return;
@@ -5660,7 +5655,7 @@ function Subscription({
       if (!response.ok) {
         throw new Error(
           data?.detail ||
-          'Не удалось изменить лимит услуг'
+          t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
         );
       }
 
@@ -5677,7 +5672,7 @@ function Subscription({
     } catch (e: any) {
       alert(
         e?.message ||
-        'Не удалось изменить лимит услуг'
+        t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
       );
     } finally {
       setChangingServiceLimit(false);
@@ -5688,9 +5683,7 @@ function Subscription({
     if (changingServiceLimit) return;
 
     const confirmed = await confirmAsync(
-      'Отменить дополнительный пакет?\n\n' +
-      'Пакет останется доступен до конца оплаченного периода.\n' +
-      'Со следующего продления останется базовый лимит 10 услуг.'
+      t('owner.cancelPackageConfirm', 'Отменить дополнительный пакет?\n\nПакет останется доступен до конца оплаченного периода.\nСо следующего продления останется базовый лимит 10 услуг.')
     );
 
     if (!confirmed) return;
@@ -5714,7 +5707,7 @@ function Subscription({
       if (!response.ok) {
         throw new Error(
           data?.detail ||
-          'Не удалось запланировать отмену пакета'
+          t('owner.cancelPackageScheduleError', 'Не удалось запланировать отмену пакета')
         );
       }
 
@@ -5733,7 +5726,7 @@ function Subscription({
     } catch (e: any) {
       alert(
         e?.message ||
-        'Не удалось отменить пакет'
+        t('owner.cancelPackageError', 'Не удалось отменить пакет')
       );
     } finally {
       setChangingServiceLimit(false);
@@ -5744,8 +5737,7 @@ function Subscription({
     if (changingServiceLimit) return;
 
     const confirmed = await confirmAsync(
-      'Возобновить дополнительный пакет?\n\n' +
-      'Пакет продолжит действовать и останется в подписке со следующего продления.'
+      t('owner.resumePackageConfirm', 'Возобновить дополнительный пакет?\n\nПакет продолжит действовать и останется в подписке со следующего продления.')
     );
 
     if (!confirmed) return;
@@ -5766,7 +5758,7 @@ function Subscription({
       if (!response.ok) {
         throw new Error(
           data?.detail ||
-          'Не удалось возобновить пакет'
+          t('owner.resumePackageError', 'Не удалось возобновить пакет')
         );
       }
 
@@ -5777,7 +5769,7 @@ await refreshAfterChange({
     } catch (e: any) {
       alert(
         e?.message ||
-        'Не удалось возобновить пакет'
+        t('owner.resumePackageError', 'Не удалось возобновить пакет')
       );
     } finally {
       setChangingServiceLimit(false);
@@ -5911,7 +5903,7 @@ await refreshAfterChange({
 
         <p>
           {cancelledButActive
-            ? 'Автопродление отменено. Доступ сохраняется до конца оплаченного периода.'
+            ? t('owner.autoRenewalCancelledDescription', 'Автопродление отменено. Доступ сохраняется до конца оплаченного периода.')
             : t(
                 'owner.subscribeAccessText',
                 'Полный доступ к возможностям Bookly Pro'
@@ -5941,7 +5933,7 @@ await refreshAfterChange({
           {expiresAt && (
             <p className="muted">
               {cancelledButActive
-                ? 'Доступ до:'
+                ? t('owner.accessUntilColon', 'Доступ до:')
                 : t('owner.nextPayment', 'Следующее списание')}
               {' '}
               {expiresAt.toLocaleDateString(getLocale())}
@@ -6166,7 +6158,7 @@ await refreshAfterChange({
                         Возобновляем…
                       </>
                     ) : (
-                      'Возобновить пакет'
+                      t('owner.resumePackage', 'Возобновить пакет')
                     )}
                   </button>
                 ) : (
@@ -6183,7 +6175,7 @@ await refreshAfterChange({
                         Отменяем…
                       </>
                     ) : (
-                      'Отменить пакет'
+                      t('owner.cancelPackage', 'Отменить пакет')
                     )}
                   </button>
                 )
@@ -6970,7 +6962,7 @@ alert(
           verticalAlign: '-2px'
         }}
       />
-      Сохранение...
+      {t('owner.saving', 'Сохранение...')}
     </>
   ) : (
     t(
@@ -7120,7 +7112,7 @@ alert(
     }}
   >
     <option value="0">
-      0 часов
+      0 {t('owner.hours', 'часов')}
     </option>
 
     {Array.from(
@@ -7164,7 +7156,7 @@ alert(
         key={minute}
         value={minute}
       >
-        {minute} минут
+        {minute} {t('owner.minutesWord', 'минут')}
       </option>
     ))}
   </select>
@@ -7191,7 +7183,7 @@ alert(
           verticalAlign: '-2px'
         }}
       />
-      Сохранение...
+      {t('owner.saving', 'Сохранение...')}
     </>
   ) : (
     editingId
@@ -7302,7 +7294,7 @@ alert(
           verticalAlign: '-2px'
         }}
       />
-      Удаление...
+      {t('owner.deleting', 'Удаление...')}
     </>
   ) : (
     t(
@@ -7347,7 +7339,7 @@ function Hours({
 
   if (existingHours.length > 0) {
     const dayName =
-      days[weekday] || 'Этот день';
+      days[weekday] || t('owner.thisDay', 'Этот день');
 
     const currentSchedule =
       existingHours
@@ -7358,11 +7350,9 @@ function Hours({
         .join(', ');
 
     alert(
-      `График уже добавлен\n\n` +
+      t('owner.scheduleAlreadyAddedTitle', 'График уже добавлен') + '\n\n' +
       `${dayName}: ${currentSchedule}\n\n` +
-      `Чтобы изменить график этого дня, ` +
-      `сначала удалите существующий интервал ` +
-      `кнопкой ×.`
+      t('owner.scheduleAlreadyAddedHint', 'Чтобы изменить график этого дня, сначала удалите существующий интервал кнопкой ×.')
     );
 
     return;
@@ -7385,20 +7375,20 @@ function Hours({
 
     if (!response.ok) {
       throw new Error(
-        'Не удалось добавить график'
+        t('owner.addScheduleError', 'Не удалось добавить график')
       );
     }
 
     await reload();
 
     alert(
-      `График добавлен\n\n` +
+      t('owner.scheduleAdded', 'График добавлен') + '\n\n' +
       `${days[weekday]}: ${f.start}–${f.end}`
     );
   } catch (e: any) {
     alert(
       e?.message ||
-        'Не удалось добавить график'
+        t('owner.addScheduleError', 'Не удалось добавить график')
     );
   } finally {
     setSavingHours(false);
@@ -7483,7 +7473,7 @@ function Hours({
           verticalAlign: '-2px'
         }}
       />
-      Сохранение...
+      {t('owner.saving', 'Сохранение...')}
     </>
   ) : (
     t('owner.addInterval')
@@ -7617,7 +7607,7 @@ useEffect(() => {
 
     await reload();
     
-    alert('Блокировка добавлена');
+    alert(t('owner.blockAdded', 'Блокировка добавлена'));
   } finally {
     setSavingBlock(false);
   }
@@ -7699,7 +7689,7 @@ useEffect(() => {
           verticalAlign: '-2px'
         }}
       />
-      Сохранение...
+      {t('owner.saving', 'Сохранение...')}
     </>
   ) : (
     t('owner.blockTime')
@@ -9634,7 +9624,7 @@ t(
     >
       <input
         type="text"
-        placeholder="Найти город или часовой пояс..."
+        placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
         value={settingsTimezoneSearch}
         onChange={e =>
           setSettingsTimezoneSearch(
@@ -9752,7 +9742,7 @@ t(
       />
       {t(
   'owner.deleting',
-  'Удаление...'
+  '{t('owner.deleting', 'Удаление...')}'
 )}
     </>
   ) : (
