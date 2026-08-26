@@ -1,0 +1,68 @@
+name: One-time i18n audit
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    if: github.event.head_commit.message != 'Store i18n audit report'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build audit report
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+          main = Path('frontend/src/main.tsx').read_text(encoding='utf-8')
+          i18n = Path('frontend/src/i18n.ts').read_text(encoding='utf-8')
+
+          def block(locale, next_locale=None):
+              start = i18n.find(f'const {locale}: TranslationMap = {{')
+              if start < 0: return ''
+              if next_locale:
+                  end = i18n.find(f'\n}};\nconst {next_locale}:', start)
+              else:
+                  end = i18n.find('\n};\n\nexport const translations:', start)
+              return i18n[start:end if end >= 0 else len(i18n)]
+
+          en = block('en','uz')
+          uz = block('uz','tr')
+          tr = block('tr','ar')
+          ar = block('ar')
+
+          key_re = re.compile(r"['\"]([A-Za-z0-9_.-]+)['\"]\s*:")
+          en_keys = set(key_re.findall(en))
+          locales = {'uz':uz,'tr':tr,'ar':ar}
+
+          used = set(re.findall(r"\bt\(\s*['\"]([^'\"]+)['\"]", main))
+          missing = {}
+          for loc,b in locales.items():
+              keys = set(key_re.findall(b))
+              missing[loc] = sorted(k for k in used if k not in keys)
+
+          # Direct user-facing Cyrillic literals not obviously used as translation fallbacks.
+          direct=[]
+          for i,line in enumerate(main.splitlines(),1):
+              if re.search(r'[А-Яа-яЁё]', line) and ' t(' not in line and '//' not in line.strip():
+                  if re.search(r'(^|[=>(:?,])\s*[\'\"`][^\'\"`]*[А-Яа-яЁё]', line) or re.search(r'>\s*[А-Яа-яЁё]', line):
+                      direct.append(f'{i}: {line.strip()}')
+
+          report=['# Bookly i18n audit','# This is a generated audit; no application code is changed by this report.','',f'Used translation keys in main.tsx: {len(used)}','']
+          for loc,items in missing.items():
+              report.append(f'## Keys used in main.tsx but not explicitly overridden in {loc}: {len(items)}')
+              report.extend(f'- {x}' for x in items)
+              report.append('')
+          report.append('## Potential direct Cyrillic UI literals')
+          report.extend(f'- {x}' for x in direct[:300])
+          Path('i18n-audit.txt').write_text('\n'.join(report)+'\n',encoding='utf-8')
+          PY
+      - name: Commit report and remove workflow
+        run: |
+          git config user.name "bookly-bot"
+          git config user.email "actions@users.noreply.github.com"
+          rm -f .github/workflows/one-time-i18n-audit.yml
+          git add i18n-audit.txt .github/workflows/one-time-i18n-audit.yml
+          git commit -m "Store i18n audit report"
+          git push
