@@ -10313,15 +10313,12 @@ function Client({
       setSelectedTime('');
 
       setTimeout(() => {
-        window.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'smooth'
-        });
-
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      }, 100);
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'smooth'
+  });
+}, 100);
 
       await loadSlots(
         selected,
