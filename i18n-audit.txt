@@ -1,0 +1,854 @@
+# Bookly i18n audit
+# This is a generated audit; no application code is changed by this report.
+
+Used translation keys in main.tsx: 317
+
+## Keys used in main.tsx but not explicitly overridden in uz: 186
+- app.name
+- client.availabilityError
+- client.bookingCancelled
+- client.bookingError
+- client.bookingLoading
+- client.bookingRetry
+- client.bookingSuccess
+- client.businessDataError
+- client.businessInactive
+- client.businessNotFound
+- client.enterName
+- client.enterPhone
+- client.loadingBusiness
+- client.location
+- client.noSavedBusinesses
+- client.noSlots
+- client.openError
+- client.retry
+- client.saveBusinessError
+- client.savedBusiness
+- client.serverError
+- client.services
+- client.slugError
+- home.createBusinessHint
+- home.description
+- home.emptySaved
+- home.greeting
+- home.manage
+- home.manageBusiness
+- home.openAdmin
+- home.openBusiness
+- home.slugPlaceholder
+- home.title
+- info.activationDescription
+- info.basePlanServices
+- info.bookingNotifications
+- info.clientLink
+- info.clientPage
+- info.clientQr
+- info.contactDescription
+- info.contacts
+- info.howBooklyWorks
+- info.onlineBookings
+- info.proUnlocksClientPart
+- info.rule1
+- info.rule10
+- info.rule2
+- info.rule3
+- info.rule4
+- info.rule5
+- info.rule6
+- info.rule7
+- info.rule8
+- info.rule9
+- info.rulesAndContacts
+- info.stepAddInfo
+- info.stepAddServices
+- info.stepBookings
+- info.stepCreateBusiness
+- info.termsOfUse
+- info.withoutSubscription
+- owner.active
+- owner.addBooking
+- owner.addBusiness
+- owner.addInterval
+- owner.addService
+- owner.addServiceButton
+- owner.addressPlaceholder
+- owner.all
+- owner.availabilityError
+- owner.blockTime
+- owner.blocksDescription
+- owner.bookingAdded
+- owner.bookingCancelled
+- owner.bookingHint
+- owner.bookings
+- owner.booklyActivated
+- owner.booklyProMonthly
+- owner.businessContacts
+- owner.businessesLoadError
+- owner.cancel
+- owner.cancelBookingConfirm
+- owner.cancelBookingError
+- owner.cancelled
+- owner.cancelling
+- owner.cardBlocked
+- owner.cardExpired
+- owner.changeServiceLimitError
+- owner.chooseService
+- owner.chooseServiceError
+- owner.chooseTime
+- owner.clientData
+- owner.clientLink
+- owner.clientName
+- owner.clientPhone
+- owner.close
+- owner.completed
+- owner.confirmDeleteService
+- owner.confirmed
+- owner.contactsSaved
+- owner.createBookingError
+- owner.createBusinessError
+- owner.currentBusiness
+- owner.date
+- owner.dayOff
+- owner.decreaseLimitConfirm
+- owner.delete
+- owner.deleteBusinessConfirm
+- owner.deleteServiceError
+- owner.edit
+- owner.editService
+- owner.enterBusinessName
+- owner.enterClientName
+- owner.forBusinessOwner
+- owner.geolocationError
+- owner.geolocationUnavailable
+- owner.inactive
+- owner.increaseLimitConfirm
+- owner.insufficientFunds
+- owner.invalidDuration
+- owner.invalidPrice
+- owner.invalidServiceLimit
+- owner.invalidServiceLimitValue
+- owner.invalidServiceName
+- owner.limitPreviewError
+- owner.limitPriceCalculationError
+- owner.loadingSlots
+- owner.locationDetected
+- owner.minutes
+- owner.monthlyPrice
+- owner.newBooking
+- owner.nextPayment
+- owner.noAvailableTime
+- owner.noBookings
+- owner.noBookingsInSection
+- owner.opened
+- owner.packageUpToServices
+- owner.paddleLoading
+- owner.paymentAuthenticationFailed
+- owner.paymentDeclined
+- owner.paymentDeclinedNoRetry
+- owner.paymentFailed
+- owner.paymentFailedGeneric
+- owner.perMonth
+- owner.phoneMissing
+- owner.phonePlaceholder
+- owner.price
+- owner.reasonOptional
+- owner.saveChanges
+- owner.saveContacts
+- owner.saveContactsError
+- owner.saveServiceError
+- owner.saving
+- owner.scheduleDescription
+- owner.searchCurrency
+- owner.selectedBusinessError
+- owner.serverError
+- owner.serviceAdded
+- owner.serviceDeleted
+- owner.serviceDescription
+- owner.serviceLimitAlreadySet
+- owner.serviceLimitChanged
+- owner.serviceName
+- owner.serviceUpdated
+- owner.services
+- owner.setupBlocks
+- owner.setupWorkingHours
+- owner.subscription
+- owner.telegramInitDataMissing
+- owner.telegramNotifications
+- owner.telegramOnlyDescription
+- owner.telegramOnlyTitle
+- owner.telegramUserError
+- owner.timeBlocks
+- owner.today
+- owner.upcomingBookings
+- owner.workSchedule
+- settings.address
+- settings.businessInfo
+- settings.copyLink
+- settings.description
+- settings.downloadQr
+- settings.latitudeOptional
+- settings.longitudeOptional
+- settings.phone
+- settings.qr
+
+## Keys used in main.tsx but not explicitly overridden in tr: 186
+- app.name
+- client.availabilityError
+- client.bookingCancelled
+- client.bookingError
+- client.bookingLoading
+- client.bookingRetry
+- client.bookingSuccess
+- client.businessDataError
+- client.businessInactive
+- client.businessNotFound
+- client.enterName
+- client.enterPhone
+- client.loadingBusiness
+- client.location
+- client.noSavedBusinesses
+- client.noSlots
+- client.openError
+- client.retry
+- client.saveBusinessError
+- client.savedBusiness
+- client.serverError
+- client.services
+- client.slugError
+- home.createBusinessHint
+- home.description
+- home.emptySaved
+- home.greeting
+- home.manage
+- home.manageBusiness
+- home.openAdmin
+- home.openBusiness
+- home.slugPlaceholder
+- home.title
+- info.activationDescription
+- info.basePlanServices
+- info.bookingNotifications
+- info.clientLink
+- info.clientPage
+- info.clientQr
+- info.contactDescription
+- info.contacts
+- info.howBooklyWorks
+- info.onlineBookings
+- info.proUnlocksClientPart
+- info.rule1
+- info.rule10
+- info.rule2
+- info.rule3
+- info.rule4
+- info.rule5
+- info.rule6
+- info.rule7
+- info.rule8
+- info.rule9
+- info.rulesAndContacts
+- info.stepAddInfo
+- info.stepAddServices
+- info.stepBookings
+- info.stepCreateBusiness
+- info.termsOfUse
+- info.withoutSubscription
+- owner.active
+- owner.addBooking
+- owner.addBusiness
+- owner.addInterval
+- owner.addService
+- owner.addServiceButton
+- owner.addressPlaceholder
+- owner.all
+- owner.availabilityError
+- owner.blockTime
+- owner.blocksDescription
+- owner.bookingAdded
+- owner.bookingCancelled
+- owner.bookingHint
+- owner.bookings
+- owner.booklyActivated
+- owner.booklyProMonthly
+- owner.businessContacts
+- owner.businessesLoadError
+- owner.cancel
+- owner.cancelBookingConfirm
+- owner.cancelBookingError
+- owner.cancelled
+- owner.cancelling
+- owner.cardBlocked
+- owner.cardExpired
+- owner.changeServiceLimitError
+- owner.chooseService
+- owner.chooseServiceError
+- owner.chooseTime
+- owner.clientData
+- owner.clientLink
+- owner.clientName
+- owner.clientPhone
+- owner.close
+- owner.completed
+- owner.confirmDeleteService
+- owner.confirmed
+- owner.contactsSaved
+- owner.createBookingError
+- owner.createBusinessError
+- owner.currentBusiness
+- owner.date
+- owner.dayOff
+- owner.decreaseLimitConfirm
+- owner.delete
+- owner.deleteBusinessConfirm
+- owner.deleteServiceError
+- owner.edit
+- owner.editService
+- owner.enterBusinessName
+- owner.enterClientName
+- owner.forBusinessOwner
+- owner.geolocationError
+- owner.geolocationUnavailable
+- owner.inactive
+- owner.increaseLimitConfirm
+- owner.insufficientFunds
+- owner.invalidDuration
+- owner.invalidPrice
+- owner.invalidServiceLimit
+- owner.invalidServiceLimitValue
+- owner.invalidServiceName
+- owner.limitPreviewError
+- owner.limitPriceCalculationError
+- owner.loadingSlots
+- owner.locationDetected
+- owner.minutes
+- owner.monthlyPrice
+- owner.newBooking
+- owner.nextPayment
+- owner.noAvailableTime
+- owner.noBookings
+- owner.noBookingsInSection
+- owner.opened
+- owner.packageUpToServices
+- owner.paddleLoading
+- owner.paymentAuthenticationFailed
+- owner.paymentDeclined
+- owner.paymentDeclinedNoRetry
+- owner.paymentFailed
+- owner.paymentFailedGeneric
+- owner.perMonth
+- owner.phoneMissing
+- owner.phonePlaceholder
+- owner.price
+- owner.reasonOptional
+- owner.saveChanges
+- owner.saveContacts
+- owner.saveContactsError
+- owner.saveServiceError
+- owner.saving
+- owner.scheduleDescription
+- owner.searchCurrency
+- owner.selectedBusinessError
+- owner.serverError
+- owner.serviceAdded
+- owner.serviceDeleted
+- owner.serviceDescription
+- owner.serviceLimitAlreadySet
+- owner.serviceLimitChanged
+- owner.serviceName
+- owner.serviceUpdated
+- owner.services
+- owner.setupBlocks
+- owner.setupWorkingHours
+- owner.subscription
+- owner.telegramInitDataMissing
+- owner.telegramNotifications
+- owner.telegramOnlyDescription
+- owner.telegramOnlyTitle
+- owner.telegramUserError
+- owner.timeBlocks
+- owner.today
+- owner.upcomingBookings
+- owner.workSchedule
+- settings.address
+- settings.businessInfo
+- settings.copyLink
+- settings.description
+- settings.downloadQr
+- settings.latitudeOptional
+- settings.longitudeOptional
+- settings.phone
+- settings.qr
+
+## Keys used in main.tsx but not explicitly overridden in ar: 193
+- app.name
+- client.availabilityError
+- client.bookingCancelled
+- client.bookingError
+- client.bookingLoading
+- client.bookingRetry
+- client.bookingSuccess
+- client.businessDataError
+- client.businessInactive
+- client.businessNotFound
+- client.enterName
+- client.enterPhone
+- client.loadingBusiness
+- client.location
+- client.noSavedBusinesses
+- client.noSlots
+- client.openError
+- client.retry
+- client.saveBusinessError
+- client.savedBusiness
+- client.serverError
+- client.services
+- client.slugError
+- days.fri
+- days.mon
+- days.sat
+- days.sun
+- days.thu
+- days.tue
+- days.wed
+- home.createBusinessHint
+- home.description
+- home.emptySaved
+- home.greeting
+- home.manage
+- home.manageBusiness
+- home.openAdmin
+- home.openBusiness
+- home.slugPlaceholder
+- home.title
+- info.activationDescription
+- info.basePlanServices
+- info.bookingNotifications
+- info.clientLink
+- info.clientPage
+- info.clientQr
+- info.contactDescription
+- info.contacts
+- info.howBooklyWorks
+- info.onlineBookings
+- info.proUnlocksClientPart
+- info.rule1
+- info.rule10
+- info.rule2
+- info.rule3
+- info.rule4
+- info.rule5
+- info.rule6
+- info.rule7
+- info.rule8
+- info.rule9
+- info.rulesAndContacts
+- info.stepAddInfo
+- info.stepAddServices
+- info.stepBookings
+- info.stepCreateBusiness
+- info.termsOfUse
+- info.withoutSubscription
+- owner.active
+- owner.addBooking
+- owner.addBusiness
+- owner.addInterval
+- owner.addService
+- owner.addServiceButton
+- owner.addressPlaceholder
+- owner.all
+- owner.availabilityError
+- owner.blockTime
+- owner.blocksDescription
+- owner.bookingAdded
+- owner.bookingCancelled
+- owner.bookingHint
+- owner.bookings
+- owner.booklyActivated
+- owner.booklyProMonthly
+- owner.businessContacts
+- owner.businessesLoadError
+- owner.cancel
+- owner.cancelBookingConfirm
+- owner.cancelBookingError
+- owner.cancelled
+- owner.cancelling
+- owner.cardBlocked
+- owner.cardExpired
+- owner.changeServiceLimitError
+- owner.chooseService
+- owner.chooseServiceError
+- owner.chooseTime
+- owner.clientData
+- owner.clientLink
+- owner.clientName
+- owner.clientPhone
+- owner.close
+- owner.completed
+- owner.confirmDeleteService
+- owner.confirmed
+- owner.contactsSaved
+- owner.createBookingError
+- owner.createBusinessError
+- owner.currentBusiness
+- owner.date
+- owner.dayOff
+- owner.decreaseLimitConfirm
+- owner.delete
+- owner.deleteBusinessConfirm
+- owner.deleteServiceError
+- owner.edit
+- owner.editService
+- owner.enterBusinessName
+- owner.enterClientName
+- owner.forBusinessOwner
+- owner.geolocationError
+- owner.geolocationUnavailable
+- owner.inactive
+- owner.increaseLimitConfirm
+- owner.insufficientFunds
+- owner.invalidDuration
+- owner.invalidPrice
+- owner.invalidServiceLimit
+- owner.invalidServiceLimitValue
+- owner.invalidServiceName
+- owner.limitPreviewError
+- owner.limitPriceCalculationError
+- owner.loadingSlots
+- owner.locationDetected
+- owner.minutes
+- owner.monthlyPrice
+- owner.newBooking
+- owner.nextPayment
+- owner.noAvailableTime
+- owner.noBookings
+- owner.noBookingsInSection
+- owner.opened
+- owner.packageUpToServices
+- owner.paddleLoading
+- owner.paymentAuthenticationFailed
+- owner.paymentDeclined
+- owner.paymentDeclinedNoRetry
+- owner.paymentFailed
+- owner.paymentFailedGeneric
+- owner.perMonth
+- owner.phoneMissing
+- owner.phonePlaceholder
+- owner.price
+- owner.reasonOptional
+- owner.saveChanges
+- owner.saveContacts
+- owner.saveContactsError
+- owner.saveServiceError
+- owner.saving
+- owner.scheduleDescription
+- owner.searchCurrency
+- owner.selectedBusinessError
+- owner.serverError
+- owner.serviceAdded
+- owner.serviceDeleted
+- owner.serviceDescription
+- owner.serviceLimitAlreadySet
+- owner.serviceLimitChanged
+- owner.serviceName
+- owner.serviceUpdated
+- owner.services
+- owner.setupBlocks
+- owner.setupWorkingHours
+- owner.subscription
+- owner.telegramInitDataMissing
+- owner.telegramNotifications
+- owner.telegramOnlyDescription
+- owner.telegramOnlyTitle
+- owner.telegramUserError
+- owner.timeBlocks
+- owner.today
+- owner.upcomingBookings
+- owner.workSchedule
+- settings.address
+- settings.businessInfo
+- settings.copyLink
+- settings.description
+- settings.downloadQr
+- settings.latitudeOptional
+- settings.longitudeOptional
+- settings.phone
+- settings.qr
+
+## Potential direct Cyrillic UI literals
+- 133: {t('common.ok', 'Понятно')}
+- 193: {t('common.cancel', 'Отмена')}
+- 201: {t('common.confirm', 'Подтвердить')}
+- 209: ['Asia/Tashkent', 'Ташкент'],
+- 210: ['Asia/Almaty', 'Алматы'],
+- 211: ['Asia/Bishkek', 'Бишкек'],
+- 212: ['Asia/Dhaka', 'Дакка'],
+- 213: ['Asia/Karachi', 'Карачи'],
+- 214: ['Asia/Kolkata', 'Калькутта'],
+- 215: ['Asia/Dubai', 'Дубай'],
+- 216: ['Asia/Riyadh', 'Эр-Рияд'],
+- 217: ['Asia/Tehran', 'Тегеран'],
+- 218: ['Asia/Baghdad', 'Багдад'],
+- 219: ['Asia/Jerusalem', 'Иерусалим'],
+- 220: ['Asia/Baku', 'Баку'],
+- 221: ['Asia/Tbilisi', 'Тбилиси'],
+- 222: ['Europe/Moscow', 'Москва'],
+- 223: ['Europe/Istanbul', 'Стамбул'],
+- 224: ['Europe/Kiev', 'Киев'],
+- 225: ['Europe/Berlin', 'Берлин'],
+- 226: ['Europe/Paris', 'Париж'],
+- 227: ['Europe/London', 'Лондон'],
+- 228: ['Europe/Rome', 'Рим'],
+- 229: ['Europe/Madrid', 'Мадрид'],
+- 230: ['Africa/Cairo', 'Каир'],
+- 231: ['Africa/Johannesburg', 'Йоханнесбург'],
+- 232: ['America/New_York', 'Нью-Йорк'],
+- 233: ['America/Chicago', 'Чикаго'],
+- 234: ['America/Denver', 'Денвер'],
+- 235: ['America/Los_Angeles', 'Лос-Анджелес'],
+- 236: ['America/Toronto', 'Торонто'],
+- 237: ['America/Sao_Paulo', 'Сан-Паулу'],
+- 238: ['Australia/Sydney', 'Сидней'],
+- 239: ['Pacific/Auckland', 'Окленд']
+- 646: 'Как работает Bookly'
+- 659: 'Правила и контакты'
+- 726: 'Как работает Bookly'
+- 739: 'Правила и контакты'
+- 881: 'Как работает Bookly'
+- 887: 'Для владельца бизнеса'
+- 894: '1. Создайте бизнес.'
+- 901: '2. Добавьте информацию и фотографию.'
+- 908: '3. Добавьте услуги и цены.'
+- 915: '4. Настройте график работы.'
+- 922: '5. При необходимости создайте блокировки.'
+- 929: '6. Управляйте записями.'
+- 936: 'Чтобы начать принимать записи от клиентов, активируйте подписку Bookly Pro. После активации вы получите клиентскую ссылку и сможете начать принимать записи.'
+- 947: 'Bookly Pro открывает клиентскую часть Bookly:'
+- 955: 'Клиентская страница'
+- 962: 'Персональная ссылка для клиентов'
+- 969: 'QR-код для клиентов'
+- 976: 'Онлайн-записи'
+- 983: 'Уведомления о новых записях'
+- 989: 'До 10 услуг в базовом тарифе'
+- 997: 'Без подписки вы можете создавать и настраивать бизнес, добавлять услуги, управлять графиком, блокировками и записями в админке. Подписка нужна для подключения клиентов и начала приёма онлайн-записей.'
+- 1010: 'Правила использования'
+- 1023: '1. Bookly предназначен для законного использования и предоставления обычных товаров и услуг.'
+- 1030: '2. Запрещено использовать Bookly для незаконных товаров или услуг, наркотиков, оружия, мошенничества, порнографии, азартных игр и другой запрещённой деятельности.'
+- 1037: '3. Пользователь самостоятельно отвечает за законность своего бизнеса, товаров, услуг, рекламы и контента.'
+- 1044: '4. Запрещено использовать Bookly для обмана клиентов, спама, фиктивных записей и другого злоупотребления сервисом.'
+- 1051: '5. Пользователь обязан соблюдать применимое законодательство и требования по защите персональных данных.'
+- 1058: '6. Мы вправе временно ограничить или полностью заблокировать бизнес при нарушении настоящих правил.'
+- 1065: '7. Запрещено создавать новый бизнес или аккаунт для обхода ранее применённой блокировки.'
+- 1072: '8. Мы можем изменять функции Bookly, временно ограничивать работу сервиса или прекращать предоставление сервиса.'
+- 1079: '9. Мы не обещаем бесперебойную или безошибочную работу Bookly. Возможны технические сбои, обслуживание и недоступность сторонних сервисов.'
+- 1086: '10. Используя Bookly, пользователь подтверждает согласие соблюдать эти правила.'
+- 1095: 'Контакты'
+- 1102: 'По вопросам работы Bookly и для сообщений о нарушениях:'
+- 1134: 'Скопировано'
+- 1138: 'Скопировать'
+- 1238: 'Как работает Bookly'
+- 1252: 'Правила и контакты'
+- 1268: ? `${t('home.greeting', 'С возвращением')}, ${firstName}`
+- 1275: 'Bookly помогает бизнесу принимать записи прямо в Telegram.'
+- 1282: {t('home.openBusiness', 'Найти место')}
+- 1286: {t('home.openBusiness', 'Найти место')}
+- 1297: 'Ссылка или slug бизнеса'
+- 1305: {t('common.open', 'Открыть')}
+- 1320: {t('nav.admin', 'ДЛЯ БИЗНЕСА')}
+- 1335: 'Управляйте своим бизнесом в Bookly'
+- 1339: 'Создайте свой бизнес в Bookly'
+- 1366: {t('nav.bookings', 'Записи')}
+- 1388: {t('nav.home', 'Главная')}
+- 1398: {t('nav.bookings', 'Записи')}
+- 1408: {t('nav.saved', 'Сохранённые')}
+- 1479: 'Сохранённые'
+- 1493: 'Нет сохранённых бизнесов'
+- 1500: 'Здесь появятся сохранённые вами места.'
+- 1806: name: 'Понедельник',
+- 1813: name: 'Вторник',
+- 1820: name: 'Среда',
+- 1827: name: 'Четверг',
+- 1834: name: 'Пятница',
+- 1841: name: 'Суббота',
+- 1848: name: 'Воскресенье',
+- 2070: 'Введите корректный лимит услуг'
+- 2080: 'Лимит уже установлен на этом уровне'
+- 2103: 'Недопустимый лимит'
+- 2114: `Изменить лимит с ${serviceLimit} на ${limit} услуг?\n\n` +
+- 2115: `Новая цена: $${newPrice.toFixed(2)}/мес.\n\n` +
+- 2116: `Paddle сразу рассчитает доплату за оставшуюся часть текущего периода и попросит подтвердить списание.`
+- 2120: `Уменьшить лимит с ${serviceLimit} до ${limit} услуг?\n\n` +
+- 2121: `Возврата за текущий оплаченный период не будет.\n` +
+- 2122: `Новый лимит и цена вступят в силу с следующего периода.\n\n` +
+- 2123: `Новая цена: $${newPrice.toFixed(2)}/мес.`
+- 2151: 'Не удалось рассчитать стоимость'
+- 2198: 'Не удалось рассчитать сумму'
+- 2240: 'Лимит услуг изменён'
+- 2313: 'Не удалось выполнить оплату.'
+- 2323: 'Платёж отклонён.'
+- 2332: 'Недостаточно средств на карте.'
+- 2341: 'Срок действия карты истёк.'
+- 2350: 'Не удалось пройти проверку платежа.'
+- 2359: 'Эта карта заблокирована или недоступна для оплаты.'
+- 2368: 'Банк отклонил платёж, и повторная попытка невозможна.'
+- 2462: 'Введите название бизнеса'
+- 2504: 'Не удалось создать бизнес'
+- 2552: 'Не удалось создать бизнес'
+- 2615: 'Добавить бизнес'
+- 2628: 'Название бизнеса'
+- 2641: 'Описание бизнеса'
+- 2656: 'Номер телефона'
+- 2669: 'Адрес'
+- 2687: 'Геолокация недоступна'
+- 2718: 'Не удалось получить местоположение. Проверьте разрешение геолокации.'
+- 2765: 'Открыть на карте'
+- 2779: 'График работы'
+- 3029: placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
+- 3207: placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
+- 3358: placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
+- 3487: alt={t('owner.businessPhotoAlt', 'Фото бизнеса')}
+- 3523: 'Создать бизнес'
+- 3700: 'Добавить бизнес'
+- 3707: 'Название бизнеса'
+- 3720: 'Описание бизнеса'
+- 3735: 'Номер телефона'
+- 3748: 'Адрес'
+- 3766: 'Геолокация недоступна'
+- 3791: 'Местоположение получено'
+- 3804: 'Не удалось получить местоположение. Проверьте разрешение геолокации.'
+- 3851: 'Открыть на карте'
+- 3864: 'График работы'
+- 4082: placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
+- 4213: 'Фото бизнеса'
+- 4237: 'Создание...'
+- 4241: 'Создать бизнес'
+- 4285: aria-label={t('owner.closeInstruction', 'Закрыть инструкцию')}
+- 4334: 'Отлично. Теперь подготовьте бизнес к запуску.'
+- 4343: 'Что нужно сделать'
+- 4472: 'Как это работает'
+- 4479: 'Сначала полностью настройте бизнес: информацию, фотографию, услуги, цены, график работы и блокировки.'
+- 4486: 'После этого бизнес будет готов к работе внутри Bookly. Вы сможете управлять услугами и принимать записи от клиентов.'
+- 4526: <li>Клиентская страница</li>
+- 4527: <li>Персональная ссылка</li>
+- 4529: <li>Онлайн-записи</li>
+- 4530: <li>Уведомления о новых записях</li>
+- 4821: 'Ваш бизнес'
+- 4855: 'Онлайн-запись',
+- 4907: 'Запишитесь онлайн',
+- 4919: 'Отсканируйте QR-код',
+- 4925: 'камерой телефона',
+- 5046: alt={t('owner.qrBookingAlt', 'QR-код для записи')}
+- 5312: 'Быстрые действия'
+- 5320: 'Активируйте подписку, чтобы открыть доступ к функциям Bookly Pro'
+- 5324: 'Поделитесь страницей бизнеса с клиентами'
+- 5336: 'Ссылка на бизнес'
+- 5344: 'Активируйте подписку, чтобы получить клиентскую ссылку'
+- 5359: 'Копировать'
+- 5369: 'Страница бизнеса'
+- 5377: 'Функция доступна после активации'
+- 5381: 'Открыть клиентскую страницу'
+- 5397: 'Открыть'
+- 5406: 'QR-код'
+- 5414: 'Активируйте подписку, чтобы получить QR-код'
+- 5428: alt={t('owner.qrAlt', 'QR-код')}
+- 5439: 'Скачать QR-код'
+- 5470: 'Функции Bookly Pro'
+- 5477: 'Активируйте подписку, чтобы получить полный доступ'
+- 5492: 'Открыть доступ'
+- 5783: 'Отменить автоматическое продление подписки? Доступ сохранится до конца оплаченного периода.'
+- 5807: 'Не удалось отменить подписку'
+- 5824: 'Не удалось отменить подписку'
+- 5836: 'Возобновить автоматическое продление подписки?'
+- 5860: 'Не удалось возобновить подписку'
+- 5874: 'Не удалось возобновить подписку'
+- 5892: <span>Лимит услуг</span>
+- 5900: {t('owner.active', 'Активна')}
+- 5909: 'Полный доступ к возможностям Bookly Pro'
+- 5914: <li>{t('owner.clientLink', 'Клиентская страница и ссылка')}</li>
+- 5915: <li>{t('owner.qrCode', 'QR-код бизнеса')}</li>
+- 5916: <li>До {currentServicesLimit} услуг</li>
+- 5917: <li>{t('owner.telegramNotifications', 'Уведомления в Telegram')}</li>
+- 5925: 'Автопродление отменено'
+- 5929: 'Bookly Pro активирован'
+- 5952: 'Пакет отменён на следующее продление'
+- 5958: 'Сейчас у вас'
+- 5963: 'услуг. До конца оплаченного периода пакет продолжает действовать.'
+- 5976: 'Управление подпиской'
+- 6002: 'Управление подпиской'
+- 6009: {t('owner.price', 'Стоимость')}
+- 6021: 'Доступ до'
+- 6025: 'Следующее списание'
+- 6050: 'Bookly Pro — $7.99 / месяц'
+- 6057: 'Пакет до'
+- 6062: 'услуг'
+- 6067: '/ месяц'
+- 6084: 'Увеличить лимит услуг'
+- 6090: 'Выберите новый лимит услуг.'
+- 6102: { limit: 20, price: '$4.99 / месяц' },
+- 6103: { limit: 30, price: '$7.99 / месяц' },
+- 6104: { limit: 50, price: '$11.99 / месяц' },
+- 6105: { limit: 100, price: '$19.99 / месяц' }
+- 6129: 'До'
+- 6134: 'услуг'
+- 6199: 'Возобновить подписку'
+- 6218: 'Отменить автопродление'
+- 6241: {t('owner.paymentFailed', 'Платёж не прошёл')}
+- 6248: 'Активируйте подписку, чтобы открыть полный доступ к Bookly Pro'
+- 6256: {t('owner.openAccess', 'Открыть доступ')}
+- 6270: {t('owner.inactive', 'Неактивна')}
+- 6277: 'Оплатите подписку, чтобы открыть доступ к функциям Bookly Pro.'
+- 6285: {t('owner.openAccess', 'Открыть доступ')}
+- 6638: 'Не удалось сохранить контакты'
+- 6646: '✅ Настройки сохранены'
+- 6656: 'Не удалось сохранить настройки'
+- 6680: 'Введите название услуги'
+- 6693: 'Введите корректную цену'
+- 6709: 'Длительность должна быть от 1 до 480 минут'
+- 6758: 'Не удалось сохранить услугу'
+- 6772: '✅ Услуга изменена'
+- 6776: '✅ Услуга добавлена'
+- 6784: 'Не удалось сохранить услугу'
+- 6851: 'Удалить эту услугу?'
+- 6882: 'Не удалось удалить услугу'
+- 6892: '✅ Услуга удалена'
+- 6900: 'Не удалось удалить услугу'
+- 6965: {t('owner.saving', 'Сохранение...')}
+- 6970: 'Сохранить'
+- 7115: 0 {t('owner.hours', 'часов')}
+- 7128: ? 'час'
+- 7130: ? 'часа'
+- 7131: : 'часов'}
+- 7159: {minute} {t('owner.minutesWord', 'минут')}
+- 7186: {t('owner.saving', 'Сохранение...')}
+- 7192: 'Сохранить изменения'
+- 7196: 'Добавить услугу'
+- 7297: {t('owner.deleting', 'Удаление...')}
+- 7476: {t('owner.saving', 'Сохранение...')}
+- 7610: alert(t('owner.blockAdded', 'Блокировка добавлена'));
+- 7692: {t('owner.saving', 'Сохранение...')}
+- 7757: 'Не удалось удалить блокировку'
+- 7767: 'Блокировка удалена'
+- 7775: 'Не удалось удалить блокировку'
+- 8503: 'Загружаем свободное время...'
+- 8541: 'Загружаем свободное время...'
+- 8642: 'Загрузка...'
+- 8646: 'Добавить запись'
+- 9103: 'Выберите изображение'
+- 9113: 'Размер изображения не должен превышать 5 МБ'
+- 9344: 'Вы действительно хотите удалить этот бизнес?\n\n' +
+- 9345: 'Все данные бизнеса, включая услуги, график работы, блокировки и записи, будут удалены без возможности восстановления.\n\n' +
+- 9346: 'Подписка при этом НЕ отменяется. Вы сможете создать новый бизнес и продолжить пользоваться активной подпиской.'
+- 9375: 'Не удалось удалить бизнес'
+- 9383: 'Бизнес успешно удалён.'
+- 9394: 'Не удалось удалить бизнес'
+- 9414: 'Фото бизнеса'
+- 9421: 'Добавьте фотографию, которая будет отображаться у клиентов.'
+- 9442: ? 'Заменить фото'
+- 9443: : 'Добавить фото'}
+- 9610: ? 'Скрыть'
+- 9611: : 'Изменить'}
+- 9627: placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
+- 9745: '{t('owner.deleting', 'Удаление...')}'
+- 9751: 'Удалить бизнес'
+- 10531: 'Номер скопирован'
+- 10547: 'Номер скопирован'
+- 10553: {t('client.copy', 'Скопировать')}
