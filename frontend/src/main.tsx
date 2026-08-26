@@ -701,7 +701,10 @@ const openClient = (
     setMenuOpen(false);
   }}
 >
-  ℹ️ Как работает Bookly
+  ℹ️ {t(
+  'info.howBooklyWorks',
+  'Как работает Bookly'
+)}
 </button>
 
 <button
@@ -711,7 +714,10 @@ const openClient = (
     setMenuOpen(false);
   }}
 >
-  📄 Правила и контакты
+  📄 {t(
+  'info.rulesAndContacts',
+  'Правила и контакты'
+)}
 </button>
 
           </nav>
@@ -1207,7 +1213,10 @@ function PersonalHome({
     setInfoModal();
   }}
 >
-  ℹ️ Как работает Bookly
+  ℹ️ {t(
+  'info.howBooklyWorks',
+  'Как работает Bookly'
+)}
 </button>
 
 <button
@@ -1218,7 +1227,10 @@ function PersonalHome({
     setInfoModal();
   }}
 >
-  📄 Правила и контакты
+  📄 {t(
+  'info.rulesAndContacts',
+  'Правила и контакты'
+)}
 </button>
     </div>
   )}
@@ -2271,56 +2283,70 @@ const confirmServiceLimitChange = async () => {
   const rawMessage =
     error?.message || '';
 
-  let paymentMessage =
-    'Не удалось выполнить оплату.';
+  let paymentMessage = t(
+  'owner.paymentFailedGeneric',
+  'Не удалось выполнить оплату.'
+);
 
-  if (
-    rawMessage.includes(
-      'subscription_payment_declined'
-    )
-  ) {
-    paymentMessage =
-      'Платёж отклонён.';
-  } else if (
-    rawMessage.includes(
-      'not_enough_balance'
-    )
-  ) {
-    paymentMessage =
-      'Недостаточно средств на карте.';
-  } else if (
-    rawMessage.includes(
-      'expired_card'
-    )
-  ) {
-    paymentMessage =
-      'Срок действия карты истёк.';
-  } else if (
-    rawMessage.includes(
-      'authentication_failed'
-    )
-  ) {
-    paymentMessage =
-      'Не удалось пройти проверку платежа.';
-  } else if (
-    rawMessage.includes(
-      'blocked_card'
-    )
-  ) {
-    paymentMessage =
-      'Эта карта заблокирована или недоступна для оплаты.';
-  } else if (
-    rawMessage.includes(
-      'declined_not_retryable'
-    )
-  ) {
-    paymentMessage =
-      'Банк отклонил платёж, и повторная попытка невозможна.';
-  } else if (rawMessage) {
-    paymentMessage = rawMessage;
-  }
+if (
+  rawMessage.includes(
+    'subscription_payment_declined'
+  )
+) {
+  paymentMessage = t(
+    'owner.paymentDeclined',
+    'Платёж отклонён.'
+  );
+} else if (
+  rawMessage.includes(
+    'not_enough_balance'
+  )
+) {
+  paymentMessage = t(
+    'owner.insufficientFunds',
+    'Недостаточно средств на карте.'
+  );
+} else if (
+  rawMessage.includes(
+    'expired_card'
+  )
+) {
+  paymentMessage = t(
+    'owner.cardExpired',
+    'Срок действия карты истёк.'
+  );
+} else if (
+  rawMessage.includes(
+    'authentication_failed'
+  )
+) {
+  paymentMessage = t(
+    'owner.paymentAuthenticationFailed',
+    'Не удалось пройти проверку платежа.'
+  );
+} else if (
+  rawMessage.includes(
+    'blocked_card'
+  )
+) {
+  paymentMessage = t(
+    'owner.cardBlocked',
+    'Эта карта заблокирована или недоступна для оплаты.'
+  );
+} else if (
+  rawMessage.includes(
+    'declined_not_retryable'
+  )
+) {
+  paymentMessage = t(
+    'owner.paymentDeclinedNoRetry',
+    'Банк отклонил платёж, и повторная попытка невозможна.'
+  );
+} else if (rawMessage) {
+  paymentMessage = rawMessage;
+}
 
-  alert(paymentMessage);
+alert(paymentMessage);
 } finally {
     setLimitSaving(false);
   }
