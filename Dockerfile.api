@@ -5,4 +5,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend /app/backend
 COPY worker.py /app/worker.py
 ENV PYTHONPATH=/app
-CMD ["uvicorn","backend.app:app","--host","0.0.0.0","--port","8000"]
+CMD ["uvicorn","backend.paddle_app:app","--host","0.0.0.0","--port","8000"]
