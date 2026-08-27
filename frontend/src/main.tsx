@@ -13,7 +13,7 @@ import './style.css';
 declare global {
   interface Window {
     Telegram:any;
-    Paddle:any;
+    Paddle:any; 
   }
 }
 declare global { interface Window { Telegram:any } }
@@ -5244,7 +5244,14 @@ function Dashboard({
 <Subscription
   business={business}
   t={t}
-  onUpdated={async () => {
+  onUpdated={async (patch) => {
+    if (patch && typeof patch === 'object') {
+      setBusiness((prev: any) => ({
+        ...prev,
+        ...patch
+      }));
+    }
+
     window.dispatchEvent(
       new CustomEvent('bookly:subscription-updated')
     );
