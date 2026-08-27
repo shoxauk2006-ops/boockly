@@ -2617,9 +2617,7 @@ alert(paymentMessage);
           </h2>
 
           <p className="muted">
-            Заполните информацию о бизнесе,
-            чтобы клиенты могли его найти
-            и записаться.
+            {t('owner.businessInfoHint')}
           </p>
 
           <input
