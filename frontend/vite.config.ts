@@ -1,4 +1,6 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({});
 
 function repairAdminJsx(): Plugin {
   return {
