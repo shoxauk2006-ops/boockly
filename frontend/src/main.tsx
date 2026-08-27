@@ -2928,7 +2928,7 @@ alert(paymentMessage);
       fontWeight: 600
     }}
   >
-    Часовой пояс бизнеса
+    {t('owner.businessTimezone')}
   </label>
 
   <div
@@ -3187,8 +3187,8 @@ alert(paymentMessage);
       }}
     >
       {timezonePickerOpen
-        ? t('owner.hide', 'Скрыть')
-        : t('owner.change', 'Изменить')}
+  ? t('owner.hide')
+  : t('owner.change')}
     </button>
   </div>
 
@@ -3345,13 +3345,13 @@ alert(paymentMessage);
       }}
     >
       <strong
-        style={{
-          display: 'block',
-          marginBottom: 10
-        }}
-      >
-        Выберите часовой пояс
-      </strong>
+  style={{
+    display: 'block',
+    marginBottom: 10
+  }}
+>
+  {t('owner.chooseTimezone')}
+</strong>
 
       <input
         type="text"
