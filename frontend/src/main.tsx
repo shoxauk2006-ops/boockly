@@ -6147,11 +6147,11 @@ await refreshAfterChange({
                     style={{ marginTop: 12 }}
                   >
                     {changingServiceLimit ? (
-                      <>
-                        <span className="btn-spinner" />
-                        t('owner.cancellingAction')}
-                      </>
-                    ) : (
+  <>
+    <span className="btn-spinner" />
+    {t('owner.cancellingAction')}
+  </>
+) : (
                       t('owner.cancelPackage')
                     )}
                   </button>
