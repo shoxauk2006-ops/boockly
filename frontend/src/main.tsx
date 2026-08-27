@@ -3120,9 +3120,7 @@ alert(paymentMessage);
       marginBottom: 0
     }}
   >
-    По умолчанию выбран часовой пояс
-    вашего устройства. Вы можете изменить
-    его вручную.
+    {t('owner.deviceTimezoneHint')}
   </p>
 </div>
 
@@ -3277,43 +3275,7 @@ alert(paymentMessage);
     </div>
   )}
 </div>  
-            <div
-  style={{
-    marginTop: 12,
-    marginBottom: 0
-  }}
->
-  <label
-    style={{
-      display: 'block',
-      marginBottom: 8,
-      fontWeight: 600
-    }}
-  >
-    Часовой пояс бизнеса
-  </label>
-
-  <div
-    style={{
-      display: 'flex',
-      gap: 8,
-      alignItems: 'center'
-    }}
-  >
-    <div
-      style={{
-        flex: 1,
-        padding: '11px 12px',
-        border: '1px solid #e5e7eb',
-        borderRadius: 12,
-        background: '#f8f9fa',
-        fontWeight: 600
-      }}
-    >
-      {getTimeZoneLabel(
-        newBusinessTimezone
-      )}
-    </div>
+            
 
     <button
       type="button"
