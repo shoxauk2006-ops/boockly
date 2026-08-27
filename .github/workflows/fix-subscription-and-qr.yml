@@ -1,7 +1,11 @@
 name: Fix QR print
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/fix-subscription-and-qr.yml'
 
 permissions:
   contents: write
@@ -23,13 +27,13 @@ jobs:
           old = '''      const response =\n        await fetch(dataUrl);\n\n      const blob =\n        await response.blob();'''
           new = '''      const blob = await new Promise<Blob>(\n        (resolve, reject) => {\n          canvas.toBlob(\n            value => {\n              if (value) {\n                resolve(value);\n              } else {\n                reject(\n                  new Error(\n                    'Failed to create printable QR image'\n                  )\n                );\n              }\n            },\n            'image/png',\n            1\n          );\n        }\n      );'''
 
-          if text.count(old) != 1:
+          count = text.count(old)
+          if count != 1:
               raise SystemExit(
-                  f'Expected exactly one QR conversion block, found {text.count(old)}'
+                  f'Expected exactly one QR conversion block, found {count}'
               )
 
           text = text.replace(old, new, 1)
-
           path.write_text(text, encoding='utf-8')
 
       - name: Commit fix
@@ -44,7 +48,6 @@ jobs:
       - name: Remove temporary workflow
         shell: bash
         run: |
-          rm -f .github/workflows/fix-subscription-and-qr.yml
-          git add .github/workflows/fix-subscription-and-qr.yml
+          git rm .github/workflows/fix-subscription-and-qr.yml
           git commit -m "Remove temporary QR fix workflow"
           git push origin main
