@@ -505,7 +505,14 @@ telegram?.ready();
    const initializePaddle = () => {
      if (!window.Paddle) return;
 
-     window.Paddle.Environment.set('sandbox');
+     const paddleEnvironment =
+  import.meta.env.VITE_PADDLE_ENV || 'sandbox';
+
+window.Paddle.Environment.set(
+  paddleEnvironment === 'live'
+    ? 'production'
+    : 'sandbox'
+);
 
 window.Paddle.Initialize({
   token,
