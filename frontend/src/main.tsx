@@ -2979,8 +2979,8 @@ alert(paymentMessage);
       }}
     >
       {timezonePickerOpen
-        ? t('owner.hide', 'Скрыть')
-        : t('owner.change', 'Изменить')}
+  ? t('owner.hide')
+  : t('owner.change')}
     </button>
   </div>
 
