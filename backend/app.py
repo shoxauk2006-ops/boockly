@@ -2545,11 +2545,6 @@ PADDLE_API_KEY = os.getenv(
     ""
 )
 
-PADDLE_API_BASE = os.getenv(
-    "PADDLE_API_BASE",
-    "https://api.paddle.com"
-)
-
 
 def _paddle_request(
     method: str,
