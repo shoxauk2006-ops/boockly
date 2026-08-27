@@ -6132,7 +6132,7 @@ await refreshAfterChange({
                     {changingServiceLimit ? (
                       <>
                         <span className="btn-spinner" />
-                        t('owner.resuming')}
+                        {t('owner.resuming')}
                       </>
                     ) : (
                       t('owner.resumePackage')
