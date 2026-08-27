@@ -51,6 +51,29 @@ PADDLE_WEBHOOK_SECRET = os.getenv(
     "PADDLE_WEBHOOK_SECRET",
     ""
 )
+PADDLE_ENV = os.getenv(
+    "PADDLE_ENV",
+    "sandbox"
+).strip().lower()
+
+if PADDLE_ENV not in {
+    "sandbox",
+    "live"
+}:
+    raise RuntimeError(
+        "PADDLE_ENV must be 'sandbox' or 'live'"
+    )
+
+PADDLE_API_BASE = (
+    "https://sandbox-api.paddle.com"
+    if PADDLE_ENV == "sandbox"
+    else "https://api.paddle.com"
+)
+
+PADDLE_API_KEY = os.getenv(
+    "PADDLE_API_KEY",
+    ""
+)
 
 SERVICE_ADDONS = {
     20: 4.99,
@@ -61,8 +84,30 @@ SERVICE_ADDONS = {
 
 PADDLE_BOOKLY_BASE_PRICE_ID = os.getenv(
     "PADDLE_BOOKLY_BASE_PRICE_ID",
-    "pri_01m0vqh7n3x8h7da02fpjm3wkd"
-)
+    ""
+).strip()
+
+PADDLE_SERVICE_ADDON_PRICE_IDS = {
+    20: os.getenv(
+        "PADDLE_SERVICE_ADDON_20_PRICE_ID",
+        ""
+    ).strip(),
+
+    30: os.getenv(
+        "PADDLE_SERVICE_ADDON_30_PRICE_ID",
+        ""
+    ).strip(),
+
+    50: os.getenv(
+        "PADDLE_SERVICE_ADDON_50_PRICE_ID",
+        ""
+    ).strip(),
+
+    100: os.getenv(
+        "PADDLE_SERVICE_ADDON_100_PRICE_ID",
+        ""
+    ).strip(),
+}
 
 PADDLE_SERVICE_ADDON_PRICE_IDS = {
     20: os.getenv(
