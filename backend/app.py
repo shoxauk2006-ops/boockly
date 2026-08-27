@@ -3102,6 +3102,18 @@ async def paddle_webhook(request: Request):
         or billing_period.get("ends_at")
     )
 
+       print(
+        "BOOKLY PADDLE WEBHOOK DEBUG:",
+        event_type,
+        "business_id=",
+        business_id,
+        "owner_id=",
+        owner_id,
+        "subscription_id=",
+        subscription_id,
+        "status=",
+        status,
+    )
     with SessionLocal() as db:
         business = None
 
