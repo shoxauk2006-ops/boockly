@@ -3976,7 +3976,7 @@ borderTopColor: '#d32f2f',
       fontWeight: 600
     }}
   >
-    Часовой пояс бизнеса
+    {t('owner.businessTimezone')}
   </label>
 
   <div
@@ -3996,9 +3996,16 @@ borderTopColor: '#d32f2f',
         fontWeight: 600
       }}
     >
-      {getTimeZoneLabel(
-        newBusinessTimezone
-      )}
+      {getTimeZoneLabel(newBusinessTimezone)}
+
+      <span
+        style={{
+          float: 'right',
+          color: '#16a34a'
+        }}
+      >
+        ✓
+      </span>
     </div>
 
     <button
@@ -4013,10 +4020,13 @@ borderTopColor: '#d32f2f',
           setTimezoneSearch('');
         }
       }}
+      style={{
+        whiteSpace: 'nowrap'
+      }}
     >
       {timezonePickerOpen
-        ? t('owner.hide', 'Скрыть')
-        : t('owner.change', 'Изменить')}
+        ? t('owner.hide')
+        : t('owner.change')}
     </button>
   </div>
 
@@ -4027,26 +4037,45 @@ borderTopColor: '#d32f2f',
         padding: 12,
         border: '1px solid #e5e7eb',
         borderRadius: 16,
-        background: '#fff'
+        background: '#fff',
+        boxShadow:
+          '0 8px 24px rgba(0,0,0,0.08)'
       }}
     >
-      <strong
-  style={{
-    display: 'block',
-    marginBottom: 10
-  }}
->
-  {t('owner.chooseTimezone')}
-</strong>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+          gap: 10
+        }}
+      >
+        <strong>
+          {t('owner.chooseTimezone')}
+        </strong>
+
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => {
+            setTimezonePickerOpen(false);
+            setTimezoneSearch('');
+          }}
+          style={{
+            padding: '6px 10px'
+          }}
+        >
+          ×
+        </button>
+      </div>
 
       <input
         type="text"
-        placeholder={t('owner.searchTimezone', 'Найти город или часовой пояс...')}
+        placeholder={t('owner.searchTimezone')}
         value={timezoneSearch}
         onChange={e =>
-          setTimezoneSearch(
-            e.target.value
-          )
+          setTimezoneSearch(e.target.value)
         }
       />
 
@@ -4056,7 +4085,8 @@ borderTopColor: '#d32f2f',
           overflowY: 'auto',
           marginTop: 8,
           border: '1px solid #e5e7eb',
-          borderRadius: 12
+          borderRadius: 12,
+          background: '#fff'
         }}
       >
         {filteredTimezones.map(item => (
@@ -4067,17 +4097,15 @@ borderTopColor: '#d32f2f',
               setNewBusinessTimezone(
                 item.zone
               );
-              setTimezonePickerOpen(
-                false
-              );
+              setTimezonePickerOpen(false);
               setTimezoneSearch('');
             }}
             style={{
               width: '100%',
               display: 'flex',
-              justifyContent:
-                'space-between',
               alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
               textAlign: 'left',
               padding: '11px 12px',
               border: 0,
@@ -4088,7 +4116,8 @@ borderTopColor: '#d32f2f',
                 newBusinessTimezone
                   ? '#f5f5f5'
                   : '#fff',
-              color: '#111'
+              color: '#111',
+              cursor: 'pointer'
             }}
           >
             <span>
@@ -4108,6 +4137,18 @@ borderTopColor: '#d32f2f',
             )}
           </button>
         ))}
+
+        {filteredTimezones.length === 0 && (
+          <p
+            className="muted"
+            style={{
+              margin: 0,
+              padding: 14
+            }}
+          >
+            {t('owner.timezoneNotFound')}
+          </p>
+        )}
       </div>
     </div>
   )}
