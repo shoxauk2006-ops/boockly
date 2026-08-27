@@ -3813,7 +3813,7 @@ borderTopColor: '#d32f2f',
 );
   }}
 >
-  📍 Определить местоположение
+  📍 {t('owner.detectLocation')}
 </button>
 
             {newBusinessLatitude !== null &&
@@ -5884,12 +5884,12 @@ await refreshAfterChange({
           <div>
             <h3>Bookly Pro</h3>
             <p>
-              <b>${displayedMonthlyPrice.toFixed(2)} / месяц</b>
+              <b>${displayedMonthlyPrice.toFixed(2)} {t('owner.perMonth')}</b>
             </p>
             <div>
               <span>Лимит услуг</span>
               <strong>
-                {currentServicesLimit} услуг
+                {currentServicesLimit} {t('owner.services')}
               </strong>
             </div>
           </div>
