@@ -6066,7 +6066,7 @@ function checkout(
 const items = [
   {
     priceId:
-      'pri_01kzwxx7zeytn8sqxfvpt0a8ys',
+      'pri_01m0vqh7n3x8h7da02fpjm3wkd',
     quantity: 1
   }
 ];
