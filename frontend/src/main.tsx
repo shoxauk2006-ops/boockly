@@ -5298,6 +5298,8 @@ function Subscription({
     useState(false);
   const [changingServiceLimit, setChangingServiceLimit] =
     useState(false);
+  const [changingServiceLimitFor, setChangingServiceLimitFor] =
+  useState<number | null>(null);
   const [subscriptionActionLoading, setSubscriptionActionLoading] =
     useState(false);
 
@@ -5319,6 +5321,7 @@ function Subscription({
     if (changingServiceLimit) return;
 
     setChangingServiceLimit(true);
+    setChangingServiceLimitFor(newLimit);
 
     try {
       const previewResponse = await fetch(
@@ -5405,8 +5408,9 @@ function Subscription({
         t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
       );
     } finally {
-      setChangingServiceLimit(false);
-    }
+  setChangingServiceLimit(false);
+  setChangingServiceLimitFor(null);
+}
   };
 
   const cancelPackage = async () => {
@@ -5831,7 +5835,7 @@ await refreshAfterChange({
         width: '100%'
       }}
     >
-                          {changingServiceLimit ? (
+                          {changingServiceLimitFor === option.limit ? (
                             <span className="btn-spinner" />
                           ) : (
                             <>
