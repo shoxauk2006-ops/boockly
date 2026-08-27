@@ -6007,8 +6007,8 @@ await refreshAfterChange({
                     {t('owner.price', 'Стоимость')}
                   </span>
                   <strong>
-                    ${displayedMonthlyPrice.toFixed(2)} / месяц
-                  </strong>
+  ${displayedMonthlyPrice.toFixed(2)} {t('owner.perMonth')}
+</strong>
                 </div>
 
                 <div>
@@ -6065,7 +6065,7 @@ await refreshAfterChange({
                   }}
                 >
                   <strong>
-  'owner.increaseServiceLimit',
+  {t('owner.increaseServiceLimit')}
 </strong>
                   <p className="muted" style={{ marginTop: 6 }}>
   {t('owner.chooseNewServiceLimit')}
