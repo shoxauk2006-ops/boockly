@@ -4675,11 +4675,25 @@ function QrPrintCard({
           1
         );
 
-      const response =
-        await fetch(dataUrl);
-
-      const blob =
-        await response.blob();
+      const blob = await new Promise<Blob>(
+        (resolve, reject) => {
+          canvas.toBlob(
+            value => {
+              if (value) {
+                resolve(value);
+              } else {
+                reject(
+                  new Error(
+                    'Failed to create printable QR image'
+                  )
+                );
+              }
+            },
+            'image/png',
+            1
+          );
+        }
+      );
 
       const file =
         new File(
