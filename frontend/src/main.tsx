@@ -6070,28 +6070,33 @@ function checkout(
     alert(t('owner.selectedBusinessError'));
     return;
   }
+const paddlePrices = (
+  window as any
+).__booklyPaddlePrices as Record<number, string> | undefined;
+
+if (!paddlePrices?.[10]) {
+  alert(
+    t(
+      'owner.paddleConfigError',
+      'Платёжная система ещё не настроена.'
+    )
+  );
+  return;
+}
+
 const items = [
   {
-    priceId:
-      'pri_01m0vqh7n3x8h7da02fpjm3wkd',
+    priceId: paddlePrices[10],
     quantity: 1
   }
 ];
 
-const addonPriceIds: Record<number, string> = {
-  20: 'pri_01m0sy8kj4zw2ag1qe907zhdns',
-  30: 'pri_01m11k03qwkt7wygs6w2c1w8bs',
-  50: 'pri_01m0mhhh2k5cts13j9h3agt7bj',
-  100: 'pri_01m0mhk1wq5brdkew92q3gvk9r'
-};
-
 if (
   servicesLimit > 10 &&
-  addonPriceIds[servicesLimit]
+  paddlePrices[servicesLimit]
 ) {
   items.push({
-    priceId:
-      addonPriceIds[servicesLimit],
+    priceId: paddlePrices[servicesLimit],
     quantity: 1
   });
 }
