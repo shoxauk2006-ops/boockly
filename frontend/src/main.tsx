@@ -6073,7 +6073,7 @@ const items = [
 
 const addonPriceIds: Record<number, string> = {
   20: 'pri_01m0sy8kj4zw2ag1qe907zhdns',
-  30: 'pri_01m0mhf9rdee684tyd3mg3xp8p',
+  30: 'pri_01m11k03qwkt7wygs6w2c1w8bs',
   50: 'pri_01m0mhhh2k5cts13j9h3agt7bj',
   100: 'pri_01m0mhk1wq5brdkew92q3gvk9r'
 };
