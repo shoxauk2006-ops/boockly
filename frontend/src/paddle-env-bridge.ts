@@ -5,7 +5,12 @@ declare global {
   }
 }
 
-const env = (import.meta.env.VITE_PADDLE_ENV || 'sandbox').toLowerCase();
+const env = (import.meta.env.VITE_PADDLE_ENV || 'sandbox').trim().toLowerCase();
+
+if (env !== 'sandbox' && env !== 'live') {
+  throw new Error(`Invalid VITE_PADDLE_ENV: ${env}`);
+}
+
 const isLive = env === 'live';
 
 const clientToken = isLive
@@ -30,8 +35,6 @@ const prices: Record<number, string> = {
     : import.meta.env.VITE_PADDLE_SANDBOX_SERVICE_ADDON_100_PRICE_ID,
 };
 
-// main.tsx historically contains the old Live Price IDs. We map those IDs to
-// the active environment before Paddle receives the checkout request.
 const originalPriceIds: Record<string, number> = {
   'pri_01m0vqh7n3x8h7da02fpjm3wkd': 10,
   'pri_01m0sy8kj4zw2ag1qe907zhdns': 20,
@@ -40,6 +43,16 @@ const originalPriceIds: Record<string, number> = {
   'pri_01m0mhk1wq5brdkew92q3gvk9r': 100,
 };
 
+function getConfiguredPrice(limit: number) {
+  const priceId = prices[limit];
+  if (!priceId) {
+    throw new Error(
+      `Paddle ${env} Price ID for ${limit} services is not configured`
+    );
+  }
+  return priceId;
+}
+
 function patchCheckout() {
   const paddle = window.Paddle;
   if (!paddle?.Checkout?.open || paddle.Checkout.open.__booklyWrapped) {
@@ -47,17 +60,24 @@ function patchCheckout() {
   }
 
   const originalOpen = paddle.Checkout.open.bind(paddle.Checkout);
+
   const wrappedOpen = (options: any) => {
     if (Array.isArray(options?.items)) {
+      const items = options.items.map((item: any) => {
+        const limit = originalPriceIds[String(item?.priceId || '')];
+        if (!limit) {
+          return item;
+        }
+
+        return {
+          ...item,
+          priceId: getConfiguredPrice(limit),
+        };
+      });
+
       options = {
         ...options,
-        items: options.items.map((item: any) => {
-          const limit = originalPriceIds[String(item?.priceId || '')];
-          const activePrice = limit ? prices[limit] : '';
-          return activePrice
-            ? { ...item, priceId: activePrice }
-            : item;
-        }),
+        items,
       };
     }
 
@@ -74,12 +94,19 @@ function patchPaddle() {
     return false;
   }
 
+  if (!clientToken) {
+    throw new Error(
+      `Paddle ${env} client token is not configured`
+    );
+  }
+
   if (!paddle.__booklyInitializeWrapped && typeof paddle.Initialize === 'function') {
     const originalInitialize = paddle.Initialize.bind(paddle);
+
     paddle.Initialize = (options: any) => {
       const nextOptions = {
         ...(options || {}),
-        ...(clientToken ? { token: clientToken } : {}),
+        token: clientToken,
       };
 
       const result = originalInitialize(nextOptions);
@@ -87,7 +114,12 @@ function patchPaddle() {
       window.setTimeout(patchCheckout, 250);
       return result;
     };
+
     paddle.__booklyInitializeWrapped = true;
+  }
+
+  if (typeof paddle.Environment?.set === 'function') {
+    paddle.Environment.set(isLive ? 'production' : 'sandbox');
   }
 
   patchCheckout();
@@ -96,10 +128,17 @@ function patchPaddle() {
 
 if (!window.__booklyPaddleEnvBridge) {
   window.__booklyPaddleEnvBridge = true;
+
   let attempts = 0;
   const timer = window.setInterval(() => {
     attempts += 1;
-    if (patchPaddle() || attempts >= 200) {
+
+    try {
+      if (patchPaddle() || attempts >= 200) {
+        window.clearInterval(timer);
+      }
+    } catch (error) {
+      console.error('[Bookly] Paddle configuration error:', error);
       window.clearInterval(timer);
     }
   }, 50);
