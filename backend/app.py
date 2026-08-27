@@ -109,24 +109,6 @@ PADDLE_SERVICE_ADDON_PRICE_IDS = {
     ).strip(),
 }
 
-PADDLE_SERVICE_ADDON_PRICE_IDS = {
-    20: os.getenv(
-        "PADDLE_SERVICE_ADDON_10_PRICE_ID",
-        "pri_01m0sy8kj4zw2ag1qe907zhdns"
-    ),
-    30: os.getenv(
-        "PADDLE_SERVICE_ADDON_20_PRICE_ID",
-        "pri_01m0mhf9rdee684tyd3mg3xp8p"
-    ),
-    50: os.getenv(
-        "PADDLE_SERVICE_ADDON_40_PRICE_ID",
-        "pri_01m0mhhh2k5cts13j9h3agt7bj"
-    ),
-    100: os.getenv(
-        "PADDLE_SERVICE_ADDON_90_PRICE_ID",
-        "pri_01m0mhk1wq5brdkew92q3gvk9r"
-    ),
-}
 
 PADDLE_SERVICE_ADDON_IDS = set(
     PADDLE_SERVICE_ADDON_PRICE_IDS.values()
