@@ -47,33 +47,6 @@ engine = create_engine(DB_URL, connect_args={"check_same_thread": False} if DB_U
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 PRO_PRICE = 7.99
-PADDLE_WEBHOOK_SECRET = os.getenv(
-    "PADDLE_WEBHOOK_SECRET",
-    ""
-)
-PADDLE_ENV = os.getenv(
-    "PADDLE_ENV",
-    "sandbox"
-).strip().lower()
-
-if PADDLE_ENV not in {
-    "sandbox",
-    "live"
-}:
-    raise RuntimeError(
-        "PADDLE_ENV must be 'sandbox' or 'live'"
-    )
-
-PADDLE_API_BASE = (
-    "https://sandbox-api.paddle.com"
-    if PADDLE_ENV == "sandbox"
-    else "https://api.paddle.com"
-)
-
-PADDLE_API_KEY = os.getenv(
-    "PADDLE_API_KEY",
-    ""
-)
 
 SERVICE_ADDONS = {
     20: 4.99,
@@ -81,38 +54,6 @@ SERVICE_ADDONS = {
     50: 11.99,
     100: 19.99,
 }
-
-PADDLE_BOOKLY_BASE_PRICE_ID = os.getenv(
-    "PADDLE_BOOKLY_BASE_PRICE_ID",
-    ""
-).strip()
-
-PADDLE_SERVICE_ADDON_PRICE_IDS = {
-    20: os.getenv(
-        "PADDLE_SERVICE_ADDON_20_PRICE_ID",
-        ""
-    ).strip(),
-
-    30: os.getenv(
-        "PADDLE_SERVICE_ADDON_30_PRICE_ID",
-        ""
-    ).strip(),
-
-    50: os.getenv(
-        "PADDLE_SERVICE_ADDON_50_PRICE_ID",
-        ""
-    ).strip(),
-
-    100: os.getenv(
-        "PADDLE_SERVICE_ADDON_100_PRICE_ID",
-        ""
-    ).strip(),
-}
-
-
-PADDLE_SERVICE_ADDON_IDS = set(
-    PADDLE_SERVICE_ADDON_PRICE_IDS.values()
-)
 
 BOOKLY_REQUEST_LANGUAGE: ContextVar[Optional[str]] = ContextVar("BOOKLY_REQUEST_LANGUAGE", default=None)
 BOOKLY_REQUEST_USER_ID: ContextVar[Optional[int]] = ContextVar("BOOKLY_REQUEST_USER_ID", default=None)
