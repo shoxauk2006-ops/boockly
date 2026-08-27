@@ -1,0 +1,50 @@
+name: Fix QR print
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply targeted fix
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('frontend/src/main.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''      const response =\n        await fetch(dataUrl);\n\n      const blob =\n        await response.blob();'''
+          new = '''      const blob = await new Promise<Blob>(\n        (resolve, reject) => {\n          canvas.toBlob(\n            value => {\n              if (value) {\n                resolve(value);\n              } else {\n                reject(\n                  new Error(\n                    'Failed to create printable QR image'\n                  )\n                );\n              }\n            },\n            'image/png',\n            1\n          );\n        }\n      );'''
+
+          if text.count(old) != 1:
+              raise SystemExit(
+                  f'Expected exactly one QR conversion block, found {text.count(old)}'
+              )
+
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx
+          git commit -m "Fix printable QR download"
+          git push origin main
+
+      - name: Remove temporary workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/fix-subscription-and-qr.yml
+          git add .github/workflows/fix-subscription-and-qr.yml
+          git commit -m "Remove temporary QR fix workflow"
+          git push origin main
