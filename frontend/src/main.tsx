@@ -5319,8 +5319,6 @@ function Subscription({
     useState(false);
   const [changingServiceLimit, setChangingServiceLimit] =
     useState(false);
-  const [changingServiceLimitFor, setChangingServiceLimitFor] =
-  useState<number | null>(null);
   const [subscriptionActionLoading, setSubscriptionActionLoading] =
     useState(false);
 
@@ -5342,7 +5340,7 @@ function Subscription({
     if (changingServiceLimit) return;
 
     setChangingServiceLimit(true);
-    setChangingServiceLimitFor(newLimit);
+    
 
     try {
       const previewResponse = await fetch(
@@ -5430,7 +5428,6 @@ function Subscription({
       );
     } finally {
   setChangingServiceLimit(false);
-  setChangingServiceLimitFor(null);
 }
   };
 
@@ -5856,9 +5853,9 @@ await refreshAfterChange({
         width: '100%'
       }}
     >
-                          {changingServiceLimitFor === option.limit ? (
-                            <span className="btn-spinner" />
-                          ) : (
+                          {changingServiceLimit ? (
+  <span className="btn-spinner" />
+) : (
                             <>
                               <span>
   {t('owner.upToServices')}
