@@ -9584,8 +9584,8 @@ t(
       }}
     >
       {settingsTimezonePickerOpen
-        ? 'Скрыть'
-        : 'Изменить'}
+  ? t('owner.hide')
+  : t('owner.change')}
     </button>
   </div>
 
@@ -10580,7 +10580,7 @@ function Client({
     fontSize: 13
   }}
 >
-  Часовой пояс:{' '}
+  {t('client.timezone')}{' '}
   {business.timezone
     ? formatGMTOffset(
         getTimeZoneOffsetMinutes(
