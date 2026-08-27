@@ -34,6 +34,7 @@ const prices: Record<number, string> = {
     ? import.meta.env.VITE_PADDLE_LIVE_SERVICE_ADDON_100_PRICE_ID
     : import.meta.env.VITE_PADDLE_SANDBOX_SERVICE_ADDON_100_PRICE_ID,
 };
+(window as any).__booklyPaddlePrices = prices;
 
 const originalPriceIds: Record<string, number> = {
   'pri_01m0vqh7n3x8h7da02fpjm3wkd': 10,
