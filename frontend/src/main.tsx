@@ -5931,7 +5931,7 @@ await refreshAfterChange({
           {expiresAt && (
             <p className="muted">
               {cancelledButActive
-                ? t('owner.accessUntilColon', 'Доступ до:')
+                ? t('owner.accessUntilColon')
                 : t('owner.nextPayment', 'Следующее списание')}
               {' '}
               {expiresAt.toLocaleDateString(getLocale())}
@@ -6132,10 +6132,10 @@ await refreshAfterChange({
                     {changingServiceLimit ? (
                       <>
                         <span className="btn-spinner" />
-                        {t('owner.resuming', 'Возобновляем…')}
+                        t('owner.resuming')}
                       </>
                     ) : (
-                      t('owner.resumePackage', 'Возобновить пакет')
+                      t('owner.resumePackage')
                     )}
                   </button>
                 ) : (
@@ -6149,10 +6149,10 @@ await refreshAfterChange({
                     {changingServiceLimit ? (
                       <>
                         <span className="btn-spinner" />
-                        {t('owner.cancellingAction', 'Отменяем…')}
+                        t('owner.cancellingAction')}
                       </>
                     ) : (
-                      t('owner.cancelPackage', 'Отменить пакет')
+                      t('owner.cancelPackage')
                     )}
                   </button>
                 )
