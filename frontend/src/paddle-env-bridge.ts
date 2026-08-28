@@ -6,6 +6,32 @@ declare global {
 }
 
 const env = (import.meta.env.VITE_PADDLE_ENV || 'sandbox').trim().toLowerCase();
+function loadPaddleScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.Paddle) {
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector(
+      'script[src="https://cdn.paddle.com/paddle/v2/paddle.js"]'
+    ) as HTMLScriptElement | null;
+
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Failed to load Paddle.js')), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Paddle.js'));
+
+    document.head.appendChild(script);
+  });
+}
 
 if (env !== 'sandbox' && env !== 'live') {
   throw new Error(`Invalid VITE_PADDLE_ENV: ${env}`);
@@ -74,19 +100,13 @@ function patchPaddle() {
 if (!window.__booklyPaddleEnvBridge) {
   window.__booklyPaddleEnvBridge = true;
 
-  let attempts = 0;
-  const timer = window.setInterval(() => {
-    attempts += 1;
-
-    try {
-      if (patchPaddle() || attempts >= 200) {
-        window.clearInterval(timer);
-      }
-    } catch (error) {
-      console.error('[Bookly] Paddle configuration error:', error);
-      window.clearInterval(timer);
-    }
-  }, 50);
+  loadPaddleScript()
+    .then(() => {
+      patchPaddle();
+    })
+    .catch((error) => {
+      console.error('[Bookly] Paddle script loading error:', error);
+    });
 }
 
 export {};
