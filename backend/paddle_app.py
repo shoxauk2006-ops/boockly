@@ -37,11 +37,8 @@ if PADDLE_ENV not in {"sandbox", "live"}:
 _ENV_PREFIX = "PADDLE_SANDBOX_" if PADDLE_ENV == "sandbox" else "PADDLE_LIVE_"
 
 
-def _env(name: str, legacy: str = "") -> str:
-    value = os.getenv(_ENV_PREFIX + name, "").strip()
-    if value:
-        return value
-    return os.getenv(legacy, "").strip() if legacy else ""
+def _env(name: str) -> str:
+    return os.getenv(_ENV_PREFIX + name, "").strip()
 
 
 PADDLE_API_BASE = (
@@ -49,15 +46,15 @@ PADDLE_API_BASE = (
     if PADDLE_ENV == "sandbox"
     else "https://api.paddle.com"
 )
-PADDLE_API_KEY = _env("API_KEY", "PADDLE_API_KEY")
-PADDLE_WEBHOOK_SECRET = _env("WEBHOOK_SECRET", "PADDLE_WEBHOOK_SECRET")
+PADDLE_API_KEY = _env("API_KEY")
+PADDLE_WEBHOOK_SECRET = _env("WEBHOOK_SECRET")
 
 PRICE_IDS = {
-    10: _env("BOOKLY_BASE_PRICE_ID", "PADDLE_BOOKLY_BASE_PRICE_ID"),
-    20: _env("SERVICE_ADDON_20_PRICE_ID", "PADDLE_SERVICE_ADDON_20_PRICE_ID"),
-    30: _env("SERVICE_ADDON_30_PRICE_ID", "PADDLE_SERVICE_ADDON_30_PRICE_ID"),
-    50: _env("SERVICE_ADDON_50_PRICE_ID", "PADDLE_SERVICE_ADDON_50_PRICE_ID"),
-    100: _env("SERVICE_ADDON_100_PRICE_ID", "PADDLE_SERVICE_ADDON_100_PRICE_ID"),
+    10: _env("BOOKLY_BASE_PRICE_ID"),
+    20: _env("SERVICE_ADDON_20_PRICE_ID"),
+    30: _env("SERVICE_ADDON_30_PRICE_ID"),
+    50: _env("SERVICE_ADDON_50_PRICE_ID"),
+    100: _env("SERVICE_ADDON_100_PRICE_ID"),
 }
 
 LIMITS = {10, 20, 30, 50, 100}
