@@ -65,6 +65,7 @@ const prices: Record<number, string> = {
 
 function patchPaddle() {
   const paddle = window.Paddle;
+
   if (!paddle) {
     return false;
   }
@@ -75,8 +76,18 @@ function patchPaddle() {
     );
   }
 
-  if (!paddle.__booklyInitializeWrapped && typeof paddle.Initialize === 'function') {
-    const originalInitialize = paddle.Initialize.bind(paddle);
+  if (typeof paddle.Environment?.set === 'function') {
+    paddle.Environment.set(
+      isLive ? 'production' : 'sandbox'
+    );
+  }
+
+  if (
+    !paddle.__booklyInitializeWrapped &&
+    typeof paddle.Initialize === 'function'
+  ) {
+    const originalInitialize =
+      paddle.Initialize.bind(paddle);
 
     paddle.Initialize = (options: any) => {
       const nextOptions = {
@@ -84,17 +95,13 @@ function patchPaddle() {
         token: clientToken,
       };
 
-            return originalInitialize(nextOptions);
+      return originalInitialize(nextOptions);
     };
 
     paddle.__booklyInitializeWrapped = true;
   }
 
-  if (typeof paddle.Environment?.set === 'function') {
-    paddle.Environment.set(isLive ? 'production' : 'sandbox');
-  }
-
-    return true;
+  return true;
 }
 
 if (!window.__booklyPaddleEnvBridge) {
