@@ -316,92 +316,206 @@ def _apply_paddle_event(payload: dict) -> None:
         subscription_id = str(data.get("subscription_id") or "")
 
     with SessionLocal() as db:
-    if _event_already_processed(db, event_id):
-        db.commit()
-        return
+        if _event_already_processed(db, event_id):
+            db.rollback()
+            return
 
-    business = _find_business(
-        db,
-        custom,
-        subscription_id,
-    )
+        business = _find_business(
+            db,
+            custom,
+            subscription_id,
+        )
+
         if not business:
-    print(
-        "BOOKLY PADDLE: unmapped event",
-        event_id,
-        event_type,
-        "subscription_id=",
-        subscription_id,
-        "custom_data=",
-        custom,
-    )
-    raise ValueError(
-        f"Paddle event cannot be mapped to Bookly business: {event_id}"
-    )
+            print(
+                "BOOKLY PADDLE: unmapped event",
+                event_id,
+                event_type,
+                "subscription_id=",
+                subscription_id,
+                "custom_data=",
+                custom,
+            )
+            raise ValueError(
+                f"Paddle event cannot be mapped to Bookly business: {event_id}"
+            )
 
-        subscription = _get_or_create_subscription(db, business)
+        subscription = _get_or_create_subscription(
+            db,
+            business,
+        )
+
         if subscription_id.startswith("sub_"):
-            subscription.external_subscription_id = subscription_id
+            subscription.external_subscription_id = (
+                subscription_id
+            )
+
         subscription.payment_provider = "paddle"
 
         status = str(data.get("status") or "")
-        billing_period = data.get("current_billing_period") or data.get("billing_period") or {}
-        next_billed_at = data.get("next_billed_at") or billing_period.get("ends_at")
+        billing_period = (
+            data.get("current_billing_period")
+            or data.get("billing_period")
+            or {}
+        )
+        next_billed_at = (
+            data.get("next_billed_at")
+            or billing_period.get("ends_at")
+        )
 
         if event_type == "transaction.completed":
             subscription.active = True
             subscription.status = "active"
-            subscription.expires_at = _dt(next_billed_at) or subscription.expires_at
-            detected_limit = _limit_from_items(data.get("items") or data.get("line_items") or [])
-            subscription.current_services_limit = detected_limit
-            subscription.current_price = calculate_subscription_price(detected_limit)
+            subscription.expires_at = (
+                _dt(next_billed_at)
+                or subscription.expires_at
+            )
+
+            detected_limit = _limit_from_items(
+                data.get("items")
+                or data.get("line_items")
+                or []
+            )
+
+            subscription.current_services_limit = (
+                detected_limit
+            )
+            subscription.current_price = (
+                calculate_subscription_price(
+                    detected_limit
+                )
+            )
             subscription.pending_services_limit = None
             subscription.pending_price = None
 
         elif event_type == "transaction.payment_failed":
-            subscription.status = status or "past_due"
+            subscription.status = (
+                status
+                or "past_due"
+            )
+
             subscription.active = bool(
-                subscription.expires_at and subscription.expires_at > datetime.utcnow()
+                subscription.expires_at
+                and subscription.expires_at
+                > datetime.utcnow()
             )
 
         elif event_type == "subscription.created":
-            subscription.status = status or "active"
-            subscription.active = subscription.status not in {"canceled", "cancelled", "paused"}
-            subscription.expires_at = _dt(next_billed_at) or subscription.expires_at
-            detected = _limit_from_items(data.get("items") or [])
-            subscription.current_services_limit = detected
-            subscription.current_price = calculate_subscription_price(detected)
+            subscription.status = (
+                status
+                or "active"
+            )
+
+            subscription.active = (
+                subscription.status
+                not in {
+                    "canceled",
+                    "cancelled",
+                    "paused",
+                }
+            )
+
+            subscription.expires_at = (
+                _dt(next_billed_at)
+                or subscription.expires_at
+            )
+
+            detected = _limit_from_items(
+                data.get("items")
+                or []
+            )
+
+            subscription.current_services_limit = (
+                detected
+            )
+            subscription.current_price = (
+                calculate_subscription_price(
+                    detected
+                )
+            )
 
         elif event_type == "subscription.updated":
-            subscription.status = status or subscription.status or "active"
-            subscription.active = subscription.status not in {"canceled", "cancelled", "paused"}
-            subscription.expires_at = _dt(next_billed_at) or subscription.expires_at
+            subscription.status = (
+                status
+                or subscription.status
+                or "active"
+            )
+
+            subscription.active = (
+                subscription.status
+                not in {
+                    "canceled",
+                    "cancelled",
+                    "paused",
+                }
+            )
+
+            subscription.expires_at = (
+                _dt(next_billed_at)
+                or subscription.expires_at
+            )
+
             if subscription.pending_services_limit is None:
-                detected = _limit_from_items(data.get("items") or [])
-                subscription.current_services_limit = detected
-                subscription.current_price = calculate_subscription_price(detected)
+                detected = _limit_from_items(
+                    data.get("items")
+                    or []
+                )
+
+                subscription.current_services_limit = (
+                    detected
+                )
+                subscription.current_price = (
+                    calculate_subscription_price(
+                        detected
+                    )
+                )
 
         elif event_type == "subscription.resumed":
             subscription.status = "active"
             subscription.active = True
-            subscription.expires_at = _dt(next_billed_at) or subscription.expires_at
+            subscription.expires_at = (
+                _dt(next_billed_at)
+                or subscription.expires_at
+            )
 
         elif event_type == "subscription.canceled":
-            effective_dt = _dt((data.get("scheduled_change") or {}).get("effective_at"))
-            if effective_dt and effective_dt > datetime.utcnow():
+            effective_dt = _dt(
+                (
+                    data.get("scheduled_change")
+                    or {}
+                ).get("effective_at")
+            )
+
+            if (
+                effective_dt
+                and effective_dt > datetime.utcnow()
+            ):
                 subscription.status = "cancelled"
                 subscription.active = True
                 subscription.expires_at = effective_dt
             else:
                 subscription.status = "cancelled"
                 subscription.active = False
-                subscription.expires_at = effective_dt or subscription.expires_at
+                subscription.expires_at = (
+                    effective_dt
+                    or subscription.expires_at
+                )
 
         elif event_type == "subscription.paused":
             subscription.status = "paused"
             subscription.active = False
 
-        _sync_business_from_subscription(business, subscription)
+        _sync_business_from_subscription(
+            business,
+            subscription,
+        )
+
+        _mark_event_processed(
+            db,
+            event_id,
+            event_type,
+        )
+
         db.commit()
 
 
@@ -622,33 +736,60 @@ def cancel_subscription(x_telegram_init_data: str = Header(default="")):
 
 
 @app.post("/admin/subscription/resume")
-def resume_subscription(x_telegram_init_data: str = Header(default="")):
-    _, _, business_id, subscription_id = _current_subscription(x_telegram_init_data)
+def resume_subscription(
+    x_telegram_init_data: str = Header(default="")
+):
+    _, _, business_id, subscription_id = (
+        _current_subscription(
+            x_telegram_init_data
+        )
+    )
+
     data = _paddle_request(
         "PATCH",
         f"/subscriptions/{subscription_id}",
-        {"scheduled_change": None},
+        {
+            "scheduled_change": None,
+        },
     )
+
     paddle = data.get("data") or {}
-    next_billed_at = paddle.get("next_billed_at")
+    next_billed_at = paddle.get(
+        "next_billed_at"
+    )
 
     with SessionLocal() as db:
-        subscription = owner_subscription(db, business_id)
-        business = db.get(Business, business_id)
+        subscription = owner_subscription(
+            db,
+            business_id,
+        )
+        business = db.get(
+            Business,
+            business_id,
+        )
+
+        if not subscription or not business:
+            raise HTTPException(
+                404,
+                "Subscription not found",
+            )
+
         subscription.status = "active"
         subscription.active = True
+
         if next_billed_at:
-            subscription.expires_at = _dt(next_billed_at)
+            subscription.expires_at = _dt(
+                next_billed_at
+            )
+
         _sync_business_from_subscription(
-    business,
-    subscription,
-)
+            business,
+            subscription,
+        )
 
-_mark_event_processed(
-    db,
-    event_id,
-    event_type,
-)
+        db.commit()
 
-db.commit()
-        return {"ok": True, "resumed": True}
+        return {
+            "ok": True,
+            "resumed": True,
+        }
