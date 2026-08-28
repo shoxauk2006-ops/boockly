@@ -189,26 +189,39 @@ def _find_business(db, custom: dict, subscription_id: str = ""):
     business_id = custom.get("business_id")
     owner_id = custom.get("telegram_user_id")
 
+    # Для Paddle webhook бизнес должен определяться точно.
+    # Нельзя выбирать "первый бизнес" владельца:
+    # у одного Telegram-пользователя может быть несколько бизнесов.
     if business_id:
         try:
             business = db.get(Business, int(business_id))
-            if business and owner_id and int(business.owner_telegram_id) == int(owner_id):
-                return business
         except (TypeError, ValueError):
-            pass
+            business = None
 
-    if owner_id:
-        try:
-            business = owner_business(db, int(owner_id))
-            if business:
-                return business
-        except (TypeError, ValueError):
-            pass
+        if not business:
+            return None
 
+        # Если Telegram ID присутствует в custom_data,
+        # используем его как дополнительную проверку владельца.
+        if owner_id:
+            try:
+                if int(business.owner_telegram_id) != int(owner_id):
+                    return None
+            except (TypeError, ValueError):
+                return None
+
+        return business
+
+    # Для событий, пришедших без business_id/custom_data,
+    # разрешаем надёжный fallback только через уже сохранённый
+    # Paddle subscription ID.
     if subscription_id:
         row = (
             db.query(Subscription)
-            .filter(Subscription.external_subscription_id == subscription_id)
+            .filter(
+                Subscription.external_subscription_id
+                == subscription_id
+            )
             .first()
         )
         if row:
@@ -237,23 +250,50 @@ def _get_or_create_subscription(db, business):
     return subscription
 
 
-def _mark_event_if_new(db, event_id: str, event_type: str) -> bool:
+def _event_already_processed(db, event_id: str) -> bool:
     if not event_id:
-        return True
+        return False
+
     exists = db.execute(
-        text("SELECT event_id FROM paddle_webhook_events WHERE event_id = :event_id"),
+        text(
+            """
+            SELECT event_id
+            FROM paddle_webhook_events
+            WHERE event_id = :event_id
+            """
+        ),
         {"event_id": event_id},
     ).first()
-    if exists:
-        return False
+
+    return bool(exists)
+
+
+def _mark_event_processed(
+    db,
+    event_id: str,
+    event_type: str,
+) -> None:
+    if not event_id:
+        return
+
     db.execute(
         text(
-            "INSERT INTO paddle_webhook_events(event_id, event_type) VALUES (:event_id, :event_type)"
+            """
+            INSERT INTO paddle_webhook_events(
+                event_id,
+                event_type
+            )
+            VALUES (
+                :event_id,
+                :event_type
+            )
+            """
         ),
-        {"event_id": event_id, "event_type": event_type},
+        {
+            "event_id": event_id,
+            "event_type": event_type,
+        },
     )
-    return True
-
 
 def _apply_paddle_event(payload: dict) -> None:
     event_id = str(payload.get("event_id") or "")
@@ -276,15 +316,28 @@ def _apply_paddle_event(payload: dict) -> None:
         subscription_id = str(data.get("subscription_id") or "")
 
     with SessionLocal() as db:
-        if not _mark_event_if_new(db, event_id, event_type):
-            db.commit()
-            return
+    if _event_already_processed(db, event_id):
+        db.commit()
+        return
 
-        business = _find_business(db, custom, subscription_id)
+    business = _find_business(
+        db,
+        custom,
+        subscription_id,
+    )
         if not business:
-            print("BOOKLY PADDLE: unmapped event", event_id, event_type)
-            db.commit()
-            return
+    print(
+        "BOOKLY PADDLE: unmapped event",
+        event_id,
+        event_type,
+        "subscription_id=",
+        subscription_id,
+        "custom_data=",
+        custom,
+    )
+    raise ValueError(
+        f"Paddle event cannot be mapped to Bookly business: {event_id}"
+    )
 
         subscription = _get_or_create_subscription(db, business)
         if subscription_id.startswith("sub_"):
@@ -586,6 +639,16 @@ def resume_subscription(x_telegram_init_data: str = Header(default="")):
         subscription.active = True
         if next_billed_at:
             subscription.expires_at = _dt(next_billed_at)
-        _sync_business_from_subscription(business, subscription)
-        db.commit()
+        _sync_business_from_subscription(
+    business,
+    subscription,
+)
+
+_mark_event_processed(
+    db,
+    event_id,
+    event_type,
+)
+
+db.commit()
         return {"ok": True, "resumed": True}
