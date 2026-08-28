@@ -10,6 +10,7 @@ import {
 import {createRoot} from 'react-dom/client';
 import QRCode from 'qrcode';
 import './style.css';
+import './paddle-env-bridge';
 declare global {
   interface Window {
     Telegram:any;
