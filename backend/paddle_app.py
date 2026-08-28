@@ -59,6 +59,19 @@ PRICE_IDS = {
 
 LIMITS = {10, 20, 30, 50, 100}
 
+SUPPORTED_PADDLE_EVENTS = {
+    "transaction.completed",
+    "transaction.payment_failed",
+
+    "subscription.created",
+    "subscription.updated",
+    "subscription.activated",
+    "subscription.resumed",
+    "subscription.paused",
+    "subscription.past_due",
+    "subscription.canceled",
+}
+
 
 # Idempotency: Paddle retries non-2xx webhook deliveries. We record each event
 # only after signature verification and before applying business state.
@@ -301,6 +314,15 @@ def _apply_paddle_event(payload: dict) -> None:
     data = payload.get("data") or {}
     custom = data.get("custom_data") or {}
 
+        occurred_at = _dt(
+        payload.get("occurred_at")
+    )
+
+    if not occurred_at:
+        raise ValueError(
+            "Paddle occurred_at is missing or invalid"
+        )
+
     if not event_type:
         raise ValueError("Paddle event_type is missing")
 
@@ -315,9 +337,18 @@ def _apply_paddle_event(payload: dict) -> None:
     else:
         subscription_id = str(data.get("subscription_id") or "")
 
-    with SessionLocal() as db:
+        with SessionLocal() as db:
         if _event_already_processed(db, event_id):
             db.rollback()
+            return
+
+        if event_type not in SUPPORTED_PADDLE_EVENTS:
+            _mark_event_processed(
+                db,
+                event_id,
+                event_type,
+            )
+            db.commit()
             return
 
         business = _find_business(
@@ -340,10 +371,23 @@ def _apply_paddle_event(payload: dict) -> None:
                 f"Paddle event cannot be mapped to Bookly business: {event_id}"
             )
 
-        subscription = _get_or_create_subscription(
+                subscription = _get_or_create_subscription(
             db,
             business,
         )
+
+        if (
+            subscription.paddle_last_event_at
+            and occurred_at
+            < subscription.paddle_last_event_at
+        ):
+            _mark_event_processed(
+                db,
+                event_id,
+                event_type,
+            )
+            db.commit()
+            return
 
         if subscription_id.startswith("sub_"):
             subscription.external_subscription_id = (
@@ -470,6 +514,21 @@ def _apply_paddle_event(payload: dict) -> None:
                     )
                 )
 
+              elif event_type == "subscription.activated":
+            subscription.status = "active"
+            subscription.active = True
+            subscription.expires_at = (
+                _dt(next_billed_at)
+                or subscription.expires_at
+            )
+
+        elif event_type == "subscription.past_due":
+            subscription.status = "past_due"
+            subscription.active = bool(
+                subscription.expires_at
+                and subscription.expires_at
+                > datetime.utcnow()
+            )
         elif event_type == "subscription.resumed":
             subscription.status = "active"
             subscription.active = True
@@ -504,6 +563,8 @@ def _apply_paddle_event(payload: dict) -> None:
         elif event_type == "subscription.paused":
             subscription.status = "paused"
             subscription.active = False
+
+              subscription.paddle_last_event_at = occurred_at
 
         _sync_business_from_subscription(
             business,
