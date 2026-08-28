@@ -494,52 +494,7 @@ telegram?.ready();
     }
   },[]);
 
-  useEffect(() => {
-   const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
-
-   if (!token) {
-     console.error('Paddle client token is missing');
-     return;
-   }
-
-   const initializePaddle = () => {
-     if (!window.Paddle) return;
-
-     const paddleEnvironment =
-  import.meta.env.VITE_PADDLE_ENV || 'sandbox';
-
-window.Paddle.Environment.set(
-  paddleEnvironment === 'live'
-    ? 'production'
-    : 'sandbox'
-);
-
-window.Paddle.Initialize({
-  token,
-  eventCallback: (event: any) => {
-    if (event?.name === 'checkout.completed') {
-      window.setTimeout(() => {
-        window.dispatchEvent(
-          new CustomEvent('bookly:subscription-updated')
-        );
-      }, 1500);
-    }
-  }
-});
-   };
-
-   if (window.Paddle) {
-     initializePaddle();
-     return;
-   }
-
-   const script = document.createElement('script');
-   script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-   script.async = true;
-   script.onload = initializePaddle;
-
-   document.head.appendChild(script);
- },[]);
+  
 
 const openClient = (
   input?: string
