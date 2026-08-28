@@ -83,12 +83,10 @@ async function initializePaddle(): Promise<void> {
     return;
   }
 
-  // Paddle docs require sandbox environment to be selected before
-  // calling any other Paddle.js method, including Initialize().
-  if (typeof window.Paddle.Environment?.set === 'function') {
-    window.Paddle.Environment.set(
-      isLive ? 'production' : 'sandbox'
-    );
+  // Paddle requires sandbox to be selected before Initialize().
+  // Production is the default environment for live accounts.
+  if (!isLive && typeof window.Paddle.Environment?.set === 'function') {
+    window.Paddle.Environment.set('sandbox');
   }
 
   if (typeof window.Paddle.Initialize !== 'function') {
