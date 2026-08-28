@@ -5982,23 +5982,42 @@ await refreshAfterChange({
   );
 }
 
-function checkout(
+async function checkout(
   provider: string,
   businessId?: number,
   servicesLimit: number = 10
 ) {
   const t = createTranslator(getStoredLanguage());
+
   if (provider !== 'paddle') {
     return;
   }
 
-  if (!window.Paddle) {
-    alert(t('owner.paddleLoading'));
-    return;
-  }
+  try {
+    if (window.__booklyPaddleReady) {
+      await window.__booklyPaddleReady;
+    }
 
-  const ownerId =
-    tg()?.initDataUnsafe?.user?.id;
+    if (!window.Paddle) {
+      throw new Error(
+        t(
+          'owner.paddleLoading',
+          'Платёжная система ещё загружается. Попробуйте ещё раз.'
+        )
+      );
+    }
+
+    if (!window.Paddle.__booklyInitialized) {
+      throw new Error(
+        t(
+          'owner.paddleLoading',
+          'Платёжная система ещё не готова. Попробуйте ещё раз.'
+        )
+      );
+    }
+
+    const ownerId =
+      tg()?.initDataUnsafe?.user?.id;
 
   if (!ownerId) {
     alert(t('owner.telegramUserError'));
@@ -6058,15 +6077,29 @@ if (
 }
 
 window.Paddle.Checkout.open({
-    items,
-    customData: {
-      telegram_user_id:
-        String(ownerId),
+  items,
+  customData: {
+    telegram_user_id:
+      String(ownerId),
 
-      business_id:
-        String(selectedBusinessId)
-    }
+    business_id:
+      String(selectedBusinessId)
+  }
   });
+  } catch (error: any) {
+    console.error(
+      'BOOKLY PADDLE CHECKOUT ERROR:',
+      error
+    );
+
+    alert(
+      error?.message ||
+      t(
+        'owner.paddleLoading',
+        'Платёжная система ещё не готова. Попробуйте ещё раз.'
+      )
+    );
+  }
 }
 
 function Services({
