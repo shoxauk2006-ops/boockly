@@ -140,6 +140,13 @@ class Subscription(Base):
         Float,
         nullable=True
     )
+        # Время последнего применённого события Paddle.
+    # Используется для защиты от webhook-событий,
+    # которые приходят не по порядку.
+    paddle_last_event_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True
+    )
 class Business(Base):
     __tablename__ = "businesses"
 
@@ -509,21 +516,24 @@ def ensure_subscription_schema():
         # ---------------------------------------------------------
 
         columns_to_add = {
-            "business_id":
-                "INTEGER",
+    "business_id":
+        "INTEGER",
 
-            "current_services_limit":
-                "INTEGER DEFAULT 10",
+    "current_services_limit":
+        "INTEGER DEFAULT 10",
 
-            "pending_services_limit":
-                "INTEGER",
+    "pending_services_limit":
+        "INTEGER",
 
-            "current_price":
-                "REAL DEFAULT 7.99",
+    "current_price":
+        "REAL DEFAULT 7.99",
 
-            "pending_price":
-                "REAL"
-        }
+    "pending_price":
+        "REAL",
+
+    "paddle_last_event_at":
+        "TIMESTAMP",
+}
 
         for column_name, column_definition in columns_to_add.items():
 
