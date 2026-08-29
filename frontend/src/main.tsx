@@ -6080,7 +6080,11 @@ const tokenResponse = await fetch(
   API + '/admin/subscription/checkout-token',
   {
     method: 'POST',
-    headers: headers()
+    headers: {
+      ...headers(),
+      'X-Bookly-Business-Id':
+        String(selectedBusinessId)
+    }
   }
 );
 
