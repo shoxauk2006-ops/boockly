@@ -120,7 +120,7 @@ def _require_config() -> None:
         missing.append("BOOKLY_BASE_PRICE_ID")
     if any(not PRICE_IDS[x] for x in (20, 30, 50, 100)):
         missing.append("SERVICE_ADDON_PRICE_IDS")
-            configured_price_ids = {
+        configured_price_ids = {
         limit: PRICE_IDS[limit]
         for limit in (10, 20, 30, 50, 100)
         if PRICE_IDS[limit]
