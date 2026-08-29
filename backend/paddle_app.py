@@ -579,23 +579,32 @@ def _apply_paddle_event(payload: dict) -> None:
                 scheduled_change.get("effective_at")
             )
 
-            if (
-                scheduled_action == "cancel"
+                        if (
+                scheduled_action in {"cancel", "pause"}
                 and scheduled_effective_at
             ):
-                subscription.status = "cancelled"
+                subscription.status = "active"
                 subscription.active = True
-                subscription.expires_at = (
-                    scheduled_effective_at
+                subscription.expires_at = scheduled_effective_at
+            else:
+                subscription.status = (
+                    status
+                    or subscription.status
+                    or "active"
                 )
-            elif (
-                scheduled_action == "pause"
-                and scheduled_effective_at
-            ):
-                subscription.status = "paused"
-                subscription.active = True
+
+                subscription.active = (
+                    subscription.status
+                    not in {
+                        "canceled",
+                        "cancelled",
+                        "paused",
+                    }
+                )
+
                 subscription.expires_at = (
-                    scheduled_effective_at
+                    _dt(next_billed_at)
+                    or subscription.expires_at
                 )
             else:
                 subscription.status = (
