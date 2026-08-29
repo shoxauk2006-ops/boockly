@@ -5410,7 +5410,7 @@ const recurringTotal =
             '{current}',
             String(currentServicesLimit)
           )
-          .replace(
+          .replaceAll(
             '{limit}',
             String(newLimit)
           )
