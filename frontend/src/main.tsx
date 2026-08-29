@@ -5779,19 +5779,6 @@ await refreshAfterChange({
       'Пакет отменён на следующее продление'
     )}
 
-    <p className="muted">
-      {t(
-        'owner.packageStillActive',
-        'Сейчас у вас'
-      )}{' '}
-      {currentServicesLimit}{' '}
-      {t(
-        'owner.servicesUntilPeriodEnd',
-        'услуг. До конца оплаченного периода пакет продолжает действовать.'
-      )}
-    </p>
-  </div>
-)}
 
 {pendingLimitChange && !packageCancellationPending && (
   <div
