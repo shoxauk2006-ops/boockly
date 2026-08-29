@@ -446,7 +446,6 @@ def _apply_paddle_event(payload: dict) -> None:
             return
 
         if event_type not in SUPPORTED_PADDLE_EVENTS:
-            ...
             _mark_event_processed(
                 db,
                 event_id,
