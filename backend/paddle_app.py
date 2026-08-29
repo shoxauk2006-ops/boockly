@@ -429,12 +429,22 @@ def _apply_paddle_event(payload: dict) -> None:
         )
 
     with SessionLocal() as db:
-        if _event_already_processed(
-            db,
-            event_id,
-        ):
-            db.rollback()
-            return
+    if not event_id:
+        raise ValueError("Paddle event_id is missing")
+
+    try:
+        with db.begin_nested():
+            if _event_already_processed(db, event_id):
+                return
+
+            _mark_event_processed(
+                db,
+                event_id,
+                event_type,
+            )
+    except IntegrityError:
+        db.rollback()
+        return
 
         if event_type not in SUPPORTED_PADDLE_EVENTS:
             _mark_event_processed(
