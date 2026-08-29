@@ -5774,11 +5774,26 @@ await refreshAfterChange({
     className="success"
     style={{ marginTop: 12 }}
   >
-    {t(
-      'owner.packageCancelledNextPeriod',
-      'Пакет отменён на следующее продление'
-    )}
+    <strong>
+      {t(
+        'owner.packageCancelledNextPeriod',
+        'Пакет отменён на следующее продление'
+      )}
+    </strong>
 
+    <p className="muted">
+      {t(
+        'owner.packageStillActive',
+        'Сейчас у вас'
+      )}{' '}
+      {currentServicesLimit}{' '}
+      {t(
+        'owner.servicesUntilPeriodEnd',
+        'услуг. До конца оплаченного периода пакет продолжает действовать.'
+      )}
+    </p>
+  </div>
+)}
 
 {pendingLimitChange && !packageCancellationPending && (
   <div
@@ -5796,26 +5811,10 @@ await refreshAfterChange({
       {' '}
       Со следующего продления будет {pendingServicesLimit} {t('owner.services')}
       {' '}
-      за ${(
-        7.99 + pendingAddonPrice
-      ).toFixed(2)} {t('owner.perMonth')}.
+      за ${(7.99 + pendingAddonPrice).toFixed(2)} {t('owner.perMonth')}.
     </p>
   </div>
 )}
-</strong>
-            <p className="muted">
-  {t(
-    'owner.packageStillActive',
-    'Сейчас у вас'
-  )}{' '}
-  {currentServicesLimit}{' '}
-  {t(
-    'owner.servicesUntilPeriodEnd',
-    'услуг. До конца оплаченного периода пакет продолжает действовать.'
-  )}
-</p>
-          </div>
-        )}
 
         <button
           type="button"
