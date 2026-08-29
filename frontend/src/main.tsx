@@ -5773,11 +5773,12 @@ await refreshAfterChange({
             className="success"
             style={{ marginTop: 12 }}
           >
-            <strong>
+            
   {t(
     'owner.packageCancelledNextPeriod',
     'Пакет отменён на следующее продление'
   )}
+            <strong>
               {pendingLimitChange && !packageCancellationPending && (
   <div
     className="success"
