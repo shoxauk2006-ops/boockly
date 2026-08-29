@@ -6076,15 +6076,38 @@ if (
   });
 }
 
+const tokenResponse = await fetch(
+  API + '/admin/subscription/checkout-token',
+  {
+    method: 'POST',
+    headers: headers()
+  }
+);
+
+const tokenData =
+  await tokenResponse.json().catch(
+    () => null
+  );
+
+if (
+  !tokenResponse.ok ||
+  !tokenData?.token
+) {
+  throw new Error(
+    tokenData?.detail ||
+    t(
+      'owner.paymentPreparationError',
+      'Не удалось подготовить оплату'
+    )
+  );
+}
+
 window.Paddle.Checkout.open({
   items,
   customData: {
-    telegram_user_id:
-      String(ownerId),
-
-    business_id:
-      String(selectedBusinessId)
-  }
+  checkout_token:
+    tokenData.token
+}
   });
   } catch (error: any) {
     console.error(
