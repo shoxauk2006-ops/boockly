@@ -120,6 +120,30 @@ def _require_config() -> None:
         missing.append("BOOKLY_BASE_PRICE_ID")
     if any(not PRICE_IDS[x] for x in (20, 30, 50, 100)):
         missing.append("SERVICE_ADDON_PRICE_IDS")
+            configured_price_ids = {
+        limit: PRICE_IDS[limit]
+        for limit in (10, 20, 30, 50, 100)
+        if PRICE_IDS[limit]
+    }
+
+    duplicate_price_ids = {
+        price_id
+        for price_id in configured_price_ids.values()
+        if list(configured_price_ids.values()).count(price_id) > 1
+    }
+
+    if duplicate_price_ids:
+        duplicated_limits = [
+            limit
+            for limit, price_id in configured_price_ids.items()
+            if price_id in duplicate_price_ids
+        ]
+
+        raise HTTPException(
+            500,
+            "Paddle Price IDs must be unique for Bookly limits: "
+            + ", ".join(map(str, duplicated_limits)),
+        )
     if missing:
         raise HTTPException(
             500,
