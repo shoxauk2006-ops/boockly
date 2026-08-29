@@ -2644,49 +2644,58 @@ def _paddle_update_bookly_subscription(
 @app.post("/admin/subscription/preview-limit")
 def preview_subscription_limit(
     x: SubscriptionLimitChangeIn,
-    x_telegram_init_data: str = Header(
-        default="",
-        alias="X-Telegram-Init-Data"
-    )
+    x_telegram_init_data: str = Header(default=""),
 ):
-    user = telegram_user(x_telegram_init_data)
+    _, _, business_id, subscription_id = _current_subscription(
+        x_telegram_init_data
+    )
 
-    if x.services_limit not in {20, 30, 50, 100}:
+    if x.services_limit not in LIMITS:
         raise HTTPException(
             400,
-            "Preview доступен только для увеличения лимита"
+            "Недопустимый лимит услуг",
         )
 
     with SessionLocal() as db:
-        business = owner_business(db, int(user["id"]))
-        if not business:
-            raise HTTPException(404, "Business not found")
-
-        subscription = owner_subscription(db, business.id)
-        if not subscription:
-            raise HTTPException(404, "Subscription not found")
-
-        if not subscription.external_subscription_id:
-            raise HTTPException(
-                400,
-                "Paddle subscription ID is missing"
-            )
-
-        current_limit = subscription.current_services_limit or 10
-        if x.services_limit <= current_limit:
-            raise HTTPException(
-                400,
-                "Новый лимит должен быть больше текущего"
-            )
-
-        return _paddle_request(
-            "PATCH",
-            f"/subscriptions/{subscription.external_subscription_id}/preview",
-            {
-                "items": _bookly_subscription_items(x.services_limit),
-                "proration_billing_mode": "prorated_immediately"
-            }
+        subscription = owner_subscription(
+            db,
+            business_id,
         )
+
+        if not subscription or not subscription.active:
+            raise HTTPException(
+                400,
+                "Active subscription required",
+            )
+
+        current = (
+            subscription.current_services_limit
+            or 10
+        )
+
+    if x.services_limit == current:
+        raise HTTPException(
+            400,
+            "Этот лимит уже установлен",
+        )
+
+    proration_mode = (
+        "prorated_immediately"
+        if x.services_limit > current
+        else "prorated_next_billing_period"
+    )
+
+    return _paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}/preview",
+        {
+            "items": _items_for_limit(
+                x.services_limit
+            ),
+            "proration_billing_mode": proration_mode,
+            "on_payment_failure": "prevent_change",
+        },
+    )
 
 
 @app.post("/admin/subscription/change-limit")
