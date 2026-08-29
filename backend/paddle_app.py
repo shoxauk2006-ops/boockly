@@ -329,10 +329,11 @@ def _verify_checkout_token(token: str) -> dict:
         return payload
 
     except Exception as exc:
-        raise ValueError(
+                raise ValueError(
             "Invalid checkout token"
         ) from exc
-        
+
+
 def _dt(value: Optional[str]):
     if not value:
         return None
