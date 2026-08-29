@@ -429,8 +429,8 @@ def _apply_paddle_event(payload: dict) -> None:
         )
 
         with SessionLocal() as db:
-        if not event_id:
-            raise ValueError("Paddle event_id is missing")
+            if not event_id:
+                raise ValueError("Paddle event_id is missing")
 
         try:
             with db.begin_nested():
