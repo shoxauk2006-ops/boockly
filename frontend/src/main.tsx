@@ -5414,7 +5414,7 @@ const recurringTotal =
             '{limit}',
             String(newLimit)
           )
-          .replace(
+          .replaceAll(
             '{price}',
             nextPrice.toFixed(2)
           )
