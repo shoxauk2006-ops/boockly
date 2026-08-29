@@ -564,13 +564,14 @@ def _apply_paddle_event(payload: dict) -> None:
             business,
         )
 
-        if (
-            subscription.paddle_last_event_at
-            and occurred_at
-            < subscription.paddle_last_event_at
-        ):
-            db.commit()
-            return
+        if event_type.startswith("subscription."):
+    if (
+        subscription.paddle_last_event_at
+        and occurred_at
+        < subscription.paddle_last_event_at
+    ):
+        db.commit()
+        return
 
         if subscription_id.startswith("sub_"):
             subscription.external_subscription_id = (
@@ -770,14 +771,15 @@ def _apply_paddle_event(payload: dict) -> None:
             subscription.status = "paused"
             subscription.active = False
 
-        subscription.paddle_last_event_at = (
-            occurred_at
-        )
+        if event_type.startswith("subscription."):
+    subscription.paddle_last_event_at = (
+        occurred_at
+    )
 
-        _sync_business_from_subscription(
-            business,
-            subscription,
-        )
+_sync_business_from_subscription(
+    business,
+    subscription,
+)
 
         db.commit()
 
