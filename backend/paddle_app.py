@@ -171,14 +171,63 @@ def _items_for_limit(limit: int) -> list[dict]:
 
 
 def _limit_from_items(items) -> int:
-    price_to_limit = {v: k for k, v in PRICE_IDS.items() if v}
-    detected = 10
+    base_price_id = PRICE_IDS[10]
+
+    if not base_price_id:
+        raise HTTPException(
+            500,
+            "Bookly Pro base Price ID is not configured",
+        )
+
+    addon_price_to_limit = {
+        PRICE_IDS[20]: 20,
+        PRICE_IDS[30]: 30,
+        PRICE_IDS[50]: 50,
+        PRICE_IDS[100]: 100,
+    }
+
+    bookly_price_ids = {
+        base_price_id,
+        *(
+            price_id
+            for price_id in addon_price_to_limit
+            if price_id
+        ),
+    }
+
+    detected_price_ids = set()
+
     for item in items or []:
         price = item.get("price") or {}
-        price_id = str(item.get("price_id") or price.get("id") or "")
-        if price_id in price_to_limit:
-            detected = max(detected, price_to_limit[price_id])
-    return detected
+
+        price_id = str(
+            item.get("price_id")
+            or price.get("id")
+            or ""
+        )
+
+        if price_id in bookly_price_ids:
+            detected_price_ids.add(price_id)
+
+    if detected_price_ids == {base_price_id}:
+        return 10
+
+    matching_limits = [
+        limit
+        for price_id, limit in addon_price_to_limit.items()
+        if price_id in detected_price_ids
+    ]
+
+    if (
+        base_price_id in detected_price_ids
+        and len(matching_limits) == 1
+    ):
+        return matching_limits[0]
+
+    raise HTTPException(
+        500,
+        "Invalid Bookly Paddle subscription items",
+    )
 
 
 def _dt(value: Optional[str]):
