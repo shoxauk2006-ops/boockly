@@ -1,0 +1,68 @@
+name: subscription-localization-fix
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply localization fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, traceback
+          try:
+              main = Path('frontend/src/main.tsx')
+              text = main.read_text(encoding='utf-8')
+              pattern = re.compile(r'<strong>\s*Запланировано изменение лимита\s*</strong>\s*<p className="muted">.*?</p>', re.S)
+              replacement = '''<strong>
+      {t('owner.scheduledLimitChangeTitle', 'Запланировано изменение лимита')}
+    </strong>
+
+    <p className="muted">
+      {t(
+        'owner.scheduledLimitChangeDescription',
+        'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.'
+      )
+        .replaceAll('{current}', String(currentServicesLimit))
+        .replaceAll('{pending}', String(pendingServicesLimit))
+        .replaceAll('{price}', (7.99 + pendingAddonPrice).toFixed(2))}
+    </p>'''
+              text, count = pattern.subn(replacement, text, count=1)
+              if count != 1:
+                  raise RuntimeError('scheduled block not found')
+              main.write_text(text, encoding='utf-8')
+
+              i18n = Path('frontend/src/i18n.ts')
+              text = i18n.read_text(encoding='utf-8')
+              data = {
+                'ru': ["  'owner.decreaseServiceLimitConfirm': 'Уменьшить лимит с {current} до {limit} услуг?\\n\\nВозврата за текущий оплаченный период не будет.\\nТекущий лимит останется действовать до конца периода.\\n\\nС следующего продления лимит станет {limit} услуг.\\nНовая цена: ${price}/мес.',", "  'owner.scheduledLimitChangeTitle': 'Запланировано изменение лимита',", "  'owner.scheduledLimitChangeDescription': 'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.',"],
+                'en': ["  'owner.decreaseServiceLimitConfirm': 'Decrease the limit from {current} to {limit} services?\\n\\nThere will be no refund for the current paid period.\\nThe current limit will remain active until the end of the period.\\n\\nFrom the next renewal, the limit will be {limit} services.\\nNew price: ${price}/month.',", "  'owner.scheduledLimitChangeTitle': 'Scheduled limit change',", "  'owner.scheduledLimitChangeDescription': 'You currently have {current} services. Your current limit remains active until the end of the paid period. From the next renewal, you will have {pending} services for ${price}/month.',"],
+                'uzExtra': ["  'owner.decreaseServiceLimitConfirm': 'Xizmatlar limitini {current} tadan {limit} tagacha kamaytirilsinmi?\\n\\nJoriy to‘langan davr uchun pul qaytarilmaydi.\\nJoriy limit davr oxirigacha amal qiladi.\\n\\nKeyingi yangilanishdan limit {limit} ta xizmat bo‘ladi.\\nYangi narx: ${price}/oy.',", "  'owner.scheduledLimitChangeTitle': 'Limit o‘zgarishi rejalashtirildi',", "  'owner.scheduledLimitChangeDescription': 'Hozir sizda {current} ta xizmat bor. Joriy limit to‘langan davr oxirigacha amal qiladi. Keyingi yangilanishdan {pending} ta xizmat bo‘ladi va narx ${price}/oy.',"],
+                'trExtra': ["  'owner.decreaseServiceLimitConfirm': 'Hizmet limitini {current} hizmetten {limit} hizmete düşürmek istiyor musunuz?\\n\\nMevcut ücretli dönem için geri ödeme yapılmayacaktır.\\nMevcut limit dönemin sonuna kadar geçerli kalacaktır.\\n\\nSonraki yenilemeden itibaren limit {limit} hizmet olacaktır.\\nYeni fiyat: ${price}/ay.',", "  'owner.scheduledLimitChangeTitle': 'Planlanan limit değişikliği',", "  'owner.scheduledLimitChangeDescription': 'Şu anda {current} hizmetiniz var. Mevcut limitiniz ücretli dönemin sonuna kadar geçerli kalır. Sonraki yenilemeden itibaren {pending} hizmet olacak ve fiyat ${price}/ay olacaktır.',"],
+                'arExtra': ["  'owner.decreaseServiceLimitConfirm': 'هل تريد خفض حد الخدمات من {current} إلى {limit} خدمة؟\\n\\nلن يتم رد أي مبلغ عن الفترة المدفوعة الحالية.\\nسيظل الحد الحالي فعالًا حتى نهاية الفترة.\\n\\nبدءًا من التجديد التالي، سيصبح الحد {limit} خدمة.\\nالسعر الجديد: ${price}/شهريًا.',", "  'owner.scheduledLimitChangeTitle': 'تم جدولة تغيير الحد',", "  'owner.scheduledLimitChangeDescription': 'لديك حاليًا {current} خدمة. يظل الحد الحالي فعالًا حتى نهاية الفترة المدفوعة. بدءًا من التجديد التالي سيكون لديك {pending} خدمة بسعر ${price} شهريًا.',"]
+              }
+              for name, lines in data.items():
+                  marker = f'const {name}: TranslationMap = {{'
+                  if marker not in text:
+                      raise RuntimeError(f'{name} map not found')
+                  start = text.index(marker) + len(marker)
+                  end = text.find('\n};', start)
+                  if "'owner.decreaseServiceLimitConfirm'" not in text[start:end]:
+                      text = text[:start] + '\n' + '\n'.join(lines) + text[start:]
+              i18n.write_text(text, encoding='utf-8')
+              Path('.github/workflows/subscription-localization-fix.yml').unlink(missing_ok=True)
+          except Exception:
+              Path('LOCALIZATION_FIX_ERROR.txt').write_text(traceback.format_exc(), encoding='utf-8')
+          PY
+      - name: Commit result
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add frontend/src/main.tsx frontend/src/i18n.ts .github/workflows/subscription-localization-fix.yml LOCALIZATION_FIX_ERROR.txt
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Fix subscription localization"
+          git push
