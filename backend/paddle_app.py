@@ -507,8 +507,6 @@ def _apply_paddle_event(payload: dict) -> None:
                 _dt(next_billed_at)
                 or subscription.expires_at
             )
-            subscription.pending_services_limit = None
-            subscription.pending_price = None
 
         elif event_type == "transaction.payment_failed":
             subscription.status = (
