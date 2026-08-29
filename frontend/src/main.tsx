@@ -5296,15 +5296,28 @@ function Subscription({
 };
 
   const changeServiceLimit = async (
-    newLimit: number
-  ) => {
-    if (changingServiceLimit) return;
+  newLimit: number
+) => {
+  if (changingServiceLimit) return;
 
-    setChangingServiceLimit(true);
-    setChangingServiceLimitValue(newLimit);
-    
+  const isUpgrade = newLimit > currentServicesLimit;
 
-    try {
+  setChangingServiceLimit(true);
+  setChangingServiceLimitValue(newLimit);
+
+  try {
+    const nextPrice =
+      newLimit === 20 ? 12.98 :
+      newLimit === 30 ? 15.98 :
+      newLimit === 50 ? 19.98 :
+      27.98;
+
+    /*
+     * UPGRADE:
+     * Сначала запрашиваем у Paddle preview,
+     * чтобы показать реальную доплату сейчас.
+     */
+    if (isUpgrade) {
       const previewResponse = await fetch(
         API + '/admin/subscription/preview-limit',
         {
@@ -5323,75 +5336,163 @@ function Subscription({
       if (!previewResponse.ok) {
         throw new Error(
           preview?.detail ||
-          t('owner.limitChangePriceError', 'Не удалось рассчитать стоимость изменения лимита')
+          t(
+            'owner.limitChangePriceError',
+            'Не удалось рассчитать стоимость изменения лимита'
+          )
         );
       }
 
       const immediateAmount =
-  preview?.data?.immediate_transaction?.details?.totals?.total ??
-  preview?.immediate_transaction?.details?.totals?.total ??
-  0;
+        preview?.data?.immediate_transaction?.details?.totals?.total ??
+        preview?.immediate_transaction?.details?.totals?.total ??
+        0;
 
       const recurringTotal =
         preview?.data?.recurring_transaction_details?.totals?.total ??
         preview?.data?.next_transaction?.details?.totals?.total ??
         null;
 
-      const nextPrice =
-        newLimit === 20 ? 12.98 :
-        newLimit === 30 ? 15.98 :
-        newLimit === 50 ? 19.98 :
-        27.98;
-
       const confirmed = await confirmAsync(
-        t('owner.increaseServiceLimitConfirm', 'Увеличить лимит до {limit} услуг?\n\nСейчас к оплате: ${now}\nСо следующего продления: ${next}/мес.')
-        .replace('{limit}', String(newLimit))
-        .replace('{now}', `$${(Number(immediateAmount) / 100).toFixed(2)}`)
-        .replace('{next}', `$${recurringTotal !== null ? (Number(recurringTotal) / 100).toFixed(2) : nextPrice.toFixed(2)}`)
+        t(
+          'owner.increaseServiceLimitConfirm',
+          'Увеличить лимит с {current} до {limit} услуг?\n\nСейчас к оплате: ${now}\nСо следующего продления: ${next}/мес.'
+        )
+          .replace(
+            '{current}',
+            String(currentServicesLimit)
+          )
+          .replace(
+            '{limit}',
+            String(newLimit)
+          )
+          .replace(
+            '{now}',
+            `$${(
+              Number(immediateAmount) / 100
+            ).toFixed(2)}`
+          )
+          .replace(
+            '{next}',
+            `${
+              recurringTotal !== null
+                ? (
+                    Number(recurringTotal) / 100
+                  ).toFixed(2)
+                : nextPrice.toFixed(2)
+            }`
+          )
       );
 
-      if (!confirmed) return;
-
-      const response = await fetch(
-        API + '/admin/subscription/change-limit',
-        {
-          method: 'POST',
-          headers: headers(),
-          body: JSON.stringify({
-            services_limit: newLimit
-          })
-        }
-      );
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.detail ||
-          t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
-        );
+      if (!confirmed) {
+        return;
       }
+    }
 
-      await refreshAfterChange({
-  services_limit:
-    data?.current_services_limit ?? newLimit,
-  current_price:
-    data?.current_price ?? nextPrice,
-  pending_services_limit:
-    data?.pending_services_limit ?? null,
-  pending_price:
-    data?.pending_price ?? null
-});
-    } catch (e: any) {
-      alert(
-        e?.message ||
-        t('owner.changeServiceLimitError', 'Не удалось изменить лимит услуг')
+    /*
+     * DOWNGRADE:
+     * Никакого preview Paddle не вызываем.
+     *
+     * Пользователь уже оплатил текущий период.
+     * Поэтому новый меньший пакет начинает действовать
+     * только со следующего продления.
+     */
+    if (!isUpgrade) {
+      const confirmed = await confirmAsync(
+        t(
+          'owner.decreaseServiceLimitConfirm',
+          'Уменьшить лимит с {current} до {limit} услуг?\n\nВозврата за текущий оплаченный период не будет.\nТекущий лимит останется действовать до конца периода.\n\nС следующего продления лимит станет {limit} услуг.\nНовая цена: ${price}/мес.'
+        )
+          .replace(
+            '{current}',
+            String(currentServicesLimit)
+          )
+          .replace(
+            '{limit}',
+            String(newLimit)
+          )
+          .replace(
+            '{price}',
+            nextPrice.toFixed(2)
+          )
       );
-    } finally {
-  setChangingServiceLimit(false);
-  setChangingServiceLimitValue(null);
-}
-  };
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    /*
+     * После подтверждения применяем изменение.
+     *
+     * Upgrade:
+     *   current_services_limit -> новый лимит сразу
+     *
+     * Downgrade:
+     *   current_services_limit остаётся прежним
+     *   pending_services_limit = новый лимит
+     */
+    const response = await fetch(
+      API + '/admin/subscription/change-limit',
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          services_limit: newLimit
+        })
+      }
+    );
+
+    const data = await response
+      .json()
+      .catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail ||
+        t(
+          'owner.changeServiceLimitError',
+          'Не удалось изменить лимит услуг'
+        )
+      );
+    }
+
+    await refreshAfterChange({
+      services_limit:
+        data?.current_services_limit ??
+        currentServicesLimit,
+
+      current_price:
+        data?.current_price ??
+        currentPrice,
+
+      pending_services_limit:
+        data?.pending_services_limit ??
+        null,
+
+      pending_price:
+        data?.pending_price ??
+        null
+    });
+
+  } catch (e: any) {
+    console.error(
+      'CHANGE SERVICE LIMIT ERROR:',
+      e
+    );
+
+    alert(
+      e?.message ||
+      t(
+        'owner.changeServiceLimitError',
+        'Не удалось изменить лимит услуг'
+      )
+    );
+  } finally {
+    setChangingServiceLimit(false);
+    setChangingServiceLimitValue(null);
+  }
+};
 
   const cancelPackage = async () => {
     if (changingServiceLimit) return;
