@@ -311,6 +311,11 @@ def _mark_event_processed(
 def _apply_paddle_event(payload: dict) -> None:
     event_id = str(payload.get("event_id") or "")
     event_type = str(payload.get("event_type") or "")
+
+    if not event_id:
+        raise ValueError(
+            "Paddle event_id is missing"
+        ))
     data = payload.get("data") or {}
     custom = data.get("custom_data") or {}
 
