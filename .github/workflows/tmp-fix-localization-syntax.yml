@@ -1,0 +1,52 @@
+name: Temporary localization syntax fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fix generated translation entries
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('frontend/src/i18n.ts')
+          text = p.read_text(encoding='utf-8')
+
+          text = re.sub(
+              r"\\n  (owner\\.(?:increaseServiceLimitConfirm|decreaseServiceLimitConfirm|scheduledLimitChangeTitle|scheduledLimitChangeDescription)):",
+              r"\n  '\\1':",
+              text,
+          )
+
+          p.write_text(text, encoding='utf-8')
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/i18n.ts
+          git commit -m "Fix subscription translation syntax" || exit 0
+          git push
+
+      - name: Remove temporary workflow
+        if: always()
+        run: |
+          if [ -f .github/workflows/tmp-fix-localization-syntax.yml ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git rm .github/workflows/tmp-fix-localization-syntax.yml
+            git commit -m "Remove temporary localization syntax workflow"
+            git push
+          fi
