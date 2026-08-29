@@ -4744,7 +4744,7 @@ function QrPrintCard({
           <div className="qr-print-code">
             <img
               src={qrDataUrl}
-              alt={t('owner.qrBookingAlt', 'QR-код для записи')}
+              alt="QR-код для записи"
             />
           </div>
 
