@@ -112,18 +112,28 @@ _remove_routes(
 
 def _require_config() -> None:
     missing = []
+
     if not PADDLE_API_KEY:
         missing.append("API_KEY")
+
     if not PADDLE_WEBHOOK_SECRET:
         missing.append("WEBHOOK_SECRET")
+
     if not PRICE_IDS[10]:
         missing.append("BOOKLY_BASE_PRICE_ID")
+
     if any(not PRICE_IDS[x] for x in (20, 30, 50, 100)):
         missing.append("SERVICE_ADDON_PRICE_IDS")
-        configured_price_ids = {
+
+    if missing:
+        raise HTTPException(
+            500,
+            f"Paddle {PADDLE_ENV} configuration is incomplete: {', '.join(missing)}",
+        )
+
+    configured_price_ids = {
         limit: PRICE_IDS[limit]
         for limit in (10, 20, 30, 50, 100)
-        if PRICE_IDS[limit]
     }
 
     duplicate_price_ids = {
@@ -143,11 +153,6 @@ def _require_config() -> None:
             500,
             "Paddle Price IDs must be unique for Bookly limits: "
             + ", ".join(map(str, duplicated_limits)),
-        )
-    if missing:
-        raise HTTPException(
-            500,
-            f"Paddle {PADDLE_ENV} configuration is incomplete: {', '.join(missing)}",
         )
 
 
