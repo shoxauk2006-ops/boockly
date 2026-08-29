@@ -1,142 +1,166 @@
-name: Integrate client workspace into React
+name: Restore inactive subscription limit button
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
-  integrate:
+  patch:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Integrate client workspace
-        shell: bash
+      - name: Patch subscription UI
+        shell: python
         run: |
-          python - <<'PY'
           from pathlib import Path
           import re
 
-          main = Path('frontend/src/main.tsx')
-          css = Path('frontend/src/style.css')
-          index = Path('frontend/index.html')
+          path = Path('frontend/src/main.tsx')
+          text = path.read_text(encoding='utf-8')
 
-          s = main.read_text(encoding='utf-8')
+          state_marker = "  const [subscriptionModal, setSubscriptionModal] =\n    useState(false);"
+          state_insert = state_marker + "\n  const [serviceLimitOptionsOpen, setServiceLimitOptionsOpen] =\n    useState(false);\n  const [selectedServiceLimit, setSelectedServiceLimit] =\n    useState(10);"
 
-          component = r'''
-function PersonalWorkspace({onAdmin,slug,setSlug,open,t}:{onAdmin:()=>void;slug:string;setSlug:(value:string)=>void;open:(input?:string)=>void;t:(key:string,fallback?:string)=>string}) {
-  type Tab='home'|'bookings'|'saved';
-  const [tab,setTab]=useState<Tab>('home');
-  const [bookings,setBookings]=useState<any[]>([]);
-  const [saved,setSaved]=useState<any[]>([]);
-  const [businesses,setBusinesses]=useState<any[]>([]);
-  const [loading,setLoading]=useState(true);
+          if 'serviceLimitOptionsOpen' not in text:
+              if text.count(state_marker) != 1:
+                  raise SystemExit('Subscription state marker not found exactly once')
+              text = text.replace(state_marker, state_insert, 1)
 
-  useEffect(()=>{
-    let cancelled=false;
-    const load=async()=>{
-      setLoading(true);
-      const results=await Promise.allSettled([
-        fetch(API+'/my/bookings',{headers:headers()}),
-        fetch(API+'/my/saved-businesses',{headers:headers()}),
-        fetch(API+'/admin/businesses',{headers:headers()})
-      ]);
-      if(cancelled)return;
-      const read=async(r:PromiseSettledResult<Response>)=>{
-        if(r.status!=='fulfilled'||!r.value.ok)return [];
-        const data=await r.value.json().catch(()=>[]);
-        return Array.isArray(data)?data:[];
-      };
-      const [b,s,bs]=await Promise.all(results.map(read));
-      if(cancelled)return;
-      setBookings(b);setSaved(s);setBusinesses(bs);setLoading(false);
-    };
-    load();
-    return()=>{cancelled=true;};
-  },[]);
+          marker = "'owner.payToUnlock'"
+          marker_pos = text.index(marker)
 
-  const firstName=tg()?.initDataUnsafe?.user?.first_name||'';
-  const nav=(key:Tab,icon:string,label:string)=>(<button type="button" className={tab===key?'active':''} onClick={()=>setTab(key)}><span>{icon}</span><small>{label}</small></button>);
+          if 'Увеличить лимит услуг' not in text:
+              after_marker = text[marker_pos:]
+              checkout_match = re.search(
+                  r"checkout\(\s*['\"]paddle['\"]\s*,\s*business\.id(?:\s*,\s*[^)]*)?\)",
+                  after_marker
+              )
+              if not checkout_match:
+                  raise SystemExit('Inactive Paddle checkout call not found')
 
-  return <section className="personal-workspace" dir={getStoredLanguage()==='ar'?'rtl':'ltr'}>
-    {loading ? <div className="personal-loading"><div className="personal-spinner"/><span>{t('common.loading')}</span></div> : null}
+              checkout_pos = marker_pos + checkout_match.start()
+              button_start = text.rfind('<button', marker_pos, checkout_pos)
+              if button_start < 0:
+                  raise SystemExit('Inactive payment button start not found')
 
-    {!loading&&tab==='home' ? <>
-      <section className="personal-hero"><div className="personal-eyebrow">BOOKLY</div><h1>{firstName?`${t('home.title')}, ${firstName}`:t('home.title')}</h1><p>{t('home.description')}</p></section>
-      <section className="personal-card"><div className="personal-card-kicker">{t('home.openBusiness')}</div><h2>{t('home.openBusiness')}</h2><div className="personal-search-row"><input value={slug} onChange={e=>setSlug(e.target.value)} placeholder={t('home.slugPlaceholder')}/><button type="button" onClick={()=>open()}>{t('common.open')}</button></div></section>
-      <section className="personal-card personal-business-card"><div className="personal-card-kicker">{t('nav.admin')}</div>{businesses.length?<><h2>{businesses[0].name||t('owner.currentBusiness')}</h2><p>{businesses[0].address||''}</p><button type="button" className="personal-primary-button" onClick={onAdmin}>{t('home.openAdmin')}</button></>:<><h2>{t('owner.noBusiness')}</h2><button type="button" className="personal-primary-button" onClick={onAdmin}>{t('owner.addBusiness')}</button></>}</section>
-    </> : null}
+              block = '''<div
+  style={{
+    marginTop: 20,
+    paddingTop: 20,
+    borderTop: '1px solid #eee'
+  }}
+>
+  <button
+    type="button"
+    onClick={() =>
+      setServiceLimitOptionsOpen(
+        !serviceLimitOptionsOpen
+      )
+    }
+    style={{
+      width: '100%',
+      padding: '8px 0',
+      border: 'none',
+      background: 'transparent',
+      color: '#111',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      fontSize: 16,
+      fontWeight: 600,
+      cursor: 'pointer'
+    }}
+  >
+    <span>{t('owner.increaseServiceLimit')}</span>
+    <span style={{ fontSize: 20 }}>
+      {serviceLimitOptionsOpen ? '⌃' : '›'}
+    </span>
+  </button>
 
-    {!loading&&tab==='bookings' ? <section className="personal-page-section"><div className="personal-page-header"><div className="personal-eyebrow">BOOKLY</div><h1>{t('client.myBookings')}</h1></div>{bookings.length?<div className="personal-list">{bookings.map((item:any,index:number)=><article className="personal-list-card" key={item.id??index}><div className="personal-list-main"><strong>{item.business_name||'Bookly'}</strong><small>{item.service_name||''}</small></div><div className="personal-list-meta"><strong>{item.day||''}</strong><span>{item.start?item.start.slice(0,5):''}</span></div></article>)}</div>:<div className="personal-empty"><div className="personal-empty-icon">◷</div><h3>{t('client.noBookings')}</h3></div>}</section> : null}
+  {serviceLimitOptionsOpen && (
+    <div
+      style={{
+        display: 'grid',
+        gap: 10,
+        marginTop: 12
+      }}
+    >
+      {[
+        { limit: 20, price: '$4.99' },
+        { limit: 30, price: '$7.99' },
+        { limit: 50, price: '$11.99' },
+        { limit: 100, price: '$19.99' }
+      ].map(option => (
+        <button
+          key={option.limit}
+          type="button"
+          className="subscription-manage-button"
+          disabled={subscriptionActionLoading || changingServiceLimit}
+          onClick={() =>
+            setSelectedServiceLimit(option.limit)
+          }
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%'
+          }}
+        >
+          <span>
+            {t('owner.upToServices')} {option.limit} {t('owner.services')}
+          </span>
+          <strong>
+            {option.price} {t('owner.perMonth')}
+          </strong>
+        </button>
+      ))}
+    </div>
+  )}
+</div>
 
-    {!loading&&tab==='saved' ? <section className="personal-page-section"><div className="personal-page-header"><div className="personal-eyebrow">BOOKLY</div><h1>{t('client.savedBusinesses')}</h1></div>{saved.length?<div className="personal-list">{saved.map((item:any,index:number)=><button type="button" className="personal-list-card personal-list-button" key={item.id??index} onClick={()=>open(item.slug)}><span className="personal-saved-icon">♡</span><span className="personal-list-main"><strong>{item.name||'Bookly'}</strong><small>{item.address||''}</small></span><span className="personal-arrow">›</span></button>)}</div>:<div className="personal-empty"><div className="personal-empty-icon">♡</div><h3>{t('client.noSavedBusinesses')}</h3></div>}</section> : null}
-
-    <nav className="personal-bottom-nav" aria-label="Bookly">{nav('home','⌂',t('nav.home'))}{nav('bookings','◷',t('nav.bookings'))}{nav('saved','♡',t('nav.saved'))}</nav>
-  </section>;
-}
 '''
+              text = text[:button_start] + block + text[button_start:]
 
-          if 'function PersonalWorkspace(' not in s:
-              marker='\nfunction Home(p: any) {'
-              if marker not in s: raise SystemExit('Home component marker not found')
-              s=s.replace(marker,'\n'+component+marker,1)
+          marker_pos = text.index(marker)
+          after_marker = text[marker_pos:]
+          match = re.search(
+              r"checkout\(\s*['\"]paddle['\"]\s*,\s*business\.id(?:\s*,\s*[^)]*)?\)",
+              after_marker
+          )
+          if not match:
+              raise SystemExit('Inactive Paddle checkout call not found')
 
-          pattern=re.compile(r"\n  \{mode==='home' &&\s*<Home[\s\S]*?\n  \}\n\n  \{mode==='admin' &&",re.MULTILINE)
-          replacement="""
-  {mode==='home' &&
-    <PersonalWorkspace
-      onAdmin={()=>{setAdminTab('home');setMode('admin');}}
-      slug={clientSlug}
-      setSlug={setClientSlug}
-      open={openClient}
-      t={t}
-    />
-  }
+          absolute_start = marker_pos + match.start()
+          absolute_end = marker_pos + match.end()
+          text = (
+              text[:absolute_start]
+              + "checkout('paddle', business.id, selectedServiceLimit)"
+              + text[absolute_end:]
+          )
 
-  {mode==='admin' &&"""
-          s,count=pattern.subn(replacement,s,count=1)
-          if count!=1: raise SystemExit('Home render block not found')
+          path.write_text(text, encoding='utf-8')
 
-          while "\ncreateRoot(document.getElementById('root')!).render(<App/>);" in s:
-              s=s.replace("\ncreateRoot(document.getElementById('root')!).render(<App/>);",'',1)
-          if len(re.findall(r"createRoot\(document\.getElementById\('root'\)!\)\.render\(",s))!=1:
-              raise SystemExit('Expected exactly one createRoot render')
-          main.write_text(s,encoding='utf-8')
-
-          c=css.read_text(encoding='utf-8')
-          if '.personal-bottom-nav' not in c:
-              c+=r'''
-
-/* React personal workspace */
-.personal-workspace{position:relative;min-height:calc(100vh - 80px);padding:0 0 92px;color:#111}
-.personal-hero{padding:24px 4px 18px}.personal-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:#8a919b}.personal-hero h1{font-size:30px;line-height:1.06;letter-spacing:-1px;margin:8px 0}.personal-hero p{margin:0;max-width:520px;color:#6c7480}
-.personal-card{background:#fff;border:1px solid #e9ecf0;border-radius:22px;padding:20px;margin:12px 0;box-shadow:0 8px 28px rgba(15,23,42,.05)}.personal-card-kicker{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#8a919b;margin-bottom:8px}.personal-card h2{margin:0 0 8px;font-size:19px}.personal-card p{margin:0 0 15px;color:#707784}.personal-search-row{display:grid;grid-template-columns:1fr auto;gap:8px}.personal-search-row input{margin:0!important}.personal-search-row button,.personal-primary-button{margin:0!important;background:#111;color:#fff;border-radius:13px;border:0;padding:12px 16px;font-weight:750;white-space:nowrap}.personal-business-card{background:#111;color:#fff;border-color:#111}.personal-business-card p{color:#cbd0d7}.personal-business-card .personal-card-kicker{color:#aeb5be}.personal-business-card .personal-primary-button{background:#fff;color:#111}
-.personal-page-section{padding-top:26px}.personal-page-header{padding:0 4px 14px}.personal-page-header h1{font-size:29px;letter-spacing:-.9px;margin:7px 0 0}.personal-list{display:grid;gap:10px}.personal-list-card{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;background:#fff;border:1px solid #e9ecf0;border-radius:19px;padding:17px;text-align:left;color:#111;box-shadow:0 6px 22px rgba(15,23,42,.045)}.personal-list-button{cursor:pointer}.personal-list-main{min-width:0;flex:1}.personal-list-main strong{display:block;margin:0 0 5px;font-size:17px}.personal-list-main small{display:block;color:#8b929b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.personal-list-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto}.personal-list-meta strong{font-size:13px}.personal-list-meta span{font-size:15px;font-weight:800}.personal-saved-icon{width:40px;height:40px;border-radius:13px;background:#f0f2f4;display:grid;place-items:center;font-size:18px;flex:0 0 auto}.personal-arrow{font-size:24px;color:#98a0ab;flex:0 0 auto}.personal-empty{background:#fff;border:1px solid #e9ecf0;border-radius:21px;padding:42px 20px;text-align:center;box-shadow:0 8px 28px rgba(15,23,42,.045)}.personal-empty-icon{width:48px;height:48px;border-radius:16px;background:#f0f2f4;display:grid;place-items:center;margin:0 auto 12px;font-size:21px}.personal-empty h3{margin:0;font-size:16px}
-.personal-bottom-nav{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);width:286px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:6px;background:rgba(255,255,255,.98);backdrop-filter:blur(18px);border:1px solid #e4e7eb;border-radius:20px;box-shadow:0 16px 40px rgba(15,23,42,.15);z-index:9998}.personal-bottom-nav button{min-width:0;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 4px;border:0;border-radius:15px;background:transparent;color:#7a828c;font-weight:800}.personal-bottom-nav button span{font-size:18px;line-height:1}.personal-bottom-nav button small{font-size:9px;line-height:1.1}.personal-bottom-nav button.active{background:#111;color:#fff}.personal-loading{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#707784}.personal-spinner{width:28px;height:28px;border:3px solid #ddd;border-top-color:#111;border-radius:50%;animation:bookly-spin .8s linear infinite}
-@media(max-width:520px){.personal-search-row{grid-template-columns:1fr}.personal-search-row button{width:100%}.personal-hero h1{font-size:28px}.personal-bottom-nav{bottom:8px;width:280px}}
-'''
-              css.write_text(c,encoding='utf-8')
-
-          idx=index.read_text(encoding='utf-8')
-          idx=re.sub(r'\s*<script src="/ux2-runtime\.js\?[^\"]+"></script>','',idx)
-          index.write_text(idx,encoding='utf-8')
-          PY
-
-      - name: Build frontend
+      - name: Verify
         shell: bash
         run: |
-          npm install --prefix frontend --no-audit --no-fund
-          npm run build --prefix frontend
+          grep -q "serviceLimitOptionsOpen" frontend/src/main.tsx
+          grep -q "Увеличить лимит услуг" frontend/src/main.tsx
+          grep -q "selectedServiceLimit" frontend/src/main.tsx
 
-      - name: Commit integration
+      - name: Commit patch and remove temporary workflows
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if [ -f frontend/public/ux2-runtime.js ]; then git rm -f frontend/public/ux2-runtime.js; fi
-          git add frontend/src/main.tsx frontend/src/style.css frontend/index.html
-          git commit -m "feat: integrate client workspace into React"
+          rm -f .github/workflows/finalize-client-workspace.yml
+          rm -f .github/workflows/restore-inactive-limit-button.yml
+          rm -f .github/restore-limit-trigger.txt
+          git add frontend/src/main.tsx .github/workflows/finalize-client-workspace.yml .github/workflows/restore-inactive-limit-button.yml .github/restore-limit-trigger.txt
+          git commit -m "Restore inactive subscription limit button"
           git push
