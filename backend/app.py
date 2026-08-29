@@ -143,6 +143,12 @@ class Subscription(Base):
         # Время последнего применённого события Paddle.
     # Используется для защиты от webhook-событий,
     # которые приходят не по порядку.
+    # Время последнего применённого webhook-события Paddle.
+    # Используется для защиты от событий, пришедших не по порядку.
+    paddle_last_event_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True
+    )
     paddle_last_event_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime,
         nullable=True
