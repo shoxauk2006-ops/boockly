@@ -877,6 +877,133 @@ def create_subscription_checkout_token(
             )
         }
         
+@app.post("/admin/subscription/checkout-token")
+def create_subscription_checkout_token(
+    x_telegram_init_data: str = Header(default=""),
+    x_bookly_business_id: str = Header(default=""),
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(user["id"])
+
+    try:
+        business_id = int(
+            x_bookly_business_id
+        )
+    except (TypeError, ValueError):
+        raise HTTPException(
+            400,
+            "Business ID is required",
+        )
+
+    with SessionLocal() as db:
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == business_id,
+                Business.owner_telegram_id == owner_id,
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found",
+            )
+
+        return {
+            "token": _create_checkout_token(
+                business.id,
+                owner_id,
+            )
+        }@app.post("/admin/subscription/checkout-token")
+def create_subscription_checkout_token(
+    x_telegram_init_data: str = Header(default=""),
+    x_bookly_business_id: str = Header(default=""),
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(user["id"])
+
+    try:
+        business_id = int(
+            x_bookly_business_id
+        )
+    except (TypeError, ValueError):
+        raise HTTPException(
+            400,
+            "Business ID is required",
+        )
+
+    with SessionLocal() as db:
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == business_id,
+                Business.owner_telegram_id == owner_id,
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found",
+            )
+
+        return {
+            "token": _create_checkout_token(
+                business.id,
+                owner_id,
+            )
+        }@app.post("/admin/subscription/checkout-token")
+def create_subscription_checkout_token(
+    x_telegram_init_data: str = Header(default=""),
+    x_bookly_business_id: str = Header(default=""),
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
+
+    owner_id = int(user["id"])
+
+    try:
+        business_id = int(
+            x_bookly_business_id
+        )
+    except (TypeError, ValueError):
+        raise HTTPException(
+            400,
+            "Business ID is required",
+        )
+
+    with SessionLocal() as db:
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == business_id,
+                Business.owner_telegram_id == owner_id,
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found",
+            )
+
+        return {
+            "token": _create_checkout_token(
+                business.id,
+                owner_id,
+            )
+        }
 @app.post("/admin/subscription/preview-limit")
 def preview_subscription_limit(
     x: SubscriptionLimitChangeIn,
