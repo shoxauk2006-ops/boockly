@@ -315,7 +315,7 @@ def _apply_paddle_event(payload: dict) -> None:
     if not event_id:
         raise ValueError(
             "Paddle event_id is missing"
-        ))
+        )
     data = payload.get("data") or {}
     custom = data.get("custom_data") or {}
 
