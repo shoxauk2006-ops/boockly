@@ -391,25 +391,19 @@ def _apply_paddle_event(payload: dict) -> None:
     event_type = str(payload.get("event_type") or "")
 
     if not event_id:
-        raise ValueError(
-            "Paddle event_id is missing"
-        )
-    data = payload.get("data") or {}
-    custom = data.get("custom_data") or {}
+        raise ValueError("Paddle event_id is missing")
 
-    occurred_at = _dt(
-        payload.get("occurred_at")
-    )
+    if not event_type:
+        raise ValueError("Paddle event_type is missing")
 
+    occurred_at = _dt(payload.get("occurred_at"))
     if not occurred_at:
         raise ValueError(
             "Paddle occurred_at is missing or invalid"
         )
 
-    if not event_type:
-        raise ValueError(
-            "Paddle event_type is missing"
-        )
+    data = payload.get("data") or {}
+    custom = data.get("custom_data") or {}
 
     if event_type in {
         "subscription.created",
@@ -428,13 +422,13 @@ def _apply_paddle_event(payload: dict) -> None:
             data.get("subscription_id") or ""
         )
 
-        with SessionLocal() as db:
-            if not event_id:
-                raise ValueError("Paddle event_id is missing")
-
+    with SessionLocal() as db:
         try:
             with db.begin_nested():
-                if _event_already_processed(db, event_id):
+                if _event_already_processed(
+                    db,
+                    event_id,
+                ):
                     return
 
                 _mark_event_processed(
@@ -446,11 +440,6 @@ def _apply_paddle_event(payload: dict) -> None:
             return
 
         if event_type not in SUPPORTED_PADDLE_EVENTS:
-            _mark_event_processed(
-                db,
-                event_id,
-                event_type,
-            )
             db.commit()
             return
 
@@ -485,11 +474,6 @@ def _apply_paddle_event(payload: dict) -> None:
             and occurred_at
             < subscription.paddle_last_event_at
         ):
-            _mark_event_processed(
-                db,
-                event_id,
-                event_type,
-            )
             db.commit()
             return
 
@@ -518,14 +502,13 @@ def _apply_paddle_event(payload: dict) -> None:
         if event_type == "transaction.completed":
             subscription.active = True
             subscription.status = "active"
-
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
             )
-
             subscription.pending_services_limit = None
             subscription.pending_price = None
+
         elif event_type == "transaction.payment_failed":
             subscription.status = (
                 status
@@ -588,32 +571,14 @@ def _apply_paddle_event(payload: dict) -> None:
                 scheduled_change.get("effective_at")
             )
 
-                        if (
+            if (
                 scheduled_action in {"cancel", "pause"}
                 and scheduled_effective_at
             ):
                 subscription.status = "active"
                 subscription.active = True
-                subscription.expires_at = scheduled_effective_at
-            else:
-                subscription.status = (
-                    status
-                    or subscription.status
-                    or "active"
-                )
-
-                subscription.active = (
-                    subscription.status
-                    not in {
-                        "canceled",
-                        "cancelled",
-                        "paused",
-                    }
-                )
-
                 subscription.expires_at = (
-                    _dt(next_billed_at)
-                    or subscription.expires_at
+                    scheduled_effective_at
                 )
             else:
                 subscription.status = (
@@ -658,7 +623,6 @@ def _apply_paddle_event(payload: dict) -> None:
         elif event_type == "subscription.activated":
             subscription.status = "active"
             subscription.active = True
-
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
@@ -667,7 +631,6 @@ def _apply_paddle_event(payload: dict) -> None:
         elif event_type == "subscription.resumed":
             subscription.status = "active"
             subscription.active = True
-
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
@@ -675,7 +638,6 @@ def _apply_paddle_event(payload: dict) -> None:
 
         elif event_type == "subscription.past_due":
             subscription.status = "past_due"
-
             subscription.active = bool(
                 subscription.expires_at
                 and subscription.expires_at
@@ -718,12 +680,6 @@ def _apply_paddle_event(payload: dict) -> None:
         _sync_business_from_subscription(
             business,
             subscription,
-        )
-
-        _mark_event_processed(
-            db,
-            event_id,
-            event_type,
         )
 
         db.commit()
