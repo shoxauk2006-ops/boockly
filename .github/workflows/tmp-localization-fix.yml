@@ -13,46 +13,75 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import sys
+          import re
 
           main = Path('frontend/src/main.tsx')
           text = main.read_text(encoding='utf-8')
 
-          old = '''    <strong>\n      Запланировано изменение лимита\n    </strong>\n\n    <p className="muted">\n      Сейчас у вас {currentServicesLimit} {t('owner.services')}.\n      {' '}\n      До конца оплаченного периода текущий лимит сохраняется.\n      {' '}\n      Со следующего продления будет {pendingServicesLimit} {t('owner.services')}\n      {' '}\n      за ${(7.99 + pendingAddonPrice).toFixed(2)} {t('owner.perMonth')}.\n    </p>'''
-          new = '''    <strong>\n      {t(\n        'owner.scheduledLimitChangeTitle',\n        'Запланировано изменение лимита'\n      )}\n    </strong>\n\n    <p className="muted">\n      {t(\n        'owner.scheduledLimitChangeDescription',\n        'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.'\n      )\n        .replaceAll('{current}', String(currentServicesLimit))\n        .replaceAll('{pending}', String(pendingServicesLimit))\n        .replaceAll('{price}', (7.99 + pendingAddonPrice).toFixed(2))}\n    </p>'''
-          if old not in text:
-              print('scheduled block not found', file=sys.stderr)
-              sys.exit(1)
-          main.write_text(text.replace(old, new, 1), encoding='utf-8')
+          pattern = re.compile(r'''<strong>\s*Запланировано изменение лимита\s*</strong>\s*<p className="muted">\s*Сейчас у вас \{currentServicesLimit\} \{t\('owner\.services'\)\}\.\s*\{' '\}\s*До конца оплаченного периода текущий лимит сохраняется\.\s*\{' '\}\s*Со следующего продления будет \{pendingServicesLimit\} \{t\('owner\.services'\)\}\s*\{' '\}\s*за \$\{\(7\.99 \+ pendingAddonPrice\)\.toFixed\(2\)\} \{t\('owner\.perMonth'\)\}\.\s*</p>''')
+
+          replacement = '''<strong>
+      {t(
+        'owner.scheduledLimitChangeTitle',
+        'Запланировано изменение лимита'
+      )}
+    </strong>
+
+    <p className="muted">
+      {t(
+        'owner.scheduledLimitChangeDescription',
+        'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.'
+      )
+        .replaceAll('{current}', String(currentServicesLimit))
+        .replaceAll('{pending}', String(pendingServicesLimit))
+        .replaceAll('{price}', (7.99 + pendingAddonPrice).toFixed(2))}
+    </p>'''
+
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('subscription scheduled-change block not found')
+          main.write_text(text, encoding='utf-8')
 
           i18n = Path('frontend/src/i18n.ts')
           text = i18n.read_text(encoding='utf-8')
 
-          additions = {
-            'ru': '''  'owner.decreaseServiceLimitConfirm': 'Уменьшить лимит с {current} до {limit} услуг?\\n\\nВозврата за текущий оплаченный период не будет.\\nТекущий лимит останется действовать до конца периода.\\n\\nС следующего продления лимит станет {limit} услуг.\\nНовая цена: ${price}/мес.',\\n  'owner.scheduledLimitChangeTitle': 'Запланировано изменение лимита',\\n  'owner.scheduledLimitChangeDescription': 'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.',\\n''',
-            'en': '''  'owner.decreaseServiceLimitConfirm': 'Decrease the limit from {current} to {limit} services?\\n\\nThere will be no refund for the current paid period.\\nThe current limit will remain active until the end of the period.\\n\\nFrom the next renewal, the limit will be {limit} services.\\nNew price: ${price}/month.',\\n  'owner.scheduledLimitChangeTitle': 'Scheduled limit change',\\n  'owner.scheduledLimitChangeDescription': 'You currently have {current} services. Your current limit remains active until the end of the paid period. From the next renewal, you will have {pending} services for ${price}/month.',\\n''',
-            'uz': '''  'owner.decreaseServiceLimitConfirm': 'Xizmatlar limitini {current} tadan {limit} tagacha kamaytirilsinmi?\\n\\nJoriy to‘langan davr uchun pul qaytarilmaydi.\\nJoriy limit davr oxirigacha amal qiladi.\\n\\nKeyingi yangilanishdan limit {limit} ta xizmat bo‘ladi.\\nYangi narx: ${price}/oy.',\\n  'owner.scheduledLimitChangeTitle': 'Limit o‘zgarishi rejalashtirildi',\\n  'owner.scheduledLimitChangeDescription': 'Hozir sizda {current} ta xizmat bor. Joriy limit to‘langan davr oxirigacha amal qiladi. Keyingi yangilanishdan {pending} ta xizmat bo‘ladi va narx ${price}/oy.',\\n''',
-            'tr': '''  'owner.decreaseServiceLimitConfirm': 'Hizmet limitini {current} hizmetten {limit} hizmete düşürmek istiyor musunuz?\\n\\nMevcut ücretli dönem için geri ödeme yapılmayacaktır.\\nMevcut limit dönemin sonuna kadar geçerli kalacaktır.\\n\\nSonraki yenilemeden itibaren limit {limit} hizmet olacaktır.\\nYeni fiyat: ${price}/ay.',\\n  'owner.scheduledLimitChangeTitle': 'Planlanan limit değişikliği',\\n  'owner.scheduledLimitChangeDescription': 'Şu anda {current} hizmetiniz var. Mevcut limitiniz ücretli dönemin sonuna kadar geçerli kalır. Sonraki yenilemeden itibaren {pending} hizmet olacak ve fiyat ${price}/ay olacaktır.',\\n''',
-            'ar': '''  'owner.decreaseServiceLimitConfirm': 'هل تريد خفض حد الخدمات من {current} إلى {limit} خدمة؟\\n\\nلن يتم رد أي مبلغ عن الفترة المدفوعة الحالية.\\nسيظل الحد الحالي فعالًا حتى نهاية الفترة.\\n\\nبدءًا من التجديد التالي، سيصبح الحد {limit} خدمة.\\nالسعر الجديد: ${price}/شهريًا.',\\n  'owner.scheduledLimitChangeTitle': 'تم جدولة تغيير الحد',\\n  'owner.scheduledLimitChangeDescription': 'لديك حاليًا {current} خدمة. يظل الحد الحالي فعالًا حتى نهاية الفترة المدفوعة. بدءًا من التجديد التالي سيكون لديك {pending} خدمة بسعر ${price} شهريًا.',\\n'''
+          translations = {
+            'ru': [
+              "  'owner.decreaseServiceLimitConfirm': 'Уменьшить лимит с {current} до {limit} услуг?\\n\\nВозврата за текущий оплаченный период не будет.\\nТекущий лимит останется действовать до конца периода.\\n\\nС следующего продления лимит станет {limit} услуг.\\nНовая цена: ${price}/мес.',",
+              "  'owner.scheduledLimitChangeTitle': 'Запланировано изменение лимита',",
+              "  'owner.scheduledLimitChangeDescription': 'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.',",
+            ],
+            'en': [
+              "  'owner.decreaseServiceLimitConfirm': 'Decrease the limit from {current} to {limit} services?\\n\\nThere will be no refund for the current paid period.\\nThe current limit will remain active until the end of the period.\\n\\nFrom the next renewal, the limit will be {limit} services.\\nNew price: ${price}/month.',",
+              "  'owner.scheduledLimitChangeTitle': 'Scheduled limit change',",
+              "  'owner.scheduledLimitChangeDescription': 'You currently have {current} services. Your current limit remains active until the end of the paid period. From the next renewal, you will have {pending} services for ${price}/month.',",
+            ],
+            'uz': [
+              "  'owner.decreaseServiceLimitConfirm': 'Xizmatlar limitini {current} tadan {limit} tagacha kamaytirilsinmi?\\n\\nJoriy to‘langan davr uchun pul qaytarilmaydi.\\nJoriy limit davr oxirigacha amal qiladi.\\n\\nKeyingi yangilanishdan limit {limit} ta xizmat bo‘ladi.\\nYangi narx: ${price}/oy.',",
+              "  'owner.scheduledLimitChangeTitle': 'Limit o‘zgarishi rejalashtirildi',",
+              "  'owner.scheduledLimitChangeDescription': 'Hozir sizda {current} ta xizmat bor. Joriy limit to‘langan davr oxirigacha amal qiladi. Keyingi yangilanishdan {pending} ta xizmat bo‘ladi va narx ${price}/oy.',",
+            ],
+            'tr': [
+              "  'owner.decreaseServiceLimitConfirm': 'Hizmet limitini {current} hizmetten {limit} hizmete düşürmek istiyor musunuz?\\n\\nMevcut ücretli dönem için geri ödeme yapılmayacaktır.\\nMevcut limit dönemin sonuna kadar geçerli kalacaktır.\\n\\nSonraki yenilemeden itibaren limit {limit} hizmet olacaktır.\\nYeni fiyat: ${price}/ay.',",
+              "  'owner.scheduledLimitChangeTitle': 'Planlanan limit değişikliği',",
+              "  'owner.scheduledLimitChangeDescription': 'Şu anda {current} hizmetiniz var. Mevcut limitiniz ücretli dönemin sonuna kadar geçerli kalır. Sonraki yenilemeden itibaren {pending} hizmet olacak ve fiyat ${price}/ay olacaktır.',",
+            ],
+            'ar': [
+              "  'owner.decreaseServiceLimitConfirm': 'هل تريد خفض حد الخدمات من {current} إلى {limit} خدمة؟\\n\\nلن يتم رد أي مبلغ عن الفترة المدفوعة الحالية.\\nسيظل الحد الحالي فعالًا حتى نهاية الفترة.\\n\\nبدءًا من التجديد التالي، سيصبح الحد {limit} خدمة.\\nالسعر الجديد: ${price}/شهريًا.',",
+              "  'owner.scheduledLimitChangeTitle': 'تم جدولة تغيير الحد',",
+              "  'owner.scheduledLimitChangeDescription': 'لديك حاليًا {current} خدمة. يظل الحد الحالي فعالًا حتى نهاية الفترة المدفوعة. بدءًا من التجديد التالي سيكون لديك {pending} خدمة بسعر ${price} شهريًا.',",
+            ],
           }
 
-          markers = [
-            ('ru', '\n};\n\nconst en:'),
-            ('en', '\n};\n\nconst uz:'),
-            ('uz', '\n};\n\nconst tr:'),
-            ('tr', '\n};\n\nconst ar:'),
-            ('ar', '\n};\n\nconst uzExtra:')
-          ]
-          for lang, marker in markers:
-              addition = additions[lang]
-              if addition.strip().split("'owner.decreaseServiceLimitConfirm'")[0] == addition.strip():
-                  pass
-              if "'owner.decreaseServiceLimitConfirm'" in text[text.find('const '+lang):text.find(marker) if marker in text else len(text)]:
-                  continue
-              if marker not in text:
-                  print('marker not found', lang, file=sys.stderr)
-                  sys.exit(1)
-              text = text.replace(marker, '\n' + addition + '};\n\nconst ' + marker.split('const ')[1], 1)
+          for lang, lines in translations.items():
+              start = text.index('const ' + lang + ':')
+              next_match = re.search(r'\n};\n\nconst ', text[start:])
+              if not next_match:
+                  raise SystemExit(f'end of {lang} map not found')
+              end = start + next_match.start()
+              section = text[start:end]
+              if "'owner.decreaseServiceLimitConfirm'" not in section:
+                  text = text[:end] + '\n' + '\n'.join(lines) + text[end:]
 
           i18n.write_text(text, encoding='utf-8')
           PY
