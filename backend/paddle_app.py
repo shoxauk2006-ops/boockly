@@ -103,6 +103,7 @@ def _remove_routes(paths: set[str]) -> None:
 _remove_routes(
     {
         "/payments/webhook/paddle",
+        "/payments/webhook/{provider}",
         "/admin/subscription/preview-limit",
         "/admin/subscription/change-limit",
         "/admin/subscription/resume-package",
