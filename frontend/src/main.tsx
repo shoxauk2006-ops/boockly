@@ -2117,8 +2117,8 @@ if (isUpgrade) {
     }
 
     const immediateAmount =
-  preview?.data?.immediate_transaction?.details?.totals?.total ??
-  preview?.immediate_transaction?.details?.totals?.total ??
+  preview?.data?.update_summary?.result?.amount ??
+  preview?.update_summary?.result?.amount ??
   0;
 
     const currency =
