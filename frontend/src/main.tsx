@@ -5259,15 +5259,24 @@ function Subscription({
   const currentAddonPrice =
     addonPrices[currentServicesLimit] || 0;
 
+  const pendingLimitChange =
+  pendingServicesLimit > 0 &&
+  pendingServicesLimit !== currentServicesLimit;
+
+  const pendingAddonPrice =
+    pendingLimitChange
+      ? (addonPrices[pendingServicesLimit] || 0)
+      : 0;
+
+  const packageCancellationPending =
+    currentServicesLimit > 10 &&
+    pendingServicesLimit === 10;
+
   const paymentFailed =
     status === 'past_due' || status === 'unpaid';
 
   const cancelledButActive =
     (status === 'cancelled' || status === 'canceled') && active;
-
-  const packageCancellationPending =
-    currentServicesLimit > 10 &&
-    pendingServicesLimit === 10;
 
   const displayedMonthlyPrice =
   packageCancellationPending
