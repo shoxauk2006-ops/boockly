@@ -949,7 +949,6 @@ def change_subscription_limit(
             }
 
     mode = "prorated_immediately" if limit > current else "prorated_next_billing_period"
-    _paddle_request(
     paddle_result = _paddle_request(
     "PATCH",
     f"/subscriptions/{subscription_id}",
@@ -967,14 +966,14 @@ def change_subscription_limit(
         if not subscription or not business:
             raise HTTPException(404, "Subscription not found")
 
-if limit > current:
-    subscription.current_services_limit = limit
-    subscription.current_price = new_price
-    subscription.pending_services_limit = None
-    subscription.pending_price = None
-else:
-    subscription.pending_services_limit = limit
-    subscription.pending_price = new_price
+        if limit > current:
+            subscription.current_services_limit = limit
+            subscription.current_price = new_price
+            subscription.pending_services_limit = None
+            subscription.pending_price = None
+        else:
+            subscription.pending_services_limit = limit
+            subscription.pending_price = new_price
 
         _sync_business_from_subscription(business, subscription)
         db.commit()
