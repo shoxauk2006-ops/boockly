@@ -122,7 +122,7 @@ function BooklyAlertModal({
         <h2>{title}</h2>
 
         <p className="muted">
-          {message}
+          {message.replace(/\\n/g, '\n')}
         </p>
 
         <button
@@ -176,7 +176,7 @@ function BooklyConfirmModal({
         </span>
 
         <p className="muted">
-          {message}
+          {message.replace(/\\n/g, '\n')}
         </p>
 
         <div
