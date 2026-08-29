@@ -949,7 +949,7 @@ def change_subscription_limit(
             }
 
     mode = "prorated_immediately" if limit > current else "prorated_next_billing_period"
-    paddle_result = _paddle_request(
+paddle_result = _paddle_request(
     "PATCH",
     f"/subscriptions/{subscription_id}",
     {
