@@ -498,26 +498,59 @@ def _apply_paddle_event(payload: dict) -> None:
                 )
             )
 
-        elif event_type == "subscription.updated":
-            subscription.status = (
-                status
-                or subscription.status
-                or "active"
+                elif event_type == "subscription.updated":
+            scheduled_change = (
+                data.get("scheduled_change")
+                or {}
             )
 
-            subscription.active = (
-                subscription.status
-                not in {
-                    "canceled",
-                    "cancelled",
-                    "paused",
-                }
+            scheduled_action = (
+                scheduled_change.get("action")
+                or ""
             )
 
-            subscription.expires_at = (
-                _dt(next_billed_at)
-                or subscription.expires_at
+            scheduled_effective_at = _dt(
+                scheduled_change.get("effective_at")
             )
+
+            if (
+                scheduled_action == "cancel"
+                and scheduled_effective_at
+            ):
+                subscription.status = "cancelled"
+                subscription.active = True
+                subscription.expires_at = (
+                    scheduled_effective_at
+                )
+            elif (
+                scheduled_action == "pause"
+                and scheduled_effective_at
+            ):
+                subscription.status = "paused"
+                subscription.active = True
+                subscription.expires_at = (
+                    scheduled_effective_at
+                )
+            else:
+                subscription.status = (
+                    status
+                    or subscription.status
+                    or "active"
+                )
+
+                subscription.active = (
+                    subscription.status
+                    not in {
+                        "canceled",
+                        "cancelled",
+                        "paused",
+                    }
+                )
+
+                subscription.expires_at = (
+                    _dt(next_billed_at)
+                    or subscription.expires_at
+                )
 
             if (
                 subscription.pending_services_limit
