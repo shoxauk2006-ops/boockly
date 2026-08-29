@@ -564,7 +564,7 @@ def _apply_paddle_event(payload: dict) -> None:
             business,
         )
 
-        if event_type.startswith("subscription."):
+if event_type.startswith("subscription."):
     if (
         subscription.paddle_last_event_at
         and occurred_at
@@ -771,7 +771,7 @@ def _apply_paddle_event(payload: dict) -> None:
             subscription.status = "paused"
             subscription.active = False
 
-        if event_type.startswith("subscription."):
+if event_type.startswith("subscription."):
     subscription.paddle_last_event_at = (
         occurred_at
     )
