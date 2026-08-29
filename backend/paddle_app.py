@@ -506,7 +506,7 @@ def _apply_paddle_event(payload: dict) -> None:
             or billing_period.get("ends_at")
         )
 
-         if event_type == "transaction.completed":
+        if event_type == "transaction.completed":
             subscription.active = True
             subscription.status = "active"
 
