@@ -814,7 +814,7 @@ setInfoSection={setInfoSection}
             setInfoSection('help')
           }
         >
-          Как работает Bookly
+          {t('info.howBooklyWorks')}
         </button>
 
         <button
@@ -828,7 +828,7 @@ setInfoSection={setInfoSection}
             setInfoSection('rules')
           }
         >
-          Правила и контакты
+          {t('info.rulesAndContacts')}
         </button>
       </div>
 
