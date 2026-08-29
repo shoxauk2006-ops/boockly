@@ -740,9 +740,12 @@ async def paddle_webhook(request: Request):
         raise HTTPException(401, "Invalid Paddle signature header")
 
     try:
-        age = abs(int(time.time()) - int(ts))
+        age = int(time.time()) - int(ts)
     except ValueError:
         raise HTTPException(401, "Invalid Paddle timestamp")
+
+    if age < 0 or age > 5:
+        raise HTTPException(401, "Invalid Paddle webhook timestamp")
 
     if age > 5:
         raise HTTPException(401, "Expired Paddle webhook")
