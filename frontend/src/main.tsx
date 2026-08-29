@@ -5767,7 +5767,7 @@ await refreshAfterChange({
             </p>
           )}
         </div>
-<strong>
+
        
   {packageCancellationPending && (
   <div
