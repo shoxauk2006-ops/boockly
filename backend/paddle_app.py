@@ -314,7 +314,7 @@ def _apply_paddle_event(payload: dict) -> None:
     data = payload.get("data") or {}
     custom = data.get("custom_data") or {}
 
-        occurred_at = _dt(
+    occurred_at = _dt(
         payload.get("occurred_at")
     )
 
@@ -324,21 +324,32 @@ def _apply_paddle_event(payload: dict) -> None:
         )
 
     if not event_type:
-        raise ValueError("Paddle event_type is missing")
+        raise ValueError(
+            "Paddle event_type is missing"
+        )
 
     if event_type in {
         "subscription.created",
         "subscription.updated",
+        "subscription.activated",
         "subscription.resumed",
         "subscription.paused",
+        "subscription.past_due",
         "subscription.canceled",
     }:
-        subscription_id = str(data.get("id") or "")
+        subscription_id = str(
+            data.get("id") or ""
+        )
     else:
-        subscription_id = str(data.get("subscription_id") or "")
+        subscription_id = str(
+            data.get("subscription_id") or ""
+        )
 
-        with SessionLocal() as db:
-        if _event_already_processed(db, event_id):
+    with SessionLocal() as db:
+        if _event_already_processed(
+            db,
+            event_id,
+        ):
             db.rollback()
             return
 
@@ -368,10 +379,11 @@ def _apply_paddle_event(payload: dict) -> None:
                 custom,
             )
             raise ValueError(
-                f"Paddle event cannot be mapped to Bookly business: {event_id}"
+                "Paddle event cannot be mapped "
+                f"to Bookly business: {event_id}"
             )
 
-                subscription = _get_or_create_subscription(
+        subscription = _get_or_create_subscription(
             db,
             business,
         )
@@ -396,12 +408,16 @@ def _apply_paddle_event(payload: dict) -> None:
 
         subscription.payment_provider = "paddle"
 
-        status = str(data.get("status") or "")
+        status = str(
+            data.get("status") or ""
+        )
+
         billing_period = (
             data.get("current_billing_period")
             or data.get("billing_period")
             or {}
         )
+
         next_billed_at = (
             data.get("next_billed_at")
             or billing_period.get("ends_at")
@@ -410,6 +426,7 @@ def _apply_paddle_event(payload: dict) -> None:
         if event_type == "transaction.completed":
             subscription.active = True
             subscription.status = "active"
+
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
@@ -424,11 +441,13 @@ def _apply_paddle_event(payload: dict) -> None:
             subscription.current_services_limit = (
                 detected_limit
             )
+
             subscription.current_price = (
                 calculate_subscription_price(
                     detected_limit
                 )
             )
+
             subscription.pending_services_limit = None
             subscription.pending_price = None
 
@@ -472,6 +491,7 @@ def _apply_paddle_event(payload: dict) -> None:
             subscription.current_services_limit = (
                 detected
             )
+
             subscription.current_price = (
                 calculate_subscription_price(
                     detected
@@ -499,7 +519,10 @@ def _apply_paddle_event(payload: dict) -> None:
                 or subscription.expires_at
             )
 
-            if subscription.pending_services_limit is None:
+            if (
+                subscription.pending_services_limit
+                is None
+            ):
                 detected = _limit_from_items(
                     data.get("items")
                     or []
@@ -508,15 +531,26 @@ def _apply_paddle_event(payload: dict) -> None:
                 subscription.current_services_limit = (
                     detected
                 )
+
                 subscription.current_price = (
                     calculate_subscription_price(
                         detected
                     )
                 )
 
-              elif event_type == "subscription.activated":
+        elif event_type == "subscription.activated":
             subscription.status = "active"
             subscription.active = True
+
+            subscription.expires_at = (
+                _dt(next_billed_at)
+                or subscription.expires_at
+            )
+
+        elif event_type == "subscription.resumed":
+            subscription.status = "active"
+            subscription.active = True
+
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
@@ -524,17 +558,11 @@ def _apply_paddle_event(payload: dict) -> None:
 
         elif event_type == "subscription.past_due":
             subscription.status = "past_due"
+
             subscription.active = bool(
                 subscription.expires_at
                 and subscription.expires_at
                 > datetime.utcnow()
-            )
-        elif event_type == "subscription.resumed":
-            subscription.status = "active"
-            subscription.active = True
-            subscription.expires_at = (
-                _dt(next_billed_at)
-                or subscription.expires_at
             )
 
         elif event_type == "subscription.canceled":
@@ -551,7 +579,9 @@ def _apply_paddle_event(payload: dict) -> None:
             ):
                 subscription.status = "cancelled"
                 subscription.active = True
-                subscription.expires_at = effective_dt
+                subscription.expires_at = (
+                    effective_dt
+                )
             else:
                 subscription.status = "cancelled"
                 subscription.active = False
@@ -564,7 +594,9 @@ def _apply_paddle_event(payload: dict) -> None:
             subscription.status = "paused"
             subscription.active = False
 
-              subscription.paddle_last_event_at = occurred_at
+        subscription.paddle_last_event_at = (
+            occurred_at
+        )
 
         _sync_business_from_subscription(
             business,
