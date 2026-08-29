@@ -1024,10 +1024,25 @@ def resume_subscription_package(x_telegram_init_data: str = Header(default="")):
 @app.post("/admin/subscription/cancel")
 def cancel_subscription(x_telegram_init_data: str = Header(default="")):
     _, _, business_id, subscription_id = _current_subscription(x_telegram_init_data)
+
+    # Убираем предыдущее запланированное изменение,
+    # если оно осталось после изменения пакета.
+    _paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}",
+        {
+            "scheduled_change": None,
+        },
+    )
+
+    # После этого создаём отмену автопродления
+    # на конец текущего оплаченного периода.
     data = _paddle_request(
         "POST",
         f"/subscriptions/{subscription_id}/cancel",
-        {"effective_from": "next_billing_period"},
+        {
+            "effective_from": "next_billing_period"
+        },
     )
     paddle = data.get("data") or {}
     expires = _dt((paddle.get("scheduled_change") or {}).get("effective_at"))
