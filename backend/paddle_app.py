@@ -892,7 +892,7 @@ def cancel_subscription(x_telegram_init_data: str = Header(default="")):
     with SessionLocal() as db:
         subscription = owner_subscription(db, business_id)
         business = db.get(Business, business_id)
-        subscription.status = "cancelled"
+        subscription.status = "active"
         subscription.active = True
         if expires:
             subscription.expires_at = expires
