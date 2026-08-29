@@ -12,6 +12,7 @@ from urllib.error import HTTPError, URLError
 
 from fastapi import Header, HTTPException, Request
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from .app import (
     app,
