@@ -602,24 +602,28 @@ def _apply_paddle_event(payload: dict) -> None:
                     or subscription.expires_at
                 )
 
-            if (
-                subscription.pending_services_limit
-                is None
-            ):
-                detected = _limit_from_items(
-                    data.get("items")
-                    or []
-                )
+            detected = _limit_from_items(
+    data.get("items")
+    or []
+)
 
-                subscription.current_services_limit = (
-                    detected
-                )
-
-                subscription.current_price = (
-                    calculate_subscription_price(
-                        detected
-                    )
-                )
+if subscription.pending_services_limit is not None:
+    if detected == subscription.pending_services_limit:
+        subscription.current_services_limit = detected
+        subscription.current_price = (
+            calculate_subscription_price(
+                detected
+            )
+        )
+        subscription.pending_services_limit = None
+        subscription.pending_price = None
+else:
+    subscription.current_services_limit = detected
+    subscription.current_price = (
+        calculate_subscription_price(
+            detected
+        )
+    )
 
         elif event_type == "subscription.activated":
             subscription.status = "active"
