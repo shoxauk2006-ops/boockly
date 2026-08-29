@@ -2117,16 +2117,9 @@ if (isUpgrade) {
     }
 
     const immediateAmount =
-      preview?.data?.update_summary?.immediate_transaction
-        ?.details?.totals?.total
-      ??
-      preview?.data?.immediate_transaction
-        ?.details?.totals?.total
-      ??
-      preview?.update_summary?.immediate_transaction
-        ?.details?.totals?.total
-      ??
-      0;
+  preview?.data?.immediate_transaction?.details?.totals?.total ??
+  preview?.immediate_transaction?.details?.totals?.total ??
+  0;
 
     const currency =
       preview?.data?.currency_code ||
@@ -5285,6 +5278,8 @@ function Subscription({
     useState(false);
   const [changingServiceLimit, setChangingServiceLimit] =
     useState(false);
+  const [changingServiceLimitValue, setChangingServiceLimitValue] =
+  useState<number | null>(null);
   const [subscriptionActionLoading, setSubscriptionActionLoading] =
     useState(false);
 
@@ -5306,6 +5301,7 @@ function Subscription({
     if (changingServiceLimit) return;
 
     setChangingServiceLimit(true);
+    setChangingServiceLimitValue(newLimit);
     
 
     try {
@@ -5394,6 +5390,7 @@ function Subscription({
       );
     } finally {
   setChangingServiceLimit(false);
+  setChangingServiceLimitValue(null);
 }
   };
 
@@ -5407,6 +5404,7 @@ function Subscription({
     if (!confirmed) return;
 
     setChangingServiceLimit(true);
+    setChangingServiceLimitValue(10);
 
     try {
       const response = await fetch(
@@ -5461,6 +5459,8 @@ function Subscription({
     if (!confirmed) return;
 
     setChangingServiceLimit(true);
+    setChangingServiceLimit(false);
+    setChangingServiceLimitValue(null);
 
     try {
       const response = await fetch(
@@ -5819,7 +5819,8 @@ await refreshAfterChange({
         width: '100%'
       }}
     >
-                          {changingServiceLimit ? (
+ {changingServiceLimit &&
+ changingServiceLimitValue === option.limit ? (
   <span className="btn-spinner" />
 ) : (
                             <>
