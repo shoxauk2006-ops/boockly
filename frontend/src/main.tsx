@@ -4247,6 +4247,7 @@ borderTopColor: '#d32f2f',
           bookings={bookings}
           business={business}
           t={t}
+          setBusiness={setBusiness}
         />
       )}
 
@@ -4783,11 +4784,13 @@ function QrPrintCard({
 function Dashboard({
   bookings,
   business,
-  t
+  t,
+  setBusiness
 }: {
   bookings: any[];
   business: any;
   t: (key: string, fallback?: string) => string;
+  setBusiness: React.Dispatch<React.SetStateAction<any>>;
 }) {
   const today = new Date()
     .toISOString()
