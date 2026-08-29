@@ -5767,19 +5767,33 @@ await refreshAfterChange({
             </p>
           )}
         </div>
+<strong>
+       
+  {packageCancellationPending && (
+  <div
+    className="success"
+    style={{ marginTop: 12 }}
+  >
+    {t(
+      'owner.packageCancelledNextPeriod',
+      'Пакет отменён на следующее продление'
+    )}
 
-        {packageCancellationPending && (
-          <div
-            className="success"
-            style={{ marginTop: 12 }}
-          >
-            
-  {t(
-    'owner.packageCancelledNextPeriod',
-    'Пакет отменён на следующее продление'
-  )}
-            <strong>
-              {pendingLimitChange && !packageCancellationPending && (
+    <p className="muted">
+      {t(
+        'owner.packageStillActive',
+        'Сейчас у вас'
+      )}{' '}
+      {currentServicesLimit}{' '}
+      {t(
+        'owner.servicesUntilPeriodEnd',
+        'услуг. До конца оплаченного периода пакет продолжает действовать.'
+      )}
+    </p>
+  </div>
+)}
+
+{pendingLimitChange && !packageCancellationPending && (
   <div
     className="success"
     style={{ marginTop: 12 }}
