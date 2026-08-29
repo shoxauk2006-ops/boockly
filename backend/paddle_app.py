@@ -361,43 +361,48 @@ def _find_business(
         custom.get("checkout_token") or ""
     ).strip()
 
+    # Сначала пытаемся определить бизнес по checkout_token.
+    # Если token устарел/некорректен, НЕ останавливаемся:
+    # ниже есть надёжный fallback по subscription_id.
     if checkout_token:
         try:
             token = _verify_checkout_token(
                 checkout_token
             )
         except ValueError:
-            return None
+            token = None
 
-        try:
-            business_id = int(
-                token["business_id"]
-            )
-            owner_id = int(
-                token["owner_telegram_id"]
-            )
-        except (
-            KeyError,
-            TypeError,
-            ValueError,
-        ):
-            return None
+        if token:
+            try:
+                business_id = int(
+                    token["business_id"]
+                )
+                owner_id = int(
+                    token["owner_telegram_id"]
+                )
+            except (
+                KeyError,
+                TypeError,
+                ValueError,
+            ):
+                token = None
 
-        business = db.get(
-            Business,
-            business_id,
-        )
+            if token:
+                business = db.get(
+                    Business,
+                    business_id,
+                )
 
-        if not business:
-            return None
+                if (
+                    business
+                    and int(
+                        business.owner_telegram_id
+                    ) == owner_id
+                ):
+                    return business
 
-        if int(
-            business.owner_telegram_id
-        ) != owner_id:
-            return None
-
-        return business
-
+    # Основной fallback для всех последующих Paddle events:
+    # subscription_id постоянный и не зависит от checkout_token.
     if subscription_id:
         row = (
             db.query(Subscription)
@@ -415,7 +420,6 @@ def _find_business(
             )
 
     return None
-
 
 def _get_or_create_subscription(db, business):
     subscription = owner_subscription(db, business.id)
