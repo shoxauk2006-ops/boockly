@@ -5795,17 +5795,20 @@ await refreshAfterChange({
     style={{ marginTop: 12 }}
   >
     <strong>
-      Запланировано изменение лимита
+      {t(
+        'owner.scheduledLimitChangeTitle',
+        'Запланировано изменение лимита'
+      )}
     </strong>
 
     <p className="muted">
-      Сейчас у вас {currentServicesLimit} {t('owner.services')}.
-      {' '}
-      До конца оплаченного периода текущий лимит сохраняется.
-      {' '}
-      Со следующего продления будет {pendingServicesLimit} {t('owner.services')}
-      {' '}
-      за ${(7.99 + pendingAddonPrice).toFixed(2)} {t('owner.perMonth')}.
+      {t(
+        'owner.scheduledLimitChangeDescription',
+        'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.'
+      )
+        .replace('{current}', String(currentServicesLimit))
+        .replace('{pending}', String(pendingServicesLimit))
+        .replace('{price}', (7.99 + pendingAddonPrice).toFixed(2))}
     </p>
   </div>
 )}

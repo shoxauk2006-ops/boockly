@@ -86,7 +86,7 @@ const ru: TranslationMap = {
   'days.satFull': 'Суббота',
   'days.sunFull': 'Воскресенье',
   'owner.resuming': 'Возобновляем…',
-  'owner.cancellingAction': 'Отменяем…',
+  'owner.cancellingAction': 'Отменяем…',\n  owner.increaseServiceLimitConfirm: 'Увеличить лимит с {current} до {limit} услуг?\\n\\nСейчас к оплате: ${now}\\nСо следующего продления: ${next}/мес.',\n  owner.decreaseServiceLimitConfirm: 'Уменьшить лимит с {current} до {limit} услуг?\\n\\nВозврата за текущий оплаченный период не будет.\\nТекущий лимит останется действовать до конца периода.\\n\\nСо следующего продления лимит станет {limit} услуг.\\nНовая цена: ${price}/мес.',\n  owner.scheduledLimitChangeTitle: 'Запланировано изменение лимита',\n  owner.scheduledLimitChangeDescription: 'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.',
 };
 
 const en: TranslationMap = {
@@ -157,7 +157,7 @@ const en: TranslationMap = {
   'days.satFull': 'Saturday',
   'days.sunFull': 'Sunday',
   'owner.resuming': 'Resuming…',
-  'owner.cancellingAction': 'Cancelling…',
+  'owner.cancellingAction': 'Cancelling…',\n  owner.increaseServiceLimitConfirm: 'Increase the limit from {current} to {limit} services?\\n\\nDue now: ${now}\\nFrom the next renewal: ${next}/month.',\n  owner.decreaseServiceLimitConfirm: 'Decrease the limit from {current} to {limit} services?\\n\\nThere will be no refund for the current paid period.\\nThe current limit remains active until the end of the period.\\n\\nFrom the next renewal, the limit will be {limit} services.\\nNew price: ${price}/month.',\n  owner.scheduledLimitChangeTitle: 'Limit change scheduled',\n  owner.scheduledLimitChangeDescription: 'You currently have {current} services. The current limit remains active until the end of the paid period. From the next renewal, you will have {pending} services for ${price}/month.',
 };
 
 const uz: TranslationMap = {
@@ -268,7 +268,7 @@ const uz: TranslationMap = {
   'client.savedBusiness':'Saqlangan',
   'client.location':'Joylashuvni ochish',
   'client.services':'Xizmatlar',
-  'client.bookingCancelled':'Bron bekor qilindi',
+  'client.bookingCancelled':'Bron bekor qilindi',\n  owner.increaseServiceLimitConfirm: 'Limitni {current} tadan {limit} ta xizmatgacha oshirish kerakmi?\\n\\nHozir to‘lov: ${now}\\nKeyingi uzaytirishdan boshlab: ${next}/oyiga.',\n  owner.decreaseServiceLimitConfirm: 'Limitni {current} tadan {limit} ta xizmatgacha kamaytirish kerakmi?\\n\\nJoriy to‘langan davr uchun pul qaytarilmaydi.\\nJoriy limit davr oxirigacha amal qiladi.\\n\\nKeyingi uzaytirishdan boshlab limit {limit} ta xizmat bo‘ladi.\\nYangi narx: ${price}/oyiga.',\n  owner.scheduledLimitChangeTitle: 'Limit o‘zgarishi rejalashtirildi',\n  owner.scheduledLimitChangeDescription: 'Hozir sizda {current} ta xizmat bor. Joriy limit to‘langan davr oxirigacha amal qiladi. Keyingi uzaytirishdan boshlab {pending} ta xizmat uchun narx ${price}/oyiga bo‘ladi.',
 };
 const tr: TranslationMap = {
   ...en,
@@ -377,7 +377,7 @@ const tr: TranslationMap = {
   'client.savedBusiness':'Kaydedildi',
   'client.location':'Konumu aç',
   'client.services':'Hizmetler',
-  'client.bookingCancelled':'Rezervasyon iptal edildi',
+  'client.bookingCancelled':'Rezervasyon iptal edildi',\n  owner.increaseServiceLimitConfirm: 'Limiti {current} hizmetten {limit} hizmete yükseltmek istiyor musunuz?\\n\\nŞimdi ödenecek: ${now}\\nSonraki yenilemeden itibaren: ${next}/ay.',\n  owner.decreaseServiceLimitConfirm: 'Limiti {current} hizmetten {limit} hizmete düşürmek istiyor musunuz?\\n\\nMevcut ödenmiş dönem için iade yapılmaz.\\nMevcut limit dönem sonuna kadar geçerli kalır.\\n\\nSonraki yenilemeden itibaren limit {limit} hizmet olacaktır.\\nYeni fiyat: ${price}/ay.',\n  owner.scheduledLimitChangeTitle: 'Limit değişikliği planlandı',\n  owner.scheduledLimitChangeDescription: 'Şu anda {current} hizmet kullanıyorsunuz. Mevcut limit, ödenen dönemin sonuna kadar geçerlidir. Sonraki yenilemeden itibaren {pending} hizmet için fiyat ${price}/ay olacaktır.',
 };
 const ar: TranslationMap = {
   ...en,
@@ -485,7 +485,7 @@ const ar: TranslationMap = {
   'client.savedBusiness':'تم الحفظ',
   'client.location':'فتح الموقع',
   'client.services':'الخدمات',
-  'client.bookingCancelled':'تم إلغاء الحجز',
+  'client.bookingCancelled':'تم إلغاء الحجز',\n  owner.increaseServiceLimitConfirm: 'هل تريد زيادة الحد من {current} إلى {limit} خدمة؟\\n\\nالمبلغ المستحق الآن: ${now}\\nابتداءً من التجديد التالي: ${next}/شهريًا.',\n  owner.decreaseServiceLimitConfirm: 'هل تريد خفض الحد من {current} إلى {limit} خدمة؟\\n\\nلن يتم رد أي مبلغ عن الفترة المدفوعة الحالية.\\nسيظل الحد الحالي فعالًا حتى نهاية الفترة.\\n\\nابتداءً من التجديد التالي سيصبح الحد {limit} خدمة.\\nالسعر الجديد: ${price}/شهريًا.',\n  owner.scheduledLimitChangeTitle: 'تمت جدولة تغيير الحد',\n  owner.scheduledLimitChangeDescription: 'لديك حاليًا {current} خدمة. سيظل الحد الحالي فعالًا حتى نهاية الفترة المدفوعة. ابتداءً من التجديد التالي سيكون لديك {pending} خدمة بسعر ${price}/شهريًا.',
 };
 
 const uzExtra: TranslationMap = {
