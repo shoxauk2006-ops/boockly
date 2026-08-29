@@ -3075,7 +3075,7 @@ async def paddle_webhook(request: Request):
         or billing_period.get("ends_at")
     )
 
-           print(
+    print(
         "BOOKLY PADDLE WEBHOOK DEBUG:",
         event_type,
         "business_id=",
