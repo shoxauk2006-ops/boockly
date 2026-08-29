@@ -12,7 +12,7 @@ from urllib import request as urllib_request
 from urllib.error import HTTPError, URLError
 
 from fastapi import Header, HTTPException, Request
-from sqlalchemy import text
+from sqlalchemy import textа
 from sqlalchemy.exc import IntegrityError
 
 from .app import (
@@ -701,18 +701,48 @@ def _apply_paddle_event(payload: dict) -> None:
                 )
 
             detected = _limit_from_items(
-                data.get("items")
-                or []
-            )
+    data.get("items")
+    or []
+)
 
-            if subscription.pending_services_limit is not None:
-                if detected == subscription.pending_services_limit:
-                    subscription.current_services_limit = detected
-                    subscription.current_price = (
-                        calculate_subscription_price(
-                            detected
-                        )
-                    )
+period_starts_at = _dt(
+    billing_period.get("starts_at")
+)
+
+period_ends_at = _dt(
+    billing_period.get("ends_at")
+)
+
+current_period_renewed = bool(
+    period_starts_at
+    and subscription.expires_at
+    and period_starts_at >= subscription.expires_at
+)
+
+if subscription.pending_services_limit is not None:
+    if (
+        detected == subscription.pending_services_limit
+        and current_period_renewed
+    ):
+        subscription.current_services_limit = detected
+        subscription.current_price = (
+            calculate_subscription_price(
+                detected
+            )
+        )
+        subscription.pending_services_limit = None
+        subscription.pending_price = None
+    else:
+        # Изменение только запланировано.
+        # Текущий оплаченный пакет не трогаем.
+        pass
+else:
+    subscription.current_services_limit = detected
+    subscription.current_price = (
+        calculate_subscription_price(
+            detected
+        )
+    )
                     subscription.pending_services_limit = None
                     subscription.pending_price = None
             else:
