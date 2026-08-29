@@ -149,10 +149,7 @@ class Subscription(Base):
         DateTime,
         nullable=True
     )
-    paddle_last_event_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime,
-        nullable=True
-    )
+    
 class Business(Base):
     __tablename__ = "businesses"
 
