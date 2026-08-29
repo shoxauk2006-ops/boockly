@@ -510,6 +510,32 @@ def ensure_subscription_schema():
                 "subscriptions"
             )
         }
+                # ---------------------------------------------------------
+        # Исправляем старый UNIQUE index на owner_telegram_id.
+        #
+        # Раньше подписка была привязана к владельцу,
+        # поэтому owner_telegram_id был UNIQUE.
+        #
+        # Сейчас одна подписка принадлежит одному бизнесу,
+        # поэтому у одного владельца может быть несколько подписок.
+        # ---------------------------------------------------------
+
+        conn.execute(
+            text(
+                """
+                DROP INDEX IF EXISTS ix_subscriptions_owner_telegram_id
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_subscriptions_owner_telegram_id
+                ON subscriptions (owner_telegram_id)
+                """
+            )
+        )
 
         # ---------------------------------------------------------
         # Добавляем новые колонки в старую таблицу
