@@ -5328,10 +5328,9 @@ function Subscription({
       }
 
       const immediateAmount =
-        preview?.data?.update_summary?.result?.amount ??
-        preview?.data?.immediate_transaction?.details?.totals?.total ??
-        preview?.data?.update_summary?.immediate_transaction?.details?.totals?.total ??
-        0;
+  preview?.data?.immediate_transaction?.details?.totals?.total ??
+  preview?.immediate_transaction?.details?.totals?.total ??
+  0;
 
       const recurringTotal =
         preview?.data?.recurring_transaction_details?.totals?.total ??
@@ -5804,7 +5803,7 @@ await refreshAfterChange({
   { limit: 50, price: '$11.99' },
   { limit: 100, price: '$19.99' }
 ]
-  .filter(option => option.limit > currentServicesLimit)
+  .filter(option => option.limit !== currentServicesLimit)
   .map(option => (
     <button
       key={option.limit}
