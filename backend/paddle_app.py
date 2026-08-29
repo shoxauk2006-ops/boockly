@@ -913,6 +913,43 @@ def preview_subscription_limit(
         if x.services_limit <= current:
             raise HTTPException(400, "Новый лимит должен быть больше текущего")
 
+        paddle_subscription = _paddle_request(
+        "GET",
+        f"/subscriptions/{subscription_id}",
+    )
+
+    paddle_data = paddle_subscription.get("data") or {}
+    paddle_items = paddle_data.get("items") or []
+
+    print(
+        "BOOKLY PADDLE DEBUG PREVIEW:",
+        {
+            "bookly_current_limit": current,
+            "requested_limit": x.services_limit,
+            "subscription_id": subscription_id,
+            "paddle_items": [
+                {
+                    "price_id": (
+                        item.get("price_id")
+                        or (item.get("price") or {}).get("id")
+                    ),
+                    "quantity": item.get("quantity"),
+                }
+                for item in paddle_items
+            ],
+            "current_billing_period": (
+                paddle_data.get("current_billing_period")
+            ),
+            "next_billed_at": (
+                paddle_data.get("next_billed_at")
+            ),
+            "scheduled_change": (
+                paddle_data.get("scheduled_change")
+            ),
+        },
+        flush=True,
+    )
+
     return _paddle_request(
         "PATCH",
         f"/subscriptions/{subscription_id}/preview",
