@@ -428,7 +428,7 @@ def _apply_paddle_event(payload: dict) -> None:
             or billing_period.get("ends_at")
         )
 
-        if event_type == "transaction.completed":
+         if event_type == "transaction.completed":
             subscription.active = True
             subscription.status = "active"
 
@@ -437,25 +437,8 @@ def _apply_paddle_event(payload: dict) -> None:
                 or subscription.expires_at
             )
 
-            detected_limit = _limit_from_items(
-                data.get("items")
-                or data.get("line_items")
-                or []
-            )
-
-            subscription.current_services_limit = (
-                detected_limit
-            )
-
-            subscription.current_price = (
-                calculate_subscription_price(
-                    detected_limit
-                )
-            )
-
             subscription.pending_services_limit = None
             subscription.pending_price = None
-
         elif event_type == "transaction.payment_failed":
             subscription.status = (
                 status
