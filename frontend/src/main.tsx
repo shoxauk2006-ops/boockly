@@ -5778,6 +5778,28 @@ await refreshAfterChange({
     'owner.packageCancelledNextPeriod',
     'Пакет отменён на следующее продление'
   )}
+              {pendingLimitChange && !packageCancellationPending && (
+  <div
+    className="success"
+    style={{ marginTop: 12 }}
+  >
+    <strong>
+      Запланировано изменение лимита
+    </strong>
+
+    <p className="muted">
+      Сейчас у вас {currentServicesLimit} {t('owner.services')}.
+      {' '}
+      До конца оплаченного периода текущий лимит сохраняется.
+      {' '}
+      Со следующего продления будет {pendingServicesLimit} {t('owner.services')}
+      {' '}
+      за ${(
+        7.99 + pendingAddonPrice
+      ).toFixed(2)} {t('owner.perMonth')}.
+    </p>
+  </div>
+)}
 </strong>
             <p className="muted">
   {t(
