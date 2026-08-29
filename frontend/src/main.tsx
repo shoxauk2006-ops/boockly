@@ -5352,15 +5352,15 @@ function Subscription({
         );
       }
 
-      const immediateAmount =
-        preview?.data?.immediate_transaction?.details?.totals?.total ??
-        preview?.immediate_transaction?.details?.totals?.total ??
-        0;
+const immediateAmount =
+  preview?.data?.update_summary?.result?.amount ??
+  preview?.update_summary?.result?.amount ??
+  0;
 
-      const recurringTotal =
-        preview?.data?.recurring_transaction_details?.totals?.total ??
-        preview?.data?.next_transaction?.details?.totals?.total ??
-        null;
+const recurringTotal =
+  preview?.data?.recurring_transaction_details?.details?.totals?.total ??
+  preview?.recurring_transaction_details?.details?.totals?.total ??
+  null;
 
       const confirmed = await confirmAsync(
         t(
@@ -5381,16 +5381,10 @@ function Subscription({
               Number(immediateAmount) / 100
             ).toFixed(2)}`
           )
-          .replace(
-            '{next}',
-            `${
-              recurringTotal !== null
-                ? (
-                    Number(recurringTotal) / 100
-                  ).toFixed(2)
-                : nextPrice.toFixed(2)
-            }`
-          )
+.replace(
+  '{next}',
+  nextPrice.toFixed(2)
+)
       );
 
       if (!confirmed) {
