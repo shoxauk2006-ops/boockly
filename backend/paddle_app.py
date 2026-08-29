@@ -1,5 +1,6 @@
 from __future__
 
+import base64
 import hashlib
 import hmac
 import json
@@ -260,6 +261,78 @@ def _limit_from_items(items) -> int:
     )
 
 
+def _create_checkout_token(
+    business_id: int,
+    owner_telegram_id: int,
+) -> str:
+    payload = {
+        "business_id": int(business_id),
+        "owner_telegram_id": int(owner_telegram_id),
+        "exp": int(time.time()) + 600,
+    }
+
+    raw = json.dumps(
+        payload,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+    encoded = (
+        base64.urlsafe_b64encode(raw)
+        .rstrip(b"=")
+        .decode("ascii")
+    )
+
+    signature = hmac.new(
+        PADDLE_WEBHOOK_SECRET.encode("utf-8"),
+        encoded.encode("ascii"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    return f"{encoded}.{signature}"
+
+
+def _verify_checkout_token(token: str) -> dict:
+    try:
+        encoded, signature = token.split(".", 1)
+
+        expected = hmac.new(
+            PADDLE_WEBHOOK_SECRET.encode("utf-8"),
+            encoded.encode("ascii"),
+            hashlib.sha256,
+        ).hexdigest()
+
+        if not hmac.compare_digest(
+            expected,
+            signature,
+        ):
+            raise ValueError(
+                "Invalid checkout token"
+            )
+
+        padding = "=" * (
+            (-len(encoded)) % 4
+        )
+
+        raw = base64.urlsafe_b64decode(
+            encoded + padding
+        )
+
+        payload = json.loads(
+            raw.decode("utf-8")
+        )
+
+        if int(payload["exp"]) < int(time.time()):
+            raise ValueError(
+                "Checkout token expired"
+            )
+
+        return payload
+
+    except Exception as exc:
+        raise ValueError(
+            "Invalid checkout token"
+        ) from exc
+        
 def _dt(value: Optional[str]):
     if not value:
         return None
@@ -277,36 +350,52 @@ def _sync_business_from_subscription(business, subscription) -> None:
     business.external_subscription_id = subscription.external_subscription_id or ""
 
 
-def _find_business(db, custom: dict, subscription_id: str = ""):
-    business_id = custom.get("business_id")
-    owner_id = custom.get("telegram_user_id")
+def _find_business(
+    db,
+    custom: dict,
+    subscription_id: str = "",
+):
+    checkout_token = str(
+        custom.get("checkout_token") or ""
+    ).strip()
 
-    # Для Paddle webhook бизнес должен определяться точно.
-    # Нельзя выбирать "первый бизнес" владельца:
-    # у одного Telegram-пользователя может быть несколько бизнесов.
-    if business_id:
+    if checkout_token:
         try:
-            business = db.get(Business, int(business_id))
-        except (TypeError, ValueError):
-            business = None
+            token = _verify_checkout_token(
+                checkout_token
+            )
+        except ValueError:
+            return None
+
+        try:
+            business_id = int(
+                token["business_id"]
+            )
+            owner_id = int(
+                token["owner_telegram_id"]
+            )
+        except (
+            KeyError,
+            TypeError,
+            ValueError,
+        ):
+            return None
+
+        business = db.get(
+            Business,
+            business_id,
+        )
 
         if not business:
             return None
 
-        # Если Telegram ID присутствует в custom_data,
-        # используем его как дополнительную проверку владельца.
-        if owner_id:
-            try:
-                if int(business.owner_telegram_id) != int(owner_id):
-                    return None
-            except (TypeError, ValueError):
-                return None
+        if int(
+            business.owner_telegram_id
+        ) != owner_id:
+            return None
 
         return business
 
-    # Для событий, пришедших без business_id/custom_data,
-    # разрешаем надёжный fallback только через уже сохранённый
-    # Paddle subscription ID.
     if subscription_id:
         row = (
             db.query(Subscription)
@@ -316,8 +405,12 @@ def _find_business(db, custom: dict, subscription_id: str = ""):
             )
             .first()
         )
+
         if row:
-            return db.get(Business, row.business_id)
+            return db.get(
+                Business,
+                row.business_id,
+            )
 
     return None
 
@@ -755,7 +848,35 @@ def _current_subscription(x_telegram_init_data: str):
             raise HTTPException(400, "Paddle subscription ID is missing")
         return user, owner_id, business.id, subscription_id
 
+@app.post("/admin/subscription/checkout-token")
+def create_subscription_checkout_token(
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(
+        x_telegram_init_data
+    )
 
+    owner_id = int(user["id"])
+
+    with SessionLocal() as db:
+        business = owner_business(
+            db,
+            owner_id,
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found",
+            )
+
+        return {
+            "token": _create_checkout_token(
+                business.id,
+                owner_id,
+            )
+        }
+        
 @app.post("/admin/subscription/preview-limit")
 def preview_subscription_limit(
     x: SubscriptionLimitChangeIn,
