@@ -949,15 +949,15 @@ def change_subscription_limit(
             }
 
     mode = "prorated_immediately" if limit > current else "prorated_next_billing_period"
-paddle_result = _paddle_request(
-    "PATCH",
-    f"/subscriptions/{subscription_id}",
-    {
-        "items": _items_for_limit(limit),
-        "proration_billing_mode": mode,
-        "on_payment_failure": "prevent_change",
-    },
-)
+    paddle_result = _paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}",
+        {
+            "items": _items_for_limit(limit),
+            "proration_billing_mode": mode,
+            "on_payment_failure": "prevent_change",
+        },
+    )
 
     new_price = calculate_subscription_price(limit)
     with SessionLocal() as db:
