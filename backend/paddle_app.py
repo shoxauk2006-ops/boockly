@@ -428,25 +428,25 @@ def _apply_paddle_event(payload: dict) -> None:
             data.get("subscription_id") or ""
         )
 
-    with SessionLocal() as db:
-    if not event_id:
-        raise ValueError("Paddle event_id is missing")
+        with SessionLocal() as db:
+        if not event_id:
+            raise ValueError("Paddle event_id is missing")
 
-    try:
-        with db.begin_nested():
-            if _event_already_processed(db, event_id):
-                return
+        try:
+            with db.begin_nested():
+                if _event_already_processed(db, event_id):
+                    return
 
-            _mark_event_processed(
-                db,
-                event_id,
-                event_type,
-            )
-    except IntegrityError:
-        db.rollback()
-        return
+                _mark_event_processed(
+                    db,
+                    event_id,
+                    event_type,
+                )
+        except IntegrityError:
+            return
 
         if event_type not in SUPPORTED_PADDLE_EVENTS:
+            ...
             _mark_event_processed(
                 db,
                 event_id,
