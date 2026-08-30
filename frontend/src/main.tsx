@@ -8717,35 +8717,18 @@ setSlots([]);
 }
 function BookingRow({
   x,
-  t
+  t,
+  business
 }: {
   x: any;
   t: (key: string, fallback?: string) => string;
+  business: any;
 }) {
   const [cancelling, setCancelling] =
     useState(false);
 
   const [cancelled, setCancelled] =
     useState(x.status === 'cancelled');
-
-  const getNowTashkent = () => {
-    return new Intl.DateTimeFormat(
-      'sv-SE',
-      {
-        timeZone:
-          'Asia/Tashkent',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }
-    ).format(
-      new Date()
-    );
-  };
 
   const [now, setNow] = useState(
   new Date()
@@ -8761,8 +8744,24 @@ useEffect(() => {
   };
 }, []);
 
+const businessTimezone =
+  business?.timezone ||
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 const nowDateTime =
-  now.toISOString().slice(0, 16);
+  new Intl.DateTimeFormat(
+    'sv-SE',
+    {
+      timeZone: businessTimezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }
+  ).format(now).slice(0, 16);
 
   const bookingDateTime =
     `${x.day} ${x.start}`;
@@ -8772,7 +8771,7 @@ const nowDateTime =
     x.status ===
       'confirmed' &&
     bookingDateTime >
-      nowTashkent;
+      nowDateTime;
 
   const bookingEndDateTime =
   `${x.day} ${x.end}`;
@@ -8781,12 +8780,12 @@ const isInProgress =
   !cancelled &&
   x.status === 'confirmed' &&
   bookingDateTime <= nowTashkent &&
-  bookingEndDateTime > nowTashkent;
+  bookingEndDateTime > nowDateTime;
 
 const isCompleted =
   !cancelled &&
   x.status === 'confirmed' &&
-  bookingEndDateTime <= nowTashkent;
+  bookingEndDateTime <= nowDateTime;
 
   const cancelBooking =
     async () => {
