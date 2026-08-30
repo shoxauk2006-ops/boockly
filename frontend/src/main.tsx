@@ -8170,22 +8170,6 @@ setSlots([]);
       }
     };
 
-  const getTodayTashkent =
-    () => {
-      return new Intl.DateTimeFormat(
-        'en-CA',
-        {
-          timeZone:
-            'Asia/Tashkent',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        }
-      ).format(
-        new Date()
-      );
-    };
-
  const [now, setNow] = useState(new Date());
 
 useEffect(() => {
@@ -8218,21 +8202,6 @@ const nowDateTime =
 
 const todayBusiness =
   nowDateTime.slice(0, 10);
-
-const nowDateTime =
-  new Intl.DateTimeFormat('sv-SE', {
-    timeZone: businessTimezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  })
-    .format(now)
-    .slice(0, 16);
-
 
   const filteredBookings =
   bookings
