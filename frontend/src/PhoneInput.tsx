@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   getCountries,
   getCountryCallingCode,
-  parsePhoneNumberFromString,
   formatIncompletePhoneNumber,
   type Country
 } from 'libphonenumber-js';
@@ -87,11 +86,13 @@ function detectDeviceCountry(): Country {
 
 function detectCountry(value: string): Country {
   if (value) {
-    const phone =
-      parsePhoneNumberFromString(value);
+    const digits = value.replace(/\D/g, '');
 
-    if (phone?.country) {
-      return phone.country;
+    for (const country of countries) {
+      const code = getCountryCallingCode(country);
+      if (digits.startsWith(code)) {
+        return country;
+      }
     }
   }
 
@@ -155,14 +156,7 @@ export default function PhoneInput({
   const [selectedCountry, setSelectedCountry] =
     useState<Country>(() => detectCountry(value));
 
-  // True after the user explicitly chooses a country.
-  // This prevents the selected country from jumping back based on the
-  // number value on every render/change.
   const countryChangedByUser = useRef(false);
-
-  // The last value emitted by this component. Used to distinguish our own
-  // edits from a new value supplied by the parent (for example, when an
-  // existing business is loaded).
   const lastEmittedValue = useRef(value);
 
   useEffect(() => {
@@ -174,8 +168,7 @@ export default function PhoneInput({
     }
 
     if (value) {
-      const detected = detectCountry(value);
-      setSelectedCountry(detected);
+      setSelectedCountry(detectCountry(value));
     }
   }, [value]);
 
@@ -218,7 +211,6 @@ export default function PhoneInput({
       nationalValue.replace(/\D/g, '');
 
     countryChangedByUser.current = true;
-
     setSelectedCountry(newCountry);
 
     const newCountryCode =
@@ -226,7 +218,7 @@ export default function PhoneInput({
 
     const nextValue = nationalDigits
       ? `+${newCountryCode}${nationalDigits}`
-      : `+${newCountryCode}`;
+      : '';
 
     lastEmittedValue.current = nextValue;
     onChange(nextValue);
@@ -268,26 +260,54 @@ export default function PhoneInput({
             key={country}
             value={country}
           >
-            {flag(country)} {getCountryName(country)} +{getCountryCallingCode(country)}
+            {flag(country)} {getCountryName(country)}
           </option>
         ))}
       </select>
 
-      <input
-        type="tel"
-        inputMode="tel"
-        value={nationalValue}
-        onChange={handleChange}
-        placeholder={
-          placeholder ||
-          'Номер телефона'
-        }
-        autoComplete="tel"
-        aria-invalid={value.length > 0 && !valid}
+      <div
         style={{
-          flex: 1
+          display: 'flex',
+          alignItems: 'center',
+          flex: 1,
+          minWidth: 0,
+          border: '1px solid #ddd',
+          borderRadius: 12,
+          background: '#fff'
         }}
-      />
+      >
+        <span
+          style={{
+            paddingLeft: 12,
+            color: '#666',
+            fontWeight: 600,
+            whiteSpace: 'nowrap'
+          }}
+        >
+          +{countryCode}
+        </span>
+
+        <input
+          type="tel"
+          inputMode="tel"
+          value={nationalValue}
+          onChange={handleChange}
+          placeholder={
+            placeholder ||
+            'Номер телефона'
+          }
+          autoComplete="tel"
+          aria-invalid={value.length > 0 && !valid}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            border: 'none',
+            outline: 'none',
+            background: 'transparent',
+            paddingLeft: 6
+          }}
+        />
+      </div>
     </div>
   );
 }
