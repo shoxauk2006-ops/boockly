@@ -2424,10 +2424,25 @@ alert(paymentMessage);
     return;
   }
 
-      if (
-  newBusinessPhone &&
-  !isPhoneValid(newBusinessPhone)
-) {
+      if (!newBusinessPhone.trim()) {
+  alert(
+    t(
+      'owner.enterBusinessPhone',
+      'Введите номер телефона бизнеса'
+    )
+  );
+  return;
+}
+
+if (!isPhoneValid(newBusinessPhone)) {
+  alert(
+    t(
+      'owner.invalidPhone',
+      'Введите корректный номер телефона'
+    )
+  );
+  return;
+}
   alert(
     t(
       'owner.invalidPhone',
@@ -6699,10 +6714,25 @@ const durationMinutes =
 
   const saveBusinessContacts =
     async () => {
-      if (
-  businessPhone &&
-  !isPhoneValid(businessPhone)
-) {
+      if (!businessPhone.trim()) {
+  alert(
+    t(
+      'owner.enterBusinessPhone',
+      'Введите номер телефона бизнеса'
+    )
+  );
+  return;
+}
+
+if (!isPhoneValid(businessPhone)) {
+  alert(
+    t(
+      'owner.invalidPhone',
+      'Введите корректный номер телефона'
+    )
+  );
+  return;
+}
   alert(
     t(
       'owner.invalidPhone',
