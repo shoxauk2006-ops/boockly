@@ -6091,19 +6091,109 @@ await refreshAfterChange({
     );
   }
 
-  return (
+    return (
     <div className="card subscription">
       <div className="subscription-head">
         <div>
           <h3>Bookly Pro</h3>
-          <p><b>{t('owner.monthlyPrice')}</b></p>
+          <p>
+            <b>{t('owner.monthlyPrice')}</b>
+          </p>
         </div>
+
         <span className="pill">
           {t('owner.inactive', 'Неактивна')}
         </span>
       </div>
 
-        'owner.payToUnlock',
+      <p>
+        {t(
+          'owner.payToUnlock',
+          'Оплатите подписку, чтобы открыть доступ к функциям Bookly Pro.'
+        )}
+      </p>
+
+      <button
+        type="button"
+        className="primary full"
+        onClick={() =>
+          setInactiveLimitOptionsOpen(
+            !inactiveLimitOptionsOpen
+          )
+        }
+      >
+        {t(
+          'owner.increaseServiceLimit',
+          'Увеличить лимит'
+        )}
+      </button>
+
+      {inactiveLimitOptionsOpen && (
+        <div
+          style={{
+            display: 'grid',
+            gap: 10,
+            marginTop: 12
+          }}
+        >
+          {[
+            { limit: 10, price: '$7.99' },
+            { limit: 20, price: '$12.98' },
+            { limit: 30, price: '$15.98' },
+            { limit: 50, price: '$19.98' },
+            { limit: 100, price: '$27.98' }
+          ].map((option) => (
+            <button
+              key={option.limit}
+              type="button"
+              className={
+                inactiveSelectedServiceLimit ===
+                option.limit
+                  ? 'primary'
+                  : 'subscription-manage-button'
+              }
+              onClick={() =>
+                setInactiveSelectedServiceLimit(
+                  option.limit
+                )
+              }
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%'
+              }}
+            >
+              <span>
+                {t('owner.upToServices', 'До')}{' '}
+                {option.limit}{' '}
+                {t('owner.services', 'услуг')}
+              </span>
+
+              <strong>
+                {option.price} {t('owner.perMonth')}
+              </strong>
+            </button>
+          ))}
+
+          <button
+            type="button"
+            className="primary full"
+            onClick={() =>
+              checkout(
+                'paddle',
+                business.id,
+                inactiveSelectedServiceLimit
+              )
+            }
+          >
+            {t(
+              'owner.openAccess',
+              'Оплатить и открыть доступ'
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
