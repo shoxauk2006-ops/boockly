@@ -8738,10 +8738,6 @@ function BookingRow({
   t: (key: string, fallback?: string) => string;
   business: any;
 }) {
-  x: any;
-  t: (key: string, fallback?: string) => string;
-  business: any;
-}) {
   const [cancelling, setCancelling] =
     useState(false);
 
@@ -8797,7 +8793,7 @@ const nowDateTime =
 const isInProgress =
   !cancelled &&
   x.status === 'confirmed' &&
-  bookingDateTime <= nowTashkent &&
+  bookingDateTime <= nowDateTime &&
   bookingEndDateTime > nowDateTime;
 
 const isCompleted =
