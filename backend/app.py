@@ -2086,64 +2086,132 @@ def business_qr(
         }
     )
 @app.get("/businesses/{business_id}/availability")
-def availability(business_id: int, service_id: int, day: date):
+def availability(
+    business_id: int,
+    service_id: int,
+    day: date
+):
     with SessionLocal() as db:
         b = db.get(Business, business_id)
         s = db.get(Service, service_id)
 
-        if not b or not s or s.business_id != business_id or not s.active:
+        if (
+            not b
+            or not s
+            or s.business_id != business_id
+            or not s.active
+        ):
             raise HTTPException(404, "Not found")
 
-        slots = []
-        step = s.duration_min
+        # Получаем график одним запросом.
+        work_windows = get_work_windows(
+            db,
+            business_id,
+            day
+        )
 
-        # Render работает в UTC, поэтому переводим текущее время
-        # в часовой пояс Узбекистана.
+        # Получаем все записи этого бизнеса на выбранный день
+        # одним запросом.
+        bookings = (
+            db.query(
+                Booking.start,
+                Booking.end
+            )
+            .filter(
+                Booking.business_id == business_id,
+                Booking.day == day,
+                Booking.status == "confirmed"
+            )
+            .all()
+        )
+
+        # Получаем все блокировки этого бизнеса на выбранный день
+        # одним запросом.
+        blocked_slots = (
+            db.query(
+                BlockedSlot.start,
+                BlockedSlot.end
+            )
+            .filter(
+                BlockedSlot.business_id == business_id,
+                BlockedSlot.day == day
+            )
+            .all()
+        )
+
         from zoneinfo import ZoneInfo
 
         now_tashkent = datetime.now(
             ZoneInfo("Asia/Tashkent")
         ).replace(tzinfo=None)
 
-        for win_start, win_end in get_work_windows(
-            db,
-            business_id,
-            day
-        ):
-            cursor = datetime.combine(day, win_start)
-            endday = datetime.combine(day, win_end)
+        slots = []
+        step = s.duration_min
 
-            while cursor + timedelta(
-                minutes=s.duration_min
-            ) <= endday:
+        for win_start, win_end in work_windows:
+            cursor = datetime.combine(
+                day,
+                win_start
+            )
 
+            endday = datetime.combine(
+                day,
+                win_end
+            )
+
+            while (
+                cursor + timedelta(
+                    minutes=s.duration_min
+                ) <= endday
+            ):
                 st = cursor.time()
+
                 en = (
-                    cursor +
-                    timedelta(minutes=s.duration_min)
+                    cursor
+                    + timedelta(
+                        minutes=s.duration_min
+                    )
                 ).time()
 
-                # Если выбрана сегодняшняя дата,
-                # показываем только будущее время.
+                # Для сегодняшнего дня показываем
+                # только будущее время.
                 if day == now_tashkent.date():
                     if cursor <= now_tashkent:
-                        cursor += timedelta(minutes=step)
+                        cursor += timedelta(
+                            minutes=step
+                        )
                         continue
 
-                if is_free(
-                    db,
-                    business_id,
-                    day,
-                    st,
-                    en
-                ):
+                # Проверяем пересечение с существующими записями
+                # уже в памяти, без новых запросов к БД.
+                booking_overlap = any(
+                    booking_start < en
+                    and booking_end > st
+                    for booking_start, booking_end
+                    in bookings
+                )
+
+                # Проверяем пересечение с блокировками
+                # также в памяти.
+                blocked_overlap = any(
+                    blocked_start < en
+                    and blocked_end > st
+                    for blocked_start, blocked_end
+                    in blocked_slots
+                )
+
+                if not booking_overlap and not blocked_overlap:
                     slots.append(
                         st.strftime("%H:%M")
                     )
 
-                cursor += timedelta(minutes=step)
+                cursor += timedelta(
+                    minutes=step
+                )
 
-        return {"slots": slots}
+        return {
+            "slots": slots
+        }
 
 @app.post("/bookings")
 def create_booking(
