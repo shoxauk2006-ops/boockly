@@ -9084,35 +9084,6 @@ function Settings({
         .timeZone ||
       'Asia/Tashkent'
   );
-
-const [settingsTimezoneSearch, setSettingsTimezoneSearch] =
-  useState('');
-
-const [settingsTimezonePickerOpen, setSettingsTimezonePickerOpen] =
-  useState(false);
-
-const filteredSettingsTimezones =
-  useMemo(() => {
-    const search =
-      settingsTimezoneSearch
-        .trim()
-        .toLowerCase();
-
-    if (!search) {
-      return TIMEZONE_BY_OFFSET;
-    }
-
-    return TIMEZONE_BY_OFFSET.filter(
-      item =>
-        item.label
-          .toLowerCase()
-          .includes(search) ||
-        item.zone
-          .toLowerCase()
-          .includes(search)
-    );
-  }, [settingsTimezoneSearch]);
-
     
   const [businessImage, setBusinessImage] =
     useState(
