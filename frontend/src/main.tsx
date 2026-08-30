@@ -8747,12 +8747,22 @@ function BookingRow({
     );
   };
 
-  const nowTashkent =
-    getNowTashkent()
-      .slice(
-        0,
-        16
-      );
+  const [now, setNow] = useState(
+  new Date()
+);
+
+useEffect(() => {
+  const timer = window.setInterval(() => {
+    setNow(new Date());
+  }, 30_000);
+
+  return () => {
+    window.clearInterval(timer);
+  };
+}, []);
+
+const nowDateTime =
+  now.toISOString().slice(0, 16);
 
   const bookingDateTime =
     `${x.day} ${x.start}`;
