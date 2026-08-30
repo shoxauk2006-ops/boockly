@@ -6793,7 +6793,6 @@ if (!isPhoneValid(businessPhone)) {
 
   const saveService =
     async () => {
-          setSavingService(true);
       const name =
         f.name.trim();
 
@@ -6841,6 +6840,8 @@ if (!isPhoneValid(businessPhone)) {
         );
         return;
       }
+
+      setSavingService(true);
 
       const url =
         editingId
