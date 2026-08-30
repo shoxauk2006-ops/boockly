@@ -4457,12 +4457,14 @@ function QrPrintCard({
   business,
   qrDataUrl,
   open,
-  onClose
+  onClose,
+  t
 }: {
   business: any;
   qrDataUrl: string;
   open: boolean;
   onClose: () => void;
+  t: (key: string, fallback?: string) => string;
 }) {
   if (!open || !qrDataUrl) {
     return null;
@@ -4502,138 +4504,160 @@ function QrPrintCard({
     const qrImage =
       new Image();
 
-    qrImage.onload = async () => {
-      const businessName =
-        String(
-          business?.name ||
+    await new Promise<void>(
+      (resolve, reject) => {
+        qrImage.onload = () => {
+          resolve();
+        };
+
+        qrImage.onerror = () => {
+          reject(
+            new Error(
+              'QR image failed to load'
+            )
+          );
+        };
+
+        qrImage.src =
+          qrDataUrl;
+      }
+    );
+
+    const businessName =
+      String(
+        business?.name ||
+        t(
+          'owner.businessNameFallback',
           'Ваш бизнес'
-        );
-
-      // BOOKLY
-      ctx.fillStyle = '#111';
-
-      ctx.textAlign = 'center';
-
-      ctx.font =
-        '900 72px Arial';
-
-      ctx.fillText(
-        'BOOKLY',
-        width / 2,
-        180
+        )
       );
 
-      // Название бизнеса
-      ctx.font =
-        '800 62px Arial';
+    ctx.textAlign =
+      'center';
 
-      ctx.fillText(
-        businessName,
-        width / 2,
-        320
-      );
+    ctx.fillStyle = '#111';
 
-      // Подзаголовок
-      ctx.fillStyle = '#777';
+    ctx.font =
+      '900 72px Arial';
 
-      ctx.font =
-        '500 34px Arial';
+    ctx.fillText(
+      'BOOKLY',
+      width / 2,
+      180
+    );
 
-      ctx.fillText(
-        'Онлайн-запись',
-        width / 2,
-        385
-      );
+    ctx.font =
+      '800 62px Arial';
 
-      // Карточка QR
-      const cardX = 150;
-      const cardY = 500;
-      const cardW = 1300;
-      const cardH = 1300;
+    ctx.fillText(
+      businessName,
+      width / 2,
+      320
+    );
 
-      ctx.fillStyle = '#fff';
-      ctx.strokeStyle = '#e5e7eb';
-      ctx.lineWidth = 4;
+    ctx.fillStyle = '#777';
 
-      ctx.beginPath();
+    ctx.font =
+      '500 34px Arial';
 
-      ctx.roundRect(
-        cardX,
-        cardY,
-        cardW,
-        cardH,
-        45
-      );
+    ctx.fillText(
+      t(
+        'owner.onlineBooking',
+        'Онлайн-запись'
+      ),
+      width / 2,
+      385
+    );
 
-      ctx.fill();
-      ctx.stroke();
+    const cardX = 150;
+    const cardY = 500;
+    const cardW = 1300;
+    const cardH = 1300;
 
-      // QR
-      const qrSize = 1050;
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 4;
 
-      const qrX =
-        (width - qrSize) / 2;
+    ctx.beginPath();
 
-      const qrY =
-        cardY + 125;
+    ctx.roundRect(
+      cardX,
+      cardY,
+      cardW,
+      cardH,
+      45
+    );
 
-      ctx.drawImage(
-        qrImage,
-        qrX,
-        qrY,
-        qrSize,
-        qrSize
-      );
+    ctx.fill();
+    ctx.stroke();
 
-      // Заголовок
-      ctx.fillStyle = '#111';
+    const qrSize = 1050;
 
-      ctx.font =
-        '800 58px Arial';
+    const qrX =
+      (width - qrSize) / 2;
 
-      ctx.fillText(
-        'Запишитесь онлайн',
-        width / 2,
-        1910
-      );
+    const qrY =
+      cardY + 125;
 
-      // Инструкция
-      ctx.fillStyle = '#707780';
+    ctx.drawImage(
+      qrImage,
+      qrX,
+      qrY,
+      qrSize,
+      qrSize
+    );
 
-      ctx.font =
-        '500 34px Arial';
+    ctx.fillStyle = '#111';
 
-      ctx.fillText(
-        'Отсканируйте QR-код',
-        width / 2,
-        1970
-      );
+    ctx.font =
+      '800 58px Arial';
 
-      ctx.fillText(
-        'камерой телефона',
-        width / 2,
-        2025
-      );
+    ctx.fillText(
+      t(
+        'owner.bookOnline',
+        'Запишитесь онлайн'
+      ),
+      width / 2,
+      1910
+    );
 
-      // Footer
-      ctx.fillStyle = '#a0a5ab';
+    ctx.fillStyle = '#707780';
 
-      ctx.font =
-        '700 24px Arial';
+    ctx.font =
+      '500 34px Arial';
 
-      ctx.fillText(
-        'POWERED BY BOOKLY',
-        width / 2,
-        2135
-      );
+    ctx.fillText(
+      t(
+        'owner.scanQr',
+        'Отсканируйте QR-код'
+      ),
+      width / 2,
+      1970
+    );
 
-      const dataUrl =
-        canvas.toDataURL(
-          'image/png',
-          1
-        );
+    ctx.fillText(
+      t(
+        'owner.phoneCamera',
+        'камерой телефона'
+      ),
+      width / 2,
+      2025
+    );
 
-      const blob = await new Promise<Blob>(
+    ctx.fillStyle =
+      '#a0a5ab';
+
+    ctx.font =
+      '700 24px Arial';
+
+    ctx.fillText(
+      'POWERED BY BOOKLY',
+      width / 2,
+      2135
+    );
+
+    const blob =
+      await new Promise<Blob>(
         (resolve, reject) => {
           canvas.toBlob(
             value => {
@@ -4653,59 +4677,63 @@ function QrPrintCard({
         }
       );
 
-      const file =
-        new File(
-          [blob],
-          `${business?.slug || 'bookly'}-qr-print.png`,
-          {
-            type: 'image/png'
-          }
-        );
+    const file =
+      new File(
+        [blob],
+        `${business?.slug || 'bookly'}-qr-print.png`,
+        {
+          type: 'image/png'
+        }
+      );
 
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({
-          files: [file]
-        })
-      ) {
-        await navigator.share({
-          files: [file],
-          title:
-            t('owner.printQrTitle', 'Bookly — QR для печати')
-        });
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({
+        files: [file]
+      })
+    ) {
+      await navigator.share({
+        files: [file],
+        title: t(
+          'owner.printQrTitle',
+          'Bookly — QR для печати'
+        )
+      });
 
-        return;
-      }
+      return;
+    }
 
-      const url =
-        URL.createObjectURL(blob);
+    const url =
+      URL.createObjectURL(blob);
 
-      const link =
-        document.createElement('a');
+    const link =
+      document.createElement('a');
 
-      link.href = url;
+    link.href = url;
 
-      link.download =
-        `${business?.slug || 'bookly'}-qr-print.png`;
+    link.download =
+      `${business?.slug || 'bookly'}-qr-print.png`;
 
-      document.body.appendChild(link);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
-      link.click();
-
-      document.body.removeChild(link);
-
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 1000);
-    };
-
-    qrImage.src = qrDataUrl;
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
 
   } catch (error) {
     console.error(
       'QR PRINT DOWNLOAD ERROR:',
       error
+    );
+
+    alert(
+      t(
+        'owner.qrPrintError',
+        'Не удалось скачать макет'
+      )
     );
   }
 };
@@ -4739,8 +4767,11 @@ function QrPrintCard({
           </h2>
 
           <p>
-            Онлайн-запись
-          </p>
+  {t(
+    'owner.onlineBooking',
+    'Онлайн-запись'
+  )}
+</p>
 
           <div className="qr-print-code">
             <img
@@ -4750,13 +4781,23 @@ function QrPrintCard({
           </div>
 
           <h3>
-            Запишитесь онлайн
-          </h3>
+  {t(
+    'owner.bookOnline',
+    'Запишитесь онлайн'
+  )}
+</h3>
 
           <span>
-            Отсканируйте QR-код
-            камерой телефона
-          </span>
+  {t(
+    'owner.scanQr',
+    'Отсканируйте QR-код'
+  )}
+  {' '}
+  {t(
+    'owner.phoneCamera',
+    'камерой телефона'
+  )}
+</span>
 
           <small>
             powered by Bookly
@@ -4764,12 +4805,15 @@ function QrPrintCard({
         </div>
 
         <button
-          type="button"
-          className="primary full"
-          onClick={downloadPrintableQr}
-        >
-          Скачать макет
-        </button>
+  type="button"
+  className="primary full"
+  onClick={downloadPrintableQr}
+>
+  {t(
+    'owner.saveLayout',
+    'Скачать макет'
+  )}
+</button>
       </div>
     </div>
   );
@@ -5222,6 +5266,7 @@ function Dashboard({
   qrDataUrl={qrDataUrl}
   open={qrPrintOpen}
   onClose={() => setQrPrintOpen(false)}
+  t={t}
 />
     </>
   );
