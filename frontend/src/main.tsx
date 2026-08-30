@@ -8566,34 +8566,7 @@ setSlots([]);
       )}
     </p>
   )}
-{slotsLoading && (
-  <p
-    className="muted"
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 12
-    }}
-  >
-    <span
-      style={{
-        width: 14,
-        height: 14,
-        border: '2px solid #ddd',
-        borderTopColor: '#111',
-        borderRadius: '50%',
-        animation: 'bookly-spin .8s linear infinite',
-        display: 'inline-block',
-        flexShrink: 0
-      }}
-    />
-    {t(
-      'owner.loadingSlots',
-      'Загружаем свободное время...'
-    )}
-  </p>
-)}
+  
 <div className="slots">
   {slots.map(
     time => (
