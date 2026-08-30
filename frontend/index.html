@@ -23,15 +23,15 @@
       .business-photo-settings > strong{display:block;font-size:16px;margin-bottom:6px}
       .business-photo-settings > .muted{margin:0 0 12px}
       .business-photo-preview{
-  display:block;
-  width:140px;
-  height:90px;
-  object-fit:cover;
-  object-position:center;
-  border-radius:14px;
-  background:#f3f4f6;
-  border:1px solid #e7eaee;
-}
+        display:block;
+        width:140px;
+        height:90px;
+        object-fit:cover;
+        object-position:center;
+        border-radius:14px;
+        background:#f3f4f6;
+        border:1px solid #e7eaee;
+      }
       .business-photo-empty{
         width:100%;
         min-height:150px;
@@ -66,58 +66,22 @@
         margin:0;
       }
 
-      /* Keep admin navigation visible and lift it above the mobile keyboard. */
+      /* Admin navigation stays in its normal bottom position. */
       .admin-bottom-nav{
         position:fixed!important;
         left:50%!important;
-        bottom:calc(12px + var(--bookly-keyboard-height, 0px))!important;
+        bottom:12px!important;
         transform:translateX(-50%)!important;
         width:min(100% - 24px, 400px)!important;
+        margin:0!important;
         z-index:10000!important;
       }
 
+      /* Leave room for the fixed navigation in the document flow. */
       body:has(.admin-bottom-nav) .app{
         padding-bottom:110px!important;
       }
     </style>
-    <script>
-      (function () {
-        function updateBooklyKeyboardHeight() {
-          var vv = window.visualViewport;
-          var height = 0;
-
-          if (vv) {
-            height = Math.max(
-              0,
-              window.innerHeight - vv.height - vv.offsetTop
-            );
-          }
-
-          document.documentElement.style.setProperty(
-            '--bookly-keyboard-height',
-            height + 'px'
-          );
-        }
-
-        updateBooklyKeyboardHeight();
-
-        if (window.visualViewport) {
-          window.visualViewport.addEventListener(
-            'resize',
-            updateBooklyKeyboardHeight
-          );
-          window.visualViewport.addEventListener(
-            'scroll',
-            updateBooklyKeyboardHeight
-          );
-        }
-
-        window.addEventListener(
-          'resize',
-          updateBooklyKeyboardHeight
-        );
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
