@@ -8729,6 +8729,7 @@ const nowDateTime =
     </div>
   );
 }
+// Bookly booking status uses business timezone.
 function BookingRow({
   x,
   t,
