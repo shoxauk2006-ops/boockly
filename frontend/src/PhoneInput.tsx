@@ -216,9 +216,8 @@ export default function PhoneInput({
     const newCountryCode =
       getCountryCallingCode(newCountry);
 
-    const nextValue = nationalDigits
-      ? `+${newCountryCode}${nationalDigits}`
-      : '';
+    const nextValue =
+      `+${newCountryCode}${nationalDigits}`;
 
     lastEmittedValue.current = nextValue;
     onChange(nextValue);
@@ -232,7 +231,7 @@ export default function PhoneInput({
 
     const nextValue = digits
       ? `+${countryCode}${digits}`
-      : '';
+      : `+${countryCode}`;
 
     lastEmittedValue.current = nextValue;
     onChange(nextValue);
