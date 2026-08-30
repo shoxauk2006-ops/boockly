@@ -5291,6 +5291,11 @@ function Subscription({
   useState<number | null>(null);
   const [subscriptionActionLoading, setSubscriptionActionLoading] =
     useState(false);
+  const [inactiveLimitOptionsOpen, setInactiveLimitOptionsOpen] =
+  useState(false);
+
+  const [inactiveSelectedServiceLimit, setInactiveSelectedServiceLimit] =
+    useState(10);
 
   const expiresAt =
     business?.subscription_expires_at
@@ -6098,19 +6103,7 @@ await refreshAfterChange({
         </span>
       </div>
 
-      <p>
-        {t(
-          'owner.payToUnlock',
-          'Оплатите подписку, чтобы открыть доступ к функциям Bookly Pro.'
-        )}
-      </p>
-
-      <button
-        className="primary full"
-        onClick={() => checkout('paddle', business.id)}
-      >
-        {t('owner.openAccess', 'Открыть доступ')}
-      </button>
+        'owner.payToUnlock',
     </div>
   );
 }
