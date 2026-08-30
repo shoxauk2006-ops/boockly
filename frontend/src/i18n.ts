@@ -37,6 +37,8 @@ const ru: TranslationMap = {
   'owner.businessPhotoAlt': 'Фото бизнеса',
   'owner.clientQrHint': 'Клиенты могут сканировать и сразу перейти к записи',
   'owner.thisDay': 'Этот день',
+  'owner.changeTimezoneWithBookings':
+  'У бизнеса уже есть существующие записи. Их дата и время останутся без изменений.\n\nИзменение часового пояса повлияет на расчёт текущего времени и новые записи.\n\nИзменить часовой пояс?',
   'owner.invalidPhone':'Введите корректный номер телефона',
   'owner.inProgress':'В процессе',
 'owner.poweredByBookly':'Работает на Bookly',
@@ -117,6 +119,8 @@ const en: TranslationMap = {
   'owner.businessPhotoAlt': 'Business photo',
   'owner.clientQrHint': 'Clients can scan this to go directly to booking',
   'owner.thisDay': 'This day',
+  'owner.changeTimezoneWithBookings':
+  'This business already has existing bookings. Their date and time will remain unchanged.\n\nChanging the time zone will affect current-time calculations and new bookings.\n\nChange the time zone?',
   'owner.inProgress':'In progress',
 'owner.poweredByBookly':'Powered by Bookly',
 'owner.qrPrintError':'Failed to download the layout',
@@ -202,6 +206,8 @@ const uz: TranslationMap = {
   'settings.linkCopied': 'Havola nusxalandi',
   'owner.printQrTitle': 'Bookly — Chop etish uchun QR',
   'owner.qrTitle': 'Bookly QR-kodi',
+  'owner.changeTimezoneWithBookings':
+  'Bu biznesda allaqachon mavjud bronlar bor. Ularning sanasi va vaqti o‘zgarmaydi.\n\nVaqt zonasini o‘zgartirish joriy vaqt hisobiga va yangi bronlarga ta’sir qiladi.\n\nVaqt zonasi o‘zgartirilsinmi?',
   'owner.qrBookingAlt': 'Bron uchun QR-kod',
   'owner.qrAlt': 'QR-kod',
   'owner.closeInstruction': 'Yo‘riqnomani yopish',
@@ -318,6 +324,8 @@ const tr: TranslationMap = {
   'owner.printQrTitle': 'Bookly — Yazdırma QR kodu',
   'owner.qrTitle': 'Bookly QR kodu',
   'owner.qrBookingAlt': 'Rezervasyon QR kodu',
+  'owner.changeTimezoneWithBookings':
+  'Bu işletmede mevcut rezervasyonlar var. Tarih ve saatleri değiştirilmeyecek.\n\nSaat dilimini değiştirmek mevcut zaman hesaplamasını ve yeni rezervasyonları etkiler.\n\nSaat dilimi değiştirilsin mi?',
   'owner.qrAlt': 'QR kodu',
   'owner.inProgress':'Devam ediyor',
 'owner.poweredByBookly':'Bookly tarafından',
@@ -435,6 +443,8 @@ const ar: TranslationMap = {
   'owner.printQrTitle': 'Bookly — رمز QR للطباعة',
   'owner.qrTitle': 'رمز QR لـ Bookly',
   'owner.invalidPhone':'أدخل رقم هاتف صحيح',
+  'owner.changeTimezoneWithBookings':
+  'لدى هذا النشاط حجوزات موجودة بالفعل. ستبقى تواريخها وأوقاتها دون تغيير.\n\nسيؤثر تغيير المنطقة الزمنية على حساب الوقت الحالي والحجوزات الجديدة.\n\nهل تريد تغيير المنطقة الزمنية؟',
   'owner.qrBookingAlt': 'رمز QR للحجز',
   'owner.qrAlt': 'رمز QR',
   'owner.closeInstruction': 'إغلاق التعليمات',
