@@ -2470,15 +2470,12 @@ def my_bookings(
 
     from zoneinfo import ZoneInfo
 
-    now_tashkent = datetime.now(
-        ZoneInfo("Asia/Tashkent")
-    ).replace(tzinfo=None)
-
     with SessionLocal() as db:
         rows = (
             db.query(
                 Booking,
                 Business.name.label("business_name"),
+                Business.timezone.label("business_timezone"),
                 Service.name.label("service_name")
             )
             .join(
@@ -2503,14 +2500,31 @@ def my_bookings(
 
         result = []
 
-        for booking, business_name, service_name in rows:
+        for (
+            booking,
+            business_name,
+            business_timezone,
+            service_name
+        ) in rows:
+
+            timezone_name = (
+                business_timezone or
+                "Asia/Tashkent"
+            )
+
+            now_business = datetime.now(
+                ZoneInfo(timezone_name)
+            ).replace(
+                tzinfo=None
+            )
+
             booking_datetime = datetime.combine(
                 booking.day,
                 booking.start
             )
 
             # Не показываем прошедшие записи
-            if booking_datetime <= now_tashkent:
+            if booking_datetime <= now_business:
                 continue
 
             result.append({
