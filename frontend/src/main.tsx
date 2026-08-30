@@ -6699,6 +6699,18 @@ const durationMinutes =
 
   const saveBusinessContacts =
     async () => {
+      if (
+  businessPhone &&
+  !isPhoneValid(businessPhone)
+) {
+  alert(
+    t(
+      'owner.invalidPhone',
+      'Введите корректный номер телефона'
+    )
+  );
+  return;
+}
       setSavingBusiness(true);
 
       try {
@@ -7017,21 +7029,13 @@ alert(
           {t('owner.businessContacts')}
         </h2>
 
-        <input
-          type="tel"
-          placeholder={
-            t(
-              'owner.phonePlaceholder'
-            )
-          }
-          value={businessPhone}
-          onChange={e =>
-            setBusinessPhone(
-              e.target.value
-            )
-          }
-        />
-
+        <PhoneInput
+  value={businessPhone}
+  onChange={setBusinessPhone}
+  placeholder={t(
+    'owner.phonePlaceholder'
+  )}
+/>
         <input
           placeholder={
             t(
@@ -8149,6 +8153,19 @@ if (!businessId) {
         return;
       }
 
+      if (
+  clientPhone &&
+  !isPhoneValid(clientPhone)
+) {
+  setError(
+    t(
+      'owner.invalidPhone',
+      'Введите корректный номер телефона'
+    )
+  );
+  return;
+}
+
       setSaving(true);
       setError('');
 
@@ -8651,22 +8668,13 @@ const todayBusiness =
             }
           />
 
-          <input
-            type="tel"
-            placeholder={
-              t(
-                'owner.clientPhone'
-              )
-            }
-            value={
-              clientPhone
-            }
-            onChange={e =>
-              setClientPhone(
-                e.target.value
-              )
-            }
-          />
+          <PhoneInput
+  value={clientPhone}
+  onChange={setClientPhone}
+  placeholder={t(
+    'owner.clientPhone'
+  )}
+/>
           <button
   type="button"
   className="primary full"
@@ -10383,6 +10391,16 @@ function Client({
       return;
     }
 
+    if (!isPhoneValid(clientPhone)) {
+  alert(
+    t(
+      'owner.invalidPhone',
+      'Введите корректный номер телефона'
+    )
+  );
+  return;
+}
+
     setBookingLoading(true);
 
     try {
@@ -10882,18 +10900,13 @@ function Client({
                 }
               />
 
-              <input
-                type="tel"
-                placeholder={
-                  t('client.phone')
-                }
-                value={phone}
-                onChange={e =>
-                  setPhone(
-                    e.target.value
-                  )
-                }
-              />
+<PhoneInput
+  value={phone}
+  onChange={setPhone}
+  placeholder={t(
+    'client.phone'
+  )}
+/>
 
               <button
                 className="primary full"
