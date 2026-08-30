@@ -4274,6 +4274,7 @@ borderTopColor: '#d32f2f',
           bookings={bookings}
           reload={load}
           t={t}
+          business={business}
         />
       )}
 
@@ -7859,11 +7860,13 @@ useEffect(() => {
 function Bookings({
   bookings,
   reload,
-  t
+  t,
+  business
 }: {
   bookings: any[];
   reload: () => Promise<void>;
   t: (key: string, fallback?: string) => string;
+  business: any;
 }) {
   const [showForm, setShowForm] =
     useState(false);
@@ -8183,25 +8186,35 @@ setSlots([]);
       );
     };
 
-  const getNowTashkent =
-    () => {
-      return new Intl.DateTimeFormat(
-        'sv-SE',
-        {
-          timeZone:
-            'Asia/Tashkent',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
-        }
-      ).format(
-        new Date()
-      );
-    };
+ const [now, setNow] = useState(new Date());
+
+useEffect(() => {
+  const timer = window.setInterval(() => {
+    setNow(new Date());
+  }, 30_000);
+
+  return () => {
+    window.clearInterval(timer);
+  };
+}, []);
+
+const businessTimezone =
+  business?.timezone ||
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+const nowDateTime =
+  new Intl.DateTimeFormat('sv-SE', {
+    timeZone: businessTimezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
+    .format(now)
+    .slice(0, 16);
 
   const todayTashkent =
     getTodayTashkent();
@@ -8721,6 +8734,10 @@ function BookingRow({
   t,
   business
 }: {
+  x: any;
+  t: (key: string, fallback?: string) => string;
+  business: any;
+}) {
   x: any;
   t: (key: string, fallback?: string) => string;
   business: any;
