@@ -9704,7 +9704,7 @@ t(
           minute: '2-digit',
           hour12: false
         }
-      }).format(currentTimezoneTime)}
+      ).format(currentTimezoneTime)}
     </div>
   </div>
 </div>
