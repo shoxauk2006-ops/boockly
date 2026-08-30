@@ -8700,6 +8700,7 @@ setSlots([]);
                 x={booking}
                 key={booking.id}
                 t={t}
+                business={business}
               />
             )
           )
