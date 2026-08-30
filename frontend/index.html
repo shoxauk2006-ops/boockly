@@ -65,7 +65,59 @@
       .business-photo-actions .ghost{
         margin:0;
       }
+
+      /* Keep admin navigation visible and lift it above the mobile keyboard. */
+      .admin-bottom-nav{
+        position:fixed!important;
+        left:50%!important;
+        bottom:calc(12px + var(--bookly-keyboard-height, 0px))!important;
+        transform:translateX(-50%)!important;
+        width:min(100% - 24px, 400px)!important;
+        z-index:10000!important;
+      }
+
+      body:has(.admin-bottom-nav) .app{
+        padding-bottom:110px!important;
+      }
     </style>
+    <script>
+      (function () {
+        function updateBooklyKeyboardHeight() {
+          var vv = window.visualViewport;
+          var height = 0;
+
+          if (vv) {
+            height = Math.max(
+              0,
+              window.innerHeight - vv.height - vv.offsetTop
+            );
+          }
+
+          document.documentElement.style.setProperty(
+            '--bookly-keyboard-height',
+            height + 'px'
+          );
+        }
+
+        updateBooklyKeyboardHeight();
+
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener(
+            'resize',
+            updateBooklyKeyboardHeight
+          );
+          window.visualViewport.addEventListener(
+            'scroll',
+            updateBooklyKeyboardHeight
+          );
+        }
+
+        window.addEventListener(
+          'resize',
+          updateBooklyKeyboardHeight
+        );
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
