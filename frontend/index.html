@@ -81,7 +81,66 @@
       body:has(.admin-bottom-nav) .app{
         padding-bottom:110px!important;
       }
+
+      /* Keep the element being edited above the fixed navigation. */
+      html,body,#root,.app{
+        scroll-padding-bottom:120px;
+      }
     </style>
+    <script>
+      (function () {
+        var focusTimer = null;
+
+        function scrollFocusedFieldIntoView() {
+          var active = document.activeElement;
+
+          if (!active) {
+            return;
+          }
+
+          var tag = active.tagName;
+
+          if (
+            tag !== 'INPUT' &&
+            tag !== 'TEXTAREA' &&
+            tag !== 'SELECT'
+          ) {
+            return;
+          }
+
+          if (focusTimer) {
+            clearTimeout(focusTimer);
+          }
+
+          /*
+           * Telegram/mobile WebViews resize the visible area a moment
+           * after the keyboard animation starts. Wait for that resize,
+           * then move only the focused control into the visible area.
+           */
+          focusTimer = setTimeout(function () {
+            try {
+              active.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+              });
+            } catch (_) {}
+          }, 220);
+        }
+
+        document.addEventListener(
+          'focusin',
+          scrollFocusedFieldIntoView
+        );
+
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener(
+            'resize',
+            scrollFocusedFieldIntoView
+          );
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
