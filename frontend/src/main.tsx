@@ -9084,6 +9084,19 @@ function Settings({
         .timeZone ||
       'Asia/Tashkent'
   );
+
+  const [currentTimezoneTime, setCurrentTimezoneTime] =
+  useState(new Date());
+
+  useEffect(() => {
+  const timer = setInterval(() => {
+    setCurrentTimezoneTime(new Date());
+  }, 1000);
+
+  return () => {
+    clearInterval(timer);
+  };
+}, []);
     
   const [businessImage, setBusinessImage] =
     useState(
@@ -9737,7 +9750,7 @@ t(
           minute: '2-digit',
           hour12: false
         }
-      ).format(new Date())}
+      }).format(currentTimezoneTime)}
     </div>
   </div>
 </div>
