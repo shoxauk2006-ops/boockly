@@ -8232,8 +8232,6 @@ const todayBusiness =
 
       return first.localeCompare(second);
     });
-        }
-      );
 
   return (
     <div>
