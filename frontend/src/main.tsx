@@ -8764,6 +8764,20 @@ function BookingRow({
     bookingDateTime >
       nowTashkent;
 
+  const bookingEndDateTime =
+  `${x.day} ${x.end}`;
+
+const isInProgress =
+  !cancelled &&
+  x.status === 'confirmed' &&
+  bookingDateTime <= nowTashkent &&
+  bookingEndDateTime > nowTashkent;
+
+const isCompleted =
+  !cancelled &&
+  x.status === 'confirmed' &&
+  bookingEndDateTime <= nowTashkent;
+
   const cancelBooking =
     async () => {
       if (!canCancel) {
@@ -8900,23 +8914,27 @@ function BookingRow({
       >
 
         <em>
-          {cancelled
-            ? t(
-                'owner.cancelled'
-              )
-            : x.status ===
-              'confirmed'
-              ? (
-                canCancel
-                  ? t(
-                      'owner.confirmed'
-                    )
-                  : t(
-                      'owner.completed'
-                    )
-              )
-              : x.status}
-        </em>
+  {cancelled
+    ? t(
+        'owner.cancelled'
+      )
+    : x.status === 'confirmed'
+      ? isInProgress
+        ? t(
+            'owner.inProgress',
+            'В процессе'
+          )
+        : isCompleted
+          ? t(
+              'owner.completed',
+              'Завершено'
+            )
+          : t(
+              'owner.confirmed',
+              'Подтверждено'
+            )
+      : x.status}
+</em>
 
         {canCancel && (
           <button
