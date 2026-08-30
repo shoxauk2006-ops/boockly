@@ -8186,14 +8186,6 @@ if (!isPhoneValid(clientPhone)) {
   );
   return;
 }
-  setError(
-    t(
-      'owner.invalidPhone',
-      'Введите корректный номер телефона'
-    )
-  );
-  return;
-}
 
       setSaving(true);
       setError('');
