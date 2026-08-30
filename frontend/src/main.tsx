@@ -8,6 +8,7 @@ import {
   applyLanguageDirection,
 } from './i18n';
 import {createRoot} from 'react-dom/client';
+import PhoneInput from './PhoneInput';
 import QRCode from 'qrcode';
 import './style.css';
 import './paddle-env-bridge';
@@ -2603,19 +2604,14 @@ alert(paymentMessage);
             rows={4}
           />
 
-          <input
-            type="tel"
-            placeholder={t(
-              'owner.businessPhone',
-              'Номер телефона'
-            )}
-            value={newBusinessPhone}
-            onChange={e =>
-              setNewBusinessPhone(
-                e.target.value
-              )
-            }
-          />
+          <PhoneInput
+  value={newBusinessPhone}
+  onChange={setNewBusinessPhone}
+  placeholder={t(
+    'owner.businessPhone',
+    'Номер телефона'
+  )}
+/>
 
           <input
             placeholder={t(
