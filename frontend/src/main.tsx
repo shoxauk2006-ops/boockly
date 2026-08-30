@@ -9173,9 +9173,6 @@ function Settings({
       .timeZone ||
     'Asia/Tashkent'
 );
-
-setSettingsTimezoneSearch('');
-setSettingsTimezonePickerOpen(false);
 }, [business]);
   
     const handleBusinessImage = (
