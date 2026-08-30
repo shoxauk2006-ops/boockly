@@ -2141,16 +2141,19 @@ def availability(
 
         from zoneinfo import ZoneInfo
 
+        business_timezone = (
+            b.timezone or
+            "Asia/Tashkent"
+        )
 
-business_timezone = b.timezone or "Asia/Tashkent"
-
-now_business = datetime.now(
-    ZoneInfo(business_timezone)
-).replace(tzinfo=None)
+        now_business = datetime.now(
+            ZoneInfo(business_timezone)
+        ).replace(
+            tzinfo=None
+        )
 
         slots = []
         step = s.duration_min
-
         for win_start, win_end in work_windows:
             cursor = datetime.combine(
                 day,
