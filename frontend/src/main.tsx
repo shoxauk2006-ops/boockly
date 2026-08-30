@@ -6193,8 +6193,10 @@ await refreshAfterChange({
                   type="button"
                   onClick={() =>
                     setInactiveSelectedServiceLimit(
-                      option.limit
-                    )
+                      inactiveSelectedServiceLimit === option.limit
+                        ? 10
+                        : option.limit
+                   )
                   }
                   style={{
                     width: '100%',
