@@ -9287,6 +9287,52 @@ setSettingsTimezonePickerOpen(false);
       objectUrl;
   };
   const save = async () => {
+        const timezoneChanged =
+      settingsTimezone !==
+      (business?.timezone || '');
+
+    if (timezoneChanged) {
+      try {
+        const bookingsResponse =
+          await fetch(
+            API + '/admin/bookings',
+            {
+              headers: headers()
+            }
+          );
+
+        const bookingsData =
+          bookingsResponse.ok
+            ? await bookingsResponse.json()
+            : [];
+
+        const hasExistingBookings =
+          Array.isArray(bookingsData) &&
+          bookingsData.some(
+            (booking: any) =>
+              booking.status === 'confirmed'
+          );
+
+        if (hasExistingBookings) {
+          const confirmed =
+            await confirmAsync(
+              t(
+                'owner.changeTimezoneWithBookings',
+                'У бизнеса уже есть существующие записи. Их дата и время останутся без изменений.\n\nИзменение часового пояса повлияет на расчёт текущего времени и новые записи.\n\nИзменить часовой пояс?'
+              )
+            );
+
+          if (!confirmed) {
+            return;
+          }
+        }
+      } catch (error) {
+        console.error(
+          'TIMEZONE BOOKINGS CHECK ERROR:',
+          error
+        );
+      }
+    }
     if (!phone.trim()) {
   alert(
     t(
