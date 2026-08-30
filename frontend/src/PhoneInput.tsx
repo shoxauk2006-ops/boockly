@@ -3,10 +3,10 @@ import {
   getCountries,
   getCountryCallingCode,
   parsePhoneNumberFromString,
-  isValidPhoneNumber,
   formatIncompletePhoneNumber,
   type Country
 } from 'libphonenumber-js';
+import { isValidPhoneNumber } from 'libphonenumber-js/max';
 
 type PhoneInputProps = {
   value: string;
