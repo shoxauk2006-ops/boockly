@@ -9,7 +9,7 @@
     "typescript": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "qrcode": "latest"
+    "qrcode": "latest",
     "libphonenumber-js": "latest"
   },
   "devDependencies": {}
