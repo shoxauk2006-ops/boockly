@@ -9286,6 +9286,25 @@ setSettingsTimezonePickerOpen(false);
       objectUrl;
   };
   const save = async () => {
+    if (!phone.trim()) {
+  alert(
+    t(
+      'owner.enterBusinessPhone',
+      'Введите номер телефона бизнеса'
+    )
+  );
+  return;
+}
+
+if (!isPhoneValid(phone)) {
+  alert(
+    t(
+      'owner.invalidPhone',
+      'Введите корректный номер телефона'
+    )
+  );
+  return;
+}
     setSaving(true);
 
     try {
@@ -9604,18 +9623,13 @@ t(
           }
         />
 
-        <input
-          type="tel"
-          placeholder={t(
-            'settings.phone'
-          )}
-          value={phone}
-          onChange={e =>
-            setPhone(
-              e.target.value
-            )
-          }
-        />
+        <PhoneInput
+  value={phone}
+  onChange={setPhone}
+  placeholder={t(
+    'settings.phone'
+  )}
+/>
 
         <input
           placeholder={t(
