@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   getCountries,
   getCountryCallingCode,
@@ -155,10 +155,26 @@ export default function PhoneInput({
   const [selectedCountry, setSelectedCountry] =
     useState<Country>(() => detectCountry(value));
 
-  useEffect(() => {
-    const detected = detectCountry(value);
+  // True after the user explicitly chooses a country.
+  // This prevents the selected country from jumping back based on the
+  // number value on every render/change.
+  const countryChangedByUser = useRef(false);
 
-    if (value && detected !== selectedCountry) {
+  // The last value emitted by this component. Used to distinguish our own
+  // edits from a new value supplied by the parent (for example, when an
+  // existing business is loaded).
+  const lastEmittedValue = useRef(value);
+
+  useEffect(() => {
+    if (
+      countryChangedByUser.current ||
+      value === lastEmittedValue.current
+    ) {
+      return;
+    }
+
+    if (value) {
+      const detected = detectCountry(value);
       setSelectedCountry(detected);
     }
   }, [value]);
@@ -171,27 +187,17 @@ export default function PhoneInput({
       return '';
     }
 
-    const phone =
-      parsePhoneNumberFromString(value);
+    const digits = value.replace(/\D/g, '');
+    const codeDigits = String(countryCode);
 
-    if (
-      phone?.country === selectedCountry &&
-      phone.nationalNumber
-    ) {
-      return formatIncompletePhoneNumber(
-        phone.nationalNumber,
-        selectedCountry
-      );
+    let nationalDigits = digits;
+
+    if (digits.startsWith(codeDigits)) {
+      nationalDigits = digits.slice(codeDigits.length);
     }
 
-    const digits = value.replace(/\D/g, '');
-    const withoutCallingCode =
-      digits.startsWith(countryCode)
-        ? digits.slice(countryCode.length)
-        : digits;
-
     return formatIncompletePhoneNumber(
-      withoutCallingCode,
+      nationalDigits,
       selectedCountry
     );
   }, [value, selectedCountry, countryCode]);
@@ -208,20 +214,21 @@ export default function PhoneInput({
     const newCountry =
       e.target.value as Country;
 
+    const nationalDigits =
+      nationalValue.replace(/\D/g, '');
+
+    countryChangedByUser.current = true;
+
     setSelectedCountry(newCountry);
 
-    const digits = nationalValue.replace(/\D/g, '');
+    const newCountryCode =
+      getCountryCallingCode(newCountry);
 
-    if (!digits) {
-      onChange(
-        `+${getCountryCallingCode(newCountry)}`
-      );
-      return;
-    }
+    const nextValue = nationalDigits
+      ? `+${newCountryCode}${nationalDigits}`
+      : `+${newCountryCode}`;
 
-    const nextValue =
-      `+${getCountryCallingCode(newCountry)}${digits}`;
-
+    lastEmittedValue.current = nextValue;
     onChange(nextValue);
   };
 
@@ -235,6 +242,7 @@ export default function PhoneInput({
       ? `+${countryCode}${digits}`
       : '';
 
+    lastEmittedValue.current = nextValue;
     onChange(nextValue);
   };
 
