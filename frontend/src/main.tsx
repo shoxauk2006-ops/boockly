@@ -8216,63 +8216,53 @@ const nowDateTime =
     .format(now)
     .slice(0, 16);
 
-  const todayTashkent =
-    getTodayTashkent();
+const todayBusiness =
+  nowDateTime.slice(0, 10);
 
-  const nowTashkent =
-    getNowTashkent();
+const nowDateTime =
+  new Intl.DateTimeFormat('sv-SE', {
+    timeZone: businessTimezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
+    .format(now)
+    .slice(0, 16);
+
 
   const filteredBookings =
-    bookings
-      .filter(
-        booking => {
-          const bookingDateTime =
-            `${booking.day} ${booking.start}`;
+  bookings
+    .filter(booking => {
+      const bookingDateTime =
+        `${booking.day} ${booking.start}`;
 
-          if (
-            filter === 'today'
-          ) {
-            return (
-              booking.day ===
-              todayTashkent
-            );
-          }
+      if (filter === 'today') {
+        return booking.day === todayBusiness;
+      }
 
-          if (
-            filter === 'upcoming'
-          ) {
-            return (
-              bookingDateTime >=
-              nowTashkent.slice(
-                0,
-                16
-              )
-            );
-          }
+      if (filter === 'upcoming') {
+        return bookingDateTime >= nowDateTime;
+      }
 
-          if (
-            filter === 'date'
-          ) {
-            return (
-              booking.day ===
-              selectedDate
-            );
-          }
+      if (filter === 'date') {
+        return booking.day === selectedDate;
+      }
 
-          return true;
-        }
-      )
-      .sort(
-        (a, b) => {
-          const first =
-            `${a.day} ${a.start}`;
+      return true;
+    })
+    .sort((a, b) => {
+      const first =
+        `${a.day} ${a.start}`;
 
-          const second =
-            `${b.day} ${b.start}`;
+      const second =
+        `${b.day} ${b.start}`;
 
-          return first.localeCompare(
-            second
-          );
+      return first.localeCompare(second);
+    });
         }
       );
 
