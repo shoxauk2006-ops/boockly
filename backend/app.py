@@ -2141,9 +2141,12 @@ def availability(
 
         from zoneinfo import ZoneInfo
 
-        now_tashkent = datetime.now(
-            ZoneInfo("Asia/Tashkent")
-        ).replace(tzinfo=None)
+
+business_timezone = b.timezone or "Asia/Tashkent"
+
+now_business = datetime.now(
+    ZoneInfo(business_timezone)
+).replace(tzinfo=None)
 
         slots = []
         step = s.duration_min
@@ -2175,8 +2178,8 @@ def availability(
 
                 # Для сегодняшнего дня показываем
                 # только будущее время.
-                if day == now_tashkent.date():
-                    if cursor <= now_tashkent:
+                if day == now_business.date():
+                    if cursor <= now_business:
                         cursor += timedelta(
                             minutes=step
                         )
