@@ -2443,14 +2443,6 @@ if (!isPhoneValid(newBusinessPhone)) {
   );
   return;
 }
-  alert(
-    t(
-      'owner.invalidPhone',
-      'Введите корректный номер телефона'
-    )
-  );
-  return;
-}
 
   setCreatingBusiness(true);
 
@@ -6733,14 +6725,6 @@ if (!isPhoneValid(businessPhone)) {
   );
   return;
 }
-  alert(
-    t(
-      'owner.invalidPhone',
-      'Введите корректный номер телефона'
-    )
-  );
-  return;
-}
       setSavingBusiness(true);
 
       try {
@@ -8183,10 +8167,25 @@ if (!businessId) {
         return;
       }
 
-      if (
-  clientPhone &&
-  !isPhoneValid(clientPhone)
-) {
+      if (!clientPhone.trim()) {
+  setError(
+    t(
+      'client.enterPhone',
+      'Введите номер телефона клиента'
+    )
+  );
+  return;
+}
+
+if (!isPhoneValid(clientPhone)) {
+  setError(
+    t(
+      'owner.invalidPhone',
+      'Введите корректный номер телефона'
+    )
+  );
+  return;
+}
   setError(
     t(
       'owner.invalidPhone',
