@@ -4,13 +4,13 @@
 // ordinary current transaction currencies only.
 const blockedCurrencyCodes = new Set([
   // Historical / replaced currencies commonly surfaced by ICU data.
-  'ALK','AOK','ARY','BOP','BRB','BGJ','BGK','BUK','CSJ','GNS','GNE','GWE',
-  'ISJ','ILP','ILR','LAJ','LSM','MVQ','MTP','MXP','MZE','NIC','PEH','ROK',
-  'RHD','SDP','UGS','UGW','SUR','UYP','UYN','VNC','YUD','ZWC',
-  'BYR','EEK','LVL','LTL','MTL','CYP','SKK','SIT','RUR','ROL','TRL',
-  'VEF','VEB','HRK','ESP','FRF','DEM','ITL','GRD','IEP','PTE','NLG','BEF',
-  'ATS','FIM','LUF','SLL','MZM','ZMK','ZWD','ZWN','ZWR',
-
+  'ALK','AOK','AON','AOR','ARP','AFA','BYB','BRE','BGJ','BGK','BOP','BRB','BUK',
+  'CSJ','GHC','GNS','GNE','GWE','ISJ','ILP','ILR','LAJ','LSM','MVQ','MTP','MXP',
+  'MRO','MZM','MZE','NIC','PEH','ROK','RHD','SDP','STD','UGS','UGW','SUR','UYP',
+  'UYN','VNC','YUD','ZWC','BYR','EEK','LVL','LTL','MTL','CYP','SKK','SIT','RUR',
+  'ROL','TRL','VEF','VEB','HRK','ESP','FRF','DEM','ITL','GRD','IEP','PTE','NLG',
+  'BEF','ATS','FIM','LUF','SLL','ZMK','ZWD','ZWN','ZWR','AON','AOR','ARP','AFA'
+,
   // Funds, index/accounting units, precious metals and test/no-currency codes.
   'BOV','CHE','CHW','CLF','COU','MXV','USN','USS','UYI','UYW',
   'XAG','XAU','XBA','XBB','XBC','XBD','XPD','XPT','XSU','XTS','XUA','XXX'
