@@ -639,7 +639,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 > datetime.utcnow()
             )
 
-        elif event_type == "subscription.created":
+elif event_type == "subscription.created":
     subscription.status = (
         status
         or "active"
