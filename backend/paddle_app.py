@@ -701,7 +701,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 subscription.expires_at = (
                     scheduled_effective_at
                 )
-                        else:
+            else:
                 subscription.status = (
                     status
                     or subscription.status
