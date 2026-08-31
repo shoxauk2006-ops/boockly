@@ -18,10 +18,13 @@ const clientToken = isLive
   ? import.meta.env.VITE_PADDLE_LIVE_CLIENT_TOKEN
   : import.meta.env.VITE_PADDLE_SANDBOX_CLIENT_TOKEN;
 
-const prices: Record<number, string> = {
+const prices: Record<number | 'noTrialBase', string> = {
   10: isLive
     ? import.meta.env.VITE_PADDLE_LIVE_BOOKLY_BASE_PRICE_ID
     : import.meta.env.VITE_PADDLE_SANDBOX_BOOKLY_BASE_PRICE_ID,
+  noTrialBase: isLive
+    ? import.meta.env.VITE_PADDLE_LIVE_BOOKLY_BASE_NO_TRIAL_PRICE_ID
+    : import.meta.env.VITE_PADDLE_SANDBOX_BOOKLY_BASE_NO_TRIAL_PRICE_ID,
   20: isLive
     ? import.meta.env.VITE_PADDLE_LIVE_SERVICE_ADDON_20_PRICE_ID
     : import.meta.env.VITE_PADDLE_SANDBOX_SERVICE_ADDON_20_PRICE_ID,

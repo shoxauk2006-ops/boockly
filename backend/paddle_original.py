@@ -12,7 +12,7 @@ from urllib import request as urllib_request
 from urllib.error import HTTPError, URLError
 
 from fastapi import Header, HTTPException, Request
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 
 from .app import (
@@ -78,7 +78,38 @@ PRICE_IDS = {
     100: _env("SERVICE_ADDON_100_PRICE_ID"),
 }
 
+# Paddle trials belong to a Price. A separate recurring Price without a
+# trial is required for profiles that already used the free trial.
+NO_TRIAL_BASE_PRICE_ID = _env("BOOKLY_BASE_NO_TRIAL_PRICE_ID")
+
 LIMITS = {10, 20, 30, 50, 100}
+
+
+def _ensure_trial_schema() -> None:
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        if "telegram_user_languages" not in inspector.get_table_names():
+            return
+
+        columns = {
+            column["name"]
+            for column in inspector.get_columns(
+                "telegram_user_languages"
+            )
+        }
+
+        if "free_trial_used" not in columns:
+            conn.execute(
+                text(
+                    """
+                    ALTER TABLE telegram_user_languages
+                    ADD COLUMN free_trial_used BOOLEAN DEFAULT FALSE
+                    """
+                )
+            )
+
+
+_ensure_trial_schema()
 
 SUPPORTED_PADDLE_EVENTS = {
     "transaction.completed",
@@ -460,6 +491,80 @@ def _get_or_create_subscription(db, business):
     return subscription
 
 
+def _profile_trial_used(db, owner_telegram_id: int) -> bool:
+    row = db.execute(
+        text(
+            """
+            SELECT free_trial_used
+            FROM telegram_user_languages
+            WHERE telegram_user_id = :owner_id
+            """
+        ),
+        {"owner_id": owner_telegram_id},
+    ).mappings().first()
+    return bool(row and row.get("free_trial_used"))
+
+
+def _mark_profile_trial_used(db, owner_telegram_id: int) -> None:
+    row = db.execute(
+        text(
+            """
+            SELECT telegram_user_id
+            FROM telegram_user_languages
+            WHERE telegram_user_id = :owner_id
+            """
+        ),
+        {"owner_id": owner_telegram_id},
+    ).first()
+
+    if row:
+        db.execute(
+            text(
+                """
+                UPDATE telegram_user_languages
+                SET free_trial_used = TRUE
+                WHERE telegram_user_id = :owner_id
+                """
+            ),
+            {"owner_id": owner_telegram_id},
+        )
+    else:
+        db.execute(
+            text(
+                """
+                INSERT INTO telegram_user_languages(
+                    telegram_user_id,
+                    language,
+                    free_trial_used
+                )
+                VALUES (
+                    :owner_id,
+                    'en',
+                    TRUE
+                )
+                """
+            ),
+            {"owner_id": owner_telegram_id},
+        )
+
+
+def _trial_available_for_profile(db, owner_telegram_id: int) -> bool:
+    existing_trial = (
+        db.query(Subscription)
+        .filter(
+            Subscription.owner_telegram_id == owner_telegram_id,
+            Subscription.status == "trialing",
+        )
+        .first()
+    )
+
+    if existing_trial:
+        _mark_profile_trial_used(db, owner_telegram_id)
+        return False
+
+    return not _profile_trial_used(db, owner_telegram_id)
+
+
 def _event_already_processed(db, event_id: str) -> bool:
     if not event_id:
         return False
@@ -656,6 +761,10 @@ def _apply_paddle_event(payload: dict) -> None:
 
             if subscription.status == "trialing":
                 subscription.active = True
+                _mark_profile_trial_used(
+                    db,
+                    int(business.owner_telegram_id),
+                )
 
             subscription.expires_at = (
                 _dt(next_billed_at)
@@ -907,6 +1016,19 @@ def _current_subscription(x_telegram_init_data: str):
         return user, owner_id, business.id, subscription_id
 
         
+@app.get("/admin/subscription/trial-status")
+def subscription_trial_status(
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
+
+    with SessionLocal() as db:
+        trial_available = _trial_available_for_profile(db, owner_id)
+        db.commit()
+        return {"trial_available": trial_available}
+
+
 @app.post("/admin/subscription/checkout-token")
 def create_subscription_checkout_token(
     x_telegram_init_data: str = Header(default=""),
@@ -944,11 +1066,26 @@ def create_subscription_checkout_token(
                 "Business not found",
             )
 
-        return {
-            "token": _create_checkout_token(
-                business.id,
-                owner_id,
+        trial_available = _trial_available_for_profile(
+            db,
+            owner_id,
+        )
+
+        if not trial_available and not NO_TRIAL_BASE_PRICE_ID:
+            raise HTTPException(
+                500,
+                "Bookly regular Price ID is not configured",
             )
+
+        token = _create_checkout_token(
+            business.id,
+            owner_id,
+        )
+        db.commit()
+
+        return {
+            "token": token,
+            "trial_available": trial_available,
         }
         
 @app.post("/admin/subscription/preview-limit")

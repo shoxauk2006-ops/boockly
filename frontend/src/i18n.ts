@@ -54,6 +54,7 @@ const ru: TranslationMap = {
 'owner.freeTrialAfter': 'После окончания пробного периода подписка автоматически продлится за $7.99/месяц, если её не отменить.',
 'owner.freeTrialCancel': 'Отмена в любой момент.',
 'owner.startFreeTrial': 'Начать 7-дневный бесплатный период',
+'owner.paddleRegularPriceError': 'Не настроена обычная цена подписки.',
   'owner.businessTimezone': 'Часовой пояс бизнеса',
 'owner.chooseTimezone': 'Выберите часовой пояс',
 'owner.resumePackage': 'Возобновить пакет',

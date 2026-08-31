@@ -5350,6 +5350,8 @@ function Subscription({
   useState<number | null>(null);
   const [subscriptionActionLoading, setSubscriptionActionLoading] =
     useState(false);
+  const [trialAvailable, setTrialAvailable] =
+    useState<boolean | null>(null);
   const [inactiveLimitOptionsOpen, setInactiveLimitOptionsOpen] =
   useState(false);
 
@@ -5660,6 +5662,40 @@ await refreshAfterChange({
       setChangingServiceLimit(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadTrialStatus = async () => {
+      try {
+        const response = await fetch(
+          API + '/admin/subscription/trial-status',
+          { headers: headers() }
+        );
+
+        const data = await response.json().catch(
+          () => null
+        );
+
+        if (!cancelled && response.ok) {
+          setTrialAvailable(
+            Boolean(data?.trial_available)
+          );
+        }
+      } catch (error) {
+        console.error(
+          'BOOKLY TRIAL STATUS ERROR:',
+          error
+        );
+      }
+    };
+
+    loadTrialStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [business?.id]);
 
   const cancelSubscription = async () => {
     const confirmed = await confirmAsync(
@@ -6350,69 +6386,76 @@ await refreshAfterChange({
           </div>
         )}
 
-        <div
-  style={{
-    marginTop: 16,
-    padding: '13px 14px',
-    borderRadius: 12,
-    background: '#f8f9fa',
-    border: '1px solid #e5e7eb',
-    fontSize: 14,
-    lineHeight: 1.45
-  }}
->
-  <strong>
-    {t(
-      'owner.freeTrialTitle',
-      '7 дней бесплатно'
-    )}
-  </strong>
+        {trialAvailable !== false && (
+          <div
+            style={{
+              marginTop: 16,
+              padding: '13px 14px',
+              borderRadius: 12,
+              background: '#f8f9fa',
+              border: '1px solid #e5e7eb',
+              fontSize: 14,
+              lineHeight: 1.45
+            }}
+          >
+            <strong>
+              {t(
+                'owner.freeTrialTitle',
+                '7 дней бесплатно'
+              )}
+            </strong>
 
-  <div style={{ marginTop: 5 }}>
-    {t(
-      'owner.freeTrialToday',
-      'Попробуйте Bookly бесплатно в течение 7 дней. Сегодня списание — $0.'
-    )}
-  </div>
+            <div style={{ marginTop: 5 }}>
+              {t(
+                'owner.freeTrialToday',
+                'Попробуйте Bookly бесплатно в течение 7 дней. Сегодня списание — $0.'
+              )}
+            </div>
 
-  <div style={{ marginTop: 5 }}>
-    {t(
-      'owner.freeTrialAfter',
-      'После окончания пробного периода подписка автоматически продлится за $7.99/месяц, если её не отменить.'
-    )}
-  </div>
+            <div style={{ marginTop: 5 }}>
+              {t(
+                'owner.freeTrialAfter',
+                'После окончания пробного периода подписка автоматически продлится за $7.99/месяц, если её не отменить.'
+              )}
+            </div>
 
-  <div
-    style={{
-      marginTop: 6,
-      fontSize: 13,
-      opacity: 0.7
-    }}
-  >
-    {t(
-      'owner.freeTrialCancel',
-      'Отмена в любой момент.'
-    )}
-  </div>
-</div>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 13,
+                opacity: 0.7
+              }}
+            >
+              {t(
+                'owner.freeTrialCancel',
+                'Отмена в любой момент.'
+              )}
+            </div>
+          </div>
+        )}
 
-<button
-  type="button"
-  className="primary full"
-  style={{ marginTop: 10 }}
-  onClick={() =>
-    checkout(
-      'paddle',
-      business.id,
-      inactiveSelectedServiceLimit
-    )
-  }
->
-  {t(
-    'owner.startFreeTrial',
-    'Начать 7-дневный бесплатный период'
-  )}
-</button>
+        <button
+          type="button"
+          className="primary full"
+          style={{ marginTop: 10 }}
+          onClick={() =>
+            checkout(
+              'paddle',
+              business.id,
+              inactiveSelectedServiceLimit
+            )
+          }
+        >
+          {trialAvailable === false
+            ? t(
+                'owner.openAccess',
+                'Оплатить подписку'
+              )
+            : t(
+                'owner.startFreeTrial',
+                'Начать 7-дневный бесплатный период'
+              )}
+        </button>
       </div>
     </div>
   );
@@ -6483,7 +6526,11 @@ async function checkout(
   }
 const paddlePrices = (
   window as any
-).__booklyPaddlePrices as Record<number, string> | undefined;
+).__booklyPaddlePrices as
+  | (Record<number, string> & {
+      noTrialBase?: string;
+    })
+  | undefined;
 
 if (!paddlePrices?.[10]) {
   alert(
@@ -6493,23 +6540,6 @@ if (!paddlePrices?.[10]) {
     )
   );
   return;
-}
-
-const items = [
-  {
-    priceId: paddlePrices[10],
-    quantity: 1
-  }
-];
-
-if (
-  servicesLimit > 10 &&
-  paddlePrices[servicesLimit]
-) {
-  items.push({
-    priceId: paddlePrices[servicesLimit],
-    quantity: 1
-  });
 }
 
 const tokenResponse = await fetch(
@@ -6542,13 +6572,52 @@ if (
   );
 }
 
-window.Paddle.Checkout.open({
-  items,
-  customData: {
-  checkout_token:
-    tokenData.token
+const trialAvailable =
+  Boolean(tokenData.trial_available);
+
+const basePriceId =
+  trialAvailable
+    ? paddlePrices[10]
+    : paddlePrices.noTrialBase;
+
+if (!basePriceId) {
+  throw new Error(
+    trialAvailable
+      ? t(
+          'owner.paddleConfigError',
+          'Платёжная система ещё не настроена.'
+        )
+      : t(
+          'owner.paddleRegularPriceError',
+          'Не настроена обычная цена подписки.'
+        )
+  );
 }
+
+const checkoutItems = [
+  {
+    priceId: basePriceId,
+    quantity: 1
+  }
+];
+
+if (
+  servicesLimit > 10 &&
+  paddlePrices[servicesLimit]
+) {
+  checkoutItems.push({
+    priceId: paddlePrices[servicesLimit],
+    quantity: 1
   });
+}
+
+window.Paddle.Checkout.open({
+  items: checkoutItems,
+  customData: {
+    checkout_token:
+      tokenData.token
+  }
+});
   } catch (error: any) {
     console.error(
       'BOOKLY PADDLE CHECKOUT ERROR:',
