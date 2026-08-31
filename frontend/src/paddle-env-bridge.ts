@@ -1,6 +1,7 @@
 declare global {
   interface Window {
     Paddle?: any;
+    Telegram?: any;
     __booklyPaddleEnvBridge?: boolean;
     __booklyPaddleReady?: Promise<void>;
   }
@@ -40,6 +41,93 @@ const prices: Record<number | 'noTrialBase', string> = {
 };
 
 (window as any).__booklyPaddlePrices = prices;
+
+async function getProfileTrialAvailable(): Promise<boolean | null> {
+  const api = String(
+    import.meta.env.VITE_API_URL || ''
+  ).replace(/\/$/, '');
+
+  const initData =
+    window.Telegram?.WebApp?.initData || '';
+
+  if (!api || !initData) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      api + '/admin/subscription/trial-status',
+      {
+        headers: {
+          'X-Telegram-Init-Data': initData,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json().catch(
+      () => null
+    );
+
+    return typeof data?.trial_available === 'boolean'
+      ? data.trial_available
+      : null;
+  } catch (error) {
+    console.error(
+      '[Bookly] Trial status lookup failed:',
+      error
+    );
+    return null;
+  }
+}
+
+function installProfileTrialPriceGuard(): void {
+  if (
+    !window.Paddle?.Checkout ||
+    typeof window.Paddle.Checkout.open !== 'function' ||
+    (window.Paddle.Checkout.open as any).__booklyProfileTrialGuard
+  ) {
+    return;
+  }
+
+  const originalOpen = window.Paddle.Checkout.open.bind(
+    window.Paddle.Checkout
+  );
+
+  const guardedOpen = async (options: any = {}) => {
+    const trialAvailable =
+      await getProfileTrialAvailable();
+
+    if (
+      trialAvailable === false &&
+      prices.noTrialBase
+    ) {
+      const items = Array.isArray(options.items)
+        ? options.items.map((item: any, index: number) =>
+            index === 0
+              ? {
+                  ...item,
+                  priceId: prices.noTrialBase,
+                }
+              : item
+          )
+        : options.items;
+
+      return originalOpen({
+        ...options,
+        items,
+      });
+    }
+
+    return originalOpen(options);
+  };
+
+  (guardedOpen as any).__booklyProfileTrialGuard = true;
+  window.Paddle.Checkout.open = guardedOpen;
+}
 
 function loadPaddleScript(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -83,6 +171,7 @@ async function initializePaddle(): Promise<void> {
   }
 
   if (window.Paddle.__booklyInitialized) {
+    installProfileTrialPriceGuard();
     return;
   }
 
@@ -101,6 +190,7 @@ async function initializePaddle(): Promise<void> {
   });
 
   window.Paddle.__booklyInitialized = true;
+  installProfileTrialPriceGuard();
 }
 
 if (!window.__booklyPaddleEnvBridge) {
