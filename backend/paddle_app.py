@@ -701,24 +701,24 @@ def _apply_paddle_event(payload: dict) -> None:
                 subscription.expires_at = (
                     scheduled_effective_at
                 )
-            else:
-    subscription.status = (
-        status
-        or subscription.status
-        or "active"
-    )
+                        else:
+                subscription.status = (
+                    status
+                    or subscription.status
+                    or "active"
+                )
 
-    subscription.active = (
-        subscription.status
-        not in {
-            "canceled",
-            "cancelled",
-            "paused",
-        }
-    )
+                subscription.active = (
+                    subscription.status
+                    not in {
+                        "canceled",
+                        "cancelled",
+                        "paused",
+                    }
+                )
 
-    if subscription.status == "trialing":
-        subscription.active = True
+                if subscription.status == "trialing":
+                    subscription.active = True
 
                 subscription.expires_at = (
                     _dt(next_billed_at)
