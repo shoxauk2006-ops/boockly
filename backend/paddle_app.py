@@ -677,7 +677,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 )
             )
 
-                elif event_type == "subscription.updated":
+        elif event_type == "subscription.updated":
             scheduled_change = (
                 data.get("scheduled_change")
                 or {}
