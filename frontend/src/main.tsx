@@ -6173,6 +6173,41 @@ await refreshAfterChange({
         )}
       </p>
 
+            <ul>
+        <li>
+          {t(
+            'owner.clientLink',
+            'Клиентская страница и ссылка'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.qrCode',
+            'QR-код бизнеса'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.upToServices',
+            'До'
+          )}{' '}
+          10{' '}
+          {t(
+            'owner.services',
+            'услуг'
+          )}
+        </li>
+
+        <li>
+          {t(
+            'owner.telegramNotifications',
+            'Уведомления в Telegram'
+          )}
+        </li>
+      </ul>
+
       <div
         style={{
           marginTop: 20,
