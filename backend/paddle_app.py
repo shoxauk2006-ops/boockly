@@ -640,24 +640,27 @@ def _apply_paddle_event(payload: dict) -> None:
             )
 
         elif event_type == "subscription.created":
-            subscription.status = (
-                status
-                or "active"
-            )
+    subscription.status = (
+        status
+        or "active"
+    )
 
-            subscription.active = (
-                subscription.status
-                not in {
-                    "canceled",
-                    "cancelled",
-                    "paused",
-                }
-            )
+    subscription.active = (
+        subscription.status
+        not in {
+            "canceled",
+            "cancelled",
+            "paused",
+        }
+    )
 
-            subscription.expires_at = (
-                _dt(next_billed_at)
-                or subscription.expires_at
-            )
+    if subscription.status == "trialing":
+        subscription.active = True
+
+    subscription.expires_at = (
+        _dt(next_billed_at)
+        or subscription.expires_at
+    )
 
             detected = _limit_from_items(
                 data.get("items")
