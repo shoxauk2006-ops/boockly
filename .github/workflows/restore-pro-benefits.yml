@@ -1,0 +1,41 @@
+name: Restore Pro plan benefits
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore benefits block
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+          marker = """      <p>\n        {t(\n          'owner.payToUnlock',\n          'Оплатите подписку, чтобы открыть доступ к функциям Bookly Pro.'\n        )}\n      </p>"""
+          block = """      <div\n        style={{\n          marginTop: 12,\n          display: 'grid',\n          gap: 7,\n          fontSize: 14\n        }}\n      >\n        <div>✓ {t('owner.unlimitedBookings', 'Неограниченные записи')}</div>\n        <div>✓ {t('owner.telegramNotifications', 'Уведомления в Telegram')}</div>\n        <div>✓ {t('owner.manageServicesSchedule', 'Управление услугами и расписанием')}</div>\n        <div>✓ {t('owner.businessPageForClients', 'Страница бизнеса для клиентов')}</div>\n        <div>✓ {t('owner.servicesLimitIncluded', 'До 10 услуг включено')}</div>\n      </div>\n\n"""
+          if block.strip() in s:
+              print('Benefits block already present; no changes needed.')
+              raise SystemExit(0)
+          if marker not in s:
+              raise SystemExit('Target subscription description not found')
+          s = s.replace(marker, block + marker, 1)
+          p.write_text(s)
+          PY
+
+      - name: Commit and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx
+          git commit -m "Restore Bookly Pro benefits"
+          git push
+          git rm .github/workflows/restore-pro-benefits.yml
+          git commit -m "Remove temporary restore workflow"
+          git push
