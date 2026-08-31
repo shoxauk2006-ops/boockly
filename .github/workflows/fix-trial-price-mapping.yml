@@ -1,0 +1,108 @@
+name: Fix regular trial price mapping
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[trial-price-fix]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch backend mapping
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('backend/paddle_original.py')
+          text = p.read_text(encoding='utf-8')
+          old = '''    bookly_price_ids = {
+        base_price_id,
+        *(
+            price_id
+            for price_id in addon_price_to_limit
+            if price_id
+        ),
+    }
+'''
+          new = '''    base_price_ids = {
+        base_price_id,
+        NO_TRIAL_BASE_PRICE_ID,
+    }
+
+    bookly_price_ids = {
+        price_id
+        for price_id in (
+            *base_price_ids,
+            *addon_price_to_limit.keys(),
+        )
+        if price_id
+    }
+'''
+          if old not in text:
+              raise SystemExit('Expected _limit_from_items block not found')
+          text = text.replace(old, new, 1)
+
+          old2 = '''    if detected_price_ids == {base_price_id}:
+        return 10
+
+    matching_limits = [
+'''
+          new2 = '''    detected_base_price_ids = detected_price_ids.intersection(
+        base_price_ids
+    )
+
+    if (
+        len(detected_base_price_ids) == 1
+        and not any(
+            price_id in detected_price_ids
+            for price_id in addon_price_to_limit
+        )
+    ):
+        return 10
+
+    matching_limits = [
+'''
+          if old2 not in text:
+              raise SystemExit('Expected base-price detection block not found')
+          text = text.replace(old2, new2, 1)
+
+          old3 = '''    if (
+        base_price_id in detected_price_ids
+        and len(matching_limits) == 1
+    ):
+        return matching_limits[0]
+'''
+          new3 = '''    if (
+        len(detected_base_price_ids) == 1
+        and len(matching_limits) == 1
+    ):
+        return matching_limits[0]
+'''
+          if old3 not in text:
+              raise SystemExit('Expected matching-limit block not found')
+          text = text.replace(old3, new3, 1)
+
+          p.write_text(text, encoding='utf-8')
+          wf = Path('.github/workflows/fix-trial-price-mapping.yml')
+          if wf.exists():
+              wf.unlink()
+          PY
+
+      - name: Validate backend syntax
+        run: python -m py_compile backend/paddle_original.py
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/paddle_original.py .github/workflows/fix-trial-price-mapping.yml
+          git diff --cached --quiet || git commit -m 'Fix regular trial price mapping [trial-price-fix]'
+          git push origin main
