@@ -6315,20 +6315,69 @@ await refreshAfterChange({
           </div>
         )}
 
-        <button
-          type="button"
-          className="primary full"
-          style={{ marginTop: 16 }}
-          onClick={() =>
-            checkout(
-              'paddle',
-              business.id,
-              inactiveSelectedServiceLimit
-            )
-          }
-        >
-          Оплатить подписку
-        </button>
+        <div
+  style={{
+    marginTop: 16,
+    padding: '13px 14px',
+    borderRadius: 12,
+    background: '#f8f9fa',
+    border: '1px solid #e5e7eb',
+    fontSize: 14,
+    lineHeight: 1.45
+  }}
+>
+  <strong>
+    {t(
+      'owner.freeTrialTitle',
+      '7 дней бесплатно'
+    )}
+  </strong>
+
+  <div style={{ marginTop: 5 }}>
+    {t(
+      'owner.freeTrialToday',
+      'Попробуйте Bookly бесплатно в течение 7 дней. Сегодня списание — $0.'
+    )}
+  </div>
+
+  <div style={{ marginTop: 5 }}>
+    {t(
+      'owner.freeTrialAfter',
+      'После окончания пробного периода подписка автоматически продлится за $7.99/месяц, если её не отменить.'
+    )}
+  </div>
+
+  <div
+    style={{
+      marginTop: 6,
+      fontSize: 13,
+      opacity: 0.7
+    }}
+  >
+    {t(
+      'owner.freeTrialCancel',
+      'Отмена в любой момент.'
+    )}
+  </div>
+</div>
+
+<button
+  type="button"
+  className="primary full"
+  style={{ marginTop: 10 }}
+  onClick={() =>
+    checkout(
+      'paddle',
+      business.id,
+      inactiveSelectedServiceLimit
+    )
+  }
+>
+  {t(
+    'owner.startFreeTrial',
+    'Начать 7-дневный бесплатный период'
+  )}
+</button>
       </div>
     </div>
   );
