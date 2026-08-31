@@ -693,14 +693,23 @@ def _apply_paddle_event(payload: dict) -> None:
             )
 
             if (
-                scheduled_action in {"cancel", "pause"}
-                and scheduled_effective_at
-            ):
-                subscription.status = "active"
-                subscription.active = True
-                subscription.expires_at = (
-                    scheduled_effective_at
-                )
+    scheduled_action in {"cancel", "pause"}
+    and scheduled_effective_at
+):
+    if subscription.status == "trialing":
+        subscription.status = "trialing"
+        subscription.active = True
+    else:
+        subscription.status = "active"
+        subscription.active = True
+
+    subscription.cancel_at = (
+        scheduled_effective_at
+    )
+
+    subscription.expires_at = (
+        scheduled_effective_at
+    )
             else:
                 subscription.status = (
                     status
