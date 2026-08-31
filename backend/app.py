@@ -564,6 +564,9 @@ def ensure_subscription_schema():
 
     "paddle_last_event_at":
         "TIMESTAMP",
+
+    "cancel_at":
+        "TIMESTAMP",
 }
 
         for column_name, column_definition in columns_to_add.items():
