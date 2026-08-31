@@ -96,6 +96,11 @@ class Subscription(Base):
         nullable=True
     )
 
+    cancel_at: Mapped[Optional[datetime]] = mapped_column(
+    DateTime,
+    nullable=True
+)
+
     status: Mapped[str] = mapped_column(
         String(30),
         default="inactive"
