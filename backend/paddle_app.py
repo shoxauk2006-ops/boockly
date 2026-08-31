@@ -677,7 +677,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 )
             )
 
-        elif event_type == "subscription.updated":
+                elif event_type == "subscription.updated":
             scheduled_change = (
                 data.get("scheduled_change")
                 or {}
@@ -692,7 +692,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 scheduled_change.get("effective_at")
             )
 
-                        if (
+            if (
                 scheduled_action in {"cancel", "pause"}
                 and scheduled_effective_at
             ):
@@ -710,6 +710,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 subscription.expires_at = (
                     scheduled_effective_at
                 )
+
             else:
                 subscription.status = (
                     status
@@ -763,8 +764,6 @@ def _apply_paddle_event(payload: dict) -> None:
                     subscription.pending_services_limit = None
                     subscription.pending_price = None
                 else:
-                    # Downgrade ещё только запланирован.
-                    # Текущий оплаченный пакет не меняем.
                     pass
             else:
                 subscription.current_services_limit = detected
