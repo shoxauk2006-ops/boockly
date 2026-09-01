@@ -5192,10 +5192,11 @@ return (
   </small>
 
   {subscriptionLocked ? (
-  <div
-    className="admin-qr-locked"
-    onClick={() => showProModal()}
-  >
+  <>
+    <div
+      className="admin-qr-locked"
+      onClick={() => showProModal()}
+    >
     {qrDataUrl && (
       <img
         src={qrDataUrl}
