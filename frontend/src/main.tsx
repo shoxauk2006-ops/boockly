@@ -5354,6 +5354,8 @@ function Subscription({
     useState<boolean | null>(null);
   const [inactiveLimitOptionsOpen, setInactiveLimitOptionsOpen] =
   useState(false);
+  const [checkoutLoading, setCheckoutLoading] =
+  useState(false);
 
   const [inactiveSelectedServiceLimit, setInactiveSelectedServiceLimit] =
     useState(10);
@@ -6451,28 +6453,41 @@ await refreshAfterChange({
           type="button"
           className="primary full"
           style={{ marginTop: 10 }}
-          onClick={() =>
-            checkout(
-              'paddle',
-              business.id,
-              inactiveSelectedServiceLimit
-            )
-          }
+          disabled={checkoutLoading || trialAvailable === null}
+          onClick={async () => {
+  if (checkoutLoading) return;
+
+  setCheckoutLoading(true);
+
+  try {
+    await checkout(
+      'paddle',
+      business.id,
+      inactiveSelectedServiceLimit
+    );
+  } finally {
+    setCheckoutLoading(false);
+  }
+}}
         >
-{trialAvailable === null
-  ? t(
-      'owner.loading',
-      'Загрузка...'
-    )
-  : trialAvailable
-    ? t(
-        'owner.startFreeTrial',
-        'Начать 7-дневный бесплатный период'
-      )
-    : t(
-        'owner.openAccess',
-        'Оплатить подписку'
-      )}
+{checkoutLoading ? (
+  <>
+    <span className="btn-spinner" />
+    {t('owner.loading', 'Загрузка...')}
+  </>
+) : trialAvailable === null ? (
+  t('owner.loading', 'Загрузка...')
+) : trialAvailable ? (
+  t(
+    'owner.startFreeTrial',
+    'Начать 7-дневный бесплатный период'
+  )
+) : (
+  t(
+    'owner.openAccess',
+    'Оплатить подписку'
+  )
+)}
         </button>
       </div>
     </div>
