@@ -5223,6 +5223,28 @@ return (
       </span>
     </div>
   </div>
+        <button
+  type="button"
+  className="admin-action-button admin-download-button"
+  onClick={() => showProModal()}
+>
+  🔒 {t(
+    'settings.downloadQr',
+    'Скачать QR-код'
+  )}
+</button>
+
+<button
+  type="button"
+  className="admin-action-button admin-download-button qr-print-open-button"
+  onClick={() => showProModal()}
+>
+  🔒 {t(
+    'owner.printLayout',
+    'Макет для печати'
+  )}
+    </button>
+  </>
 ) : (
   qrDataUrl && (
     <>
