@@ -6460,14 +6460,19 @@ await refreshAfterChange({
   setCheckoutLoading(true);
 
   try {
-    await checkout(
-      'paddle',
-      business.id,
-      inactiveSelectedServiceLimit
-    );
-  } finally {
+  await checkout(
+    'paddle',
+    business.id,
+    inactiveSelectedServiceLimit
+  );
+
+  // Даём Paddle время начать открытие checkout
+  setTimeout(() => {
     setCheckoutLoading(false);
-  }
+  }, 1000);
+} catch (error) {
+  setCheckoutLoading(false);
+}
 }}
         >
 {checkoutLoading ? (
