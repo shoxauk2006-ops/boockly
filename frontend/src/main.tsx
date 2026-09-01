@@ -5231,32 +5231,30 @@ return (
 ) : (
   qrDataUrl && (
     <>
-      qrDataUrl && (
-  <>
-    <img
-      src={qrDataUrl}
-      alt={t('owner.qrAlt', 'QR-код')}
-      className="admin-home-qr"
-    />
+      <img
+        src={qrDataUrl}
+        alt={t('owner.qrAlt', 'QR-код')}
+        className="admin-home-qr"
+      />
 
-    <button
-      type="button"
-      className="admin-action-button admin-download-button"
-      onClick={downloadQr}
-    >
-      {t(
-        'settings.downloadQr',
-        'Скачать QR-код'
-      )}
-    </button>
+      <button
+        type="button"
+        className="admin-action-button admin-download-button"
+        onClick={downloadQr}
+      >
+        {t(
+          'settings.downloadQr',
+          'Скачать QR-код'
+        )}
+      </button>
 
-    <button
-      type="button"
-      className="admin-action-button admin-download-button qr-print-open-button"
-      onClick={() => setQrPrintOpen(true)}
-    >
-      Макет для печати
-    </button>
+      <button
+        type="button"
+        className="admin-action-button admin-download-button qr-print-open-button"
+        onClick={() => setQrPrintOpen(true)}
+      >
+        Макет для печати
+      </button>
     </>
   )
 )}
