@@ -5021,10 +5021,17 @@ function Dashboard({
   };
 
   const subscriptionLocked =
-    !business.subscription_active;
-  
-  return (
-    <>
+  !business.subscription_active;
+
+const [proModalOpen, setProModalOpen] =
+  useState(false);
+
+const showProModal = () => {
+  setProModalOpen(true);
+};
+
+return (
+  <>
       <div className="grid2">
         <Stat
           n={todayBookings.length}
@@ -5224,7 +5231,32 @@ function Dashboard({
 ) : (
   qrDataUrl && (
     <>
-      {/* твой существующий рабочий QR */}
+      qrDataUrl && (
+  <>
+    <img
+      src={qrDataUrl}
+      alt={t('owner.qrAlt', 'QR-код')}
+      className="admin-home-qr"
+    />
+
+    <button
+      type="button"
+      className="admin-action-button admin-download-button"
+      onClick={downloadQr}
+    >
+      {t(
+        'settings.downloadQr',
+        'Скачать QR-код'
+      )}
+    </button>
+
+    <button
+      type="button"
+      className="admin-action-button admin-download-button qr-print-open-button"
+      onClick={() => setQrPrintOpen(true)}
+    >
+      Макет для печати
+    </button>
     </>
   )
 )}
