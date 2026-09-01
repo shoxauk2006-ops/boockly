@@ -6386,7 +6386,7 @@ await refreshAfterChange({
           </div>
         )}
 
-        {trialAvailable !== false && (
+        {trialAvailable === true && (
           <div
             style={{
               marginTop: 16,
@@ -6446,15 +6446,20 @@ await refreshAfterChange({
             )
           }
         >
-          {trialAvailable === false
-            ? t(
-                'owner.openAccess',
-                'Оплатить подписку'
-              )
-            : t(
-                'owner.startFreeTrial',
-                'Начать 7-дневный бесплатный период'
-              )}
+{trialAvailable === null
+  ? t(
+      'owner.loading',
+      'Загрузка...'
+    )
+  : trialAvailable
+    ? t(
+        'owner.startFreeTrial',
+        'Начать 7-дневный бесплатный период'
+      )
+    : t(
+        'owner.openAccess',
+        'Оплатить подписку'
+      )}
         </button>
       </div>
     </div>
