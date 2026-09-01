@@ -46,6 +46,20 @@ const ru: TranslationMap = {
   'owner.inProgress':'В процессе',
 'owner.poweredByBookly':'Работает на Bookly',
 'owner.qrPrintError':'Не удалось скачать макет',
+  'owner.proQrTitle': 'QR-код',
+'owner.proQrDescription': 'Активируйте Bookly Pro, чтобы получить QR-код.',
+
+'owner.proDownloadTitle': 'Скачать QR-код',
+'owner.proDownloadDescription': 'Активируйте Bookly Pro, чтобы скачать QR-код.',
+
+'owner.proPrintTitle': 'Макет для печати',
+'owner.proPrintDescription': 'Активируйте Bookly Pro, чтобы подготовить QR-код к печати.',
+
+'owner.proLinkTitle': 'Ссылка на бизнес',
+'owner.proLinkDescription': 'Активируйте Bookly Pro, чтобы получить клиентскую ссылку.',
+
+'owner.proPageTitle': 'Страница бизнеса',
+'owner.proPageDescription': 'Активируйте Bookly Pro, чтобы открыть страницу бизнеса.',
   'owner.addScheduleError': 'Не удалось добавить график',
   'owner.increaseServiceLimit': 'Увеличить лимит услуг',
   'owner.businessInfoHint': 'Заполните информацию о бизнесе, чтобы клиенты могли его найти и записаться',
@@ -135,6 +149,20 @@ const en: TranslationMap = {
 'owner.poweredByBookly':'Powered by Bookly',
 'owner.qrPrintError':'Failed to download the layout',
   'owner.totalLabel': 'Total:',
+  'owner.proQrTitle': 'QR code',
+'owner.proQrDescription': 'Activate Bookly Pro to get your QR code.',
+
+'owner.proDownloadTitle': 'Download QR code',
+'owner.proDownloadDescription': 'Activate Bookly Pro to download the QR code.',
+
+'owner.proPrintTitle': 'Print layout',
+'owner.proPrintDescription': 'Activate Bookly Pro to prepare the QR code for printing.',
+
+'owner.proLinkTitle': 'Business link',
+'owner.proLinkDescription': 'Activate Bookly Pro to get the client link.',
+
+'owner.proPageTitle': 'Business page',
+'owner.proPageDescription': 'Activate Bookly Pro to open the business page.',
   'owner.freeTrialTitle': '7 days free',
 'owner.freeTrialToday': 'Try Bookly free for 7 days. Today you pay $0.',
 'owner.freeTrialAfter': 'After the trial period, your subscription will automatically renew for $7.99/month unless you cancel it.',
@@ -230,6 +258,20 @@ const uz: TranslationMap = {
   'Bu biznesda allaqachon mavjud bronlar bor. Ularning sanasi va vaqti o‘zgarmaydi.\n\nVaqt zonasini o‘zgartirish joriy vaqt hisobiga va yangi bronlarga ta’sir qiladi.\n\nVaqt zonasi o‘zgartirilsinmi?',
   'owner.qrBookingAlt': 'Bron uchun QR-kod',
   'owner.qrAlt': 'QR-kod',
+  'owner.proQrTitle': 'QR-kod',
+'owner.proQrDescription': 'QR-kodni olish uchun Bookly Pro-ni faollashtiring.',
+
+'owner.proDownloadTitle': 'QR-kodni yuklab olish',
+'owner.proDownloadDescription': 'QR-kodni yuklab olish uchun Bookly Pro-ni faollashtiring.',
+
+'owner.proPrintTitle': 'Chop etish maketi',
+'owner.proPrintDescription': 'QR-kodni chop etishga tayyorlash uchun Bookly Pro-ni faollashtiring.',
+
+'owner.proLinkTitle': 'Biznes havolasi',
+'owner.proLinkDescription': 'Mijozlar havolasini olish uchun Bookly Pro-ni faollashtiring.',
+
+'owner.proPageTitle': 'Biznes sahifasi',
+'owner.proPageDescription': 'Biznes sahifasini ochish uchun Bookly Pro-ni faollashtiring.',
   'owner.closeInstruction': 'Yo‘riqnomani yopish',
   'owner.freeTrialTitle': '7 kun bepul',
 'owner.freeTrialToday': 'Bookly’dan 7 kun bepul foydalanib ko‘ring. Bugun to‘lov — $0.',
@@ -347,6 +389,20 @@ const tr: TranslationMap = {
   'owner.autoRenewalCancelledDescription': 'Otomatik yenileme iptal edildi. Erişim ücretli dönemin sonuna kadar devam eder.',
   'owner.accessUntilColon': 'Erişim tarihi:',
   'owner.freeTrialTitle': '7 gün ücretsiz',
+  'owner.proQrTitle': 'QR kodu',
+'owner.proQrDescription': 'QR kodunuzu almak için Bookly Pro\'yu etkinleştirin.',
+
+'owner.proDownloadTitle': 'QR kodunu indir',
+'owner.proDownloadDescription': 'QR kodunu indirmek için Bookly Pro\'yu etkinleştirin.',
+
+'owner.proPrintTitle': 'Yazdırma düzeni',
+'owner.proPrintDescription': 'QR kodunu yazdırmaya hazırlamak için Bookly Pro\'yu etkinleştirin.',
+
+'owner.proLinkTitle': 'İşletme bağlantısı',
+'owner.proLinkDescription': 'Müşteri bağlantısını almak için Bookly Pro\'yu etkinleştirin.',
+
+'owner.proPageTitle': 'İşletme sayfası',
+'owner.proPageDescription': 'İşletme sayfasını açmak için Bookly Pro\'yu etkinleştirin.',
 'owner.freeTrialToday': 'Bookly’yi 7 gün ücretsiz deneyin. Bugün ödeme — $0.',
 'owner.freeTrialAfter': 'Deneme süresi sona erdikten sonra aboneliğiniz iptal edilmezse aylık $7.99 olarak otomatik yenilenir.',
 'owner.freeTrialCancel': 'İstediğiniz zaman iptal edebilirsiniz.',
@@ -481,6 +537,20 @@ const ar: TranslationMap = {
   'owner.qrBookingAlt': 'رمز QR للحجز',
   'owner.qrAlt': 'رمز QR',
   'owner.closeInstruction': 'إغلاق التعليمات',
+  'owner.proQrTitle': 'رمز QR',
+'owner.proQrDescription': 'فعّل Bookly Pro للحصول على رمز QR الخاص بك.',
+
+'owner.proDownloadTitle': 'تنزيل رمز QR',
+'owner.proDownloadDescription': 'فعّل Bookly Pro لتنزيل رمز QR.',
+
+'owner.proPrintTitle': 'تصميم الطباعة',
+'owner.proPrintDescription': 'فعّل Bookly Pro لإعداد رمز QR للطباعة.',
+
+'owner.proLinkTitle': 'رابط النشاط التجاري',
+'owner.proLinkDescription': 'فعّل Bookly Pro للحصول على رابط العملاء.',
+
+'owner.proPageTitle': 'صفحة النشاط التجاري',
+'owner.proPageDescription': 'فعّل Bookly Pro لفتح صفحة النشاط التجاري.',
   'owner.hours': 'ساعات',
   'owner.servicesLimitText': 'حتى {limit} خدمة',
   'owner.hourOne': 'ساعة',
