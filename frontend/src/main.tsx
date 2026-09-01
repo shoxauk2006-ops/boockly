@@ -6362,8 +6362,14 @@ await refreshAfterChange({
                     }}
                   >
                     <strong>
-                      До {option.limit} услуг
-                    </strong>
+  {t(
+    'owner.servicesLimitText',
+    'До {limit} услуг'
+  ).replace(
+    '{limit}',
+    String(option.limit)
+  )}
+</strong>
 
                     <span
                       style={{
@@ -6378,7 +6384,7 @@ await refreshAfterChange({
                     className="muted"
                     style={{ marginTop: 5 }}
                   >
-                    +${option.addon.toFixed(2)} / месяц
+                    +${option.addon.toFixed(2)} {t('owner.perMonth')}
                   </div>
 
                   <div
@@ -6387,7 +6393,7 @@ await refreshAfterChange({
                       fontSize: 13
                     }}
                   >
-                    Итого: ${option.total.toFixed(2)} / месяц
+                    {t('owner.totalLabel', 'Итого:')} ${option.total.toFixed(2)} {t('owner.perMonth')}
                   </div>
                 </button>
               );
