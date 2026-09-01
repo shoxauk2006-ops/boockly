@@ -5018,10 +5018,26 @@ function Dashboard({
 const [proModalOpen, setProModalOpen] =
   useState(false);
 
-const showProModal = () => {
+const [proModalType, setProModalType] =
+  useState<
+    'link' |
+    'page' |
+    'qr' |
+    'download' |
+    'print'
+  >('qr');
+
+const showProModal = (
+  type:
+    | 'link'
+    | 'page'
+    | 'qr'
+    | 'download'
+    | 'print'
+) => {
+  setProModalType(type);
   setProModalOpen(true);
 };
-
 return (
   <>
       <div className="grid2">
@@ -5113,7 +5129,7 @@ return (
   className="admin-action-button"
   onClick={() => {
     if (subscriptionLocked) {
-      showProModal();
+      showProModal('link');
       return;
     }
 
@@ -5155,7 +5171,7 @@ return (
   className="admin-action-button"
   onClick={() => {
     if (subscriptionLocked) {
-      showProModal();
+      showProModal('page');
       return;
     }
 
@@ -5195,7 +5211,7 @@ return (
   <>
     <div
       className="admin-qr-locked"
-      onClick={() => showProModal()}
+      onClick={() => showProModal('qr')}
     >
     {qrDataUrl && (
       <img
@@ -5227,7 +5243,7 @@ return (
         <button
   type="button"
   className="admin-action-button admin-download-button"
-  onClick={() => showProModal()}
+  onClick={() => showProModal('download')}
 >
   🔒 {t(
     'settings.downloadQr',
@@ -5238,7 +5254,7 @@ return (
 <button
   type="button"
   className="admin-action-button admin-download-button qr-print-open-button"
-  onClick={() => showProModal()}
+  onClick={() => showProModal('print')}
 >
   🔒 {t(
     'owner.printLayout',
@@ -5304,18 +5320,58 @@ return (
       </span>
 
       <h2>
-        {t(
-          'owner.booklyProRequired',
-          'Bookly Pro'
-        )}
-      </h2>
+  {proModalType === 'qr'
+    ? t(
+        'owner.proQrTitle',
+        'QR-код'
+      )
+    : proModalType === 'download'
+      ? t(
+          'owner.proDownloadTitle',
+          'Скачать QR-код'
+        )
+      : proModalType === 'print'
+        ? t(
+            'owner.proPrintTitle',
+            'Макет для печати'
+          )
+        : proModalType === 'link'
+          ? t(
+              'owner.proLinkTitle',
+              'Ссылка на бизнес'
+            )
+          : t(
+              'owner.proPageTitle',
+              'Страница бизнеса'
+            )}
+</h2>
 
-      <p className="muted">
-        {t(
-          'owner.activateToUnlock',
-          'Активируйте Bookly Pro, чтобы использовать эту функцию'
-        )}
-      </p>
+<p className="muted">
+  {proModalType === 'qr'
+    ? t(
+        'owner.proQrDescription',
+        'Активируйте Bookly Pro, чтобы получить QR-код.'
+      )
+    : proModalType === 'download'
+      ? t(
+          'owner.proDownloadDescription',
+          'Активируйте Bookly Pro, чтобы скачать QR-код.'
+        )
+      : proModalType === 'print'
+        ? t(
+            'owner.proPrintDescription',
+            'Активируйте Bookly Pro, чтобы подготовить QR-код к печати.'
+          )
+        : proModalType === 'link'
+          ? t(
+              'owner.proLinkDescription',
+              'Активируйте Bookly Pro, чтобы получить клиентскую ссылку.'
+            )
+          : t(
+              'owner.proPageDescription',
+              'Активируйте Bookly Pro, чтобы открыть страницу бизнеса.'
+            )}
+</p>
 
       <button
         type="button"
