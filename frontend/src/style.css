@@ -1521,3 +1521,36 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   outline: 0 !important;
   box-shadow: none !important;
 }
+.admin-qr-locked {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.admin-home-qr-blurred {
+  filter: blur(5px);
+  opacity: 0.72;
+  transform: scale(1.03);
+}
+
+.admin-qr-locked-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.admin-qr-locked-overlay strong {
+  font-size: 15px;
+}
+
+.admin-qr-locked-overlay span {
+  font-size: 13px;
+}
