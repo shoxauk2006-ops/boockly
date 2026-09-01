@@ -5834,7 +5834,13 @@ await refreshAfterChange({
         <ul>
           <li>{t('owner.clientLink', 'Клиентская страница и ссылка')}</li>
           <li>{t('owner.qrCode', 'QR-код бизнеса')}</li>
-          <li>{t('owner.upToServices', 'До')} {currentServicesLimit} {t('owner.services', 'услуг')}</li>
+          <li>{t(
+  'owner.servicesLimitText',
+  '{limit} услуг'
+).replace(
+  '{limit}',
+  String(currentServicesLimit)
+)}</li>
           <li>{t('owner.telegramNotifications', 'Уведомления в Telegram')}</li>
         </ul>
 
@@ -6273,8 +6279,11 @@ await refreshAfterChange({
           }}
         >
           <span>
-            Увеличить лимит услуг
-          </span>
+  {t(
+    'owner.increaseServiceLimit',
+    'Увеличить лимит услуг'
+  )}
+</span>
 
           <span style={{ fontSize: 20 }}>
             {inactiveLimitOptionsOpen
