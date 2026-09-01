@@ -815,12 +815,6 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   overflow:hidden;
 }
 
-.subscription-locked .subscription-feature-list{
-  filter:blur(5px);
-  opacity:.55;
-  user-select:none;
-  pointer-events:none;
-}
 
 .subscription-lock-overlay{
   position:absolute;
