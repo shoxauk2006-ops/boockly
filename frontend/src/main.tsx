@@ -6465,6 +6465,10 @@ await refreshAfterChange({
     business.id,
     inactiveSelectedServiceLimit
   );
+
+  setTimeout(() => {
+    setCheckoutLoading(false);
+  }, 2000);
 } catch (error) {
   setCheckoutLoading(false);
 }
