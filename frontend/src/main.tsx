@@ -5181,11 +5181,14 @@ return (
 
   <small>
     {subscriptionLocked
-      ? t(
-          'owner.activateForQR',
-          'Активируйте подписку, чтобы получить QR-код'
-        )
-      : t('owner.clientQrHint', 'Клиенты могут сканировать и сразу перейти к записи')}
+  ? t(
+      'owner.activateForQR',
+      'Активируйте Bookly Pro, чтобы получить QR-код'
+    )
+  : t(
+      'owner.clientQrHint',
+      'Клиенты могут сканировать и сразу перейти к записи'
+    )}
   </small>
 
   {subscriptionLocked ? (
