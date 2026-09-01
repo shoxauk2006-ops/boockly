@@ -5264,7 +5264,62 @@ return (
 
         </div>
       </div>
+{proModalOpen && (
+  <div
+    className="subscription-modal-overlay"
+    onClick={() => setProModalOpen(false)}
+  >
+    <div
+      className="subscription-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="subscription-modal-close"
+        onClick={() => setProModalOpen(false)}
+      >
+        ×
+      </button>
 
+      <span className="personal-eyebrow">
+        BOOKLY PRO
+      </span>
+
+      <h2>
+        {t(
+          'owner.booklyProRequired',
+          'Bookly Pro'
+        )}
+      </h2>
+
+      <p className="muted">
+        {t(
+          'owner.activateToUnlock',
+          'Активируйте Bookly Pro, чтобы использовать эту функцию'
+        )}
+      </p>
+
+      <button
+        type="button"
+        className="primary full"
+        style={{ marginTop: 16 }}
+        onClick={() => {
+          setProModalOpen(false);
+
+          checkout(
+            'paddle',
+            business.id
+          );
+        }}
+      >
+        {t(
+          'owner.openAccess',
+          'Активировать Pro'
+        )}
+      </button>
+    </div>
+  </div>
+)}
 <Subscription
   business={business}
   t={t}
