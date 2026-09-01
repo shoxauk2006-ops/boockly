@@ -127,9 +127,9 @@ const en: TranslationMap = {
   'owner.clientQrHint': 'Clients can scan this to go directly to booking',
   'owner.thisDay': 'This day',
   'owner.changeTimezoneWithBookings':
-    'owner.servicesLimitText': 'Up to {limit} services',
   'This business already has existing bookings. Their date and time will remain unchanged.\n\nChanging the time zone will affect current-time calculations and new bookings.\n\nChange the time zone?',
   'owner.inProgress':'In progress',
+   'owner.servicesLimitText': 'Up to {limit} services',
 'owner.poweredByBookly':'Powered by Bookly',
 'owner.qrPrintError':'Failed to download the layout',
   'owner.freeTrialTitle': '7 days free',
