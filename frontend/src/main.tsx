@@ -432,6 +432,8 @@ function App(){
   useState<'help' | 'rules'>('help');
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertModalMessage, setAlertModalMessage] = useState('');
+  const [proModalOpen, setProModalOpen] =
+  useState(false);
   const [alertModalTitle, setAlertModalTitle] =
   useState('Bookly');
 
@@ -5020,8 +5022,11 @@ function Dashboard({
 
   const subscriptionLocked =
     !business.subscription_active;
-
-  return (
+  const [proModalOpen, setProModalOpen] =
+  useState(false);
+  const showProModal = () => {
+  setProModalOpen(true);
+};
     <>
       <div className="grid2">
         <Stat
@@ -5109,17 +5114,23 @@ function Dashboard({
             </div>
 
             <button
-              className="admin-action-button"
-              disabled={subscriptionLocked}
-              onClick={copyLink}
-            >
-              {subscriptionLocked
-                ? '🔒'
-                : t(
-                    'settings.copyLink',
-                    'Копировать'
-                  )}
-            </button>
+  className="admin-action-button"
+  onClick={() => {
+    if (subscriptionLocked) {
+      showProModal();
+      return;
+    }
+
+    copyLink();
+  }}
+>
+  {subscriptionLocked
+    ? '🔒'
+    : t(
+        'settings.copyLink',
+        'Копировать'
+      )}
+</button>
           </div>
 
           <div className="admin-action-row">
@@ -5145,12 +5156,16 @@ function Dashboard({
             </div>
 
             <button
-              className="admin-action-button"
-              disabled={subscriptionLocked}
-              onClick={
-                openBusinessPage
-              }
-            >
+  className="admin-action-button"
+  onClick={() => {
+    if (subscriptionLocked) {
+      showProModal();
+      return;
+    }
+
+    openBusinessPage();
+  }}
+>
               {subscriptionLocked
                 ? '🔒'
                 : t(
@@ -5178,84 +5193,49 @@ function Dashboard({
   </small>
 
   {subscriptionLocked ? (
-    <span className="admin-lock-badge">
-      🔒
-    </span>
-  ) : (
-    qrDataUrl && (
-      <>
-        <img
-          src={qrDataUrl}
-          alt={t('owner.qrAlt', 'QR-код')}
-          className="admin-home-qr"
-        />
+  <div
+    className="admin-qr-locked"
+    onClick={() => showProModal()}
+  >
+    {qrDataUrl && (
+      <img
+        src={qrDataUrl}
+        alt={t(
+          'owner.qrAlt',
+          'QR-код'
+        )}
+        className="admin-home-qr admin-home-qr-blurred"
+      />
+    )}
 
-        <button
-  type="button"
-  className="admin-action-button admin-download-button"
-  onClick={downloadQr}
->
-  {t(
-  'settings.downloadQr',
-  'Скачать QR-код'
+    <div className="admin-qr-locked-overlay">
+      <strong>
+        {t(
+          'owner.booklyProRequired',
+          'Bookly Pro'
+        )}
+      </strong>
+
+      <span>
+        {t(
+          'owner.activateToUnlock',
+          'Активируйте Bookly Pro'
+        )}
+      </span>
+    </div>
+  </div>
+) : (
+  qrDataUrl && (
+    <>
+      {/* твой существующий рабочий QR */}
+    </>
+  )
 )}
-</button>
-
-        <button
-  type="button"
-  className="admin-action-button admin-download-button qr-print-open-button"
-  onClick={() => setQrPrintOpen(true)}
->
-  Макет для печати
-</button>
-        
-      </>
-    )
-  )}
 </div>
 
             
 
         </div>
-
-        {subscriptionLocked && (
-          <div className="subscription-lock-overlay">
-            <div className="subscription-lock-content">
-              <div className="subscription-lock-icon">
-                🔒
-              </div>
-
-              <strong>
-                {t(
-                  'owner.booklyProRequired',
-                  'Функции Bookly Pro'
-                )}
-              </strong>
-
-              <p>
-                {t(
-                  'owner.activateToUnlock',
-                  'Активируйте подписку, чтобы получить полный доступ'
-                )}
-              </p>
-
-              <button
-                className="primary"
-                onClick={() =>
-                  checkout(
-                    'paddle',
-                    business.id
-                  )
-                }
-              >
-                {t(
-                  'owner.openAccess',
-                  'Открыть доступ'
-                )}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
 <Subscription
