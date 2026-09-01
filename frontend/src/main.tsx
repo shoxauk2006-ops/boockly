@@ -4865,11 +4865,6 @@ function Dashboard({
   useState(false);
 
   useEffect(() => {
-    if (!business.subscription_active) {
-      setQrDataUrl('');
-      return;
-    }
-
     const generateQR = async () => {
       try {
         const url = await QRCode.toDataURL(
@@ -4891,10 +4886,7 @@ function Dashboard({
     };
 
     generateQR();
-    }, [
-    clientLink,
-    business.subscription_active
-  ]);
+    }, [clientLink]);
 
   const downloadQr = async () => {
     if (!business.subscription_active) {
