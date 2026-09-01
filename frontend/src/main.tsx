@@ -6231,16 +6231,14 @@ await refreshAfterChange({
         </li>
 
         <li>
-          {t(
-            'owner.upToServices',
-            'До'
-          )}{' '}
-          10{' '}
-          {t(
-            'owner.services',
-            'услуг'
-          )}
-        </li>
+  {t(
+    'owner.servicesLimitText',
+    '{limit} услуг'
+  ).replace(
+    '{limit}',
+    '10'
+  )}
+</li>
 
         <li>
           {t(
