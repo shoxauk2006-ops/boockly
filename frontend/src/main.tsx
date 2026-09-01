@@ -5022,11 +5022,8 @@ function Dashboard({
 
   const subscriptionLocked =
     !business.subscription_active;
-  const [proModalOpen, setProModalOpen] =
-  useState(false);
-  const showProModal = () => {
-  setProModalOpen(true);
-};
+  
+  return (
     <>
       <div className="grid2">
         <Stat
