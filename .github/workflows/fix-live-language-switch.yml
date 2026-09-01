@@ -1,0 +1,76 @@
+name: Fix instant language switching
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[language-switch-fix]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch React and UX runtime
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          main = Path('frontend/src/main.tsx')
+          s = main.read_text(encoding='utf-8')
+
+          old = """  const changeLanguage = (nextLanguage: Language) => {\n    setLanguage(nextLanguage);\n    setStoredLanguage(nextLanguage);\n    applyLanguageDirection(nextLanguage);\n  };\n\n  useEffect(() => {\n    applyLanguageDirection(language);\n  }, [language]);\n"""
+          new = """  const changeLanguage = (nextLanguage: Language) => {\n    setStoredLanguage(nextLanguage);\n    setLanguage(nextLanguage);\n    applyLanguageDirection(nextLanguage);\n    window.dispatchEvent(\n      new CustomEvent('bookly-language-change', {\n        detail: nextLanguage\n      })\n    );\n  };\n\n  useEffect(() => {\n    applyLanguageDirection(language);\n  }, [language]);\n\n  useEffect(() => {\n    const handleLanguageChange = (event: Event) => {\n      const nextLanguage = (event as CustomEvent<Language>).detail;\n      if (!SUPPORTED_LANGUAGES.some(item => item.code === nextLanguage)) {\n        return;\n      }\n      setLanguage(nextLanguage);\n      applyLanguageDirection(nextLanguage);\n    };\n\n    window.addEventListener(\n      'bookly-language-change',\n      handleLanguageChange\n    );\n\n    return () => {\n      window.removeEventListener(\n        'bookly-language-change',\n        handleLanguageChange\n      );\n    };\n  }, []);\n"""
+          if old not in s:
+              raise SystemExit('changeLanguage block not found')
+          s = s.replace(old, new, 1)
+
+          old_label = """          <span>\n            Увеличить лимит услуг\n          </span>\n"""
+          new_label = """          <span>\n            {t(\n              'owner.increaseServiceLimit',\n              'Увеличить лимит услуг'\n            )}\n          </span>\n"""
+          if old_label not in s:
+              raise SystemExit('hardcoded service-limit label not found')
+          s = s.replace(old_label, new_label, 1)
+
+          main.write_text(s, encoding='utf-8')
+
+          ux = Path('frontend/src/ux2-runtime.ts')
+          u = ux.read_text(encoding='utf-8')
+
+          marker = """const renderPicker=()=>{"""
+          listener = """window.addEventListener('bookly-language-change',(event)=>{const nextLanguage=(event as CustomEvent<Language>).detail;if(!SUPPORTED_LANGUAGES.some((item)=>item.code===nextLanguage))return;language=nextLanguage;signature='';renderPicker();renderRuntime(true);});\n\n"""
+          if listener not in u:
+              if marker not in u:
+                  raise SystemExit('renderPicker marker not found')
+              u = u.replace(marker, listener + marker, 1)
+
+          old_click = """b.onclick=()=>{language=item.code;setStoredLanguage(language);applyLanguageDirection(language);pickerOpen=false;signature='';translateDom();renderPicker();renderRuntime(true);};"""
+          new_click = """b.onclick=()=>{language=item.code;setStoredLanguage(language);applyLanguageDirection(language);window.dispatchEvent(new CustomEvent('bookly-language-change',{detail:language}));pickerOpen=false;signature='';translateDom();renderPicker();renderRuntime(true);};"""
+          if old_click not in u:
+              raise SystemExit('runtime language click block not found')
+          u = u.replace(old_click, new_click, 1)
+
+          ux.write_text(u, encoding='utf-8')
+          PY
+
+      - name: Validate frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx frontend/src/ux2-runtime.ts
+          git commit -m "Fix instant language switching [language-switch-fix]"
+          git push
+          git rm .github/workflows/fix-live-language-switch.yml
+          git commit -m "Remove temporary language switch workflow"
+          git push
