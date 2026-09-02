@@ -1860,6 +1860,204 @@ def admin_bookings(day:Optional[date]=None,x_telegram_init_data:str=Header(defau
         q=db.query(Booking).filter_by(business_id=b.id)
         if day:q=q.filter_by(day=day)
         return q.order_by(Booking.day,Booking.start).all()
+@app.get("/admin/statistics")
+def admin_statistics(
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+    owner_id = int(user["id"])
+
+    with SessionLocal() as db:
+        business = owner_business(
+            db,
+            owner_id
+        )
+
+        if not business:
+            return {
+                "today": {
+                    "bookings": 0,
+                    "revenue": 0
+                },
+                "week": {
+                    "bookings": 0,
+                    "revenue": 0
+                },
+                "month": {
+                    "bookings": 0,
+                    "revenue": 0
+                },
+                "total": 0,
+                "completed": 0,
+                "cancelled": 0,
+                "confirmed": 0,
+                "daily": [],
+                "top_services": []
+            }
+
+        bookings = (
+            db.query(
+                Booking,
+                Service
+            )
+            .join(
+                Service,
+                Service.id == Booking.service_id
+            )
+            .filter(
+                Booking.business_id == business.id
+            )
+            .all()
+        )
+
+        now = datetime.now()
+
+        today = now.date()
+
+        week_start = today - timedelta(
+            days=today.weekday()
+        )
+
+        month_start = today.replace(
+            day=1
+        )
+
+        today_bookings = 0
+        today_revenue = Decimal("0")
+
+        week_bookings = 0
+        week_revenue = Decimal("0")
+
+        month_bookings = 0
+        month_revenue = Decimal("0")
+
+        completed = 0
+        cancelled = 0
+        confirmed = 0
+
+        daily_map = {}
+
+        for offset in range(30):
+            current_day = today - timedelta(
+                days=29 - offset
+            )
+
+            daily_map[
+                current_day.isoformat()
+            ] = {
+                "date": current_day.isoformat(),
+                "bookings": 0,
+                "revenue": 0
+            }
+
+        service_stats = {}
+
+        for booking, service in bookings:
+            booking_day = booking.day
+
+            if booking.status == "cancelled":
+                cancelled += 1
+                continue
+
+            confirmed += 1
+
+            try:
+                price = Decimal(
+                    str(service.price or 0)
+                )
+            except Exception:
+                price = Decimal("0")
+
+            if booking_day == today:
+                today_bookings += 1
+                today_revenue += price
+
+            if booking_day >= week_start:
+                week_bookings += 1
+                week_revenue += price
+
+            if booking_day >= month_start:
+                month_bookings += 1
+                month_revenue += price
+
+            if booking_day.isoformat() in daily_map:
+                daily_map[
+                    booking_day.isoformat()
+                ]["bookings"] += 1
+
+                daily_map[
+                    booking_day.isoformat()
+                ]["revenue"] = float(
+                    Decimal(
+                        str(
+                            daily_map[
+                                booking_day.isoformat()
+                            ]["revenue"]
+                        )
+                    ) + price
+                )
+
+            service_id = service.id
+
+            if service_id not in service_stats:
+                service_stats[service_id] = {
+                    "id": service.id,
+                    "name": service.name,
+                    "bookings": 0,
+                    "revenue": 0
+                }
+
+            service_stats[service_id]["bookings"] += 1
+
+            service_stats[service_id]["revenue"] = float(
+                Decimal(
+                    str(
+                        service_stats[
+                            service_id
+                        ]["revenue"]
+                    )
+                ) + price
+            )
+
+            booking_end = datetime.combine(
+                booking.day,
+                booking.end
+            )
+
+            if booking_end <= now:
+                completed += 1
+
+        top_services = sorted(
+            service_stats.values(),
+            key=lambda item: (
+                item["bookings"],
+                item["revenue"]
+            ),
+            reverse=True
+        )[:5]
+
+        return {
+            "today": {
+                "bookings": today_bookings,
+                "revenue": float(today_revenue)
+            },
+            "week": {
+                "bookings": week_bookings,
+                "revenue": float(week_revenue)
+            },
+            "month": {
+                "bookings": month_bookings,
+                "revenue": float(month_revenue)
+            },
+            "total": len(bookings),
+            "completed": completed,
+            "cancelled": cancelled,
+            "confirmed": confirmed,
+            "daily": list(
+                daily_map.values()
+            ),
+            "top_services": top_services
+        }
 @app.post("/admin/bookings/{booking_id}/cancel")
 def admin_cancel_booking(
     booking_id: int,
