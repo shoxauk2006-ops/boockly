@@ -1701,11 +1701,6 @@ function Admin({
   const [blocks, setBlocks] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [statistics, setStatistics] = useState<any>(null);
-const [statisticsLoading, setStatisticsLoading] =
-  useState(false);
-const [statisticsPeriod, setStatisticsPeriod] =
-  useState<'7' | '30'>('7');
-  const [statistics, setStatistics] = useState<any>(null);
   const [statisticsLoading, setStatisticsLoading] = useState(false);
   const [statisticsPeriod, setStatisticsPeriod] =
     useState<'7' | '30'>('7');
