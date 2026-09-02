@@ -3,6 +3,7 @@ name: Apply Bookly map and services patch
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -28,10 +29,7 @@ jobs:
 
           # 1. Add "My location" control to the existing map picker.
           if "const locateMe = () =>" not in s:
-              anchor = "        };
-
-        if (latitude != null &&
-          longitude != null)"
+              anchor = "        };\n\n        if (latitude != null &&\n          longitude != null)"
               locate = r'''        };
 
         const locateMe = () => {
@@ -281,14 +279,3 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npm run build
-
-      - name: Remove temporary workflow
-        if: always()
-        run: |
-          git fetch origin main
-          git reset --hard origin/main
-          if [ -f .github/workflows/fix-live-language-switch.yml ]; then
-            git rm .github/workflows/fix-live-language-switch.yml
-            git commit -m 'chore: remove temporary Bookly map patch [bookly-ui-patch]'
-            git push
-          fi
