@@ -5244,7 +5244,7 @@ return (
         'Загружаем статистику...'
       )}
     </p>
-  ) : statistics ? (
+  ) : dashboardStatistics ? (
     <>
       <div className="grid2">
         <Stat
@@ -5324,7 +5324,7 @@ return (
           >
             {money(
               Number(
-                statistics.today?.revenue ||
+                dashboardStatistics.today?.revenue ||
                   0
               ),
               business?.currency ||
@@ -5555,10 +5555,10 @@ return (
       </div>
 
       {Array.isArray(
-        statistics.top_services
-      ) &&
-        statistics.top_services.length >
-          0 && (
+  dashboardStatistics.top_services
+) &&
+  dashboardStatistics.top_services.length >
+    0 && (
           <div
             style={{
               marginTop: 18
@@ -5592,7 +5592,7 @@ return (
                       '10px 0',
                     borderBottom:
                       index <
-                      statistics
+                      dashboardStatistics
                         .top_services
                         .length -
                         1
