@@ -4882,10 +4882,64 @@ function Dashboard({
       x.status === 'confirmed'
   );
 
+  const [dashboardStatistics, setDashboardStatistics] =
+  useState<any>(null);
+
+const [dashboardStatisticsLoading, setDashboardStatisticsLoading] =
+  useState(false);
+
+useEffect(() => {
+  let cancelled = false;
+
+  const loadStatistics = async () => {
+    if (!business?.id) {
+      return;
+    }
+
+    setDashboardStatisticsLoading(true);
+
+    try {
+      const response = await fetch(
+        API + '/admin/statistics',
+        {
+          headers: headers()
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Statistics request failed: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      if (!cancelled) {
+        setDashboardStatistics(data);
+      }
+    } catch (error) {
+      console.error(
+        'DASHBOARD STATISTICS ERROR:',
+        error
+      );
+    } finally {
+      if (!cancelled) {
+        setDashboardStatisticsLoading(false);
+      }
+    }
+  };
+
+  loadStatistics();
+
+  return () => {
+    cancelled = true;
+  };
+}, [business?.id]);
+
     const statisticsDaily =
-    Array.isArray(statistics?.daily)
-      ? statistics.daily
-      : [];
+  Array.isArray(dashboardStatistics?.daily)
+    ? dashboardStatistics.daily
+    : [];
 
   const visibleDaily =
     statisticsDaily.slice(
@@ -5183,7 +5237,7 @@ return (
     </div>
   </div>
 
-  {statisticsLoading ? (
+  {dashboardStatisticsLoading ? (
     <p className="muted">
       {t(
         'owner.loadingStatistics',
@@ -5195,7 +5249,7 @@ return (
       <div className="grid2">
         <Stat
           n={
-            statistics.today?.bookings ??
+            dashboardStatistics.today?.bookings ??
             0
           }
           t={t(
@@ -5206,7 +5260,7 @@ return (
 
         <Stat
           n={
-            statistics.week?.bookings ??
+            dashboardStatistics.week?.bookings ??
             0
           }
           t={t(
@@ -5217,7 +5271,7 @@ return (
 
         <Stat
           n={
-            statistics.month?.bookings ??
+            dashboardStatistics.month?.bookings ??
             0
           }
           t={t(
@@ -5228,7 +5282,7 @@ return (
 
         <Stat
           n={
-            statistics.total ??
+            dashboardStatistics.total ??
             0
           }
           t={t(
@@ -5330,7 +5384,7 @@ return (
           }}
         >
           <strong>
-            {statistics.confirmed ??
+            {dashboardStatistics.confirmed ??
               0}
           </strong>
 
@@ -5351,7 +5405,7 @@ return (
           }}
         >
           <strong>
-            {statistics.completed ??
+            {dashboardStatistics.completed ??
               0}
           </strong>
 
@@ -5372,7 +5426,7 @@ return (
           }}
         >
           <strong>
-            {statistics.cancelled ??
+            {dashboardStatistics.cancelled ??
               0}
           </strong>
 
@@ -5521,7 +5575,7 @@ return (
               )}
             </h4>
 
-            {statistics.top_services.map(
+            {dashboardStatistics.top_services.map(
               (
                 service: any,
                 index: number
