@@ -1,4 +1,4 @@
-name: Apply Bookly UI patch
+name: Apply Bookly map and services patch
 
 on:
   push:
@@ -21,225 +21,93 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           p = Path('frontend/src/main.tsx')
           s = p.read_text(encoding='utf-8')
 
-          # 1. Map picker in Settings.
-          if 'function MapPicker({' not in s:
-              marker = 'function Settings({'
-              component = r'''function MapPicker({
-            latitude,
-            longitude,
-            onSelect,
-            onClose,
-            t
-          }: {
-            latitude: number | null;
-            longitude: number | null;
-            onSelect: (lat: number, lng: number, address?: string) => void;
-            onClose: () => void;
-            t: (key: string, fallback?: string) => string;
-          }) {
-            const mapRef = useRef<HTMLDivElement | null>(null);
-            const mapInstanceRef = useRef<any>(null);
-            const markerRef = useRef<any>(null);
-            const selectedRef = useRef<{ lat: number; lng: number; address?: string } | null>(
-              latitude != null && longitude != null ? { lat: latitude, lng: longitude } : null
+          # 1. Add "My location" control to the existing map picker.
+          if "const locateMe = () =>" not in s:
+              anchor = "        };
+
+        if (latitude != null &&
+          longitude != null)"
+              locate = r'''        };
+
+        const locateMe = () => {
+          if (!navigator.geolocation) {
+            alert(
+              t(
+                'settings.locationUnavailable',
+                'Геолокация недоступна на этом устройстве.'
+              )
             );
-            const [selected, setSelected] = useState<{ lat: number; lng: number; address?: string } | null>(selectedRef.current);
-            const [loading, setLoading] = useState(true);
-
-            useEffect(() => {
-              let cancelled = false;
-              const loadLeaflet = () => new Promise<void>((resolve, reject) => {
-                if ((window as any).L) return resolve();
-                const existing = document.querySelector('script[data-bookly-leaflet]') as HTMLScriptElement | null;
-                if (existing) {
-                  existing.addEventListener('load', () => resolve(), { once: true });
-                  existing.addEventListener('error', () => reject(new Error('Leaflet failed')), { once: true });
-                  return;
-                }
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                link.dataset.booklyLeaflet = '1';
-                document.head.appendChild(link);
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                script.async = true;
-                script.dataset.booklyLeaflet = '1';
-                script.onload = () => resolve();
-                script.onerror = () => reject(new Error('Leaflet failed'));
-                document.body.appendChild(script);
-              });
-
-              const init = async () => {
-                try {
-                  await loadLeaflet();
-                  if (cancelled || !mapRef.current) return;
-                  const L = (window as any).L;
-                  const defaultLat = latitude ?? 41.3111;
-                  const defaultLng = longitude ?? 69.2797;
-                  const map = L.map(mapRef.current).setView(
-                    [defaultLat, defaultLng],
-                    latitude != null && longitude != null ? 16 : 12
-                  );
-                  mapInstanceRef.current = map;
-                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
-                  }).addTo(map);
-
-                  const updatePoint = async (lat: number, lng: number) => {
-                    if (!markerRef.current) {
-                      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
-                      markerRef.current.on('dragend', () => {
-                        const point = markerRef.current.getLatLng();
-                        void updatePoint(point.lat, point.lng);
-                      });
-                    } else {
-                      markerRef.current.setLatLng([lat, lng]);
-                    }
-                    map.panTo([lat, lng]);
-                    const next = { lat, lng };
-                    selectedRef.current = next;
-                    setSelected(next);
-                    try {
-                      const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&accept-language=${encodeURIComponent(getStoredLanguage())}`
-                      );
-                      const data = await response.json();
-                      if (data?.display_name && !cancelled) {
-                        const withAddress = { lat, lng, address: data.display_name };
-                        selectedRef.current = withAddress;
-                        setSelected(withAddress);
-                      }
-                    } catch {}
-                  };
-
-                  if (latitude != null && longitude != null) {
-                    markerRef.current = L.marker([latitude, longitude], { draggable: true }).addTo(map);
-                    markerRef.current.on('dragend', () => {
-                      const point = markerRef.current.getLatLng();
-                      void updatePoint(point.lat, point.lng);
-                    });
-                  }
-                  map.on('click', (event: any) => void updatePoint(event.latlng.lat, event.latlng.lng));
-                  setLoading(false);
-                  setTimeout(() => map.invalidateSize(), 100);
-                } catch (error) {
-                  console.error('MAP PICKER ERROR:', error);
-                  setLoading(false);
-                }
-              };
-              void init();
-              return () => {
-                cancelled = true;
-                if (mapInstanceRef.current) {
-                  mapInstanceRef.current.remove();
-                  mapInstanceRef.current = null;
-                }
-                markerRef.current = null;
-              };
-            }, []);
-
-            const confirm = () => {
-              if (selectedRef.current) {
-                onSelect(selectedRef.current.lat, selectedRef.current.lng, selectedRef.current.address);
-              }
-              onClose();
-            };
-
-            return (
-              <div className="subscription-modal-overlay" onClick={onClose}>
-                <div className="subscription-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 620 }}>
-                  <button type="button" className="subscription-modal-close" onClick={onClose}>×</button>
-                  <span className="personal-eyebrow">BOOKLY</span>
-                  <h2>{t('settings.mapTitle', 'Выберите адрес на карте')}</h2>
-                  <p className="muted">{t('settings.mapHint', 'Нажмите на карту или перетащите метку в нужное место.')}</p>
-                  <div ref={mapRef} style={{ width: '100%', height: 360, borderRadius: 14, overflow: 'hidden', marginTop: 12, background: '#eee' }} />
-                  {loading && <p className="muted" style={{ marginTop: 10 }}>{t('common.loading', 'Загрузка…')}</p>}
-                  {selected && <p className="muted" style={{ marginTop: 10 }}>{selected.address || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`}</p>}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
-                    <button type="button" onClick={onClose}>{t('common.cancel', 'Отмена')}</button>
-                    <button type="button" className="primary" disabled={!selected} onClick={confirm}>{t('common.confirm', 'Готово')}</button>
-                  </div>
-                </div>
-              </div>
-            );
+            return;
           }
 
-          '''
-              if marker not in s:
-                  raise SystemExit('Settings marker not found')
-              s = s.replace(marker, component + marker, 1)
+          navigator.geolocation.getCurrentPosition(
+            position => {
+              void updatePoint(
+                position.coords.latitude,
+                position.coords.longitude
+              );
+            },
+            error => {
+              console.error(
+                'BOOKLY GEOLOCATION ERROR:',
+                error
+              );
 
-          if 'const [mapPickerOpen, setMapPickerOpen]' not in s:
-              anchor = '  const [settingsTimezone, setSettingsTimezone] ='
-              pos = s.find(anchor)
-              if pos < 0: raise SystemExit('Settings state anchor not found')
-              s = s[:pos] + "  const [mapPickerOpen, setMapPickerOpen] = useState(false);\n" + s[pos:]
-
-          old_map = '''        <div className="two">
-          <input
-            placeholder={t('settings.latitudeOptional')}
-            value={latitude}
-            onChange={e =>
-              setLatitude(
-                e.target.value
-              )
+              alert(
+                t(
+                  'settings.locationPermissionError',
+                  'Не удалось определить местоположение. Разрешите доступ к геолокации и попробуйте снова.'
+                )
+              );
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 30000
             }
-          />
+          );
+        };
 
-          <input
-            placeholder={t('settings.longitudeOptional')}
-            value={longitude}
-            onChange={e =>
-              setLongitude(
-                e.target.value
-              )
-            }
-          />
-        </div>'''
-          new_map = '''        <button
-          type="button"
-          className="ghost full"
-          onClick={() => setMapPickerOpen(true)}
-        >
-          {latitude !== '' && longitude !== ''
-            ? t('settings.changeMapLocation', 'Изменить точку на карте')
-            : t('settings.chooseMapLocation', 'Выбрать адрес на карте')}
-        </button>
+        if (latitude != null &&
+          longitude != null)'''
+              if anchor in s:
+                  s = s.replace(anchor, locate, 1)
+              else:
+                  raise SystemExit('MapPicker updatePoint anchor not found')
 
-        {latitude !== '' && longitude !== '' && (
-          <p className="muted">
-            {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
-          </p>
-        )}
+          map_div = '''                  <div ref={mapRef} style={{ width: '100%', height: 360, borderRadius: 14, overflow: 'hidden', marginTop: 12, background: '#eee' }} />'''
+          map_div_new = '''                  <button
+                    type="button"
+                    className="ghost full"
+                    onClick={locateMe}
+                    style={{
+                      marginTop: 12,
+                      marginBottom: 4
+                    }}
+                  >
+                    ◎ {t(
+                      'settings.locateMe',
+                      'Определить моё местоположение'
+                    )}
+                  </button>
+                  <div ref={mapRef} style={{ width: '100%', height: 360, borderRadius: 14, overflow: 'hidden', marginTop: 8, background: '#eee' }} />'''
+          if map_div in s:
+              s = s.replace(map_div, map_div_new, 1)
 
-        {mapPickerOpen && (
-          <MapPicker
-            latitude={latitude === '' ? null : Number(latitude)}
-            longitude={longitude === '' ? null : Number(longitude)}
-            onSelect={(lat, lng, selectedAddress) => {
-              setLatitude(String(lat));
-              setLongitude(String(lng));
-              if (selectedAddress) setAddress(selectedAddress);
-            }}
-            onClose={() => setMapPickerOpen(false)}
-            t={t}
-          />
-        )}'''
-          if old_map in s:
-              s = s.replace(old_map, new_map, 1)
+          # 2. Services: remove the dedicated Business Contacts card and related state/functions.
+          services_start = s.find('function Services(')
+          if services_start < 0:
+              raise SystemExit('Services function not found')
 
-          # 2. Remove business contacts card from Services.
-          start_fn = s.find('function Services(')
-          if start_fn >= 0:
-              card_start = s.find('      <div className="card">\n        <h2>\n          {t(\n            \'owner.businessContacts\'', start_fn)
-              form_start = s.find('      <div\n  className="card"\n  ref={serviceFormRef}', card_start) if card_start >= 0 else -1
-              if card_start >= 0 and form_start >= 0:
-                  s = s[:card_start] + s[form_start:]
+          card_start = s.find("      <div className=\"card\">\n        <h2>\n          {t(\n            'owner.businessContacts'", services_start)
+          form_start = s.find('      <div\n  className="card"\n  ref={serviceFormRef}', card_start) if card_start >= 0 else -1
+          if card_start >= 0 and form_start >= 0:
+              s = s[:card_start] + s[form_start:]
 
           state_block = '''  const [businessPhone, setBusinessPhone] =
     useState(business?.phone || '');
@@ -250,8 +118,7 @@ jobs:
   const [savingBusiness, setSavingBusiness] =
     useState(false);
 '''
-          if state_block in s:
-              s = s.replace(state_block, '', 1)
+          s = s.replace(state_block, '', 1)
 
           effect_block = '''  useEffect(() => {
     setBusinessPhone(
@@ -264,83 +131,139 @@ jobs:
   }, [business]);
 
 '''
-          if effect_block in s:
-              s = s.replace(effect_block, '', 1)
+          s = s.replace(effect_block, '', 1)
 
-          fn_start = s.find('  const saveBusinessContacts =')
+          fn_start = s.find('  const saveBusinessContacts =', services_start)
           if fn_start >= 0:
               fn_end = s.find('  const saveService =', fn_start)
               if fn_end >= 0:
                   s = s[:fn_start] + s[fn_end:]
 
-          # 3. Client: first available day in the next 90 days.
-          if 'const MAX_DAYS_TO_SEARCH = 90;' not in s:
-              choose_start = s.find('  const chooseService = async (\n    service: any\n  ) => {')
-              choose_end = s.find('  const chooseTime =', choose_start) if choose_start >= 0 else -1
-              if choose_start >= 0 and choose_end >= 0:
-                  new_choose = '''  const chooseService = async (
-    service: any
-  ) => {
-    setSelected(service);
-    setSelectedTime('');
-    setSlots([]);
-    setSlotsLoading(true);
-    setError('');
+          # 3. Client: offer Google Maps and Apple Maps using exact coordinates.
+          old_map_url = '''  const mapUrl =
+    business &&
+    business.latitude != null &&
+    business.longitude != null
+      ? `https://www.google.com/maps/search/?api=1&query=${business.latitude},${business.longitude}`
+      : business?.address
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            business.address
+          )}`
+        : '';'''
+          new_map_url = '''  const googleMapUrl =
+    business &&
+    business.latitude != null &&
+    business.longitude != null
+      ? `https://www.google.com/maps/search/?api=1&query=${business.latitude},${business.longitude}`
+      : business?.address
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            business.address
+          )}`
+        : '';
 
-    try {
-      const startDate = new Date(`${day}T12:00:00`);
-      const MAX_DAYS_TO_SEARCH = 90;
+  const appleMapUrl =
+    business &&
+    business.latitude != null &&
+    business.longitude != null
+      ? `https://maps.apple.com/?ll=${business.latitude},${business.longitude}&q=${encodeURIComponent(
+          business.address || business.name
+        )}`
+      : business?.address
+        ? `https://maps.apple.com/?q=${encodeURIComponent(
+            business.address
+          )}`
+        : '';'''
+          if old_map_url in s:
+              s = s.replace(old_map_url, new_map_url, 1)
+          else:
+              raise SystemExit('Client map URL block not found')
 
-      for (let offset = 0; offset < MAX_DAYS_TO_SEARCH; offset += 1) {
-        const candidate = new Date(startDate);
-        candidate.setDate(startDate.getDate() + offset);
+          old_button = '''    {mapUrl && (
+      <button
+        type="button"
+        className="client-contact-button"
+        onClick={() => {
+          if (tg()?.openLink) {
+            tg().openLink(mapUrl);
+          } else {
+            window.open(
+              mapUrl,
+              '_blank'
+            );
+          }
+        }}
+      >
+        <span className="client-contact-label">
+          {business.address ||
+            t('client.location')}
+        </span>
 
-        const candidateDay = [
-          candidate.getFullYear(),
-          String(candidate.getMonth() + 1).padStart(2, '0'),
-          String(candidate.getDate()).padStart(2, '0')
-        ].join('-');
+        <span className="client-contact-arrow">
+          →
+        </span>
+      </button>
+    )}'''
+          new_button = '''    {(googleMapUrl || appleMapUrl) && (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 8
+        }}
+      >
+        {googleMapUrl && (
+          <button
+            type="button"
+            className="client-contact-button"
+            onClick={() => {
+              if (tg()?.openLink) {
+                tg().openLink(googleMapUrl);
+              } else {
+                window.open(
+                  googleMapUrl,
+                  '_blank'
+                );
+              }
+            }}
+          >
+            <span className="client-contact-label">
+              Google Maps
+            </span>
+            <span className="client-contact-arrow">
+              →
+            </span>
+          </button>
+        )}
 
-        const response = await fetch(
-          API +
-            `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-            t('client.availabilityError')
-          );
-        }
-
-        const candidateSlots = Array.isArray(data?.slots)
-          ? data.slots
-          : [];
-
-        if (candidateSlots.length > 0) {
-          setDay(candidateDay);
-          setSlots(candidateSlots);
-          return;
-        }
-      }
-
-      setSlots([]);
-    } catch (e) {
-      console.error(
-        'FIND NEXT AVAILABILITY ERROR:',
-        e
-      );
-      setSlots([]);
-      setError(t('client.availabilityError'));
-    } finally {
-      setSlotsLoading(false);
-    }
-  };
-
-'''
-                  s = s[:choose_start] + new_choose + s[choose_end:]
+        {appleMapUrl && (
+          <button
+            type="button"
+            className="client-contact-button"
+            onClick={() => {
+              if (tg()?.openLink) {
+                tg().openLink(appleMapUrl);
+              } else {
+                window.open(
+                  appleMapUrl,
+                  '_blank'
+                );
+              }
+            }}
+          >
+            <span className="client-contact-label">
+              Apple Maps
+            </span>
+            <span className="client-contact-arrow">
+              →
+            </span>
+          </button>
+        )}
+      </div>
+    )}'''
+          if old_button in s:
+              s = s.replace(old_button, new_button, 1)
+          else:
+              raise SystemExit('Client map button block not found')
 
           p.write_text(s, encoding='utf-8')
           PY
@@ -350,12 +273,11 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add frontend/src/main.tsx
-          git commit -m 'feat: map picker and next availability [bookly-ui-patch]' || true
+          git commit -m 'feat: improve map location and remove service contacts [bookly-ui-patch]' || true
           git push
 
       - name: Validate frontend
         working-directory: frontend
-        continue-on-error: true
         run: |
           npm install --no-audit --no-fund
           npm run build
@@ -367,6 +289,6 @@ jobs:
           git reset --hard origin/main
           if [ -f .github/workflows/fix-live-language-switch.yml ]; then
             git rm .github/workflows/fix-live-language-switch.yml
-            git commit -m 'chore: remove temporary Bookly UI patch [bookly-ui-patch]'
+            git commit -m 'chore: remove temporary Bookly map patch [bookly-ui-patch]'
             git push
           fi
