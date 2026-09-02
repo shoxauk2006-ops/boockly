@@ -9421,6 +9421,102 @@ function MapPicker({
   const [loading, setLoading] =
     useState(true);
 
+  const locateMe = () => {
+  if (!navigator.geolocation) {
+    alert(
+      t(
+        'settings.locationUnavailable',
+        'Геолокация недоступна на этом устройстве.'
+      )
+    );
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async position => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      const map = mapInstanceRef.current;
+      const L = (window as any).L;
+
+      if (!map || !L) {
+        return;
+      }
+
+      if (!markerRef.current) {
+        markerRef.current = L.marker(
+          [lat, lng],
+          {
+            draggable: true
+          }
+        ).addTo(map);
+      } else {
+        markerRef.current.setLatLng([
+          lat,
+          lng
+        ]);
+      }
+
+      map.setView(
+        [lat, lng],
+        18
+      );
+
+      const next = {
+        lat,
+        lng
+      };
+
+      selectedRef.current = next;
+      setSelected(next);
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&accept-language=${encodeURIComponent(getStoredLanguage())}`
+        );
+
+        const data =
+          await response.json();
+
+        if (data?.display_name) {
+          const withAddress = {
+            lat,
+            lng,
+            address:
+              data.display_name
+          };
+
+          selectedRef.current =
+            withAddress;
+
+          setSelected(
+            withAddress
+          );
+        }
+      } catch {}
+    },
+    error => {
+      console.error(
+        'BOOKLY GEOLOCATION ERROR:',
+        error
+      );
+
+      alert(
+        t(
+          'settings.locationPermissionError',
+          'Не удалось определить местоположение. Разрешите доступ к геолокации и попробуйте снова.'
+        )
+      );
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 30000
+    }
+  );
+};
+
   useEffect(() => {
     let cancelled = false;
 
