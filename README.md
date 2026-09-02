@@ -26,6 +26,7 @@ For production, serve the built frontend over HTTPS and configure the Telegram b
 - Past time slots are hidden for the current day.
 - Telegram contact callback stores the shared phone number correctly.
 - Subscription card updated for the $9.99/month product.
+- Business map coordinates are supported in Settings and used by the client map link.
 
 ## Bookly v0.3 additions
 - Telegram startapp parameter automatically opens the client business page.
