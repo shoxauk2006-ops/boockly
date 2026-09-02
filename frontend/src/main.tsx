@@ -4269,12 +4269,16 @@ borderTopColor: '#d32f2f',
 )}
 
       {tab === 'home' && !businessCreatedNotice && (
-        <Dashboard
-          bookings={bookings}
-          business={business}
-          t={t}
-          setBusiness={setBusiness}
-        />
+<Dashboard
+  bookings={bookings}
+  business={business}
+  t={t}
+  setBusiness={setBusiness}
+  statistics={statistics}
+  statisticsLoading={statisticsLoading}
+  statisticsPeriod={statisticsPeriod}
+  setStatisticsPeriod={setStatisticsPeriod}
+/>
       )}
 
       {tab === 'services' && (
