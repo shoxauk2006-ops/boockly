@@ -10590,11 +10590,65 @@ function Client({
   ) => {
     setSelected(service);
     setSelectedTime('');
+    setSlots([]);
+    setSlotsLoading(true);
+    setError('');
 
-    await loadSlots(
-      service,
-      day
-    );
+    try {
+      // Start from the currently selected day and automatically move
+      // forward until the first day with at least one real free slot.
+      // This prevents an empty today/tomorrow from looking like a bug.
+      const startDate = new Date(`${day}T12:00:00`);
+      const MAX_DAYS_TO_SEARCH = 90;
+
+      for (let offset = 0; offset < MAX_DAYS_TO_SEARCH; offset += 1) {
+        const candidate = new Date(startDate);
+        candidate.setDate(startDate.getDate() + offset);
+
+        const candidateDay = [
+          candidate.getFullYear(),
+          String(candidate.getMonth() + 1).padStart(2, '0'),
+          String(candidate.getDate()).padStart(2, '0')
+        ].join('-');
+
+        const response = await fetch(
+          API +
+            `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+            t('client.availabilityError')
+          );
+        }
+
+        const candidateSlots = Array.isArray(data?.slots)
+          ? data.slots
+          : [];
+
+        if (candidateSlots.length > 0) {
+          setDay(candidateDay);
+          setSlots(candidateSlots);
+          return;
+        }
+      }
+
+      // No availability in the search window. Keep the selected day
+      // and show the normal empty-state message.
+      setSlots([]);
+    } catch (e) {
+      console.error(
+        'FIND NEXT AVAILABILITY ERROR:',
+        e
+      );
+      setSlots([]);
+      setError(t('client.availabilityError'));
+    } finally {
+      setSlotsLoading(false);
+    }
   };
 
   const chooseTime = (
