@@ -1,0 +1,375 @@
+name: Apply map settings
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch map settings
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+
+          marker = "function Settings({"
+          if "function MapPicker({" not in s:
+              component = r'''function MapPicker({
+            latitude,
+            longitude,
+            onSelect,
+            onClose,
+            t
+          }: {
+            latitude: number | null;
+            longitude: number | null;
+            onSelect: (lat: number, lng: number, address?: string) => void;
+            onClose: () => void;
+            t: (key: string, fallback?: string) => string;
+          }) {
+            const mapRef = useRef<HTMLDivElement | null>(null);
+            const mapInstanceRef = useRef<any>(null);
+            const markerRef = useRef<any>(null);
+            const selectedRef = useRef<{
+              lat: number;
+              lng: number;
+              address?: string;
+            } | null>(
+              latitude != null && longitude != null
+                ? { lat: latitude, lng: longitude }
+                : null
+            );
+            const [selected, setSelected] = useState<{
+              lat: number;
+              lng: number;
+              address?: string;
+            } | null>(selectedRef.current);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+              let cancelled = false;
+
+              const loadLeaflet = () =>
+                new Promise<void>((resolve, reject) => {
+                  if ((window as any).L) {
+                    resolve();
+                    return;
+                  }
+
+                  const existingScript = document.querySelector(
+                    'script[data-bookly-leaflet]'
+                  ) as HTMLScriptElement | null;
+
+                  if (existingScript) {
+                    existingScript.addEventListener('load', () => resolve(), { once: true });
+                    existingScript.addEventListener('error', () => reject(new Error('Leaflet failed')), { once: true });
+                    return;
+                  }
+
+                  const link = document.createElement('link');
+                  link.rel = 'stylesheet';
+                  link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                  link.dataset.booklyLeaflet = '1';
+                  document.head.appendChild(link);
+
+                  const script = document.createElement('script');
+                  script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                  script.async = true;
+                  script.dataset.booklyLeaflet = '1';
+                  script.onload = () => resolve();
+                  script.onerror = () => reject(new Error('Leaflet failed'));
+                  document.body.appendChild(script);
+                });
+
+              const init = async () => {
+                try {
+                  await loadLeaflet();
+                  if (cancelled || !mapRef.current) return;
+
+                  const L = (window as any).L;
+                  const defaultLat = latitude ?? 41.3111;
+                  const defaultLng = longitude ?? 69.2797;
+                  const map = L.map(mapRef.current).setView(
+                    [defaultLat, defaultLng],
+                    latitude != null && longitude != null ? 16 : 12
+                  );
+                  mapInstanceRef.current = map;
+
+                  L.tileLayer(
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    { attribution: '&copy; OpenStreetMap contributors' }
+                  ).addTo(map);
+
+                  const updatePoint = async (lat: number, lng: number) => {
+                    if (!markerRef.current) {
+                      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
+                      markerRef.current.on('dragend', () => {
+                        const point = markerRef.current.getLatLng();
+                        void updatePoint(point.lat, point.lng);
+                      });
+                    } else {
+                      markerRef.current.setLatLng([lat, lng]);
+                    }
+
+                    map.panTo([lat, lng]);
+                    const next = { lat, lng };
+                    selectedRef.current = next;
+                    setSelected(next);
+
+                    try {
+                      const response = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&accept-language=${encodeURIComponent(getStoredLanguage())}`
+                      );
+                      const data = await response.json();
+                      if (data?.display_name && !cancelled) {
+                        const withAddress = {
+                          lat,
+                          lng,
+                          address: data.display_name
+                        };
+                        selectedRef.current = withAddress;
+                        setSelected(withAddress);
+                      }
+                    } catch {}
+                  };
+
+                  if (latitude != null && longitude != null) {
+                    markerRef.current = L.marker(
+                      [latitude, longitude],
+                      { draggable: true }
+                    ).addTo(map);
+                    markerRef.current.on('dragend', () => {
+                      const point = markerRef.current.getLatLng();
+                      void updatePoint(point.lat, point.lng);
+                    });
+                  }
+
+                  map.on('click', (event: any) => {
+                    void updatePoint(event.latlng.lat, event.latlng.lng);
+                  });
+
+                  setLoading(false);
+                  setTimeout(() => map.invalidateSize(), 100);
+                } catch (error) {
+                  console.error('MAP PICKER ERROR:', error);
+                  setLoading(false);
+                }
+              };
+
+              void init();
+
+              return () => {
+                cancelled = true;
+                if (mapInstanceRef.current) {
+                  mapInstanceRef.current.remove();
+                  mapInstanceRef.current = null;
+                }
+                markerRef.current = null;
+              };
+            }, []);
+
+            const confirm = () => {
+              if (selectedRef.current) {
+                onSelect(
+                  selectedRef.current.lat,
+                  selectedRef.current.lng,
+                  selectedRef.current.address
+                );
+              }
+              onClose();
+            };
+
+            return (
+              <div
+                className="subscription-modal-overlay"
+                onClick={onClose}
+              >
+                <div
+                  className="subscription-modal"
+                  onClick={e => e.stopPropagation()}
+                  style={{ maxWidth: 620 }}
+                >
+                  <button
+                    type="button"
+                    className="subscription-modal-close"
+                    onClick={onClose}
+                  >
+                    ×
+                  </button>
+
+                  <span className="personal-eyebrow">BOOKLY</span>
+                  <h2>{t('settings.mapTitle', 'Выберите адрес на карте')}</h2>
+                  <p className="muted">
+                    {t('settings.mapHint', 'Нажмите на карту или перетащите метку в нужное место.')}
+                  </p>
+
+                  <div
+                    ref={mapRef}
+                    style={{
+                      width: '100%',
+                      height: 360,
+                      borderRadius: 14,
+                      overflow: 'hidden',
+                      marginTop: 12,
+                      background: '#eee'
+                    }}
+                  />
+
+                  {loading && (
+                    <p className="muted" style={{ marginTop: 10 }}>
+                      {t('common.loading', 'Загрузка…')}
+                    </p>
+                  )}
+
+                  {selected && (
+                    <p className="muted" style={{ marginTop: 10 }}>
+                      {selected.address || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`}
+                    </p>
+                  )}
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: 8,
+                      marginTop: 14
+                    }}
+                  >
+                    <button type="button" onClick={onClose}>
+                      {t('common.cancel', 'Отмена')}
+                    </button>
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={!selected}
+                      onClick={confirm}
+                    >
+                      {t('common.confirm', 'Готово')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          '''
+              if marker not in s:
+                  raise SystemExit('Settings marker not found')
+              s = s.replace(marker, component + marker, 1)
+
+          settings_state = "  const [mapPickerOpen, setMapPickerOpen] = useState(false);\n"
+          state_anchor = "  const [settingsTimezone, setSettingsTimezone] ="
+          if "const [mapPickerOpen, setMapPickerOpen]" not in s:
+              pos = s.find(state_anchor)
+              if pos < 0:
+                  raise SystemExit('Settings state anchor not found')
+              s = s[:pos] + settings_state + s[pos:]
+
+          old_latlong = '''<div className="two">
+  <input
+    placeholder={t('settings.latitudeOptional')}
+    value={latitude}
+    onChange={e =>
+      setLatitude(
+        e.target.value
+      )
+    }
+  />
+
+  <input
+    placeholder={t('settings.longitudeOptional')}
+    value={longitude}
+    onChange={e =>
+      setLongitude(
+        e.target.value
+      )
+    }
+  />
+</div>'''
+          new_latlong = '''<button
+  type="button"
+  className="ghost full"
+  onClick={() => setMapPickerOpen(true)}
+>
+  {latitude !== '' && longitude !== ''
+    ? t('settings.changeMapLocation', 'Изменить точку на карте')
+    : t('settings.chooseMapLocation', 'Выбрать адрес на карте')}
+</button>
+
+{latitude !== '' && longitude !== '' && (
+  <p className="muted">
+    {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+  </p>
+)}
+
+{mapPickerOpen && (
+  <MapPicker
+    latitude={latitude === '' ? null : Number(latitude)}
+    longitude={longitude === '' ? null : Number(longitude)}
+    onSelect={(lat, lng, selectedAddress) => {
+      setLatitude(String(lat));
+      setLongitude(String(lng));
+      if (selectedAddress) {
+        setAddress(selectedAddress);
+      }
+    }}
+    onClose={() => setMapPickerOpen(false)}
+    t={t}
+  />
+)}'''
+          if old_latlong in s:
+              s = s.replace(old_latlong, new_latlong, 1)
+          elif "settings.chooseMapLocation" not in s:
+              raise SystemExit('Latitude/longitude UI block not found')
+
+          p.write_text(s)
+          PY
+
+      - name: Remove contacts from Services
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+          start_fn = s.find('function Services(')
+          if start_fn < 0:
+              raise SystemExit('Services function not found')
+
+          marker = "      <div className=\"card\">\n        <h2>\n          {t(\n            'owner.businessContacts'"
+          start = s.find(marker, start_fn)
+          if start >= 0:
+              end_marker = "      <div\n  className=\"card\"\n  ref={serviceFormRef}"
+              end = s.find(end_marker, start)
+              if end < 0:
+                  raise SystemExit('Service form marker not found')
+              s = s[:start] + s[end:]
+
+          p.write_text(s)
+          PY
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit changes and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/main.tsx
+          git commit -m 'feat: add map picker to settings' || true
+          git rm .github/workflows/apply-map-settings.yml
+          git commit -m 'chore: remove map settings patch workflow'
+          git push
