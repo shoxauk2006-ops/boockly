@@ -9543,7 +9543,7 @@ function MapPicker({
           }
         ).addTo(map);
 
-        const updatePoint = async (
+                const updatePoint = async (
           lat: number,
           lng: number
         ) => {
@@ -9552,8 +9552,7 @@ function MapPicker({
               L.marker(
                 [lat, lng],
                 {
-                  draggable:
-                    true
+                  draggable: true
                 }
               ).addTo(map);
 
@@ -9618,6 +9617,47 @@ function MapPicker({
               );
             }
           } catch {}
+        };
+
+        const locateMe = () => {
+          if (!navigator.geolocation) {
+            alert(
+              t(
+                'settings.locationUnavailable',
+                'Геолокация недоступна на этом устройстве.'
+              )
+            );
+            return;
+          }
+
+          navigator.geolocation.getCurrentPosition(
+            position => {
+              void updatePoint(
+                position.coords.latitude,
+                position.coords.longitude
+              );
+
+              map.setZoom(18);
+            },
+            error => {
+              console.error(
+                'BOOKLY GEOLOCATION ERROR:',
+                error
+              );
+
+              alert(
+                t(
+                  'settings.locationPermissionError',
+                  'Не удалось определить местоположение. Разрешите доступ к геолокации и попробуйте снова.'
+                )
+              );
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 30000
+            }
+          );
         };
 
         if (
