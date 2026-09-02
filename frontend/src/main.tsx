@@ -9784,6 +9784,20 @@ function MapPicker({
             'Нажмите на карту или перетащите метку в нужное место.'
           )}
         </p>
+        <button
+  type="button"
+  className="ghost full"
+  onClick={locateMe}
+  style={{
+    marginTop: 12,
+    marginBottom: 4
+  }}
+>
+  ◎ {t(
+    'settings.locateMe',
+    'Определить моё местоположение'
+  )}
+</button>
 
         <div
           ref={mapRef}
