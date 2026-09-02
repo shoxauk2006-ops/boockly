@@ -7365,63 +7365,6 @@ alert(
   return (
     <div>
 
-      <div className="card">
-        <h2>
-          {t('owner.businessContacts')}
-        </h2>
-
-        <PhoneInput
-  value={businessPhone}
-  onChange={setBusinessPhone}
-  placeholder={t(
-    'owner.phonePlaceholder'
-  )}
-/>
-        <input
-          placeholder={
-            t(
-              'owner.addressPlaceholder'
-            )
-          }
-          value={businessAddress}
-          onChange={e =>
-            setBusinessAddress(
-              e.target.value
-            )
-          }
-        />
-
-        <button
-  className="primary full"
-  disabled={savingBusiness}
-  onClick={saveBusinessContacts}
->
-  {savingBusiness ? (
-    <>
-      <span
-        style={{
-          display: 'inline-block',
-          width: 14,
-          height: 14,
-          border: '2px solid rgba(211,47,47,0.25)',
-          borderTopColor: '#d32f2f',
-          borderRadius: '50%',
-          animation: 'bookly-spin .8s linear infinite',
-          marginRight: 8,
-          verticalAlign: '-2px'
-        }}
-      />
-      {t('owner.saving', 'Сохранение...')}
-    </>
-  ) : (
-    t(
-      'owner.saveContacts',
-      'Сохранить'
-    )
-  )}
-</button>
-      </div>
-
       <div
   className="card"
   ref={serviceFormRef}
