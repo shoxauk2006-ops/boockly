@@ -1700,6 +1700,15 @@ function Admin({
   const [hours, setHours] = useState<any[]>([]);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [statistics, setStatistics] = useState<any>(null);
+const [statisticsLoading, setStatisticsLoading] =
+  useState(false);
+const [statisticsPeriod, setStatisticsPeriod] =
+  useState<'7' | '30'>('7');
+  const [statistics, setStatistics] = useState<any>(null);
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [statisticsPeriod, setStatisticsPeriod] =
+    useState<'7' | '30'>('7');
   const [serviceLimit, setServiceLimit] = useState(10);
   const [newServiceLimit, setNewServiceLimit] = useState(10);
   const [savingServiceLimit, setSavingServiceLimit] = useState(false);
@@ -1982,6 +1991,13 @@ const [newBusinessHours, setNewBusinessHours] =
           }
         ).then(r =>
           r.ok ? r.json() : []
+        ),
+
+        fetch(
+          API + '/admin/statistics',
+          {
+            headers: headers()
+          }
         )
       ]);
 
@@ -1989,7 +2005,8 @@ const [newBusinessHours, setNewBusinessHours] =
       servicesResult,
       hoursResult,
       blocksResult,
-      bookingsResult
+      bookingsResult,
+      statisticsResult
     ] = results;
 
     if (
@@ -2027,6 +2044,14 @@ const [newBusinessHours, setNewBusinessHours] =
         bookingsResult.value || []
       );
     }
+    if (
+  statisticsResult.status ===
+  'fulfilled'
+) {
+  setStatistics(
+    statisticsResult.value || null
+  );
+}
   };
   const changeServiceLimit = async () => {
   const limit = Number(newServiceLimit);
