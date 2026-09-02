@@ -4987,11 +4987,11 @@ function Dashboard({
       );
 
       alert(
-        t(
-          'settings.copyLink',
-          t('settings.linkCopied', 'Ссылка скопирована')
-        )
-      );
+       t(
+        'owner.businessLinkCopied',
+        'Ссылка скопирована'
+       )
+     );
     } catch {
       alert(clientLink);
     }
