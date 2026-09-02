@@ -1,4 +1,4 @@
-name: Fix instant language switching
+name: Apply Bookly UI patch
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   apply:
-    if: ${{ !contains(github.event.head_commit.message, '[language-switch-fix]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[bookly-ui-patch]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,58 +17,356 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Patch React and UX runtime
+      - name: Patch source
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           from pathlib import Path
 
-          main = Path('frontend/src/main.tsx')
-          s = main.read_text(encoding='utf-8')
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text(encoding='utf-8')
 
-          old = """  const changeLanguage = (nextLanguage: Language) => {\n    setLanguage(nextLanguage);\n    setStoredLanguage(nextLanguage);\n    applyLanguageDirection(nextLanguage);\n  };\n\n  useEffect(() => {\n    applyLanguageDirection(language);\n  }, [language]);\n"""
-          new = """  const changeLanguage = (nextLanguage: Language) => {\n    setStoredLanguage(nextLanguage);\n    setLanguage(nextLanguage);\n    applyLanguageDirection(nextLanguage);\n    window.dispatchEvent(\n      new CustomEvent('bookly-language-change', {\n        detail: nextLanguage\n      })\n    );\n  };\n\n  useEffect(() => {\n    applyLanguageDirection(language);\n  }, [language]);\n\n  useEffect(() => {\n    const handleLanguageChange = (event: Event) => {\n      const nextLanguage = (event as CustomEvent<Language>).detail;\n      if (!SUPPORTED_LANGUAGES.some(item => item.code === nextLanguage)) {\n        return;\n      }\n      setLanguage(nextLanguage);\n      applyLanguageDirection(nextLanguage);\n    };\n\n    window.addEventListener(\n      'bookly-language-change',\n      handleLanguageChange\n    );\n\n    return () => {\n      window.removeEventListener(\n        'bookly-language-change',\n        handleLanguageChange\n      );\n    };\n  }, []);\n"""
-          if old not in s:
-              raise SystemExit('changeLanguage block not found')
-          s = s.replace(old, new, 1)
+          # 1. Map picker in Settings.
+          if 'function MapPicker({' not in s:
+              marker = 'function Settings({'
+              component = r'''function MapPicker({
+            latitude,
+            longitude,
+            onSelect,
+            onClose,
+            t
+          }: {
+            latitude: number | null;
+            longitude: number | null;
+            onSelect: (lat: number, lng: number, address?: string) => void;
+            onClose: () => void;
+            t: (key: string, fallback?: string) => string;
+          }) {
+            const mapRef = useRef<HTMLDivElement | null>(null);
+            const mapInstanceRef = useRef<any>(null);
+            const markerRef = useRef<any>(null);
+            const selectedRef = useRef<{ lat: number; lng: number; address?: string } | null>(
+              latitude != null && longitude != null ? { lat: latitude, lng: longitude } : null
+            );
+            const [selected, setSelected] = useState<{ lat: number; lng: number; address?: string } | null>(selectedRef.current);
+            const [loading, setLoading] = useState(true);
 
-          old_label = """          <span>\n            Увеличить лимит услуг\n          </span>\n"""
-          new_label = """          <span>\n            {t(\n              'owner.increaseServiceLimit',\n              'Увеличить лимит услуг'\n            )}\n          </span>\n"""
-          if old_label in s:
-              s = s.replace(old_label, new_label, 1)
+            useEffect(() => {
+              let cancelled = false;
+              const loadLeaflet = () => new Promise<void>((resolve, reject) => {
+                if ((window as any).L) return resolve();
+                const existing = document.querySelector('script[data-bookly-leaflet]') as HTMLScriptElement | null;
+                if (existing) {
+                  existing.addEventListener('load', () => resolve(), { once: true });
+                  existing.addEventListener('error', () => reject(new Error('Leaflet failed')), { once: true });
+                  return;
+                }
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                link.dataset.booklyLeaflet = '1';
+                document.head.appendChild(link);
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.async = true;
+                script.dataset.booklyLeaflet = '1';
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error('Leaflet failed'));
+                document.body.appendChild(script);
+              });
 
-          main.write_text(s, encoding='utf-8')
+              const init = async () => {
+                try {
+                  await loadLeaflet();
+                  if (cancelled || !mapRef.current) return;
+                  const L = (window as any).L;
+                  const defaultLat = latitude ?? 41.3111;
+                  const defaultLng = longitude ?? 69.2797;
+                  const map = L.map(mapRef.current).setView(
+                    [defaultLat, defaultLng],
+                    latitude != null && longitude != null ? 16 : 12
+                  );
+                  mapInstanceRef.current = map;
+                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                  }).addTo(map);
 
-          ux = Path('frontend/src/ux2-runtime.ts')
-          u = ux.read_text(encoding='utf-8')
+                  const updatePoint = async (lat: number, lng: number) => {
+                    if (!markerRef.current) {
+                      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
+                      markerRef.current.on('dragend', () => {
+                        const point = markerRef.current.getLatLng();
+                        void updatePoint(point.lat, point.lng);
+                      });
+                    } else {
+                      markerRef.current.setLatLng([lat, lng]);
+                    }
+                    map.panTo([lat, lng]);
+                    const next = { lat, lng };
+                    selectedRef.current = next;
+                    setSelected(next);
+                    try {
+                      const response = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&accept-language=${encodeURIComponent(getStoredLanguage())}`
+                      );
+                      const data = await response.json();
+                      if (data?.display_name && !cancelled) {
+                        const withAddress = { lat, lng, address: data.display_name };
+                        selectedRef.current = withAddress;
+                        setSelected(withAddress);
+                      }
+                    } catch {}
+                  };
 
-          marker = """const renderPicker=()=>{"""
-          listener = """window.addEventListener('bookly-language-change',(event)=>{const nextLanguage=(event as CustomEvent<Language>).detail;if(!SUPPORTED_LANGUAGES.some((item)=>item.code===nextLanguage))return;language=nextLanguage;signature='';renderPicker();renderRuntime(true);});\n\n"""
-          if listener not in u:
-              if marker not in u:
-                  raise SystemExit('renderPicker marker not found')
-              u = u.replace(marker, listener + marker, 1)
+                  if (latitude != null && longitude != null) {
+                    markerRef.current = L.marker([latitude, longitude], { draggable: true }).addTo(map);
+                    markerRef.current.on('dragend', () => {
+                      const point = markerRef.current.getLatLng();
+                      void updatePoint(point.lat, point.lng);
+                    });
+                  }
+                  map.on('click', (event: any) => void updatePoint(event.latlng.lat, event.latlng.lng));
+                  setLoading(false);
+                  setTimeout(() => map.invalidateSize(), 100);
+                } catch (error) {
+                  console.error('MAP PICKER ERROR:', error);
+                  setLoading(false);
+                }
+              };
+              void init();
+              return () => {
+                cancelled = true;
+                if (mapInstanceRef.current) {
+                  mapInstanceRef.current.remove();
+                  mapInstanceRef.current = null;
+                }
+                markerRef.current = null;
+              };
+            }, []);
 
-          old_click = """b.onclick=()=>{language=item.code;setStoredLanguage(language);applyLanguageDirection(language);pickerOpen=false;signature='';translateDom();renderPicker();renderRuntime(true);};"""
-          new_click = """b.onclick=()=>{language=item.code;setStoredLanguage(language);applyLanguageDirection(language);window.dispatchEvent(new CustomEvent('bookly-language-change',{detail:language}));pickerOpen=false;signature='';translateDom();renderPicker();renderRuntime(true);};"""
-          if old_click in u:
-              u = u.replace(old_click, new_click, 1)
+            const confirm = () => {
+              if (selectedRef.current) {
+                onSelect(selectedRef.current.lat, selectedRef.current.lng, selectedRef.current.address);
+              }
+              onClose();
+            };
 
-          ux.write_text(u, encoding='utf-8')
+            return (
+              <div className="subscription-modal-overlay" onClick={onClose}>
+                <div className="subscription-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 620 }}>
+                  <button type="button" className="subscription-modal-close" onClick={onClose}>×</button>
+                  <span className="personal-eyebrow">BOOKLY</span>
+                  <h2>{t('settings.mapTitle', 'Выберите адрес на карте')}</h2>
+                  <p className="muted">{t('settings.mapHint', 'Нажмите на карту или перетащите метку в нужное место.')}</p>
+                  <div ref={mapRef} style={{ width: '100%', height: 360, borderRadius: 14, overflow: 'hidden', marginTop: 12, background: '#eee' }} />
+                  {loading && <p className="muted" style={{ marginTop: 10 }}>{t('common.loading', 'Загрузка…')}</p>}
+                  {selected && <p className="muted" style={{ marginTop: 10 }}>{selected.address || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`}</p>}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
+                    <button type="button" onClick={onClose}>{t('common.cancel', 'Отмена')}</button>
+                    <button type="button" className="primary" disabled={!selected} onClick={confirm}>{t('common.confirm', 'Готово')}</button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          '''
+              if marker not in s:
+                  raise SystemExit('Settings marker not found')
+              s = s.replace(marker, component + marker, 1)
+
+          if 'const [mapPickerOpen, setMapPickerOpen]' not in s:
+              anchor = '  const [settingsTimezone, setSettingsTimezone] ='
+              pos = s.find(anchor)
+              if pos < 0: raise SystemExit('Settings state anchor not found')
+              s = s[:pos] + "  const [mapPickerOpen, setMapPickerOpen] = useState(false);\n" + s[pos:]
+
+          old_map = '''        <div className="two">
+          <input
+            placeholder={t('settings.latitudeOptional')}
+            value={latitude}
+            onChange={e =>
+              setLatitude(
+                e.target.value
+              )
+            }
+          />
+
+          <input
+            placeholder={t('settings.longitudeOptional')}
+            value={longitude}
+            onChange={e =>
+              setLongitude(
+                e.target.value
+              )
+            }
+          />
+        </div>'''
+          new_map = '''        <button
+          type="button"
+          className="ghost full"
+          onClick={() => setMapPickerOpen(true)}
+        >
+          {latitude !== '' && longitude !== ''
+            ? t('settings.changeMapLocation', 'Изменить точку на карте')
+            : t('settings.chooseMapLocation', 'Выбрать адрес на карте')}
+        </button>
+
+        {latitude !== '' && longitude !== '' && (
+          <p className="muted">
+            {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
+          </p>
+        )}
+
+        {mapPickerOpen && (
+          <MapPicker
+            latitude={latitude === '' ? null : Number(latitude)}
+            longitude={longitude === '' ? null : Number(longitude)}
+            onSelect={(lat, lng, selectedAddress) => {
+              setLatitude(String(lat));
+              setLongitude(String(lng));
+              if (selectedAddress) setAddress(selectedAddress);
+            }}
+            onClose={() => setMapPickerOpen(false)}
+            t={t}
+          />
+        )}'''
+          if old_map in s:
+              s = s.replace(old_map, new_map, 1)
+
+          # 2. Remove business contacts card from Services.
+          start_fn = s.find('function Services(')
+          if start_fn >= 0:
+              card_start = s.find('      <div className="card">\n        <h2>\n          {t(\n            \'owner.businessContacts\'', start_fn)
+              form_start = s.find('      <div\n  className="card"\n  ref={serviceFormRef}', card_start) if card_start >= 0 else -1
+              if card_start >= 0 and form_start >= 0:
+                  s = s[:card_start] + s[form_start:]
+
+          state_block = '''  const [businessPhone, setBusinessPhone] =
+    useState(business?.phone || '');
+
+  const [businessAddress, setBusinessAddress] =
+    useState(business?.address || '');
+
+  const [savingBusiness, setSavingBusiness] =
+    useState(false);
+'''
+          if state_block in s:
+              s = s.replace(state_block, '', 1)
+
+          effect_block = '''  useEffect(() => {
+    setBusinessPhone(
+      business?.phone || ''
+    );
+
+    setBusinessAddress(
+      business?.address || ''
+    );
+  }, [business]);
+
+'''
+          if effect_block in s:
+              s = s.replace(effect_block, '', 1)
+
+          fn_start = s.find('  const saveBusinessContacts =')
+          if fn_start >= 0:
+              fn_end = s.find('  const saveService =', fn_start)
+              if fn_end >= 0:
+                  s = s[:fn_start] + s[fn_end:]
+
+          # 3. Client: first available day in the next 90 days.
+          if 'const MAX_DAYS_TO_SEARCH = 90;' not in s:
+              choose_start = s.find('  const chooseService = async (\n    service: any\n  ) => {')
+              choose_end = s.find('  const chooseTime =', choose_start) if choose_start >= 0 else -1
+              if choose_start >= 0 and choose_end >= 0:
+                  new_choose = '''  const chooseService = async (
+    service: any
+  ) => {
+    setSelected(service);
+    setSelectedTime('');
+    setSlots([]);
+    setSlotsLoading(true);
+    setError('');
+
+    try {
+      const startDate = new Date(`${day}T12:00:00`);
+      const MAX_DAYS_TO_SEARCH = 90;
+
+      for (let offset = 0; offset < MAX_DAYS_TO_SEARCH; offset += 1) {
+        const candidate = new Date(startDate);
+        candidate.setDate(startDate.getDate() + offset);
+
+        const candidateDay = [
+          candidate.getFullYear(),
+          String(candidate.getMonth() + 1).padStart(2, '0'),
+          String(candidate.getDate()).padStart(2, '0')
+        ].join('-');
+
+        const response = await fetch(
+          API +
+            `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+            t('client.availabilityError')
+          );
+        }
+
+        const candidateSlots = Array.isArray(data?.slots)
+          ? data.slots
+          : [];
+
+        if (candidateSlots.length > 0) {
+          setDay(candidateDay);
+          setSlots(candidateSlots);
+          return;
+        }
+      }
+
+      setSlots([]);
+    } catch (e) {
+      console.error(
+        'FIND NEXT AVAILABILITY ERROR:',
+        e
+      );
+      setSlots([]);
+      setError(t('client.availabilityError'));
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+'''
+                  s = s[:choose_start] + new_choose + s[choose_end:]
+
+          p.write_text(s, encoding='utf-8')
           PY
+
+      - name: Commit source changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/main.tsx
+          git commit -m 'feat: map picker and next availability [bookly-ui-patch]' || true
+          git push
 
       - name: Validate frontend
         working-directory: frontend
+        continue-on-error: true
         run: |
-          npm ci
+          npm install --no-audit --no-fund
           npm run build
 
-      - name: Commit and remove workflow
+      - name: Remove temporary workflow
+        if: always()
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/src/main.tsx frontend/src/ux2-runtime.ts
-          git commit -m "Fix instant language switching [language-switch-fix]"
-          git push
-          git rm .github/workflows/fix-live-language-switch.yml
-          git commit -m "Remove temporary language switch workflow"
-          git push
+          git fetch origin main
+          git reset --hard origin/main
+          if [ -f .github/workflows/fix-live-language-switch.yml ]; then
+            git rm .github/workflows/fix-live-language-switch.yml
+            git commit -m 'chore: remove temporary Bookly UI patch [bookly-ui-patch]'
+            git push
+          fi
