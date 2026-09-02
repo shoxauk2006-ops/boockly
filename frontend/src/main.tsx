@@ -5356,7 +5356,7 @@ return (
           >
             {money(
               Number(
-                statistics.month?.revenue ||
+                dashboardStatistics.month?.revenue ||
                   0
               ),
               business?.currency ||
