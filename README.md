@@ -47,4 +47,3 @@ For production, serve the built frontend over HTTPS and configure the Telegram b
 ### Lemon Squeezy webhook
 Create a webhook pointing to `/payments/webhook/lemonsqueezy` and subscribe to `subscription_created`, `subscription_updated`, `subscription_expired`, `subscription_cancelled`, `subscription_payment_success`, `subscription_payment_failed`, and `subscription_payment_recovered`.
 Bookly
-
