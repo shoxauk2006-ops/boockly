@@ -3936,13 +3936,6 @@ borderTopColor: '#d32f2f',
           <h1>
             {business.name}
           </h1>
-
-          <p>
-            {business.address ||
-              t(
-                'settings.address'
-              )}
-          </p>
         </div>
 
         <span
