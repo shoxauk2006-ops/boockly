@@ -4860,12 +4860,22 @@ function Dashboard({
   bookings,
   business,
   t,
-  setBusiness
+  setBusiness,
+  statistics,
+  statisticsLoading,
+  statisticsPeriod,
+  setStatisticsPeriod
 }: {
   bookings: any[];
   business: any;
   t: (key: string, fallback?: string) => string;
   setBusiness: React.Dispatch<React.SetStateAction<any>>;
+  statistics: any;
+  statisticsLoading: boolean;
+  statisticsPeriod: '7' | '30';
+  setStatisticsPeriod: React.Dispatch<
+    React.SetStateAction<'7' | '30'>
+  >;
 }) {
   const today = new Date()
     .toISOString()
@@ -4876,6 +4886,18 @@ function Dashboard({
       x.day === today &&
       x.status === 'confirmed'
   );
+
+    const statisticsDaily =
+    Array.isArray(statistics?.daily)
+      ? statistics.daily
+      : [];
+
+  const visibleDaily =
+    statisticsDaily.slice(
+      statisticsPeriod === '7'
+        ? -7
+        : -30
+    );
 
   const clientLink =
     `https://t.me/${BOT_USERNAME}?startapp=${business.slug}`;
@@ -5077,6 +5099,506 @@ return (
           t={t('owner.subscription')}
         />
       </div>
+    <div className="card">
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 14
+    }}
+  >
+    <div>
+      <h3 style={{ margin: 0 }}>
+        {t(
+          'owner.statistics',
+          'Статистика'
+        )}
+      </h3>
+
+      <p
+        className="muted"
+        style={{
+          margin: '4px 0 0'
+        }}
+      >
+        {t(
+          'owner.statisticsHint',
+          'Аналитика записей и выручки'
+        )}
+      </p>
+    </div>
+
+    <div
+      style={{
+        display: 'flex',
+        gap: 6
+      }}
+    >
+      <button
+        type="button"
+        onClick={() =>
+          setStatisticsPeriod('7')
+        }
+        style={{
+          padding: '7px 10px',
+          fontSize: 13,
+          background:
+            statisticsPeriod === '7'
+              ? '#111'
+              : '#fff',
+          color:
+            statisticsPeriod === '7'
+              ? '#fff'
+              : '#111',
+          border:
+            statisticsPeriod === '7'
+              ? '1px solid #111'
+              : '1px solid #ddd'
+        }}
+      >
+        7 {t('owner.days', 'дней')}
+      </button>
+
+      <button
+        type="button"
+        onClick={() =>
+          setStatisticsPeriod('30')
+        }
+        style={{
+          padding: '7px 10px',
+          fontSize: 13,
+          background:
+            statisticsPeriod === '30'
+              ? '#111'
+              : '#fff',
+          color:
+            statisticsPeriod === '30'
+              ? '#fff'
+              : '#111',
+          border:
+            statisticsPeriod === '30'
+              ? '1px solid #111'
+              : '1px solid #ddd'
+        }}
+      >
+        30 {t('owner.days', 'дней')}
+      </button>
+    </div>
+  </div>
+
+  {statisticsLoading ? (
+    <p className="muted">
+      {t(
+        'owner.loadingStatistics',
+        'Загружаем статистику...'
+      )}
+    </p>
+  ) : statistics ? (
+    <>
+      <div className="grid2">
+        <Stat
+          n={
+            statistics.today?.bookings ??
+            0
+          }
+          t={t(
+            'owner.todayBookings',
+            'Сегодня'
+          )}
+        />
+
+        <Stat
+          n={
+            statistics.week?.bookings ??
+            0
+          }
+          t={t(
+            'owner.weekBookings',
+            'За неделю'
+          )}
+        />
+
+        <Stat
+          n={
+            statistics.month?.bookings ??
+            0
+          }
+          t={t(
+            'owner.monthBookings',
+            'За месяц'
+          )}
+        />
+
+        <Stat
+          n={
+            statistics.total ??
+            0
+          }
+          t={t(
+            'owner.totalBookings',
+            'Всего'
+          )}
+        />
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            '1fr 1fr',
+          gap: 10,
+          marginTop: 10
+        }}
+      >
+        <div
+          style={{
+            padding: 12,
+            border: '1px solid #eee',
+            borderRadius: 12
+          }}
+        >
+          <strong>
+            {t(
+              'owner.revenueToday',
+              'Сегодня'
+            )}
+          </strong>
+
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 18,
+              fontWeight: 700
+            }}
+          >
+            {money(
+              Number(
+                statistics.today?.revenue ||
+                  0
+              ),
+              business?.currency ||
+                'UZS'
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: 12,
+            border: '1px solid #eee',
+            borderRadius: 12
+          }}
+        >
+          <strong>
+            {t(
+              'owner.revenueMonth',
+              'За месяц'
+            )}
+          </strong>
+
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 18,
+              fontWeight: 700
+            }}
+          >
+            {money(
+              Number(
+                statistics.month?.revenue ||
+                  0
+              ),
+              business?.currency ||
+                'UZS'
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            '1fr 1fr 1fr',
+          gap: 8,
+          marginTop: 10
+        }}
+      >
+        <div
+          style={{
+            textAlign: 'center',
+            padding: 10,
+            border: '1px solid #eee',
+            borderRadius: 10
+          }}
+        >
+          <strong>
+            {statistics.confirmed ??
+              0}
+          </strong>
+
+          <div className="muted">
+            {t(
+              'owner.confirmed',
+              'Подтверждено'
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            textAlign: 'center',
+            padding: 10,
+            border: '1px solid #eee',
+            borderRadius: 10
+          }}
+        >
+          <strong>
+            {statistics.completed ??
+              0}
+          </strong>
+
+          <div className="muted">
+            {t(
+              'owner.completed',
+              'Завершено'
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            textAlign: 'center',
+            padding: 10,
+            border: '1px solid #eee',
+            borderRadius: 10
+          }}
+        >
+          <strong>
+            {statistics.cancelled ??
+              0}
+          </strong>
+
+          <div className="muted">
+            {t(
+              'owner.cancelled',
+              'Отменено'
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 18 }}>
+        <h4 style={{ marginBottom: 10 }}>
+          {t(
+            'owner.bookingDynamics',
+            'Динамика записей'
+          )}
+        </h4>
+
+        {visibleDaily.length ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              gap: 6,
+              height: 150,
+              overflowX: 'auto',
+              padding:
+                '10px 2px 0'
+            }}
+          >
+            {visibleDaily.map(
+              item => {
+                const max = Math.max(
+                  ...visibleDaily.map(
+                    x =>
+                      Number(
+                        x.bookings || 0
+                      )
+                  ),
+                  1
+                );
+
+                const value =
+                  Number(
+                    item.bookings || 0
+                  );
+
+                const height =
+                  Math.max(
+                    8,
+                    Math.round(
+                      (value / max) *
+                        110
+                    )
+                  );
+
+                return (
+                  <div
+                    key={item.date}
+                    style={{
+                      minWidth:
+                        statisticsPeriod ===
+                        '7'
+                          ? 34
+                          : 22,
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection:
+                        'column',
+                      alignItems:
+                        'center',
+                      justifyContent:
+                        'flex-end',
+                      height: '100%'
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        marginBottom: 4
+                      }}
+                    >
+                      {value}
+                    </span>
+
+                    <div
+                      style={{
+                        width: '100%',
+                        maxWidth: 24,
+                        height,
+                        background:
+                          '#111',
+                        borderRadius:
+                          '6px 6px 2px 2px'
+                      }}
+                    />
+
+                    <span
+                      className="muted"
+                      style={{
+                        fontSize: 9,
+                        marginTop: 5,
+                        whiteSpace:
+                          'nowrap'
+                      }}
+                    >
+                      {item.date.slice(
+                        5
+                      )}
+                    </span>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        ) : (
+          <p className="muted">
+            {t(
+              'owner.noStatisticsData',
+              'Пока нет данных'
+            )}
+          </p>
+        )}
+      </div>
+
+      {Array.isArray(
+        statistics.top_services
+      ) &&
+        statistics.top_services.length >
+          0 && (
+          <div
+            style={{
+              marginTop: 18
+            }}
+          >
+            <h4
+              style={{
+                marginBottom: 10
+              }}
+            >
+              {t(
+                'owner.topServices',
+                'Популярные услуги'
+              )}
+            </h4>
+
+            {statistics.top_services.map(
+              (
+                service: any,
+                index: number
+              ) => (
+                <div
+                  key={service.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent:
+                      'space-between',
+                    alignItems:
+                      'center',
+                    padding:
+                      '10px 0',
+                    borderBottom:
+                      index <
+                      statistics
+                        .top_services
+                        .length -
+                        1
+                        ? '1px solid #eee'
+                        : 'none'
+                  }}
+                >
+                  <div>
+                    <strong>
+                      {index + 1}.{' '}
+                      {service.name}
+                    </strong>
+
+                    <div
+                      className="muted"
+                      style={{
+                        marginTop: 2,
+                        fontSize: 13
+                      }}
+                    >
+                      {
+                        service.bookings
+                      }{' '}
+                      {t(
+                        'owner.bookingsCount',
+                        'записей'
+                      )}
+                    </div>
+                  </div>
+
+                  <strong>
+                    {money(
+                      Number(
+                        service.revenue ||
+                          0
+                      ),
+                      business?.currency ||
+                        'UZS'
+                    )}
+                  </strong>
+                </div>
+              )
+            )}
+          </div>
+        )}
+    </>
+  ) : (
+    <p className="muted">
+      {t(
+        'owner.statisticsUnavailable',
+        'Статистика пока недоступна'
+      )}
+    </p>
+  )}
+</div>
 
       <div className="card">
         <h3>
