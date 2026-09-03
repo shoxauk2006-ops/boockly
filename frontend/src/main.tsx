@@ -5734,7 +5734,6 @@ return (
     </p>
   )}
 </div>
-  </div>
 )}
       <div className="card">
         <h3>
