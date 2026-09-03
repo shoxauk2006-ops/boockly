@@ -3969,32 +3969,6 @@ borderTopColor: '#d32f2f',
             ? t('owner.active')
             : t('owner.inactive')}
         </span>
-        {business.subscription_active && (
-  <button
-    type="button"
-    onClick={() =>
-      setShowStatistics(
-        value => !value
-      )
-    }
-    style={{
-      marginTop: 8,
-      padding: '4px 0',
-      border: 'none',
-      background: 'transparent',
-      color: '#111',
-      fontSize: 14,
-      fontWeight: 600,
-      cursor: 'pointer'
-    }}
-  >
-    {t(
-      'owner.statistics',
-      'Статистика'
-    )}{' '}
-    →
-  </button>
-)}
       </div>
 
      {businessCreatedNotice && (
