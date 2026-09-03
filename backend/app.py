@@ -1877,15 +1877,15 @@ def admin_statistics(
             return {
                 "today": {
                     "bookings": 0,
-                    "revenue": 0
+                    "revenue_by_currency": {}
                 },
                 "week": {
                     "bookings": 0,
-                    "revenue": 0
+                    "revenue_by_currency": {}
                 },
                 "month": {
                     "bookings": 0,
-                    "revenue": 0
+                    "revenue_by_currency": {}
                 },
                 "total": 0,
                 "completed": 0,
@@ -1934,13 +1934,12 @@ def admin_statistics(
         )
 
         today_bookings = 0
-        today_revenue = Decimal("0")
-
         week_bookings = 0
-        week_revenue = Decimal("0")
-
         month_bookings = 0
-        month_revenue = Decimal("0")
+
+        today_revenue = {}
+        week_revenue = {}
+        month_revenue = {}
 
         completed = 0
         cancelled = 0
@@ -1962,16 +1961,43 @@ def admin_statistics(
                 "date":
                     current_day.isoformat(),
                 "bookings": 0,
-                "revenue": 0
+                "revenue_by_currency": {}
             }
 
         service_stats = {}
+
+        def add_revenue(
+            target: dict,
+            currency: str,
+            amount: Decimal
+        ):
+            currency = (
+                str(currency or "UZS")
+                .upper()
+            )
+
+            target[currency] = float(
+                Decimal(
+                    str(
+                        target.get(
+                            currency,
+                            0
+                        )
+                    )
+                ) + amount
+            )
 
         for booking in bookings:
             booking_day = booking.day
 
             service = services.get(
                 booking.service_id
+            )
+
+            currency = (
+                service.currency
+                if service and service.currency
+                else "UZS"
             )
 
             try:
@@ -1993,28 +2019,46 @@ def admin_statistics(
 
             if booking_day == today:
                 today_bookings += 1
-                today_revenue += price
+
+                add_revenue(
+                    today_revenue,
+                    currency,
+                    price
+                )
 
             if booking_day >= week_start:
                 week_bookings += 1
-                week_revenue += price
+
+                add_revenue(
+                    week_revenue,
+                    currency,
+                    price
+                )
 
             if booking_day >= month_start:
                 month_bookings += 1
-                month_revenue += price
+
+                add_revenue(
+                    month_revenue,
+                    currency,
+                    price
+                )
 
             day_key = booking_day.isoformat()
 
             if day_key in daily_map:
-                daily_map[day_key]["bookings"] += 1
-                daily_map[day_key]["revenue"] = float(
-                    Decimal(
-                        str(
-                            daily_map[
-                                day_key
-                            ]["revenue"]
-                        )
-                    ) + price
+                daily_map[
+                    day_key
+                ]["bookings"] += 1
+
+                add_revenue(
+                    daily_map[
+                        day_key
+                    ][
+                        "revenue_by_currency"
+                    ],
+                    currency,
+                    price
                 )
 
             booking_end = datetime.combine(
@@ -2036,30 +2080,30 @@ def admin_statistics(
                         else "Unknown service"
                     ),
                     "bookings": 0,
-                    "revenue": 0
+                    "revenue_by_currency": {}
                 }
 
             service_stats[
                 service_id
             ]["bookings"] += 1
 
-            service_stats[
-                service_id
-            ]["revenue"] = float(
-                Decimal(
-                    str(
-                        service_stats[
-                            service_id
-                        ]["revenue"]
-                    )
-                ) + price
+            add_revenue(
+                service_stats[
+                    service_id
+                ]["revenue_by_currency"],
+                currency,
+                price
             )
 
         top_services = sorted(
             service_stats.values(),
             key=lambda item: (
                 item["bookings"],
-                item["revenue"]
+                sum(
+                    item[
+                        "revenue_by_currency"
+                    ].values()
+                )
             ),
             reverse=True
         )[:5]
@@ -2068,20 +2112,20 @@ def admin_statistics(
             "today": {
                 "bookings":
                     today_bookings,
-                "revenue":
-                    float(today_revenue)
+                "revenue_by_currency":
+                    today_revenue
             },
             "week": {
                 "bookings":
                     week_bookings,
-                "revenue":
-                    float(week_revenue)
+                "revenue_by_currency":
+                    week_revenue
             },
             "month": {
                 "bookings":
                     month_bookings,
-                "revenue":
-                    float(month_revenue)
+                "revenue_by_currency":
+                    month_revenue
             },
             "total":
                 len(bookings),
