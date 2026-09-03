@@ -4948,6 +4948,27 @@ useEffect(() => {
         : -30
     );
 
+  const formatRevenueByCurrency = (
+  revenue: Record<string, number> | undefined
+) => {
+  if (
+    !revenue ||
+    Object.keys(revenue).length === 0
+  ) {
+    return '0';
+  }
+
+  return Object.entries(revenue)
+    .map(
+      ([currency, amount]) =>
+        money(
+          Number(amount || 0),
+          currency
+        )
+    )
+    .join('\n');
+};
+
   const clientLink =
     `https://t.me/${BOT_USERNAME}?startapp=${business.slug}`;
 
@@ -5322,14 +5343,16 @@ return (
               fontWeight: 700
             }}
           >
-            {money(
-              Number(
-                dashboardStatistics.today?.revenue ||
-                  0
-              ),
-              business?.currency ||
-                'UZS'
-            )}
+            <div
+  style={{
+    whiteSpace: 'pre-line'
+  }}
+>
+  {formatRevenueByCurrency(
+    dashboardStatistics.today
+      ?.revenue_by_currency
+  )}
+</div>
           </div>
         </div>
 
@@ -5354,14 +5377,16 @@ return (
               fontWeight: 700
             }}
           >
-            {money(
-              Number(
-                dashboardStatistics.month?.revenue ||
-                  0
-              ),
-              business?.currency ||
-                'UZS'
-            )}
+            <div
+  style={{
+    whiteSpace: 'pre-line'
+  }}
+>
+  {formatRevenueByCurrency(
+    dashboardStatistics.month
+      ?.revenue_by_currency
+  )}
+</div>
           </div>
         </div>
       </div>
@@ -5624,14 +5649,16 @@ return (
                   </div>
 
                   <strong>
-                    {money(
-                      Number(
-                        service.revenue ||
-                          0
-                      ),
-                      business?.currency ||
-                        'UZS'
-                    )}
+                    <div
+  style={{
+    whiteSpace: 'pre-line',
+    textAlign: 'right'
+  }}
+>
+  {formatRevenueByCurrency(
+    service.revenue_by_currency
+  )}
+</div>
                   </strong>
                 </div>
               )
