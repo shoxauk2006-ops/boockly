@@ -4031,7 +4031,7 @@ borderTopColor: '#d32f2f',
       </div>
 
       <h2 style={{ marginBottom: 6 }}>
-        Бизнес создан
+        {t('owner.businessCreatedTitle')}
       </h2>
 
       <p className="muted">
@@ -4065,9 +4065,7 @@ borderTopColor: '#d32f2f',
             boxShadow: 'none'
           }}
         >
-          <strong>
-            1. Основная информация
-          </strong>
+          <strong>{t('owner.setupStep1Title')}</strong>
 
           <p
             className="muted"
@@ -4088,9 +4086,7 @@ borderTopColor: '#d32f2f',
             boxShadow: 'none'
           }}
         >
-          <strong>
-            2. Фотография
-          </strong>
+          <strong>{t('owner.setupStep2Title')}</strong>
 
           <p
             className="muted"
@@ -4111,9 +4107,7 @@ borderTopColor: '#d32f2f',
             boxShadow: 'none'
           }}
         >
-          <strong>
-            3. Услуги
-          </strong>
+          <strong>{t('owner.setupStep3Title')}</strong>
 
           <p
             className="muted"
@@ -4134,9 +4128,7 @@ borderTopColor: '#d32f2f',
             boxShadow: 'none'
           }}
         >
-          <strong>
-            4. График работы
-          </strong>
+          <strong>{t('owner.setupStep4Title')}</strong>
 
           <p
             className="muted"
@@ -4157,9 +4149,7 @@ borderTopColor: '#d32f2f',
             boxShadow: 'none'
           }}
         >
-          <strong>
-            5. Блокировки
-          </strong>
+          <strong>{t('owner.setupStep5Title')}</strong>
 
           <p
             className="muted"
@@ -4243,11 +4233,11 @@ borderTopColor: '#d32f2f',
           marginBottom: 0
         }}
       >
-        <li>Клиентская страница</li>
-        <li>Персональная ссылка</li>
-        <li>QR-код бизнеса</li>
-        <li>Онлайн-записи</li>
-        <li>Уведомления о новых записях</li>
+        <li>{t('owner.clientPage')}</li>
+        <li>{t('owner.personalLink')}</li>
+        <li>{t('owner.businessQrCode')}</li>
+        <li>{t('owner.onlineBookings')}</li>
+        <li>{t('owner.newBookingNotifications')}</li>
       </ul>
     </div>
 
@@ -4264,7 +4254,7 @@ borderTopColor: '#d32f2f',
         );
       }}
     >
-      Активировать Bookly Pro
+      {t('owner.activateBooklyPro')}
     </button>
   </div>
 )}
