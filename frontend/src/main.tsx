@@ -10525,7 +10525,7 @@ function MapPicker({
   }}
 >
   ◎ {t(
-    'settings.locateMe',
+    'owner.detectLocation',
     'Определить моё местоположение'
   )}
 </button>
