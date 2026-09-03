@@ -5709,9 +5709,44 @@ return (
 </div>
 )}
       <div className="card">
-        <h3>
-          {t('owner.today')}
-        </h3>
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 8
+    }}
+  >
+    <h3 style={{ margin: 0 }}>
+      {t('owner.today')}
+    </h3>
+
+    {business.subscription_active && (
+      <button
+        type="button"
+        onClick={() =>
+          setShowStatistics(
+            value => !value
+          )
+        }
+        style={{
+          border: 'none',
+          background: 'transparent',
+          color: '#111',
+          padding: 0,
+          fontSize: 14,
+          fontWeight: 700,
+          cursor: 'pointer'
+        }}
+      >
+        {t(
+          'owner.statistics',
+          'Статистика'
+        )}{' '}
+        →
+      </button>
+    )}
+  </div>
 
         {todayBookings.length ? (
           todayBookings.map(x => (
