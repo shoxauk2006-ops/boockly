@@ -5200,16 +5200,62 @@ return (
       </div>
 
             {showStatistics && (
-        <div className="card">
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 12,
-              marginBottom: 14
-            }}
-          >
+  <div className="card">
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: 12,
+        marginBottom: 14
+      }}
+    >
+      <div>
+        <h3 style={{ margin: 0 }}>
+          {t(
+            'owner.statistics',
+            'Статистика'
+          )}
+        </h3>
+
+        <p
+          className="muted"
+          style={{
+            margin: '4px 0 0'
+          }}
+        >
+          {t(
+            'owner.statisticsHint',
+            'Аналитика записей и выручки'
+          )}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() =>
+          setShowStatistics(false)
+        }
+        aria-label="Закрыть статистику"
+        style={{
+          width: 36,
+          height: 36,
+          padding: 0,
+          borderRadius: 10,
+          background: '#f1f2f4',
+          color: '#111',
+          fontSize: 24,
+          fontWeight: 400,
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0
+        }}
+      >
+        ×
+      </button>
+    </div>
             <div>
               <h3 style={{ margin: 0 }}>
                 {t(
