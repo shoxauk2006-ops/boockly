@@ -5199,32 +5199,96 @@ return (
         />
       </div>
 
-      <button
-        type="button"
-        onClick={() =>
-          setStatisticsPeriod('30')
-        }
-        style={{
-          padding: '7px 10px',
-          fontSize: 13,
-          background:
-            statisticsPeriod === '30'
-              ? '#111'
-              : '#fff',
-          color:
-            statisticsPeriod === '30'
-              ? '#fff'
-              : '#111',
-          border:
-            statisticsPeriod === '30'
-              ? '1px solid #111'
-              : '1px solid #ddd'
-        }}
-      >
-        30 {t('owner.days', 'дней')}
-      </button>
-    </div>
-  </div>
+            {showStatistics && (
+        <div className="card">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 14
+            }}
+          >
+            <div>
+              <h3 style={{ margin: 0 }}>
+                {t(
+                  'owner.statistics',
+                  'Статистика'
+                )}
+              </h3>
+
+              <p
+                className="muted"
+                style={{
+                  margin: '4px 0 0'
+                }}
+              >
+                {t(
+                  'owner.statisticsHint',
+                  'Аналитика записей и выручки'
+                )}
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 6
+              }}
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setStatisticsPeriod('7')
+                }
+                style={{
+                  padding: '7px 10px',
+                  fontSize: 13,
+                  background:
+                    statisticsPeriod === '7'
+                      ? '#111'
+                      : '#fff',
+                  color:
+                    statisticsPeriod === '7'
+                      ? '#fff'
+                      : '#111',
+                  border:
+                    statisticsPeriod === '7'
+                      ? '1px solid #111'
+                      : '1px solid #ddd'
+                }}
+              >
+                7 {t('owner.days', 'дней')}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setStatisticsPeriod('30')
+                }
+                style={{
+                  padding: '7px 10px',
+                  fontSize: 13,
+                  background:
+                    statisticsPeriod === '30'
+                      ? '#111'
+                      : '#fff',
+                  color:
+                    statisticsPeriod === '30'
+                      ? '#fff'
+                      : '#111',
+                  border:
+                    statisticsPeriod === '30'
+                      ? '1px solid #111'
+                      : '1px solid #ddd'
+                }}
+              >
+                30 {t('owner.days', 'дней')}
+              </button>
+            </div>
+          </div>
+
 
   {dashboardStatisticsLoading ? (
     <p className="muted">
