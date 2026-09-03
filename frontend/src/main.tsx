@@ -4882,6 +4882,9 @@ function Dashboard({
       x.status === 'confirmed'
   );
 
+  const [showStatistics, setShowStatistics] =
+  useState(false);
+
   const [dashboardStatistics, setDashboardStatistics] =
   useState<any>(null);
 
@@ -5169,6 +5172,62 @@ return (
           t={t('owner.subscription')}
         />
       </div>
+    <button
+  type="button"
+  className="card"
+  onClick={() =>
+    setShowStatistics(
+      value => !value
+    )
+  }
+  style={{
+    width: '100%',
+    textAlign: 'left',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12
+  }}
+>
+  <div>
+    <strong>
+      {t(
+        'owner.statistics',
+        'Статистика'
+      )}
+    </strong>
+
+    <div
+      className="muted"
+      style={{
+        marginTop: 3,
+        fontSize: 13
+      }}
+    >
+      {showStatistics
+        ? t(
+            'owner.hideStatistics',
+            'Скрыть аналитику'
+          )
+        : t(
+            'owner.openStatistics',
+            'Открыть аналитику'
+          )}
+    </div>
+  </div>
+
+  <span
+    style={{
+      fontSize: 20
+    }}
+  >
+    {showStatistics ? '⌃' : '→'}
+  </span>
+</button>
+    
+    {showStatistics && (
+    
     <div className="card">
   <div
     style={{
@@ -5675,7 +5734,8 @@ return (
     </p>
   )}
 </div>
-
+  </div>
+)}
       <div className="card">
         <h3>
           {t('owner.today')}
