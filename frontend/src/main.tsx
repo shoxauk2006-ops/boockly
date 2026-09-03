@@ -2736,7 +2736,10 @@ if (!isPhoneValid(newBusinessPhone)) {
                 }}
               >
                 <strong>
-                  📍 Местоположение выбрано
+                  📍 {t(
+  'owner.locationSelected',
+  'Местоположение выбрано'
+)}
                 </strong>
 
                 <div
@@ -2780,7 +2783,7 @@ if (!isPhoneValid(newBusinessPhone)) {
                 marginTop: 4
               }}
             >
-              Укажите часы работы бизнеса.
+              {t('owner.hoursHint')}
             </p>
 
             <div
@@ -2853,7 +2856,7 @@ if (!isPhoneValid(newBusinessPhone)) {
                       >
                         <div>
                           <small className="muted">
-                            Открытие
+                            {t('owner.opening')}
                           </small>
 
                           <input
@@ -2879,7 +2882,7 @@ if (!isPhoneValid(newBusinessPhone)) {
 
                         <div>
                           <small className="muted">
-                            Закрытие
+                            {t('owner.closing')}
                           </small>
 
                           <input
@@ -3123,7 +3126,7 @@ if (!isPhoneValid(newBusinessPhone)) {
                 marginBottom: 8
               }}
             >
-              Фото бизнеса
+              {t('owner.businessPhoto')}
             </span>
 
             <input
@@ -3495,7 +3498,10 @@ borderTopColor: '#d32f2f',
       }}
     >
       <strong>
-        📍 Местоположение выбрано
+        📍 {t(
+  'owner.locationSelected',
+  'Местоположение выбрано'
+)}
       </strong>
 
       <div
@@ -3538,7 +3544,7 @@ borderTopColor: '#d32f2f',
       marginTop: 4
     }}
   >
-    Укажите часы работы бизнеса.
+    {t('owner.hoursHint')}
   </p>
 
   <div
@@ -3614,7 +3620,7 @@ borderTopColor: '#d32f2f',
             >
               <div>
                 <small className="muted">
-                  Открытие
+                  {t('owner.opening')}
                 </small>
 
                 <input
@@ -3639,7 +3645,7 @@ borderTopColor: '#d32f2f',
 
               <div>
                 <small className="muted">
-                  Закрытие
+                  {t('owner.closing')}
                 </small>
 
                 <input
@@ -3882,7 +3888,7 @@ borderTopColor: '#d32f2f',
                   marginBottom: 8
                 }}
               >
-                Фото бизнеса
+                {t('owner.businessPhoto')}
               </span>
 
               <input
