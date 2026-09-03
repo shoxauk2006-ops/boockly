@@ -5313,7 +5313,6 @@ return (
                 30 {t('owner.days', 'дней')}
               </button>
             </div>
-          </div>
 
 
   {dashboardStatisticsLoading ? (
