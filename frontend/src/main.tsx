@@ -5256,26 +5256,6 @@ return (
         ×
       </button>
     </div>
-            <div>
-              <h3 style={{ margin: 0 }}>
-                {t(
-                  'owner.statistics',
-                  'Статистика'
-                )}
-              </h3>
-
-              <p
-                className="muted"
-                style={{
-                  margin: '4px 0 0'
-                }}
-              >
-                {t(
-                  'owner.statisticsHint',
-                  'Аналитика записей и выручки'
-                )}
-              </p>
-            </div>
 
             <div
               style={{
