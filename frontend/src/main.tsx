@@ -10504,14 +10504,14 @@ function MapPicker({
 
         <h2>
           {t(
-            'settings.mapTitle',
+            'owner.mapSelectAddress',
             'Выберите адрес на карте'
           )}
         </h2>
 
         <p className="muted">
           {t(
-            'settings.mapHint',
+            'owner.mapSelectAddressHint',
             'Нажмите на карту или перетащите метку в нужное место.'
           )}
         </p>
@@ -11209,11 +11209,11 @@ t(
   {latitude !== '' &&
   longitude !== ''
     ? t(
-        'settings.changeMapLocation',
+        'owner.changeMapPoint',
         'Изменить точку на карте'
       )
     : t(
-        'settings.chooseMapLocation',
+        'owner.chooseMapLocation',
         'Выбрать адрес на карте'
       )}
 </button>
