@@ -815,6 +815,19 @@ def _bookly_to_utc(value: datetime) -> datetime:
         raise ValueError("Timezone-aware datetime required")
     return value.astimezone(timezone.utc).replace(tzinfo=None)
 
+def _bookly_from_utc(
+    value: datetime | None,
+    zone: str
+) -> datetime | None:
+    if value is None:
+        return None
+
+    return value.replace(
+        tzinfo=timezone.utc
+    ).astimezone(
+        _bookly_zone(zone)
+    )
+
 
 def ensure_timezone_schema():
     """Add UTC timestamp columns and backfill legacy local rows."""
