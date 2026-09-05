@@ -62,12 +62,12 @@ def _all_annual_price_ids() -> set[str]:
 
 def _limit_from_items(items) -> int:
     """Recognize both monthly and annual Bookly Paddle items."""
-    annual_ids = _all_annual_price_ids()
-    monthly_base = str(_original.PRICE_IDS[10] or "").strip()
     annual_base = str(ANNUAL_PRICE_IDS[10] or "").strip()
     annual_no_trial_base = str(
         ANNUAL_NO_TRIAL_BASE_PRICE_ID or ""
     ).strip()
+
+    monthly_base = str(_original.PRICE_IDS[10] or "").strip()
 
     monthly_addons = {
         str(price_id).strip(): limit
@@ -81,7 +81,6 @@ def _limit_from_items(items) -> int:
     }
 
     detected = set()
-
     for item in items or []:
         price = item.get("price") or {}
         price_id = str(
@@ -100,10 +99,7 @@ def _limit_from_items(items) -> int:
         ]
         return matches[0] if len(matches) == 1 else 10
 
-    if (
-        annual_no_trial_base
-        and annual_no_trial_base in detected
-    ):
+    if annual_no_trial_base and annual_no_trial_base in detected:
         matches = [
             limit
             for price_id, limit in annual_addons.items()
@@ -119,7 +115,6 @@ def _limit_from_items(items) -> int:
         ]
         return matches[0] if len(matches) == 1 else 10
 
-    # Preserve the existing strict validation for unexpected Paddle items.
     return _original_limit_from_items(items)
 
 
@@ -150,7 +145,6 @@ def _items_for_limit(limit: int) -> list[dict]:
                 }
             )
 
-        # Consume the request-local override immediately.
         _billing_interval.set(None)
         return items
 
@@ -242,6 +236,62 @@ def _public_annual_prices() -> dict:
     }
 
 
+def _public_monthly_prices() -> dict:
+    return {
+        str(limit): price_id
+        for limit, price_id in _original.PRICE_IDS.items()
+        if limit != 10 and price_id
+    }
+
+
+def _price_id_for_selection(
+    billing: str,
+    limit: int,
+    trial_available: bool,
+) -> str:
+    billing = billing.lower().strip()
+    if billing == "year":
+        base_id = (
+            ANNUAL_PRICE_IDS[10]
+            if trial_available
+            else ANNUAL_NO_TRIAL_BASE_PRICE_ID
+        )
+        addon_id = (
+            ANNUAL_PRICE_IDS.get(limit)
+            if limit != 10
+            else None
+        )
+    elif billing == "month":
+        base_id = (
+            _original.PRICE_IDS[10]
+            if trial_available
+            else _original.NO_TRIAL_BASE_PRICE_ID
+        )
+        addon_id = (
+            _original.PRICE_IDS.get(limit)
+            if limit != 10
+            else None
+        )
+    else:
+        raise HTTPException(400, "billing must be 'month' or 'year'")
+
+    if not base_id:
+        raise HTTPException(
+            500,
+            "Selected Paddle base Price ID is not configured",
+        )
+
+    # For packages the external pricing page checks that the required add-on
+    # exists before allowing checkout.
+    if limit != 10 and not addon_id:
+        raise HTTPException(
+            500,
+            "Selected Paddle add-on Price ID is not configured",
+        )
+
+    return base_id if limit == 10 else addon_id
+
+
 @app.get("/payments/external/checkout-config")
 def external_checkout_config(token: str):
     """Return only public checkout data for the short-lived signed token."""
@@ -282,15 +332,89 @@ def external_checkout_config(token: str):
         "monthly": {
             "base": _original.PRICE_IDS[10],
             "no_trial_base": _original.NO_TRIAL_BASE_PRICE_ID,
-            "addons": {
-                str(limit): price_id
-                for limit, price_id in _original.PRICE_IDS.items()
-                if limit != 10 and price_id
-            },
+            "addons": _public_monthly_prices(),
         },
         "yearly": {
             "base": ANNUAL_PRICE_IDS[10],
             "no_trial_base": ANNUAL_NO_TRIAL_BASE_PRICE_ID,
             "addons": _public_annual_prices(),
         },
+    }
+
+
+@app.get("/payments/external/price")
+def external_price(
+    token: str,
+    billing: str = "month",
+    limit: int = 10,
+):
+    """Return the current Paddle price for the selected external-plan item."""
+    if limit not in {10, 20, 30, 50, 100}:
+        raise HTTPException(400, "Недопустимый лимит услуг")
+
+    try:
+        token_data = _original._verify_checkout_token(token)
+    except ValueError as exc:
+        raise HTTPException(401, "Invalid or expired checkout token") from exc
+
+    try:
+        business_id = int(token_data["business_id"])
+        owner_id = int(token_data["owner_telegram_id"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(401, "Invalid checkout token payload") from exc
+
+    with _original.SessionLocal() as db:
+        business = db.get(
+            _original.Business,
+            business_id,
+        )
+        if not business or int(business.owner_telegram_id) != owner_id:
+            raise HTTPException(403, "Checkout token does not match business")
+
+        trial_available = _original._trial_available_for_profile(
+            db,
+            owner_id,
+        )
+        db.commit()
+
+    # The base and add-on are separate recurring prices. The public pricing
+    # page displays their combined amount, while Paddle receives both items.
+    base_price_id = _price_id_for_selection(
+        billing,
+        10,
+        trial_available,
+    )
+    if limit == 10:
+        item_price_ids = [base_price_id]
+    else:
+        addon_price_id = _price_id_for_selection(
+            billing,
+            limit,
+            trial_available,
+        )
+        item_price_ids = [base_price_id, addon_price_id]
+
+    total_minor = 0
+    currency_code = "USD"
+
+    for price_id in item_price_ids:
+        response = _original._paddle_request(
+            "GET",
+            f"/prices/{price_id}",
+        )
+        data = response.get("data") or {}
+        unit_price = data.get("unit_price") or {}
+        amount = int(unit_price.get("amount") or 0)
+        total_minor += amount
+        currency_code = str(
+            data.get("currency_code")
+            or currency_code
+        )
+
+    return {
+        "billing": billing.lower(),
+        "limit": limit,
+        "amount": total_minor,
+        "currency_code": currency_code,
+        "trial_available": trial_available,
     }
