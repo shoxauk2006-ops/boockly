@@ -2776,8 +2776,6 @@ telegram_api(
 )
 
         return booking
-
-        return booking
 @app.post("/bookings/{booking_id}/cancel")
 def cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default="")):
     user=telegram_user(x_telegram_init_data);uid=int(user["id"])
