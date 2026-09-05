@@ -2973,6 +2973,9 @@ def my_bookings(
                 "day": booking.day.isoformat(),
                 "start": booking.start.strftime("%H:%M"),
                 "end": booking.end.strftime("%H:%M"),
+                "start_at_utc": booking.start_at_utc.isoformat() if booking.start_at_utc else None,
+                "end_at_utc": booking.end_at_utc.isoformat() if booking.end_at_utc else None,
+                "client_timezone": booking.client_timezone or "UTC",
                 "status": booking.status
             })
 

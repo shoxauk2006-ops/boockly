@@ -38,6 +38,38 @@ const confirmAsync = (message: string): Promise<boolean> =>
     }
   });
 const initData=()=>tg()?.initData||'';
+const getClientTimeZone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
+};
+
+const getClientLocalDateKey = () => {
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0')
+  ].join('-');
+};
+
+const formatUtcForTimeZone = (
+  value: string | undefined,
+  timeZone: string,
+  options: Intl.DateTimeFormatOptions
+) => {
+  if (!value) return '';
+  try {
+    return new Intl.DateTimeFormat(
+      getLocale(),
+      { ...options, timeZone }
+    ).format(new Date(`${value}Z`));
+  } catch {
+    return '';
+  }
+};
 const headers = () => {
   const base: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -8627,9 +8659,7 @@ function Blocks({
   t: (key: string, fallback?: string) => string;
 }) {
   const [f, setF] = useState({
-    day: new Date()
-      .toISOString()
-      .slice(0, 10),
+    day: getClientLocalDateKey(),
     start: '13:00',
     end: '15:00',
     reason: ''
@@ -8655,12 +8685,15 @@ useEffect(() => {
 }, []);
   
   const isBlockPast = (block: any) => {
-  const endTime = new Date(
-    `${block.day}T${block.end.slice(0, 8)}`
-  );
+    if (block?.end_at_utc) {
+      try {
+        return new Date(`${block.end_at_utc}Z`) < currentTime;
+      } catch {}
+    }
 
-  return endTime < currentTime;
-};
+    const endTime = new Date(`${block.day}T${block.end.slice(0, 8)}`);
+    return endTime < currentTime;
+  };
   
   const add = async () => {
   setSavingBlock(true);
@@ -8903,11 +8936,7 @@ function Bookings({
     useState('');
 
   const [day, setDay] =
-    useState(
-      new Date()
-        .toISOString()
-        .slice(0, 10)
-    );
+    useState(getClientLocalDateKey());
 
   const [slots, setSlots] =
     useState<string[]>([]);
@@ -8942,11 +8971,7 @@ function Bookings({
     >('today');
 
   const [selectedDate, setSelectedDate] =
-    useState(
-      new Date()
-        .toISOString()
-        .slice(0, 10)
-    );
+    useState(getClientLocalDateKey());
 
   useEffect(() => {
   if (!showForm) {
@@ -9041,7 +9066,7 @@ if (!businessId) {
       const availabilityResponse =
         await fetch(
           API +
-            `/businesses/${businessId}/availability?service_id=${selectedServiceId}&day=${selectedDay}`
+            `/businesses/${businessId}/availability?service_id=${selectedServiceId}&day=${selectedDay}&time_zone=${encodeURIComponent(business?.timezone || getClientTimeZone())}`
         );
 
       const data =
@@ -9519,14 +9544,7 @@ const todayBusiness =
 
           <input
             type="date"
-            min={
-              new Date()
-                .toISOString()
-                .slice(
-                  0,
-                  10
-                )
-            }
+            min={getClientLocalDateKey()}
             value={day}
             onChange={e =>
               setDay(
@@ -11378,6 +11396,28 @@ t(
 }
 
 function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {
+  const myBookingsTimeZone = getClientTimeZone();
+
+  const formatBookingDate = (item: any) => {
+    if (!item?.start_at_utc) return item?.day || '';
+    const formatted = formatUtcForTimeZone(
+      item.start_at_utc,
+      myBookingsTimeZone,
+      { year: 'numeric', month: '2-digit', day: '2-digit' }
+    );
+    return formatted || item?.day || '';
+  };
+
+  const formatBookingTime = (item: any) => {
+    if (!item?.start_at_utc || !item?.end_at_utc) {
+      return `${item?.start?.slice(0, 5) || ''} – ${item?.end?.slice(0, 5) || ''}`;
+    }
+    const opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
+    const start = formatUtcForTimeZone(item.start_at_utc, myBookingsTimeZone, opts);
+    const end = formatUtcForTimeZone(item.end_at_utc, myBookingsTimeZone, opts);
+    return `${start} – ${end}`;
+  };
+
   const [items, setItems] =
     useState<any[]>([]);
 
@@ -11512,20 +11552,11 @@ function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {
               </p>
 
               <p>
-                📅 {item.day}
+                📅 {formatBookingDate(item)}
               </p>
 
               <p>
-                🕐{' '}
-                {item.start?.slice(
-                  0,
-                  5
-                )}
-                {' – '}
-                {item.end?.slice(
-                  0,
-                  5
-                )}
+                🕐 {formatBookingTime(item)}
               </p>
 
               {item.status ===
@@ -11589,11 +11620,9 @@ function Client({
   const [selected, setSelected] =
     useState<any>(null);
 
-  const [day, setDay] = useState(
-    new Date()
-      .toISOString()
-      .slice(0, 10)
-  );
+  const clientTimeZone = getClientTimeZone();
+
+  const [day, setDay] = useState(getClientLocalDateKey());
 
   const [slots, setSlots] =
     useState<string[]>([]);
@@ -11840,7 +11869,7 @@ function Client({
       const response =
         await fetch(
           API +
-            `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`
+            `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}`
         );
 
       const data =
@@ -11896,7 +11925,7 @@ function Client({
 
         const response = await fetch(
           API +
-            `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`
+            `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}`
         );
 
         const data = await response.json();
@@ -12009,7 +12038,8 @@ function Client({
                 clientPhone,
               day,
               start:
-                selectedTime
+                selectedTime,
+              client_timezone: clientTimeZone
             })
           }
         );
@@ -12395,11 +12425,7 @@ function Client({
 
             <input
               type="date"
-              min={
-                new Date()
-                  .toISOString()
-                  .slice(0, 10)
-              }
+              min={getClientLocalDateKey()}
               value={day}
               onChange={async e => {
                 const newDay =
