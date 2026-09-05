@@ -16,69 +16,70 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import re
 
           def once(text, old, new, label):
               if old not in text:
                   raise SystemExit(f'Missing marker: {label}')
               return text.replace(old, new, 1)
 
-          # ---------- frontend ----------
+          # Frontend: client date/timezone, availability and booking payload.
           p = Path('frontend/src/main.tsx')
           s = p.read_text(encoding='utf-8')
-          locale_block = "const getLocale = () =>\n  LOCALE_MAP[getStoredLanguage()] || 'en-US';\n"
-          helper = """
-          const getClientTimeZone = () => {
-            try {
-              return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-            } catch {
-              return 'UTC';
-            }
-          };
-
-          const getLocalDateKey = (timeZone?: string) => {
-            try {
-              const parts = new Intl.DateTimeFormat('en-CA', {
-                timeZone: timeZone || undefined,
-                year: 'numeric', month: '2-digit', day: '2-digit'
-              }).formatToParts(new Date());
-              const y = parts.find(x => x.type === 'year')?.value;
-              const m = parts.find(x => x.type === 'month')?.value;
-              const d = parts.find(x => x.type === 'day')?.value;
-              if (y && m && d) return `${y}-${m}-${d}`;
-            } catch {}
-            const now = new Date();
-            return [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
-          };
-          """
+          locale_block = "const getLocale = ()\n  =>\n  LOCALE_MAP[getStoredLanguage()] || 'en-US';\n"
           if "const getClientTimeZone = () =>" not in s:
+              helper = """
+const getClientTimeZone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
+};
+
+const getLocalDateKey = (timeZone?: string) => {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timeZone || undefined,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date());
+    const y = parts.find(x => x.type === 'year')?.value;
+    const m = parts.find(x => x.type === 'month')?.value;
+    const d = parts.find(x => x.type === 'day')?.value;
+    if (y && m && d) return `${y}-${m}-${d}`;
+  } catch {}
+  const now = new Date();
+  return [now.getFullYear(), String(now.getMonth()+1).padStart(2,'0'), String(now.getDate()).padStart(2,'0')].join('-');
+};
+"""
+              if locale_block not in s:
+                  locale_block = "const getLocale = () =>\n  LOCALE_MAP[getStoredLanguage()] || 'en-US';\n"
               s = once(s, locale_block, locale_block + helper, 'client timezone helper')
 
-          # Only the Client component: find its slice and patch exact local-date/URL/payload strings.
           pos = s.find('function Client({')
           if pos < 0: raise SystemExit('Missing Client component')
           head, tail = s[:pos], s[pos:]
           tail = once(tail, "  const [day, setDay] = useState(\n    new Date()\n      .toISOString()\n      .slice(0, 10)\n  );", "  const clientTimeZone = getClientTimeZone();\n\n  const [day, setDay] = useState(getLocalDateKey(clientTimeZone));", 'client date')
-          tail = once(tail, "`/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`", "`/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}`", 'selected-day availability')
-          tail = once(tail, "`/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`", "`/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}`", 'candidate-day availability')
-          tail = once(tail, "              day,\n              start:\n                selectedTime\n", "              day,\n              start:\n                selectedTime,\n              client_timezone:\n                clientTimeZone\n", 'booking client timezone')
+          tail = once(tail, "`/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`", "`/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}`", 'selected availability')
+          tail = once(tail, "`/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`", "`/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}`", 'candidate availability')
+          tail = once(tail, "              day,\n              start:\n                selectedTime\n", "              day,\n              start:\n                selectedTime,\n              client_timezone:\n                clientTimeZone\n", 'client timezone booking')
           s = head + tail
-          # Settings: timezone remains displayed/read-only and is no longer sent on update.
-          s = once(s, "              Number(longitude),\n              \n    timezone: settingsTimezone,", "              Number(longitude),", 'immutable settings timezone')
           p.write_text(s, encoding='utf-8')
 
-          # ---------- backend ----------
+          # Backend: business timezone is immutable after creation; admin/statistics use it.
           p = Path('backend/app.py')
           b = p.read_text(encoding='utf-8')
           b = once(b, "        else:\n            for k, v in x.model_dump().items(): setattr(b, k, v)", "        else:\n            for k, v in x.model_dump().items():\n                if k == 'timezone':\n                    continue\n                setattr(b, k, v)", 'immutable business timezone')
-          b = once(b, "        today = datetime.now().date()", "        today = datetime.now(_bookly_zone(b.timezone)).date()", 'business-local block cleanup')
-          b = once(b, "        from zoneinfo import ZoneInfo\n\n        now_tashkent = datetime.now(\n            ZoneInfo(\"Asia/Tashkent\")\n        ).replace(tzinfo=None)", "        business_zone = _bookly_zone(business.timezone)\n        now_business = datetime.now(business_zone).replace(tzinfo=None)", 'business-local admin booking now')
+          b = once(b, "        today = datetime.now().date()", "        today = datetime.now(_bookly_zone(b.timezone)).date()", 'business-local blocks')
+          b = once(b, "        from zoneinfo import ZoneInfo\n\n        now_tashkent = datetime.now(\n            ZoneInfo(\"Asia/Tashkent\")\n        ).replace(tzinfo=None)", "        business_zone = _bookly_zone(business.timezone)\n        now_business = datetime.now(business_zone).replace(tzinfo=None)", 'business-local admin now')
           b = once(b, "        if start_dt <= now_tashkent:", "        if start_dt <= now_business:", 'business-local past check')
-          b = once(b, "        now = datetime.now()\n        today = now.date()", "        business_zone = _bookly_zone(business.timezone)\n        now = datetime.now(business_zone)\n        today = now.date()", 'business-local statistics now')
+          b = once(b, "        now = datetime.now()\n        today = now.date()", "        business_zone = _bookly_zone(business.timezone)\n        now = datetime.now(business_zone)\n        today = now.date()", 'business-local statistics')
           b = once(b, "            booking_end = datetime.combine(\n                booking.day,\n                booking.end\n            )", "            booking_end = (_bookly_from_utc(booking.end_at_utc, business.timezone) if booking.end_at_utc is not None else datetime.combine(booking.day, booking.end))", 'statistics UTC end')
-          # /my/bookings will expose canonical UTC fields; the existing frontend remains backward compatible.
           b = once(b, '                "status": booking.status\n            })', '                "status": booking.status,\n                "start_at_utc": booking.start_at_utc.isoformat() if booking.start_at_utc is not None else None,\n                "end_at_utc": booking.end_at_utc.isoformat() if booking.end_at_utc is not None else None\n            })', 'my bookings UTC fields')
-          b = once(b, '            booking_datetime = datetime.combine(\n                booking.day,\n                booking.start\n            )\n\n            # Не показываем прошедшие записи\n            if booking_datetime <= now_business:\n                continue', '            booking_start_utc = (booking.start_at_utc.replace(tzinfo=timezone.utc) if booking.start_at_utc is not None else datetime.combine(booking.day, booking.start, tzinfo=_bookly_zone(timezone_name)))\n\n            # Не показываем прошедшие записи\n            if booking_start_utc <= datetime.now(timezone.utc):\n                continue', 'my bookings UTC future check')
+          old = "            booking_datetime = datetime.combine(\n                booking.day,\n                booking.start\n            )\n\n            # Не показываем прошедшие записи\n            if booking_datetime <= now_business:\n                continue"
+          new = "            booking_start_utc = (booking.start_at_utc.replace(tzinfo=timezone.utc) if booking.start_at_utc is not None else datetime.combine(booking.day, booking.start, tzinfo=_bookly_zone(timezone_name)))\n\n            # Не показываем прошедшие записи\n            if booking_start_utc <= datetime.now(timezone.utc):\n                continue"
+          b = once(b, old, new, 'my bookings UTC future check')
           p.write_text(b, encoding='utf-8')
           PY
           python -m py_compile backend/app.py
@@ -89,5 +90,5 @@ jobs:
           git config user.name "bookly-timezone-bot"
           git config user.email "bookly-timezone-bot@users.noreply.github.com"
           git add frontend/src/main.tsx backend/app.py
-          git commit -m "Finish client and business timezone handling [timezone-auto]"
+          git commit -m "Finish timezone handling [timezone-auto]"
           git push origin main
