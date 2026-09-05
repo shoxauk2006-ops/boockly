@@ -1,16 +1,15 @@
-name: Apply Bookly map and services patch
+name: Temporary client notification timezone fix
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  apply:
-    if: ${{ !contains(github.event.head_commit.message, '[bookly-ui-patch]') }}
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[bookly-client-notification-timezone]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,256 +17,12 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Patch source
+      - name: Patch backend
+        shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
 
-          p = Path('frontend/src/main.tsx')
-          s = p.read_text(encoding='utf-8')
-
-          # 1. Add "My location" control to the existing map picker.
-          if "const locateMe = () =>" not in s:
-              anchor = "        };\n\n        if (latitude != null &&\n          longitude != null)"
-              locate = r'''        };
-
-        const locateMe = () => {
-          if (!navigator.geolocation) {
-            alert(
-              t(
-                'settings.locationUnavailable',
-                'Геолокация недоступна на этом устройстве.'
-              )
-            );
-            return;
-          }
-
-          navigator.geolocation.getCurrentPosition(
-            position => {
-              void updatePoint(
-                position.coords.latitude,
-                position.coords.longitude
-              );
-            },
-            error => {
-              console.error(
-                'BOOKLY GEOLOCATION ERROR:',
-                error
-              );
-
-              alert(
-                t(
-                  'settings.locationPermissionError',
-                  'Не удалось определить местоположение. Разрешите доступ к геолокации и попробуйте снова.'
-                )
-              );
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 30000
-            }
-          );
-        };
-
-        if (latitude != null &&
-          longitude != null)'''
-              if anchor in s:
-                  s = s.replace(anchor, locate, 1)
-              else:
-                  raise SystemExit('MapPicker updatePoint anchor not found')
-
-          map_div = '''                  <div ref={mapRef} style={{ width: '100%', height: 360, borderRadius: 14, overflow: 'hidden', marginTop: 12, background: '#eee' }} />'''
-          map_div_new = '''                  <button
-                    type="button"
-                    className="ghost full"
-                    onClick={locateMe}
-                    style={{
-                      marginTop: 12,
-                      marginBottom: 4
-                    }}
-                  >
-                    ◎ {t(
-                      'settings.locateMe',
-                      'Определить моё местоположение'
-                    )}
-                  </button>
-                  <div ref={mapRef} style={{ width: '100%', height: 360, borderRadius: 14, overflow: 'hidden', marginTop: 8, background: '#eee' }} />'''
-          if map_div in s:
-              s = s.replace(map_div, map_div_new, 1)
-
-          # 2. Services: remove the dedicated Business Contacts card and related state/functions.
-          services_start = s.find('function Services(')
-          if services_start < 0:
-              raise SystemExit('Services function not found')
-
-          card_start = s.find("      <div className=\"card\">\n        <h2>\n          {t(\n            'owner.businessContacts'", services_start)
-          form_start = s.find('      <div\n  className="card"\n  ref={serviceFormRef}', card_start) if card_start >= 0 else -1
-          if card_start >= 0 and form_start >= 0:
-              s = s[:card_start] + s[form_start:]
-
-          state_block = '''  const [businessPhone, setBusinessPhone] =
-    useState(business?.phone || '');
-
-  const [businessAddress, setBusinessAddress] =
-    useState(business?.address || '');
-
-  const [savingBusiness, setSavingBusiness] =
-    useState(false);
-'''
-          s = s.replace(state_block, '', 1)
-
-          effect_block = '''  useEffect(() => {
-    setBusinessPhone(
-      business?.phone || ''
-    );
-
-    setBusinessAddress(
-      business?.address || ''
-    );
-  }, [business]);
-
-'''
-          s = s.replace(effect_block, '', 1)
-
-          fn_start = s.find('  const saveBusinessContacts =', services_start)
-          if fn_start >= 0:
-              fn_end = s.find('  const saveService =', fn_start)
-              if fn_end >= 0:
-                  s = s[:fn_start] + s[fn_end:]
-
-          # 3. Client: offer Google Maps and Apple Maps using exact coordinates.
-          old_map_url = '''  const mapUrl =
-    business &&
-    business.latitude != null &&
-    business.longitude != null
-      ? `https://www.google.com/maps/search/?api=1&query=${business.latitude},${business.longitude}`
-      : business?.address
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            business.address
-          )}`
-        : '';'''
-          new_map_url = '''  const googleMapUrl =
-    business &&
-    business.latitude != null &&
-    business.longitude != null
-      ? `https://www.google.com/maps/search/?api=1&query=${business.latitude},${business.longitude}`
-      : business?.address
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-            business.address
-          )}`
-        : '';
-
-  const appleMapUrl =
-    business &&
-    business.latitude != null &&
-    business.longitude != null
-      ? `https://maps.apple.com/?ll=${business.latitude},${business.longitude}&q=${encodeURIComponent(
-          business.address || business.name
-        )}`
-      : business?.address
-        ? `https://maps.apple.com/?q=${encodeURIComponent(
-            business.address
-          )}`
-        : '';'''
-          if old_map_url in s:
-              s = s.replace(old_map_url, new_map_url, 1)
-          else:
-              raise SystemExit('Client map URL block not found')
-
-          old_button = '''    {mapUrl && (
-      <button
-        type="button"
-        className="client-contact-button"
-        onClick={() => {
-          if (tg()?.openLink) {
-            tg().openLink(mapUrl);
-          } else {
-            window.open(
-              mapUrl,
-              '_blank'
-            );
-          }
-        }}
-      >
-        <span className="client-contact-label">
-          {business.address ||
-            t('client.location')}
-        </span>
-
-        <span className="client-contact-arrow">
-          →
-        </span>
-      </button>
-    )}'''
-          new_button = '''    {(googleMapUrl || appleMapUrl) && (
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 8
-        }}
-      >
-        {googleMapUrl && (
-          <button
-            type="button"
-            className="client-contact-button"
-            onClick={() => {
-              if (tg()?.openLink) {
-                tg().openLink(googleMapUrl);
-              } else {
-                window.open(
-                  googleMapUrl,
-                  '_blank'
-                );
-              }
-            }}
-          >
-            <span className="client-contact-label">
-              Google Maps
-            </span>
-            <span className="client-contact-arrow">
-              →
-            </span>
-          </button>
-        )}
-
-        {appleMapUrl && (
-          <button
-            type="button"
-            className="client-contact-button"
-            onClick={() => {
-              if (tg()?.openTelegramLink) {
-                tg().openTelegramLink(appleMapUrl);
-              } else {
-                window.open(
-                  appleMapUrl,
-                  '_blank'
-                );
-              }
-            }}
-          >
-            <span className="client-contact-label">
-              Apple Maps
-            </span>
-            <span className="client-contact-arrow">
-              →
-            </span>
-          </button>
-        )}
-      </div>
-    )}'''
-          if old_button in s:
-              s = s.replace(old_button, new_button, 1)
-          else:
-              raise SystemExit('Client map button block not found')
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-          python3 - <<'PY'
-          from pathlib import Path
           p = Path('backend/app.py')
           s = p.read_text(encoding='utf-8')
 
@@ -350,16 +105,13 @@ jobs:
 
           python3 -m py_compile backend/app.py
 
-      - name: Commit source changes
+      - name: Commit backend fix and remove workflow
+        shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add frontend/src/main.tsx backend/app.py
-          git commit -m 'fix: client booking notification uses client timezone [bookly-ui-patch]' || true
+          git add backend/app.py
+          git commit -m 'fix: show booking notification in client timezone [bookly-client-notification-timezone]' || true
+          git rm .github/workflows/fix-live-language-switch.yml
+          git commit -m 'chore: remove temporary client notification timezone workflow [bookly-client-notification-timezone]' || true
           git push
-
-      - name: Validate frontend
-        working-directory: frontend
-        run: |
-          npm install --no-audit --no-fund
-          npm run build
