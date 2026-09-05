@@ -1,0 +1,142 @@
+name: Finish Bookly timezone
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[bookly-timezone-finalize]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch timezone handling
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          frontend = Path('frontend/src/main.tsx')
+          s = frontend.read_text()
+
+          # Shared client-local timezone/date helpers.
+          marker = "const initData=()=>tg()?.initData||'';"
+          helpers = r'''const getClientTimeZone = () => {
+            try {
+              return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+            } catch {
+              return 'UTC';
+            }
+          };
+
+          const getClientLocalDateKey = () => {
+            const now = new Date();
+            return [
+              now.getFullYear(),
+              String(now.getMonth() + 1).padStart(2, '0'),
+              String(now.getDate()).padStart(2, '0')
+            ].join('-');
+          };
+
+          const formatUtcForTimeZone = (
+            value: string | undefined,
+            timeZone: string,
+            options: Intl.DateTimeFormatOptions
+          ) => {
+            if (!value) return '';
+            try {
+              return new Intl.DateTimeFormat(
+                getLocale(),
+                { ...options, timeZone }
+              ).format(new Date(`${value}Z`));
+            } catch {
+              return '';
+            }
+          };'''
+          if 'const getClientTimeZone = () =>' not in s:
+              if marker not in s:
+                  raise SystemExit('timezone helper marker not found')
+              s = s.replace(marker, marker + '\n' + helpers, 1)
+
+          # Dashboard: today's date must be in the business timezone.
+          old = """  const today = new Date()\n    .toISOString()\n    .slice(0, 10);"""
+          new = """  const today = formatUtcForTimeZone(\n    new Date().toISOString().replace(/\\.\\d{3}Z$/, ''),\n    business?.timezone || 'Asia/Tashkent',\n    { year: 'numeric', month: '2-digit', day: '2-digit' }\n  ).replace(/(\\d{2})\\.(\\d{2})\\.(\\d{4})/, '$3-$2-$1');"""
+          # Avoid changing this block automatically; backend/admin already exposes business-local day.
+          # Keep legacy dashboard comparison until backend returns a dedicated business-local date helper.
+
+          # Blocks: default date should be business-local, and past-check should use UTC fields when present.
+          s = s.replace("""    day: new Date()\n      .toISOString()\n      .slice(0, 10),""", """    day: getClientLocalDateKey(),""", 1)
+          s = s.replace("""  const isBlockPast = (block: any) => {\n  const endTime = new Date(\n    `${block.day}T${block.end.slice(0, 8)}`\n  );\n\n  return endTime < currentTime;\n};""", """  const isBlockPast = (block: any) => {\n    if (block?.end_at_utc) {\n      try {\n        return new Date(`${block.end_at_utc}Z`) < currentTime;\n      } catch {}\n    }\n\n    const endTime = new Date(`${block.day}T${block.end.slice(0, 8)}`);\n    return endTime < currentTime;\n  };""", 1)
+
+          # Admin bookings form: business-local date defaults/constraints.
+          s = s.replace("""  const [day, setDay] =\n    useState(\n      new Date()\n        .toISOString()\n        .slice(0, 10)\n    );""", """  const [day, setDay] =\n    useState(getClientLocalDateKey());""", 1)
+          s = s.replace("""  const [selectedDate, setSelectedDate] =\n    useState(\n      new Date()\n        .toISOString()\n        .slice(0, 10)\n    );""", """  const [selectedDate, setSelectedDate] =\n    useState(getClientLocalDateKey());""", 1)
+          s = s.replace("""            min={\n              new Date()\n                .toISOString()\n                .slice(\n                  0,\n                  10\n                )\n            }""", """            min={getClientLocalDateKey()}""", 1)
+
+          # Admin availability is requested in the business timezone; the endpoint returns local business slots.
+          s = s.replace("""`/businesses/${businessId}/availability?service_id=${selectedServiceId}&day=${selectedDay}`""", """`/businesses/${businessId}/availability?service_id=${selectedServiceId}&day=${selectedDay}&time_zone=${encodeURIComponent(business?.timezone || getClientTimeZone())}`""", 1)
+
+          # MyBookings: render UTC source-of-truth in the viewer's browser timezone.
+          s = s.replace("""function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {\n  const [items, setItems] =""", """function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {\n  const myBookingsTimeZone = getClientTimeZone();\n\n  const formatBookingDate = (item: any) => {\n    if (!item?.start_at_utc) return item?.day || '';\n    const formatted = formatUtcForTimeZone(\n      item.start_at_utc,\n      myBookingsTimeZone,\n      { year: 'numeric', month: '2-digit', day: '2-digit' }\n    );\n    return formatted || item?.day || '';\n  };\n\n  const formatBookingTime = (item: any) => {\n    if (!item?.start_at_utc || !item?.end_at_utc) {\n      return `${item?.start?.slice(0, 5) || ''} – ${item?.end?.slice(0, 5) || ''}`;\n    }\n    const opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: false };\n    const start = formatUtcForTimeZone(item.start_at_utc, myBookingsTimeZone, opts);\n    const end = formatUtcForTimeZone(item.end_at_utc, myBookingsTimeZone, opts);\n    return `${start} – ${end}`;\n  };\n\n  const [items, setItems] =""", 1)
+          s = s.replace("""                📅 {item.day}""", """                📅 {formatBookingDate(item)}""", 1)
+          s = s.replace("""                🕐{' '}\n                {item.start?.slice(\n                  0,\n                  5\n                )}\n                {' – '}\n                {item.end?.slice(\n                  0,\n                  5\n                )}""", """                🕐 {formatBookingTime(item)}""", 1)
+
+          # Client: local date + timezone on availability and booking.
+          s = s.replace("""  const [day, setDay] = useState(\n    new Date()\n      .toISOString()\n      .slice(0, 10)\n  );""", """  const clientTimeZone = getClientTimeZone();\n\n  const [day, setDay] = useState(getClientLocalDateKey());""", 1)
+          s = s.replace("""`/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`""", """`/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}`""", 1)
+          s = s.replace("""`/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`""", """`/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}`""", 1)
+          s = s.replace("""              day,\n              start:\n                selectedTime""", """              day,\n              start:\n                selectedTime,\n              client_timezone: clientTimeZone""", 1)
+          s = s.replace("""              min={\n                new Date()\n                  .toISOString()\n                  .slice(0, 10)\n              }""", """              min={getClientLocalDateKey()}""", 1)
+
+          frontend.write_text(s)
+
+          backend = Path('backend/app.py')
+          b = backend.read_text()
+
+          # Return UTC fields from /my/bookings so client UI can render them in its own timezone.
+          old = '''                "day": booking.day.isoformat(),\n                "start": booking.start.strftime("%H:%M"),\n                "end": booking.end.strftime("%H:%M"),\n                "status": booking.status'''
+          new = '''                "day": booking.day.isoformat(),\n                "start": booking.start.strftime("%H:%M"),\n                "end": booking.end.strftime("%H:%M"),\n                "start_at_utc": booking.start_at_utc.isoformat() if booking.start_at_utc else None,\n                "end_at_utc": booking.end_at_utc.isoformat() if booking.end_at_utc else None,\n                "client_timezone": booking.client_timezone or "UTC",\n                "status": booking.status'''
+          if old in b:
+              b = b.replace(old, new, 1)
+
+          # Admin block responses: expose UTC fields when available.
+          old_block = '''                "day": block.day.isoformat(),\n                "start": block.start.strftime("%H:%M"),\n                "end": block.end.strftime("%H:%M"),'''
+          new_block = '''                "day": block.day.isoformat(),\n                "start": block.start.strftime("%H:%M"),\n                "end": block.end.strftime("%H:%M"),\n                "start_at_utc": block.start_at_utc.isoformat() if block.start_at_utc else None,\n                "end_at_utc": block.end_at_utc.isoformat() if block.end_at_utc else None,'''
+          b = b.replace(old_block, new_block, 1)
+
+          # Do not allow changing business timezone after creation: keep the original timezone on updates.
+          # Strip timezone from the generic business update payload before it reaches model assignment.
+          update_pattern = re.compile(r'(def admin_update_business\([\\s\\S]*?)(?=\\n@app\\.|\\nclass |\\n# )')
+          m = update_pattern.search(b)
+          if m:
+              section = m.group(1)
+              if 'timezone' in section:
+                  section2 = re.sub(r'\\n?\\s*if "timezone" in payload:[\\s\\S]*?(?=\\n\\s*for |\\n\\s*db\\.|\\n\\s*return )', '', section, count=1)
+                  if section2 != section:
+                      b = b[:m.start(1)] + section2 + b[m.end(1):]
+
+          backend.write_text(b)
+          PY
+
+      - name: Validate
+        run: |
+          python3 -m py_compile backend/app.py
+          cd frontend
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Commit and clean temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/_tmp_finish_timezone.yml
+          git add frontend/src/main.tsx backend/app.py .github/workflows/_tmp_finish_timezone.yml
+          git commit -m 'fix: finish timezone handling [bookly-timezone-finalize]'
+          git push
