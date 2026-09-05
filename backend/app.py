@@ -1252,6 +1252,7 @@ class BookingIn(BaseModel):
     client_phone: str = ""
     day: date
     start: time
+    client_timezone: str = "UTC"
     
 class AdminBookingIn(BaseModel):
     service_id: int
@@ -2377,12 +2378,12 @@ def get_work_windows(db, business_id:int, day:date):
     # Friendly first-run default until owner configures schedule.
     return [(time(9,0),time(18,0))]
 
-def is_free(db,business_id:int,day:date,st:time,en:time,timezone_name: str | None = None):
+def is_free(db, business_id: int, day: date, st: time, en: time, timezone_name: str | None = None):
     zone = _bookly_zone(timezone_name or "Asia/Tashkent")
     start_at_utc = _bookly_to_utc(datetime.combine(day, st, tzinfo=zone))
     end_at_utc = _bookly_to_utc(datetime.combine(day, en, tzinfo=zone))
 
-    overlap = db.query(Booking).filter(
+    booking = db.query(Booking).filter(
         Booking.business_id == business_id,
         Booking.status == "confirmed",
         Booking.start_at_utc.is_not(None),
@@ -2390,7 +2391,7 @@ def is_free(db,business_id:int,day:date,st:time,en:time,timezone_name: str | Non
         Booking.start_at_utc < end_at_utc,
         Booking.end_at_utc > start_at_utc,
     ).first()
-    if overlap:
+    if booking:
         return False
 
     blocked = db.query(BlockedSlot).filter(
@@ -2403,7 +2404,7 @@ def is_free(db,business_id:int,day:date,st:time,en:time,timezone_name: str | Non
     if blocked:
         return False
 
-    overlap = db.query(Booking).filter(
+    legacy_booking = db.query(Booking).filter(
         Booking.business_id == business_id,
         Booking.day == day,
         Booking.status == "confirmed",
@@ -2411,14 +2412,14 @@ def is_free(db,business_id:int,day:date,st:time,en:time,timezone_name: str | Non
         Booking.start < en,
         Booking.end > st,
     ).first()
-    blocked = db.query(BlockedSlot).filter(
+    legacy_block = db.query(BlockedSlot).filter(
         BlockedSlot.business_id == business_id,
         BlockedSlot.day == day,
         BlockedSlot.start_at_utc.is_(None),
         BlockedSlot.start < en,
         BlockedSlot.end > st,
     ).first()
-    return not overlap and not blocked
+    return not legacy_booking and not legacy_block
 
 @app.get("/businesses/{slug}")
 def get_business(slug: str):
@@ -2513,135 +2514,118 @@ def business_qr(
 def availability(
     business_id: int,
     service_id: int,
-    day: date
+    day: date,
+    time_zone: Optional[str] = None
 ):
     with SessionLocal() as db:
         b = db.get(Business, business_id)
         s = db.get(Service, service_id)
 
-        if (
-            not b
-            or not s
-            or s.business_id != business_id
-            or not s.active
-        ):
+        if not b or not s or s.business_id != business_id or not s.active:
             raise HTTPException(404, "Not found")
 
-        # Получаем график одним запросом.
-        work_windows = get_work_windows(
-            db,
-            business_id,
-            day
-        )
+        business_zone = _bookly_zone(b.timezone)
+        client_zone = _bookly_zone(time_zone or b.timezone)
+        now_business = datetime.now(business_zone)
 
-        # Получаем все записи этого бизнеса на выбранный день
-        # одним запросом.
-        bookings = (
-            db.query(
-                Booking.start,
-                Booking.end
-            )
-            .filter(
-                Booking.business_id == business_id,
-                Booking.day == day,
-                Booking.status == "confirmed"
-            )
-            .all()
-        )
+        bookings = db.query(
+            Booking.start_at_utc,
+            Booking.end_at_utc,
+            Booking.day,
+            Booking.start,
+            Booking.end
+        ).filter(
+            Booking.business_id == business_id,
+            Booking.status == "confirmed"
+        ).all()
 
-        # Получаем все блокировки этого бизнеса на выбранный день
-        # одним запросом.
-        blocked_slots = (
-            db.query(
-                BlockedSlot.start,
-                BlockedSlot.end
-            )
-            .filter(
-                BlockedSlot.business_id == business_id,
-                BlockedSlot.day == day
-            )
-            .all()
-        )
-
-        from zoneinfo import ZoneInfo
-
-        business_timezone = (
-            b.timezone or
-            "Asia/Tashkent"
-        )
-
-        now_business = datetime.now(
-            ZoneInfo(business_timezone)
-        ).replace(
-            tzinfo=None
-        )
+        blocked_slots = db.query(
+            BlockedSlot.start_at_utc,
+            BlockedSlot.end_at_utc,
+            BlockedSlot.day,
+            BlockedSlot.start,
+            BlockedSlot.end
+        ).filter(
+            BlockedSlot.business_id == business_id
+        ).all()
 
         slots = []
-        step = s.duration_min
-        for win_start, win_end in work_windows:
-            cursor = datetime.combine(
-                day,
-                win_start
-            )
+        seen = set()
 
-            endday = datetime.combine(
-                day,
-                win_end
-            )
-
-            while (
-                cursor + timedelta(
-                    minutes=s.duration_min
-                ) <= endday
+        # One client-local day can overlap adjacent business-local days.
+        for business_day in (
+            day - timedelta(days=1),
+            day,
+            day + timedelta(days=1)
+        ):
+            for win_start, win_end in get_work_windows(
+                db,
+                business_id,
+                business_day
             ):
-                st = cursor.time()
+                cursor = datetime.combine(
+                    business_day,
+                    win_start,
+                    tzinfo=business_zone
+                )
+                endday = datetime.combine(
+                    business_day,
+                    win_end,
+                    tzinfo=business_zone
+                )
 
-                en = (
-                    cursor
-                    + timedelta(
-                        minutes=s.duration_min
-                    )
-                ).time()
+                while cursor + timedelta(minutes=s.duration_min) <= endday:
+                    slot_end = cursor + timedelta(minutes=s.duration_min)
 
-                # Для сегодняшнего дня показываем
-                # только будущее время.
-                if day == now_business.date():
-                    if cursor <= now_business:
-                        cursor += timedelta(
-                            minutes=step
-                        )
+                    if business_day == now_business.date() and cursor <= now_business:
+                        cursor += timedelta(minutes=s.duration_min)
                         continue
 
-                # Проверяем пересечение с существующими записями
-                # уже в памяти, без новых запросов к БД.
-                booking_overlap = any(
-                    booking_start < en
-                    and booking_end > st
-                    for booking_start, booking_end
-                    in bookings
-                )
+                    start_utc = _bookly_to_utc(cursor)
+                    end_utc = _bookly_to_utc(slot_end)
+                    occupied = False
 
-                # Проверяем пересечение с блокировками
-                # также в памяти.
-                blocked_overlap = any(
-                    blocked_start < en
-                    and blocked_end > st
-                    for blocked_start, blocked_end
-                    in blocked_slots
-                )
+                    for bs, be, legacy_day, legacy_start, legacy_end in bookings:
+                        if bs is not None and be is not None:
+                            if bs < end_utc and be > start_utc:
+                                occupied = True
+                                break
+                        elif (
+                            legacy_day == business_day
+                            and legacy_start < slot_end.time()
+                            and legacy_end > cursor.time()
+                        ):
+                            occupied = True
+                            break
 
-                if not booking_overlap and not blocked_overlap:
-                    slots.append(
-                        st.strftime("%H:%M")
-                    )
+                    if not occupied:
+                        for bs, be, legacy_day, legacy_start, legacy_end in blocked_slots:
+                            if bs is not None and be is not None:
+                                if bs < end_utc and be > start_utc:
+                                    occupied = True
+                                    break
+                            elif (
+                                legacy_day == business_day
+                                and legacy_start < slot_end.time()
+                                and legacy_end > cursor.time()
+                            ):
+                                occupied = True
+                                break
 
-                cursor += timedelta(
-                    minutes=step
-                )
+                    if not occupied:
+                        client_local = start_utc.replace(
+                            tzinfo=timezone.utc
+                        ).astimezone(client_zone)
+                        if client_local.date() == day:
+                            value = client_local.strftime("%H:%M")
+                            if value not in seen:
+                                seen.add(value)
+                                slots.append(value)
 
-        return {
-            "slots": slots
-        }
+                    cursor += timedelta(minutes=s.duration_min)
+
+        slots.sort()
+        return {"slots": slots}
 
 @app.post("/bookings")
 def create_booking(
@@ -2668,17 +2652,29 @@ def create_booking(
         if not b.subscription_active:
             raise HTTPException(403, "Business inactive")
 
-        end = (
-            datetime.combine(x.day, x.start)
-            + timedelta(minutes=s.duration_min)
-        ).time()
+        client_zone = _bookly_zone(x.client_timezone)
+        selected_local = datetime.combine(
+            x.day,
+            x.start,
+            tzinfo=client_zone
+        )
+        start_at_utc = _bookly_to_utc(selected_local)
+        end_at_utc = start_at_utc + timedelta(minutes=s.duration_min)
+
+        business_zone = _bookly_zone(b.timezone)
+        business_start = start_at_utc.replace(
+            tzinfo=timezone.utc
+        ).astimezone(business_zone)
+        business_end = end_at_utc.replace(
+            tzinfo=timezone.utc
+        ).astimezone(business_zone)
 
         if not is_free(
             db,
-            x.business_id,
-            x.day,
-            x.start,
-            end,
+            b.id,
+            business_start.date(),
+            business_start.time(),
+            business_end.time(),
             b.timezone
         ):
             raise HTTPException(
@@ -2690,13 +2686,19 @@ def create_booking(
         start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
         end_local = start_local + timedelta(minutes=s.duration_min)
 
-        booking_data = x.model_dump()
         booking = Booking(
-            **booking_data,
-            end=end,
-            start_at_utc=_bookly_to_utc(start_local),
-            end_at_utc=_bookly_to_utc(end_local),
-            client_timezone=b.timezone or "Asia/Tashkent",
+            business_id=x.business_id,
+            service_id=x.service_id,
+            client_telegram_id=x.client_telegram_id,
+            client_name=x.client_name,
+            client_phone=x.client_phone,
+            day=business_start.date(),
+            start=business_start.time(),
+            end=business_end.time(),
+            start_at_utc=start_at_utc,
+            end_at_utc=end_at_utc,
+            client_timezone=x.client_timezone,
+            status="confirmed"
         )
 
         db.add(booking)
