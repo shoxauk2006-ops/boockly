@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextvars
 import os
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Header
 from . import paddle_original as _original
 
 app = _original.app
@@ -282,6 +282,19 @@ def _price_id_for_selection(
         )
 
     return base_id if limit == 10 else addon_id
+
+
+@app.get("/admin/subscription/billing-period")
+def subscription_billing_period(
+    x_telegram_init_data: str = Header(default=""),
+):
+    _, _, business_id, subscription_id = _current_subscription(
+        x_telegram_init_data
+    )
+    return {
+        "business_id": business_id,
+        "billing_period": _subscription_interval(subscription_id),
+    }
 
 
 @app.get("/payments/external/checkout-config")

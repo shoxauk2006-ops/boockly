@@ -6165,6 +6165,47 @@ function Subscription({
   const currentPrice = Number(
     business?.current_price || 7.99
   );
+  const [billingPeriod, setBillingPeriod] =
+    useState<'month' | 'year' | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBillingPeriod = async () => {
+      if (!business?.subscription_active || !business?.external_subscription_id) {
+        setBillingPeriod(null);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          API + '/admin/subscription/billing-period',
+          { headers: headers() }
+        );
+
+        if (!response.ok) {
+          throw new Error('billing period request failed');
+        }
+
+        const data = await response.json();
+        if (cancelled) return;
+
+        setBillingPeriod(
+          data?.billing_period === 'year' ? 'year' : 'month'
+        );
+      } catch {
+        if (!cancelled) {
+          setBillingPeriod(null);
+        }
+      }
+    };
+
+    loadBillingPeriod();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [business?.id, business?.subscription_active, business?.external_subscription_id]);
 
   const addonPrices: Record<number, number> = {
     20: 4.99,
@@ -6668,6 +6709,16 @@ await refreshAfterChange({
             <h3>Bookly Pro</h3>
             <p>
               <b>${displayedMonthlyPrice.toFixed(2)} {t('owner.perMonth')}</b>
+            </p>
+            <p>
+              <span>{t('owner.billingPeriod', 'Период')}</span>{' '}
+              <strong>
+                {billingPeriod === 'year'
+                  ? ({ ru: 'Ежегодно', en: 'Yearly', uz: 'Yillik', tr: 'Yıllık', ar: 'سنوي' } as Record<Language, string>)[getStoredLanguage()]
+                  : billingPeriod === 'month'
+                    ? ({ ru: 'Ежемесячно', en: 'Monthly', uz: 'Oylik', tr: 'Aylık', ar: 'شهري' } as Record<Language, string>)[getStoredLanguage()]
+                    : '—'}
+              </strong>
             </p>
             <div>
               <span>Лимит услуг</span>
