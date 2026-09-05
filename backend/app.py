@@ -1283,7 +1283,9 @@ def upsert_business(x: BusinessIn, x_telegram_init_data: str = Header(default=""
             b = Business(owner_telegram_id=owner_id, slug=slug, **x.model_dump())
             db.add(b)
         else:
-            for k, v in x.model_dump().items(): setattr(b, k, v)
+            payload = x.model_dump()
+            payload.pop("timezone", None)
+            for k, v in payload.items(): setattr(b, k, v)
         db.commit(); db.refresh(b)
         return b
 @app.get("/admin/businesses")
@@ -1886,7 +1888,7 @@ def admin_blocks(
 
         # Автоматически удаляем блокировки,
         # которые относятся к предыдущим дням.
-        today = datetime.now().date()
+        today = datetime.now(_bookly_zone(b.timezone)).date()
 
         db.query(BlockedSlot).filter(
             BlockedSlot.business_id == b.id,
@@ -2003,7 +2005,8 @@ def admin_statistics(
             )
         }
 
-        now = datetime.now()
+        business_zone = _bookly_zone(business.timezone)
+        now = datetime.now(business_zone).replace(tzinfo=None)
         today = now.date()
 
         week_start = (
@@ -2267,15 +2270,26 @@ def admin_cancel_booking(
         db.commit()
 
         if booking.client_telegram_id:
+            client_zone = _bookly_zone(booking.client_timezone)
+            if booking.start_at_utc and booking.end_at_utc:
+                client_start = _bookly_from_utc(booking.start_at_utc, booking.client_timezone or "UTC")
+                client_end = _bookly_from_utc(booking.end_at_utc, booking.client_timezone or "UTC")
+                display_day = client_start.date().isoformat() if client_start else booking.day.isoformat()
+                display_start = client_start.strftime('%H:%M') if client_start else booking.start.strftime('%H:%M')
+                display_end = client_end.strftime('%H:%M') if client_end else booking.end.strftime('%H:%M')
+            else:
+                display_day = booking.day.isoformat()
+                display_start = booking.start.strftime('%H:%M')
+                display_end = booking.end.strftime('%H:%M')
             telegram_api(
                 "sendMessage",
                 {
                     "chat_id": booking.client_telegram_id,
                     "text": (
                         "❌ <b>Ваша запись отменена бизнесом</b>\n\n"
-                        f"📅 {booking.day.isoformat()}\n"
-                        f"🕐 {booking.start.strftime('%H:%M')}–"
-                        f"{booking.end.strftime('%H:%M')}\n"
+                        f"📅 {display_day}\n"
+                        f"🕐 {display_start}–"
+                        f"{display_end}\n"
                         f"📞 {business.phone or 'Номер телефона не указан'}\n\n"
                         "Пожалуйста, свяжитесь с бизнесом, "
                         "если хотите выбрать другое время."
@@ -2312,11 +2326,8 @@ def admin_create_booking(
                 "Service not found"
             )
 
-        from zoneinfo import ZoneInfo
-
-        now_tashkent = datetime.now(
-            ZoneInfo("Asia/Tashkent")
-        ).replace(tzinfo=None)
+        business_zone = _bookly_zone(business.timezone)
+        now_business = datetime.now(business_zone).replace(tzinfo=None)
 
         start_dt = datetime.combine(
             x.day,
@@ -2327,7 +2338,7 @@ def admin_create_booking(
             minutes=service.duration_min
         )
 
-        if start_dt <= now_tashkent:
+        if start_dt <= now_business:
             raise HTTPException(
                 400,
                 "Нельзя создать запись на прошедшее время"
