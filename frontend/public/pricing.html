@@ -1,11 +1,226 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head><meta charset="UTF-8"><title>Тарифы — Bookly</title>
-<style>body{font-family:sans-serif;max-width:680px;margin:40px auto;padding:0 20px;line-height:1.6;}.plan{border:1px solid #ddd;border-radius:12px;padding:24px;margin-top:24px;}.price{font-size:32px;font-weight:700;margin:8px 0;}</style></head>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>Bookly Pro</title>
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111;background:#f6f7f9}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh}
+    .wrap{max-width:760px;margin:0 auto;padding:28px 18px 48px}
+    .brand{font-size:14px;font-weight:800;letter-spacing:.14em;text-align:center;margin-bottom:8px}
+    h1{text-align:center;font-size:34px;line-height:1.1;margin:0}
+    .sub{text-align:center;color:#707780;margin:12px auto 26px;max-width:560px;line-height:1.5}
+    .card{background:#fff;border:1px solid #e4e7eb;border-radius:22px;padding:22px;box-shadow:0 12px 35px rgba(17,17,17,.06)}
+    .section-title{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#707780;margin:0 0 10px}
+    .toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f1f3f5;padding:5px;border-radius:14px}
+    .toggle button{border:0;border-radius:10px;background:transparent;padding:12px;font:inherit;font-weight:700;cursor:pointer;color:#4b5563}
+    .toggle button.active{background:#111;color:#fff}
+    .toggle button:disabled{opacity:.45;cursor:not-allowed}
+    .limits{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}
+    .limit{border:1px solid #e0e3e7;background:#fff;color:#111;border-radius:14px;padding:14px;cursor:pointer;text-align:left}
+    .limit.active{border:2px solid #111;padding:13px;background:#f7f7f7}
+    .limit strong{display:block;font-size:16px}
+    .limit span{display:block;color:#737a83;font-size:13px;margin-top:4px}
+    .pricebox{text-align:center;padding:24px 10px 8px}
+    .price{font-size:42px;font-weight:850;letter-spacing:-.03em}
+    .period{color:#707780;font-size:15px}
+    .trial{margin-top:14px;background:#f5f6f8;border:1px solid #e6e8eb;border-radius:14px;padding:13px 14px;line-height:1.45;font-size:14px}
+    .trial strong{display:block;margin-bottom:4px}
+    .pay{width:100%;border:0;border-radius:14px;background:#111;color:#fff;padding:15px;font-size:16px;font-weight:800;cursor:pointer;margin-top:18px}
+    .pay:disabled{opacity:.5;cursor:not-allowed}
+    .muted{text-align:center;color:#7a8189;font-size:13px;line-height:1.5;margin:14px 0 0}
+    .back{display:block;width:100%;border:1px solid #e1e4e8;background:#fff;color:#111;border-radius:14px;padding:13px;font-weight:700;cursor:pointer;margin-top:10px}
+    .error{background:#fff0f0;border:1px solid #ffd4d4;color:#a40000;padding:13px 14px;border-radius:14px;line-height:1.45}
+    .success{text-align:center;padding:20px 8px}
+    .success-icon{width:56px;height:56px;border-radius:50%;background:#e8f8ee;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;font-weight:800}
+    .hidden{display:none}
+    @media(max-width:520px){.wrap{padding:20px 12px 36px}h1{font-size:30px}.card{padding:16px}.limits{grid-template-columns:1fr}.price{font-size:38px}}
+  </style>
+</head>
 <body>
-<h1>Тарифы Bookly</h1>
-<p>Bookly помогает бизнесу принимать записи клиентов прямо в Telegram — без звонков.</p>
-<div class="plan"><h2>Bookly Pro</h2><div class="price">$9.99 / месяц</div>
-<ul><li>Неограниченное количество записей</li><li>Персональная ссылка для клиентов</li><li>Уведомления в Telegram</li><li>Расписание и блокировка времени</li></ul></div>
+  <main class="wrap">
+    <div class="brand">BOOKLY</div>
+    <h1 id="title">Bookly Pro</h1>
+    <p class="sub" id="subtitle">Online bookings for your business, powered by Bookly.</p>
+
+    <section class="card" id="app">
+      <div id="loading">Loading…</div>
+      <div id="error" class="error hidden"></div>
+
+      <div id="content" class="hidden">
+        <div class="section-title" id="billingLabel">Billing</div>
+        <div class="toggle">
+          <button id="monthlyBtn" class="active" type="button">Monthly</button>
+          <button id="yearlyBtn" type="button">Yearly</button>
+        </div>
+
+        <div style="margin-top:20px" class="section-title" id="limitLabel">Service limit</div>
+        <div class="limits" id="limits"></div>
+
+        <div class="pricebox">
+          <span class="price" id="price">—</span>
+          <span class="period" id="period">/ month</span>
+          <div id="trial" class="trial hidden"></div>
+        </div>
+
+        <button id="payBtn" class="pay" type="button" disabled>Continue to payment</button>
+        <button id="backBtn" class="back" type="button">Back to Bookly</button>
+        <p class="muted" id="secureNote">Payment is processed securely by Paddle.</p>
+      </div>
+
+      <div id="success" class="success hidden">
+        <div class="success-icon">✓</div>
+        <h2 id="successTitle">Payment completed</h2>
+        <p class="muted" id="successText">Your Bookly Pro access is being activated.</p>
+        <button id="successBackBtn" class="pay" type="button">Return to Bookly</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      'use strict';
+
+      var qs = new URLSearchParams(window.location.search);
+      var token = String(qs.get('token') || '').trim();
+      var api = String(qs.get('api') || '').replace(/\/$/, '');
+      var defaultLimit = Number(qs.get('limit') || 10);
+      var limits = [10,20,30,50,100];
+      if (limits.indexOf(defaultLimit) === -1) defaultLimit = 10;
+
+      var cfg = null;
+      var billing = 'month';
+      var selectedLimit = defaultLimit;
+
+      var i18n = {
+        ru:{title:'Bookly Pro',subtitle:'Онлайн-запись клиентов для вашего бизнеса.',billing:'Период оплаты',monthly:'Ежемесячно',yearly:'Ежегодно',limit:'Лимит услуг',services:'услуг',month:'/ месяц',year:'/ год',pay:'Перейти к оплате',secure:'Оплата проходит безопасно через Paddle.',loading:'Загрузка…',back:'Вернуться в Bookly',trialTitle:'7 дней бесплатно',trialText:'После пробного периода подписка автоматически продлится по выбранному тарифу.',success:'Оплата завершена',successText:'Доступ Bookly Pro активируется автоматически.',return:'Вернуться в Bookly',error:'Не удалось загрузить страницу оплаты.'},
+        en:{title:'Bookly Pro',subtitle:'Online bookings for your business.',billing:'Billing period',monthly:'Monthly',yearly:'Yearly',limit:'Service limit',services:'services',month:'/ month',year:'/ year',pay:'Continue to payment',secure:'Payment is processed securely by Paddle.',loading:'Loading…',back:'Back to Bookly',trialTitle:'7 days free',trialText:'After the trial, your subscription renews automatically at the selected plan.',success:'Payment completed',successText:'Your Bookly Pro access is being activated automatically.',return:'Return to Bookly',error:'Unable to load the payment page.'},
+        uz:{title:'Bookly Pro',subtitle:'Biznesingiz uchun onlayn yozilish.',billing:'To‘lov davri',monthly:'Oylik',yearly:'Yillik',limit:'Xizmatlar limiti',services:'xizmat',month:'/ oy',year:'/ yil',pay:'To‘lovga o‘tish',secure:'To‘lov Paddle orqali xavfsiz amalga oshiriladi.',loading:'Yuklanmoqda…',back:'Bookly’ga qaytish',trialTitle:'7 kun bepul',trialText:'Sinov davridan so‘ng tanlangan tarif avtomatik yangilanadi.',success:'To‘lov yakunlandi',successText:'Bookly Pro avtomatik faollashtiriladi.',return:'Bookly’ga qaytish',error:'To‘lov sahifasini yuklab bo‘lmadi.'},
+        tr:{title:'Bookly Pro',subtitle:'İşletmeniz için online rezervasyon.',billing:'Ödeme dönemi',monthly:'Aylık',yearly:'Yıllık',limit:'Hizmet limiti',services:'hizmet',month:'/ ay',year:'/ yıl',pay:'Ödemeye devam et',secure:'Ödeme Paddle tarafından güvenli şekilde işlenir.',loading:'Yükleniyor…',back:'Bookly’ye dön',trialTitle:'7 gün ücretsiz',trialText:'Deneme süresinden sonra seçilen plan otomatik olarak yenilenir.',success:'Ödeme tamamlandı',successText:'Bookly Pro otomatik olarak etkinleştirilecek.',return:'Bookly’ye dön',error:'Ödeme sayfası yüklenemedi.'},
+        ar:{title:'Bookly Pro',subtitle:'الحجز عبر الإنترنت لنشاطك التجاري.',billing:'فترة الفوترة',monthly:'شهري',yearly:'سنوي',limit:'حد الخدمات',services:'خدمات',month:'/ شهر',year:'/ سنة',pay:'المتابعة إلى الدفع',secure:'تتم معالجة الدفع بأمان عبر Paddle.',loading:'جارٍ التحميل…',back:'العودة إلى Bookly',trialTitle:'7 أيام مجانًا',trialText:'بعد الفترة التجريبية، سيتم تجديد الاشتراك تلقائيًا وفق الخطة المحددة.',success:'تم إتمام الدفع',successText:'سيتم تفعيل Bookly Pro تلقائيًا.',return:'العودة إلى Bookly',error:'تعذر تحميل صفحة الدفع.'}
+      };
+
+      var lang = (navigator.language || 'en').toLowerCase().slice(0,2);
+      if (!i18n[lang]) lang = 'en';
+      var tr = i18n[lang];
+      document.documentElement.lang = lang;
+
+      function text(id,value){var el=document.getElementById(id);if(el)el.textContent=value;}
+      text('title',tr.title); text('subtitle',tr.subtitle); text('billingLabel',tr.billing); text('limitLabel',tr.limit); text('monthlyBtn',tr.monthly); text('yearlyBtn',tr.yearly); text('payBtn',tr.pay); text('backBtn',tr.back); text('secureNote',tr.secure); text('loading',tr.loading); text('successTitle',tr.success); text('successText',tr.successText); text('successBackBtn',tr.return);
+
+      function showError(message){
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('content').classList.add('hidden');
+        var el=document.getElementById('error'); el.textContent=message||tr.error; el.classList.remove('hidden');
+      }
+
+      if(!token || !api){ showError(tr.error); return; }
+
+      function fetchJson(url){
+        return fetch(url).then(function(r){return r.json().catch(function(){return null;}).then(function(data){if(!r.ok) throw new Error((data&&data.detail)||tr.error);return data;});});
+      }
+
+      function hasPrice(kind, limit, trial){
+        if(!cfg || !cfg[kind]) return false;
+        var group=cfg[kind];
+        var base=trial ? group.base : group.no_trial_base;
+        if(!base) return false;
+        return limit===10 || Boolean(group.addons && group.addons[String(limit)]);
+      }
+
+      function updateBillingButtons(){
+        document.getElementById('monthlyBtn').classList.toggle('active',billing==='month');
+        var yearly=document.getElementById('yearlyBtn');
+        yearly.classList.toggle('active',billing==='year');
+        var supported=hasPrice('yearly',selectedLimit,Boolean(cfg&&cfg.trial_available));
+        yearly.disabled=!supported;
+        if(billing==='year' && !supported){billing='month';document.getElementById('monthlyBtn').classList.add('active');yearly.classList.remove('active');}
+      }
+
+      function renderLimits(){
+        var root=document.getElementById('limits'); root.innerHTML='';
+        limits.forEach(function(limit){
+          var b=document.createElement('button'); b.type='button'; b.className='limit'+(selectedLimit===limit?' active':'');
+          var strong=document.createElement('strong'); strong.textContent=limit+' '+tr.services;
+          var span=document.createElement('span'); span.textContent=limit===10?'Bookly Pro': '+'+(limit-10)+' '+tr.services;
+          b.appendChild(strong); b.appendChild(span);
+          b.onclick=function(){selectedLimit=limit; renderLimits(); loadPrice();};
+          root.appendChild(b);
+        });
+      }
+
+      function loadPrice(){
+        updateBillingButtons();
+        document.getElementById('payBtn').disabled=true;
+        text('price','—');
+        text('period',billing==='year'?tr.year:tr.month);
+        fetchJson(api+'/payments/external/price?token='+encodeURIComponent(token)+'&billing='+encodeURIComponent(billing)+'&limit='+encodeURIComponent(String(selectedLimit)))
+          .then(function(data){
+            text('price',(Number(data.amount||0)/100).toFixed(2)+' '+String(data.currency_code||'USD'));
+            text('period',billing==='year'?tr.year:tr.month);
+            document.getElementById('payBtn').disabled=false;
+          })
+          .catch(function(){showError(tr.error);});
+      }
+
+      function getCheckoutItems(){
+        var group=billing==='year'?cfg.yearly:cfg.monthly;
+        var base=cfg.trial_available ? group.base : group.no_trial_base;
+        if(!base) throw new Error(tr.error);
+        var items=[{priceId:base,quantity:1}];
+        if(selectedLimit!==10){var addon=group.addons && group.addons[String(selectedLimit)];if(!addon)throw new Error(tr.error);items.push({priceId:addon,quantity:1});}
+        return items;
+      }
+
+      function openCheckout(){
+        try{
+          var items=getCheckoutItems();
+          window.Paddle.Checkout.open({
+            items:items,
+            customData:{checkout_token:token}
+          });
+        }catch(e){showError(e&&e.message||tr.error);}
+      }
+
+      function backToBookly(){
+        if(cfg && cfg.app_url){window.location.href=cfg.app_url;return;}
+        window.history.back();
+      }
+
+      fetchJson(api+'/payments/external/checkout-config?token='+encodeURIComponent(token))
+        .then(function(data){
+          cfg=data;
+          if(!cfg.client_token) throw new Error(tr.error);
+          if(cfg.environment==='sandbox' && window.Paddle.Environment && window.Paddle.Environment.set){window.Paddle.Environment.set('sandbox');}
+          window.Paddle.Initialize({
+            token:cfg.client_token,
+            eventCallback:function(data){
+              if(data && data.name==='checkout.completed'){
+                document.getElementById('content').classList.add('hidden');
+                document.getElementById('success').classList.remove('hidden');
+              }
+            }
+          });
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('content').classList.remove('hidden');
+          renderLimits();
+          updateBillingButtons();
+          var trial=document.getElementById('trial');
+          if(cfg.trial_available){trial.innerHTML='<strong>'+tr.trialTitle+'</strong>'+tr.trialText;trial.classList.remove('hidden');}
+          loadPrice();
+        })
+        .catch(function(){showError(tr.error);});
+
+      document.getElementById('monthlyBtn').onclick=function(){billing='month';updateBillingButtons();loadPrice();};
+      document.getElementById('yearlyBtn').onclick=function(){if(!this.disabled){billing='year';updateBillingButtons();loadPrice();}};
+      document.getElementById('payBtn').onclick=openCheckout;
+      document.getElementById('backBtn').onclick=backToBookly;
+      document.getElementById('successBackBtn').onclick=backToBookly;
+    })();
+  </script>
 </body>
 </html>
