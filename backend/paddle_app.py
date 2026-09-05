@@ -8,6 +8,21 @@ from . import paddle_original as _original
 
 app = _original.app
 
+# Remove payment entry points that belong to abandoned providers. Paddle is
+# the only payment provider exposed by the running API.
+def _remove_legacy_payment_routes() -> None:
+    app.router.routes = [
+        route
+        for route in app.router.routes
+        if getattr(route, "path", None) not in {
+            "/payments/checkout/{provider}",
+            "/payments/webhook/{provider}",
+        }
+    ]
+
+
+_remove_legacy_payment_routes()
+
 # Request-local billing interval used by the existing subscription-management
 # routes when they build Paddle item lists. The value is consumed once by the
 # patched _items_for_limit helper so it cannot leak into another request.
@@ -281,8 +296,6 @@ def _price_id_for_selection(
             "Selected Paddle base Price ID is not configured",
         )
 
-    # For packages the external pricing page checks that the required add-on
-    # exists before allowing checkout.
     if limit != 10 and not addon_id:
         raise HTTPException(
             500,
@@ -348,7 +361,7 @@ def external_price(
     billing: str = "month",
     limit: int = 10,
 ):
-    """Return the current Paddle price for the selected external-plan item."""
+    """Return the combined external-plan price from Paddle."""
     if limit not in {10, 20, 30, 50, 100}:
         raise HTTPException(400, "Недопустимый лимит услуг")
 
@@ -377,22 +390,21 @@ def external_price(
         )
         db.commit()
 
-    # The base and add-on are separate recurring prices. The public pricing
-    # page displays their combined amount, while Paddle receives both items.
-    base_price_id = _price_id_for_selection(
+    base_id = _price_id_for_selection(
         billing,
         10,
         trial_available,
     )
-    if limit == 10:
-        item_price_ids = [base_price_id]
-    else:
-        addon_price_id = _price_id_for_selection(
-            billing,
-            limit,
-            trial_available,
+
+    item_price_ids = [base_id]
+    if limit != 10:
+        item_price_ids.append(
+            _price_id_for_selection(
+                billing,
+                limit,
+                trial_available,
+            )
         )
-        item_price_ids = [base_price_id, addon_price_id]
 
     total_minor = 0
     currency_code = "USD"
@@ -404,8 +416,7 @@ def external_price(
         )
         data = response.get("data") or {}
         unit_price = data.get("unit_price") or {}
-        amount = int(unit_price.get("amount") or 0)
-        total_minor += amount
+        total_minor += int(unit_price.get("amount") or 0)
         currency_code = str(
             data.get("currency_code")
             or currency_code
