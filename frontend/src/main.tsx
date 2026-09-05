@@ -55,6 +55,14 @@ const getClientLocalDateKey = () => {
   ].join('-');
 };
 
+const getDateKeyForTimeZone = (timeZone: string) => {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const get=(type:string)=>parts.find(part=>part.type===type)?.value||'';
+    return `${get('year')}-${get('month')}-${get('day')}`;
+  } catch { return getClientLocalDateKey(); }
+};
+
 const formatUtcForTimeZone = (
   value: string | undefined,
   timeZone: string,
@@ -4326,6 +4334,7 @@ borderTopColor: '#d32f2f',
           blocks={blocks}
           reload={load}
           t={t}
+          business={business}
         />
       )}
 
@@ -4900,9 +4909,7 @@ function Dashboard({
     React.SetStateAction<'7' | '30'>
   >;
 }) {
-  const today = new Date()
-    .toISOString()
-    .slice(0, 10);
+  const today = getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent');
 
   const todayBookings = bookings.filter(
     x =>
@@ -8652,14 +8659,16 @@ function Hours({
 function Blocks({
   blocks,
   reload,
-  t
+  t,
+  business
 }: {
   blocks: any[];
   reload: () => Promise<void>;
   t: (key: string, fallback?: string) => string;
+  business: any;
 }) {
   const [f, setF] = useState({
-    day: getClientLocalDateKey(),
+    day: getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'),
     start: '13:00',
     end: '15:00',
     reason: ''
@@ -8936,7 +8945,7 @@ function Bookings({
     useState('');
 
   const [day, setDay] =
-    useState(getClientLocalDateKey());
+    useState(getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'));
 
   const [slots, setSlots] =
     useState<string[]>([]);
@@ -8971,7 +8980,7 @@ function Bookings({
     >('today');
 
   const [selectedDate, setSelectedDate] =
-    useState(getClientLocalDateKey());
+    useState(getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'));
 
   useEffect(() => {
   if (!showForm) {
@@ -9544,7 +9553,7 @@ const todayBusiness =
 
           <input
             type="date"
-            min={getClientLocalDateKey()}
+            min={getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent')}
             value={day}
             onChange={e =>
               setDay(
