@@ -2723,57 +2723,57 @@ def create_booking(
             s
         )
 
-          # Уведомление клиенту: показываем дату и время в timezone клиента.
-if booking.start_at_utc and booking.end_at_utc:
-    client_display_start = _bookly_from_utc(
-        booking.start_at_utc,
-        booking.client_timezone or "UTC"
-    )
-    client_display_end = _bookly_from_utc(
-        booking.end_at_utc,
-        booking.client_timezone or "UTC"
-    )
+                  # Уведомление клиенту: показываем дату и время в timezone клиента.
+        if booking.start_at_utc and booking.end_at_utc:
+            client_display_start = _bookly_from_utc(
+                booking.start_at_utc,
+                booking.client_timezone or "UTC"
+            )
+            client_display_end = _bookly_from_utc(
+                booking.end_at_utc,
+                booking.client_timezone or "UTC"
+            )
 
-    display_day = (
-        client_display_start.date().isoformat()
-        if client_display_start
-        else booking.day.isoformat()
-    )
+            display_day = (
+                client_display_start.date().isoformat()
+                if client_display_start
+                else booking.day.isoformat()
+            )
 
-    display_start = (
-        client_display_start.strftime("%H:%M")
-        if client_display_start
-        else booking.start.strftime("%H:%M")
-    )
+            display_start = (
+                client_display_start.strftime("%H:%M")
+                if client_display_start
+                else booking.start.strftime("%H:%M")
+            )
 
-    display_end = (
-        client_display_end.strftime("%H:%M")
-        if client_display_end
-        else booking.end.strftime("%H:%M")
-    )
-else:
-    display_day = booking.day.isoformat()
-    display_start = booking.start.strftime("%H:%M")
-    display_end = booking.end.strftime("%H:%M")
+            display_end = (
+                client_display_end.strftime("%H:%M")
+                if client_display_end
+                else booking.end.strftime("%H:%M")
+            )
+        else:
+            display_day = booking.day.isoformat()
+            display_start = booking.start.strftime("%H:%M")
+            display_end = booking.end.strftime("%H:%M")
 
-telegram_api(
-    "sendMessage",
-    {
-        "chat_id": booking.client_telegram_id,
-        "text": (
-            "✅ <b>Вы успешно записаны!</b>\n\n"
-            f"💈 {s.name}\n"
-            f"📅 {display_day}\n"
-            f"🕐 {display_start}–"
-            f"{display_end}\n"
-            f"📞 Ваш номер: {booking.client_phone}\n"
-            f"☎️ Связаться: {b.phone or 'номер не указан'}\n"
-            f"📍 {b.address or 'Адрес не указан'}\n\n"
-            "Ждём вас!"
-        ),
-        "parse_mode": "HTML"
-    }
-)
+        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": booking.client_telegram_id,
+                "text": (
+                    "✅ <b>Вы успешно записаны!</b>\n\n"
+                    f"💈 {s.name}\n"
+                    f"📅 {display_day}\n"
+                    f"🕐 {display_start}–"
+                    f"{display_end}\n"
+                    f"📞 Ваш номер: {booking.client_phone}\n"
+                    f"☎️ Связаться: {b.phone or 'номер не указан'}\n"
+                    f"📍 {b.address or 'Адрес не указан'}\n\n"
+                    "Ждём вас!"
+                ),
+                "parse_mode": "HTML"
+            }
+        )
 
         return booking
 @app.post("/bookings/{booking_id}/cancel")
