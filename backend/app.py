@@ -5,9 +5,10 @@ import io
 import qrcode
 import hashlib
 import secrets
-from datetime import date, time, datetime, timedelta
+from datetime import date, time, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Optional
+from zoneinfo import ZoneInfo
 from contextvars import ContextVar
 from urllib.parse import parse_qsl
 from urllib import request as urllib_request
@@ -317,6 +318,8 @@ class BlockedSlot(Base):
     day: Mapped[date] = mapped_column(Date)
     start: Mapped[time] = mapped_column(Time)
     end: Mapped[time] = mapped_column(Time)
+    start_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+    end_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
     reason: Mapped[str] = mapped_column(String(255), default="")
 
 class Booking(Base):
@@ -333,6 +336,9 @@ class Booking(Base):
     day: Mapped[date] = mapped_column(Date)
     start: Mapped[time] = mapped_column(Time)
     end: Mapped[time] = mapped_column(Time)
+    start_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+    end_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+    client_timezone: Mapped[str] = mapped_column(String(64), default="UTC")
 
     status: Mapped[str] = mapped_column(String(20), default="confirmed")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -796,6 +802,74 @@ def ensure_business_schema():
 
 ensure_business_schema()
 
+
+def _bookly_zone(name: str | None):
+    try:
+        return ZoneInfo(name or "Asia/Tashkent")
+    except Exception:
+        return ZoneInfo("Asia/Tashkent")
+
+
+def _bookly_to_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        raise ValueError("Timezone-aware datetime required")
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def ensure_timezone_schema():
+    """Add UTC timestamp columns and backfill legacy local rows."""
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        timestamp_type = "TIMESTAMP" if engine.dialect.name == "postgresql" else "DATETIME"
+
+        if "bookings" in inspector.get_table_names():
+            existing = {c["name"] for c in inspector.get_columns("bookings")}
+            for name, definition in {
+                "start_at_utc": timestamp_type,
+                "end_at_utc": timestamp_type,
+                "client_timezone": "VARCHAR(64) DEFAULT 'UTC'",
+            }.items():
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE bookings ADD COLUMN {name} {definition}"))
+
+        if "blocked_slots" in inspector.get_table_names():
+            existing = {c["name"] for c in inspector.get_columns("blocked_slots")}
+            for name in ("start_at_utc", "end_at_utc"):
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE blocked_slots ADD COLUMN {name} {timestamp_type}"))
+
+    with SessionLocal() as db:
+        bookings = db.query(Booking).filter(Booking.start_at_utc.is_(None)).all()
+        for booking in bookings:
+            business = db.get(Business, booking.business_id)
+            if not business:
+                continue
+            zone = _bookly_zone(business.timezone)
+            booking.start_at_utc = _bookly_to_utc(
+                datetime.combine(booking.day, booking.start, tzinfo=zone)
+            )
+            booking.end_at_utc = _bookly_to_utc(
+                datetime.combine(booking.day, booking.end, tzinfo=zone)
+            )
+            booking.client_timezone = business.timezone or "Asia/Tashkent"
+
+        blocks = db.query(BlockedSlot).filter(BlockedSlot.start_at_utc.is_(None)).all()
+        for block in blocks:
+            business = db.get(Business, block.business_id)
+            if not business:
+                continue
+            zone = _bookly_zone(business.timezone)
+            block.start_at_utc = _bookly_to_utc(
+                datetime.combine(block.day, block.start, tzinfo=zone)
+            )
+            block.end_at_utc = _bookly_to_utc(
+                datetime.combine(block.day, block.end, tzinfo=zone)
+            )
+
+        db.commit()
+
+
+ensure_timezone_schema()
 
 app = FastAPI(
     title="Bookly API",
@@ -1841,7 +1915,16 @@ def admin_block(x:BlockIn,x_telegram_init_data:str=Header(default="")):
     with SessionLocal() as db:
         b=owner_business(db,int(user["id"]))
         if not b:raise HTTPException(400,"Create business first")
-        z=BlockedSlot(business_id=b.id,**x.model_dump());db.add(z);db.commit();db.refresh(z);return z
+        business_zone = _bookly_zone(b.timezone)
+        start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
+        end_local = datetime.combine(x.day, x.end, tzinfo=business_zone)
+        z=BlockedSlot(
+            business_id=b.id,
+            **x.model_dump(),
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+        )
+        db.add(z);db.commit();db.refresh(z);return z
 
 @app.delete("/admin/blocks/{block_id}")
 def admin_delete_block(block_id:int,x_telegram_init_data:str=Header(default="")):
@@ -2254,12 +2337,17 @@ def admin_create_booking(
             business.id,
             x.day,
             x.start,
-            end_dt.time()
+            end_dt.time(),
+            business.timezone
         ):
             raise HTTPException(
                 400,
                 "Это время уже занято или заблокировано"
             )
+
+        business_zone = _bookly_zone(business.timezone)
+        start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
+        end_local = start_local + timedelta(minutes=service.duration_min)
 
         booking = Booking(
             business_id=business.id,
@@ -2270,6 +2358,9 @@ def admin_create_booking(
             day=x.day,
             start=x.start,
             end=end_dt.time(),
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+            client_timezone=business.timezone or "Asia/Tashkent",
             status="confirmed"
         )
 
@@ -2286,9 +2377,47 @@ def get_work_windows(db, business_id:int, day:date):
     # Friendly first-run default until owner configures schedule.
     return [(time(9,0),time(18,0))]
 
-def is_free(db,business_id:int,day:date,st:time,en:time):
-    overlap=db.query(Booking).filter(Booking.business_id==business_id,Booking.day==day,Booking.status=="confirmed",Booking.start<en,Booking.end>st).first()
-    blocked=db.query(BlockedSlot).filter(BlockedSlot.business_id==business_id,BlockedSlot.day==day,BlockedSlot.start<en,BlockedSlot.end>st).first()
+def is_free(db,business_id:int,day:date,st:time,en:time,timezone_name: str | None = None):
+    zone = _bookly_zone(timezone_name or "Asia/Tashkent")
+    start_at_utc = _bookly_to_utc(datetime.combine(day, st, tzinfo=zone))
+    end_at_utc = _bookly_to_utc(datetime.combine(day, en, tzinfo=zone))
+
+    overlap = db.query(Booking).filter(
+        Booking.business_id == business_id,
+        Booking.status == "confirmed",
+        Booking.start_at_utc.is_not(None),
+        Booking.end_at_utc.is_not(None),
+        Booking.start_at_utc < end_at_utc,
+        Booking.end_at_utc > start_at_utc,
+    ).first()
+    if overlap:
+        return False
+
+    blocked = db.query(BlockedSlot).filter(
+        BlockedSlot.business_id == business_id,
+        BlockedSlot.start_at_utc.is_not(None),
+        BlockedSlot.end_at_utc.is_not(None),
+        BlockedSlot.start_at_utc < end_at_utc,
+        BlockedSlot.end_at_utc > start_at_utc,
+    ).first()
+    if blocked:
+        return False
+
+    overlap = db.query(Booking).filter(
+        Booking.business_id == business_id,
+        Booking.day == day,
+        Booking.status == "confirmed",
+        Booking.start_at_utc.is_(None),
+        Booking.start < en,
+        Booking.end > st,
+    ).first()
+    blocked = db.query(BlockedSlot).filter(
+        BlockedSlot.business_id == business_id,
+        BlockedSlot.day == day,
+        BlockedSlot.start_at_utc.is_(None),
+        BlockedSlot.start < en,
+        BlockedSlot.end > st,
+    ).first()
     return not overlap and not blocked
 
 @app.get("/businesses/{slug}")
@@ -2549,16 +2678,25 @@ def create_booking(
             x.business_id,
             x.day,
             x.start,
-            end
+            end,
+            b.timezone
         ):
             raise HTTPException(
                 409,
                 "This time is no longer available"
             )
 
+        business_zone = _bookly_zone(b.timezone)
+        start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
+        end_local = start_local + timedelta(minutes=s.duration_min)
+
+        booking_data = x.model_dump()
         booking = Booking(
-            **x.model_dump(),
-            end=end
+            **booking_data,
+            end=end,
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+            client_timezone=b.timezone or "Asia/Tashkent",
         )
 
         db.add(booking)
