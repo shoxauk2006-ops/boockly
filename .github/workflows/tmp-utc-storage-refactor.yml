@@ -1,0 +1,323 @@
+name: tmp-utc-storage-refactor
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  refactor:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply backend UTC storage changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
+
+          s = s.replace(
+              'from datetime import date, time, datetime, timedelta\n',
+              'from datetime import date, time, datetime, timedelta, timezone\n',
+              1
+          )
+          s = s.replace(
+              'from typing import Optional\n',
+              'from typing import Optional\nfrom zoneinfo import ZoneInfo\n',
+              1
+          )
+
+          old = '''class BlockedSlot(Base):
+              __tablename__ = "blocked_slots"
+              id: Mapped[int] = mapped_column(Integer, primary_key=True)
+              business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
+              day: Mapped[date] = mapped_column(Date)
+              start: Mapped[time] = mapped_column(Time)
+              end: Mapped[time] = mapped_column(Time)
+              reason: Mapped[str] = mapped_column(String(255), default="")
+          '''
+          new = '''class BlockedSlot(Base):
+              __tablename__ = "blocked_slots"
+              id: Mapped[int] = mapped_column(Integer, primary_key=True)
+              business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
+              day: Mapped[date] = mapped_column(Date)
+              start: Mapped[time] = mapped_column(Time)
+              end: Mapped[time] = mapped_column(Time)
+              start_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+              end_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+              reason: Mapped[str] = mapped_column(String(255), default="")
+          '''
+          if old not in s:
+              raise SystemExit('BlockedSlot model marker not found')
+          s = s.replace(old, new, 1)
+
+          old = '''    day: Mapped[date] = mapped_column(Date)
+              start: Mapped[time] = mapped_column(Time)
+              end: Mapped[time] = mapped_column(Time)
+
+              status: Mapped[str] = mapped_column(String(20), default="confirmed")
+          '''
+          if old not in s:
+              raise SystemExit('Booking model marker not found')
+          new = '''    day: Mapped[date] = mapped_column(Date)
+              start: Mapped[time] = mapped_column(Time)
+              end: Mapped[time] = mapped_column(Time)
+              start_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+              end_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
+              client_timezone: Mapped[str] = mapped_column(String(64), default="UTC")
+
+              status: Mapped[str] = mapped_column(String(20), default="confirmed")
+          '''
+          s = s.replace(old, new, 1)
+
+          marker = 'ensure_business_schema()\n\n\napp = FastAPI('
+          helper = '''ensure_business_schema()
+
+
+def _bookly_zone(name: str | None):
+    try:
+        return ZoneInfo(name or "Asia/Tashkent")
+    except Exception:
+        return ZoneInfo("Asia/Tashkent")
+
+
+def _bookly_to_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        raise ValueError("Timezone-aware datetime required")
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def ensure_timezone_schema():
+    """Add UTC timestamp columns and backfill existing local rows."""
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        timestamp_type = "TIMESTAMP" if engine.dialect.name == "postgresql" else "DATETIME"
+
+        if "bookings" in inspector.get_table_names():
+            existing = {c["name"] for c in inspector.get_columns("bookings")}
+            columns = {
+                "start_at_utc": timestamp_type,
+                "end_at_utc": timestamp_type,
+                "client_timezone": "VARCHAR(64) DEFAULT 'UTC'",
+            }
+            for name, definition in columns.items():
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE bookings ADD COLUMN {name} {definition}"))
+
+        if "blocked_slots" in inspector.get_table_names():
+            existing = {c["name"] for c in inspector.get_columns("blocked_slots")}
+            for name in ("start_at_utc", "end_at_utc"):
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE blocked_slots ADD COLUMN {name} {timestamp_type}"))
+
+    with SessionLocal() as db:
+        bookings = db.query(Booking).filter(Booking.start_at_utc.is_(None)).all()
+        for booking in bookings:
+            business = db.get(Business, booking.business_id)
+            if not business:
+                continue
+            zone = _bookly_zone(business.timezone)
+            booking.start_at_utc = _bookly_to_utc(datetime.combine(booking.day, booking.start, tzinfo=zone))
+            booking.end_at_utc = _bookly_to_utc(datetime.combine(booking.day, booking.end, tzinfo=zone))
+            if not booking.client_timezone:
+                booking.client_timezone = "UTC"
+
+        blocks = db.query(BlockedSlot).filter(BlockedSlot.start_at_utc.is_(None)).all()
+        for block in blocks:
+            business = db.get(Business, block.business_id)
+            if not business:
+                continue
+            zone = _bookly_zone(business.timezone)
+            block.start_at_utc = _bookly_to_utc(datetime.combine(block.day, block.start, tzinfo=zone))
+            block.end_at_utc = _bookly_to_utc(datetime.combine(block.day, block.end, tzinfo=zone))
+
+        db.commit()
+
+
+ensure_timezone_schema()
+
+app = FastAPI('''
+          if marker not in s:
+              raise SystemExit('schema insertion marker not found')
+          s = s.replace(marker, helper, 1)
+
+          old = '''        z=BlockedSlot(business_id=b.id,**x.model_dump());db.add(z);db.commit();db.refresh(z);return z
+          '''
+          new = '''        business_zone = _bookly_zone(b.timezone)
+        start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
+        end_local = datetime.combine(x.day, x.end, tzinfo=business_zone)
+        z=BlockedSlot(
+            business_id=b.id,
+            **x.model_dump(),
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+        )
+        db.add(z);db.commit();db.refresh(z);return z
+          '''
+          if old not in s:
+              raise SystemExit('admin block marker not found')
+          s = s.replace(old, new, 1)
+
+          old = '''        if not is_free(
+            db,
+            business.id,
+            x.day,
+            x.start,
+            end_dt.time()
+        ):
+          '''
+          new = '''        if not is_free(
+            db,
+            business.id,
+            x.day,
+            x.start,
+            end_dt.time(),
+            business.timezone
+        ):
+          '''
+          if old not in s:
+              raise SystemExit('admin is_free call marker not found')
+          s = s.replace(old, new, 1)
+
+          old = '''        booking = Booking(
+            business_id=business.id,
+            service_id=service.id,
+            client_telegram_id=0,
+            client_name=x.client_name.strip(),
+            client_phone=x.client_phone.strip(),
+            day=x.day,
+            start=x.start,
+            end=end_dt.time(),
+            status="confirmed"
+        )
+          '''
+          new = '''        business_zone = _bookly_zone(business.timezone)
+        start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
+        end_local = start_local + timedelta(minutes=service.duration_min)
+
+        booking = Booking(
+            business_id=business.id,
+            service_id=service.id,
+            client_telegram_id=0,
+            client_name=x.client_name.strip(),
+            client_phone=x.client_phone.strip(),
+            day=x.day,
+            start=x.start,
+            end=end_dt.time(),
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+            client_timezone=business.timezone,
+            status="confirmed"
+        )
+          '''
+          if old not in s:
+              raise SystemExit('admin booking marker not found')
+          s = s.replace(old, new, 1)
+
+          old = '''def is_free(db,business_id:int,day:date,st:time,en:time):
+    overlap=db.query(Booking).filter(Booking.business_id==business_id,Booking.day==day,Booking.status=="confirmed",Booking.start<en,Booking.end>st).first()
+    blocked=db.query(BlockedSlot).filter(BlockedSlot.business_id==business_id,BlockedSlot.day==day,BlockedSlot.start<en,BlockedSlot.end>st).first()
+    return not overlap and not blocked
+          '''
+          new = '''def is_free(db,business_id:int,day:date,st:time,en:time,timezone_name: str | None = None):
+    zone = _bookly_zone(timezone_name or "Asia/Tashkent")
+    start_at_utc = _bookly_to_utc(datetime.combine(day, st, tzinfo=zone))
+    end_at_utc = _bookly_to_utc(datetime.combine(day, en, tzinfo=zone))
+
+    overlap = db.query(Booking).filter(
+        Booking.business_id == business_id,
+        Booking.status == "confirmed",
+        Booking.start_at_utc.is_not(None),
+        Booking.end_at_utc.is_not(None),
+        Booking.start_at_utc < end_at_utc,
+        Booking.end_at_utc > start_at_utc,
+    ).first()
+    if overlap:
+        return False
+
+    blocked = db.query(BlockedSlot).filter(
+        BlockedSlot.business_id == business_id,
+        BlockedSlot.start_at_utc.is_not(None),
+        BlockedSlot.end_at_utc.is_not(None),
+        BlockedSlot.start_at_utc < end_at_utc,
+        BlockedSlot.end_at_utc > start_at_utc,
+    ).first()
+    if blocked:
+        return False
+
+    # Legacy rows are checked in business-local time until migrated.
+    overlap = db.query(Booking).filter(
+        Booking.business_id == business_id,
+        Booking.day == day,
+        Booking.status == "confirmed",
+        Booking.start_at_utc.is_(None),
+        Booking.start < en,
+        Booking.end > st,
+    ).first()
+    blocked = db.query(BlockedSlot).filter(
+        BlockedSlot.business_id == business_id,
+        BlockedSlot.day == day,
+        BlockedSlot.start_at_utc.is_(None),
+        BlockedSlot.start < en,
+        BlockedSlot.end > st,
+    ).first()
+    return not overlap and not blocked
+          '''
+          if old not in s:
+              raise SystemExit('is_free marker not found')
+          s = s.replace(old, new, 1)
+
+          old = '''        if not is_free(
+            db,
+            x.business_id,
+            x.day,
+            x.start,
+            end
+        ):
+          '''
+          new = '''        if not is_free(
+            db,
+            x.business_id,
+            x.day,
+            x.start,
+            end,
+            b.timezone
+        ):
+          '''
+          if old not in s:
+              raise SystemExit('public is_free call marker not found')
+          s = s.replace(old, new, 1)
+
+          old = '''        booking = Booking(
+            **x.model_dump(),
+            end=end
+        )
+          '''
+          new = '''        business_zone = _bookly_zone(b.timezone)
+        start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
+        end_local = start_local + timedelta(minutes=s.duration_min)
+
+        booking_data = x.model_dump()
+        booking_data.pop("start_at_utc", None)
+        booking = Booking(
+            **booking_data,
+            end=end,
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+            client_timezone=b.timezone,
+        )
+          '''
+          if old not in s:
+              raise SystemExit('public booking marker not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          python -m py_compile backend/app.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/app.py
+          git commit -m "Implement UTC booking storage [skip ci]"
+          git push
