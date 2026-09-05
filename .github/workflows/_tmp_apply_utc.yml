@@ -12,14 +12,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Apply final timezone changes
         run: |
+          set -e
           python - <<'PY'
           from pathlib import Path
           import re
 
-          # ---------- frontend ----------
+          # FRONTEND
           p = Path('frontend/src/main.tsx')
           s = p.read_text(encoding='utf-8')
-
           marker = "const getLocale = () =>\n  LOCALE_MAP[getStoredLanguage()] || 'en-US';\n"
           helper = marker + """
 const getClientTimeZone = () => {
@@ -57,6 +57,8 @@ const getClientLocalDateKey = () => {
 """
           if old in s:
               s = s.replace(old, new, 1)
+          elif 'const clientTimeZone = getClientTimeZone();' not in s:
+              raise SystemExit('client day marker not found')
 
           s = s.replace(
               "`/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}`",
@@ -67,24 +69,24 @@ const getClientLocalDateKey = () => {
               "`/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}`"
           )
 
-          old_payload = """              day,
+          old = """              day,
               start:
                 selectedTime
             })
 """
-          new_payload = """              day,
+          new = """              day,
               start:
                 selectedTime,
               client_timezone:
                 clientTimeZone
             })
 """
-          if old_payload not in s: raise SystemExit('booking payload marker not found')
-          s = s.replace(old_payload, new_payload, 1)
+          if old not in s: raise SystemExit('booking payload marker not found')
+          s = s.replace(old, new, 1)
 
           my_marker = "function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {\n  const [items, setItems] ="
           if my_marker in s and 'const myBookingsTimeZone = getClientTimeZone();' not in s:
-              my_new = """function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {
+              s = s.replace(my_marker, """function MyBookings({t}:{t:(key:string,fallback?:string)=>string}) {
   const myBookingsTimeZone = getClientTimeZone();
 
   const formatBookingDate = (item: any) => {
@@ -120,9 +122,7 @@ const getClientLocalDateKey = () => {
     }
   };
 
-  const [items, setItems] ="""
-              s = s.replace(my_marker, my_new, 1)
-
+  const [items, setItems] =""", 1)
           s = s.replace("                📅 {item.day}\n", "                📅 {formatBookingDate(item)}\n", 1)
           old_time = """                🕐{' '}
                 {item.start?.slice(
@@ -135,28 +135,19 @@ const getClientLocalDateKey = () => {
                   5
                 )}
 """
-          new_time = """                🕐 {formatBookingTime(item)}
-"""
           if old_time in s:
-              s = s.replace(old_time, new_time, 1)
-
+              s = s.replace(old_time, "                🕐 {formatBookingTime(item)}\n", 1)
           p.write_text(s, encoding='utf-8')
 
-          # ---------- backend ----------
+          # BACKEND: business-local statistics/admin cleanup.
           p = Path('backend/app.py')
           s = p.read_text(encoding='utf-8')
-
-          # Statistics must use business-local calendar boundaries.
           old = '        now = datetime.now()\n        today = now.date()\n'
           new = '        business_zone = _bookly_zone(business.timezone)\n        now = datetime.now(business_zone).replace(tzinfo=None)\n        today = now.date()\n'
           if old in s: s = s.replace(old, new, 1)
-
-          # Block cleanup must use the business timezone.
           old = '        today = datetime.now().date()\n\n        db.query(BlockedSlot).filter(\n'
           new = '        today = datetime.now(_bookly_zone(b.timezone)).date()\n\n        db.query(BlockedSlot).filter(\n'
           if old in s: s = s.replace(old, new, 1)
-
-          # Admin-created bookings must compare against business local time.
           old = '''        now_tashkent = datetime.now(
             ZoneInfo("Asia/Tashkent")
         ).replace(tzinfo=None)
@@ -166,10 +157,7 @@ const getClientLocalDateKey = () => {
         ).replace(tzinfo=None)
 '''
           if old in s: s = s.replace(old, new, 1)
-          if 'if start_dt <= now_tashkent:' in s:
-              s = s.replace('if start_dt <= now_tashkent:', 'if start_dt <= now_business:', 1)
-
-          # Return exact UTC timestamps from /my/bookings.
+          s = s.replace('if start_dt <= now_tashkent:', 'if start_dt <= now_business:', 1)
           marker = '''                "day": booking.day.isoformat(),
                 "start": booking.start.strftime("%H:%M"),
                 "end": booking.end.strftime("%H:%M"),
@@ -183,7 +171,6 @@ const getClientLocalDateKey = () => {
                 "status": booking.status
 '''
           if marker in s: s = s.replace(marker, repl, 1)
-
           p.write_text(s, encoding='utf-8')
           PY
           python -m py_compile backend/app.py
