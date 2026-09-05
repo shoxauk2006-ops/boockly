@@ -1,0 +1,60 @@
+name: Temporary Bookly admin timezone fix
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: ${{ !contains(github.event.head_commit.message, '[bookly-admin-timezone-fix]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch frontend
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('frontend/src/main.tsx'); s=p.read_text(encoding='utf-8')
+          marker="""const getClientLocalDateKey = () => {\n  const now = new Date();\n  return [\n    now.getFullYear(),\n    String(now.getMonth() + 1).padStart(2, '0'),\n    String(now.getDate()).padStart(2, '0')\n  ].join('-');\n};"""
+          if 'const getDateKeyForTimeZone =' not in s:
+              helper=marker+"""\n\nconst getDateKeyForTimeZone = (timeZone: string) => {\n  try {\n    const parts = new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());\n    const get=(type:string)=>parts.find(part=>part.type===type)?.value||'';\n    return `${get('year')}-${get('month')}-${get('day')}`;\n  } catch { return getClientLocalDateKey(); }\n};"""
+              if marker not in s: raise SystemExit('date helper missing')
+              s=s.replace(marker,helper,1)
+          admin_today="getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent')"
+          s=s.replace("""  const today = new Date()\n    .toISOString()\n    .slice(0, 10);""",f"  const today = {admin_today};",1)
+          bs=s.find('function Blocks({'); be=s.find('function ',bs+20)
+          if bs<0: raise SystemExit('Blocks missing')
+          if be<0: be=len(s)
+          block=s[bs:be]
+          old="""function Blocks({\n  blocks,\n  reload,\n  t\n}: {\n  blocks: any[];\n  reload: () => Promise<void>;\n  t: (key: string, fallback?: string) => string;\n}) {"""
+          new="""function Blocks({\n  blocks,\n  reload,\n  t,\n  business\n}: {\n  blocks: any[];\n  reload: () => Promise<void>;\n  t: (key: string, fallback?: string) => string;\n  business: any;\n}) {"""
+          if old in block: block=block.replace(old,new,1)
+          block=block.replace('day: getClientLocalDateKey(),',"day: getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'),",1)
+          s=s[:bs]+block+s[be:]
+          old="""      {tab === 'blocks' && (\n        <Blocks\n          blocks={blocks}\n          reload={load}\n          t={t}\n        />\n      )}"""
+          new="""      {tab === 'blocks' && (\n        <Blocks\n          blocks={blocks}\n          reload={load}\n          t={t}\n          business={business}\n        />\n      )}"""
+          s=s.replace(old,new,1)
+          ks=s.find('function Bookings({'); ke=s.find('function ',ks+20)
+          if ks<0: raise SystemExit('Bookings missing')
+          if ke<0: ke=len(s)
+          k=s[ks:ke].replace('getClientLocalDateKey()',admin_today)
+          s=s[:ks]+k+s[ke:]
+          p.write_text(s,encoding='utf-8')
+          PY
+          cd frontend
+          npm install --no-audit --no-fund
+          npm run build
+      - name: Commit and clean
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/main.tsx
+          git diff --cached --check
+          git commit -m 'fix: make admin dates use business timezone [bookly-admin-timezone-fix]'
+          git push origin main
+          git rm .github/workflows/_tmp_admin_timezone_fix.yml
+          git commit -m 'chore: remove temporary admin timezone workflow [bookly-admin-timezone-fix]'
+          git push origin main
