@@ -238,8 +238,8 @@ jobs:
             type="button"
             className="client-contact-button"
             onClick={() => {
-              if (tg()?.openLink) {
-                tg().openLink(appleMapUrl);
+              if (tg()?.openTelegramLink) {
+                tg().openTelegramLink(appleMapUrl);
               } else {
                 window.open(
                   appleMapUrl,
@@ -266,12 +266,96 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
+
+          old = '''        # Уведомление клиенту
+        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": booking.client_telegram_id,
+                "text": (
+                    "✅ <b>Вы успешно записаны!</b>\\n\\n"
+                    f"💈 {s.name}\\n"
+                    f"📅 {booking.day.isoformat()}\\n"
+                    f"🕐 {booking.start.strftime('%H:%M')}–"
+                    f"{booking.end.strftime('%H:%M')}\\n"
+                    f"📞 Ваш номер: {booking.client_phone}\\n"
+                    f"☎️ Связаться: {b.phone or 'номер не указан'}\\n"
+                    f"📍 {b.address or 'Адрес не указан'}\\n\\n"
+                    "Ждём вас!"
+                ),
+                "parse_mode": "HTML"
+            }
+        )'''
+
+          new = '''        # Уведомление клиенту: показываем дату и время в timezone клиента.
+        if booking.start_at_utc and booking.end_at_utc:
+            client_display_start = _bookly_from_utc(
+                booking.start_at_utc,
+                booking.client_timezone or "UTC"
+            )
+            client_display_end = _bookly_from_utc(
+                booking.end_at_utc,
+                booking.client_timezone or "UTC"
+            )
+            display_day = (
+                client_display_start.date().isoformat()
+                if client_display_start
+                else booking.day.isoformat()
+            )
+            display_start = (
+                client_display_start.strftime('%H:%M')
+                if client_display_start
+                else booking.start.strftime('%H:%M')
+            )
+            display_end = (
+                client_display_end.strftime('%H:%M')
+                if client_display_end
+                else booking.end.strftime('%H:%M')
+            )
+        else:
+            display_day = booking.day.isoformat()
+            display_start = booking.start.strftime('%H:%M')
+            display_end = booking.end.strftime('%H:%M')
+
+        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": booking.client_telegram_id,
+                "text": (
+                    "✅ <b>Вы успешно записаны!</b>\\n\\n"
+                    f"💈 {s.name}\\n"
+                    f"📅 {display_day}\\n"
+                    f"🕐 {display_start}–"
+                    f"{display_end}\\n"
+                    f"📞 Ваш номер: {booking.client_phone}\\n"
+                    f"☎️ Связаться: {b.phone or 'номер не указан'}\\n"
+                    f"📍 {b.address or 'Адрес не указан'}\\n\\n"
+                    "Ждём вас!"
+                ),
+                "parse_mode": "HTML"
+            }
+        )'''
+
+          if old in s:
+              s = s.replace(old, new, 1)
+          elif 'client_display_start' not in s:
+              raise SystemExit('Client notification block not found')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          python3 -m py_compile backend/app.py
+
       - name: Commit source changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add frontend/src/main.tsx
-          git commit -m 'feat: improve map location and remove service contacts [bookly-ui-patch]' || true
+          git add frontend/src/main.tsx backend/app.py
+          git commit -m 'fix: client booking notification uses client timezone [bookly-ui-patch]' || true
           git push
 
       - name: Validate frontend
