@@ -59,29 +59,18 @@ ANNUAL_PRICE_IDS = {
     100: _env("ANNUAL_SERVICE_ADDON_100_PRICE_ID"),
 }
 
-ANNUAL_NO_TRIAL_BASE_PRICE_ID = _env(
-    "BOOKLY_ANNUAL_BASE_NO_TRIAL_PRICE_ID"
-)
-
 
 def _all_annual_price_ids() -> set[str]:
-    values = {
+    return {
         value
         for value in ANNUAL_PRICE_IDS.values()
         if value
     }
-    if ANNUAL_NO_TRIAL_BASE_PRICE_ID:
-        values.add(ANNUAL_NO_TRIAL_BASE_PRICE_ID)
-    return values
 
 
 def _limit_from_items(items) -> int:
     """Recognize both monthly and annual Bookly Paddle items."""
     annual_base = str(ANNUAL_PRICE_IDS[10] or "").strip()
-    annual_no_trial_base = str(
-        ANNUAL_NO_TRIAL_BASE_PRICE_ID or ""
-    ).strip()
-
     monthly_base = str(_original.PRICE_IDS[10] or "").strip()
 
     monthly_addons = {
@@ -107,14 +96,6 @@ def _limit_from_items(items) -> int:
             detected.add(price_id)
 
     if annual_base and annual_base in detected:
-        matches = [
-            limit
-            for price_id, limit in annual_addons.items()
-            if price_id in detected
-        ]
-        return matches[0] if len(matches) == 1 else 10
-
-    if annual_no_trial_base and annual_no_trial_base in detected:
         matches = [
             limit
             for price_id, limit in annual_addons.items()
@@ -266,11 +247,9 @@ def _price_id_for_selection(
 ) -> str:
     billing = billing.lower().strip()
     if billing == "year":
-        base_id = (
-            ANNUAL_PRICE_IDS[10]
-            if trial_available
-            else ANNUAL_NO_TRIAL_BASE_PRICE_ID
-        )
+        # Yearly plans never have a trial. Always use the normal annual base
+        # price, regardless of the user's monthly trial status.
+        base_id = ANNUAL_PRICE_IDS[10]
         addon_id = (
             ANNUAL_PRICE_IDS.get(limit)
             if limit != 10
@@ -349,7 +328,9 @@ def external_checkout_config(token: str):
         },
         "yearly": {
             "base": ANNUAL_PRICE_IDS[10],
-            "no_trial_base": ANNUAL_NO_TRIAL_BASE_PRICE_ID,
+            # Kept equal to the annual base for compatibility with the current
+            # external page. Yearly pricing itself never depends on trial state.
+            "no_trial_base": ANNUAL_PRICE_IDS[10],
             "addons": _public_annual_prices(),
         },
     }
