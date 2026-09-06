@@ -297,6 +297,66 @@ def subscription_billing_period(
     }
 
 
+def _price_amount(price_id: str) -> tuple[float, str]:
+    if not price_id:
+        raise HTTPException(500, "Paddle Price ID is not configured")
+
+    response = _original._paddle_request(
+        "GET",
+        f"/prices/{price_id}",
+    )
+    data = response.get("data") or {}
+    unit_price = data.get("unit_price") or {}
+    amount_minor = int(unit_price.get("amount") or 0)
+    currency_code = str(data.get("currency_code") or "USD")
+    return amount_minor / 100.0, currency_code
+
+
+@app.get("/admin/subscription/pricing")
+def subscription_pricing(
+    x_telegram_init_data: str = Header(default=""),
+):
+    """Return current subscription pricing for the active billing period."""
+    _, _, business_id, subscription_id = _current_subscription(
+        x_telegram_init_data
+    )
+
+    billing = _subscription_interval(subscription_id)
+    if billing == "year":
+        price_ids = ANNUAL_PRICE_IDS
+    else:
+        price_ids = {
+            10: _original.PRICE_IDS.get(10),
+            20: _original.PRICE_IDS.get(20),
+            30: _original.PRICE_IDS.get(30),
+            50: _original.PRICE_IDS.get(50),
+            100: _original.PRICE_IDS.get(100),
+        }
+
+    prices = {}
+    currency_code = "USD"
+
+    for limit, base_or_addon_id in price_ids.items():
+        if not base_or_addon_id:
+            continue
+
+        amount, currency = _price_amount(base_or_addon_id)
+        currency_code = currency
+
+        if limit == 10:
+            prices[str(limit)] = amount
+        else:
+            base_amount, _ = _price_amount(price_ids[10])
+            prices[str(limit)] = base_amount + amount
+
+    return {
+        "business_id": business_id,
+        "billing_period": billing,
+        "currency_code": currency_code,
+        "prices": prices,
+    }
+
+
 @app.get("/payments/external/checkout-config")
 def external_checkout_config(token: str):
     """Return only public checkout data for the short-lived signed token."""
@@ -341,8 +401,6 @@ def external_checkout_config(token: str):
         },
         "yearly": {
             "base": ANNUAL_PRICE_IDS[10],
-            # Kept equal to the annual base for compatibility with the current
-            # external page. Yearly pricing itself never depends on trial state.
             "no_trial_base": ANNUAL_PRICE_IDS[10],
             "addons": _public_annual_prices(),
         },
