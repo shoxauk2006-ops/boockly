@@ -1,6 +1,7 @@
 name: Fix Telegram connection path
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   fix:
@@ -18,7 +19,8 @@ jobs:
           old = """    const startParam =\n      tg()?.initDataUnsafe?.start_param ||\n      new URLSearchParams(window.location.search).get('startapp') ||\n      '';"""
           new = """    const pathConnectMatch = window.location.pathname.match(/^\\/connect\\/(bookly-connect-.+)$/);\n    const pathConnectParam = pathConnectMatch?.[1] || '';\n\n    const hashConnectMatch = window.location.hash.match(/^#\\/connect\\/(bookly-connect-.+)$/);\n    const hashConnectParam = hashConnectMatch?.[1] || '';\n\n    const startParam =\n      tg()?.initDataUnsafe?.start_param ||\n      new URLSearchParams(window.location.search).get('startapp') ||\n      pathConnectParam ||\n      hashConnectParam ||\n      '';"""
           if old not in s:
-              raise SystemExit('Expected startParam block not found')
+              print('Patch already applied; nothing to do.')
+              raise SystemExit(0)
           p.write_text(s.replace(old, new, 1))
       - name: Commit
         run: |
