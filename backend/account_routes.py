@@ -224,6 +224,14 @@ def account_connect_telegram(
         if not business:
             raise HTTPException(400, "Bookly business not found")
 
+        # If this account used its trial on the standalone website, transfer
+        # that trial-used marker to the real Telegram owner before changing the
+        # business owner. This prevents a second trial after connecting Telegram.
+        from . import paddle_original
+        web_owner_id = -int(account.id)
+        if paddle_original._profile_trial_used(db, web_owner_id):
+            paddle_original._mark_profile_trial_used(db, telegram_id)
+
         business.owner_telegram_id = telegram_id
         account.telegram_user_id = telegram_id
         db.commit()
