@@ -27,6 +27,18 @@ class BooklyAccount(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class BooklyTelegramLink(Base):
+    __tablename__ = "bookly_telegram_links"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    account_id: Mapped[int] = mapped_column(Integer, index=True)
+    business_id: Mapped[int] = mapped_column(Integer, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class BooklySession(Base):
     __tablename__ = "bookly_account_sessions"
 
@@ -241,6 +253,98 @@ def account_connect_telegram(
             "telegram_user_id": telegram_id,
             "business_id": business.id,
             "next": "open_bookly_in_telegram",
+        }
+
+
+class TelegramLinkIn(BaseModel):
+    token: str = Field(min_length=20, max_length=80)
+
+
+@app.get("/account/telegram-link")
+def account_telegram_link(authorization: str = Header(default="")):
+    with SessionLocal() as db:
+        account = _account_from_header(db, authorization)
+        business = db.get(Business, account.business_id) if account.business_id else None
+        if not business:
+            raise HTTPException(400, "Bookly business not found")
+
+        raw = secrets.token_urlsafe(32)
+        db.add(BooklyTelegramLink(
+            token_hash=hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+            account_id=account.id,
+            business_id=business.id,
+            expires_at=datetime.utcnow() + timedelta(minutes=10),
+        ))
+        db.commit()
+
+        import os
+        bot_username = os.getenv("BOT_USERNAME", "BooklyBot").lstrip("@").strip()
+        start_parameter = "bookly-connect-" + raw
+        if len(start_parameter) > 64:
+            raise HTTPException(500, "Telegram connection parameter is too long")
+
+        return {
+            "ok": True,
+            "business_id": business.id,
+            "telegram_url": f"https://t.me/{bot_username}?startapp={start_parameter}",
+            "expires_in": 600,
+        }
+
+
+@app.post("/account/connect-telegram-from-web")
+def account_connect_telegram_from_web(
+    x: TelegramLinkIn,
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(x_telegram_init_data)
+    telegram_id = int(user["id"])
+    prefix = "bookly-connect-"
+    if not x.token.startswith(prefix):
+        raise HTTPException(400, "Invalid Telegram connection token")
+
+    raw = x.token[len(prefix):]
+    token_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    with SessionLocal() as db:
+        link = (
+            db.query(BooklyTelegramLink)
+            .filter(BooklyTelegramLink.token_hash == token_hash)
+            .filter(BooklyTelegramLink.used_at.is_(None))
+            .filter(BooklyTelegramLink.expires_at > datetime.utcnow())
+            .first()
+        )
+        if not link:
+            raise HTTPException(400, "Telegram connection link is invalid or expired")
+
+        account = db.get(BooklyAccount, link.account_id)
+        business = db.get(Business, link.business_id)
+        if not account or not business or account.business_id != business.id:
+            raise HTTPException(400, "Bookly account or business not found")
+
+        existing = (
+            db.query(BooklyAccount)
+            .filter(BooklyAccount.telegram_user_id == telegram_id)
+            .filter(BooklyAccount.id != account.id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(409, "This Telegram account is already connected to another Bookly account")
+
+        from . import paddle_original
+        web_owner_id = -int(account.id)
+        if paddle_original._profile_trial_used(db, web_owner_id):
+            paddle_original._mark_profile_trial_used(db, telegram_id)
+
+        business.owner_telegram_id = telegram_id
+        account.telegram_user_id = telegram_id
+        link.used_at = datetime.utcnow()
+        db.commit()
+
+        return {
+            "ok": True,
+            "telegram_user_id": telegram_id,
+            "business_id": business.id,
+            "next": "open_admin",
         }
 
 

@@ -526,13 +526,42 @@ function App(){
   const [emailCopied,setEmailCopied]=useState(false);
   useEffect(()=>{
     const telegram = tg();
-
-telegram?.ready();
+    telegram?.ready();
 
     const startParam =
       tg()?.initDataUnsafe?.start_param ||
       new URLSearchParams(window.location.search).get('startapp') ||
       '';
+
+    if (startParam.startsWith('bookly-connect-')) {
+      fetch(API + '/account/connect-telegram-from-web', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': initData()
+        },
+        body: JSON.stringify({ token: startParam })
+      })
+        .then(async (response) => {
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data?.detail || 'Telegram connection failed');
+          }
+          return data;
+        })
+        .then((data) => {
+          if (data?.business_id) {
+            localStorage.setItem('bookly_active_business_id', String(data.business_id));
+          }
+          setAdminTab('home');
+          setMode('admin');
+        })
+        .catch((error) => {
+          console.error('Bookly Telegram connection error:', error);
+          alert(error?.message || 'Telegram connection failed');
+        });
+      return;
+    }
 
     if(startParam){
       setClientSlug(startParam);
