@@ -528,9 +528,16 @@ function App(){
     const telegram = tg();
     telegram?.ready();
 
+    const pathMatch = window.location.pathname.match(/^\/connect\/(.+)$/);
+    const pathStartParam = pathMatch ? decodeURIComponent(pathMatch[1]) : '';
+    const queryStartParam = new URLSearchParams(window.location.search).get('startapp') || '';
+    const hashStartParam = window.location.hash.replace(/^#/, '');
+
     const startParam =
       tg()?.initDataUnsafe?.start_param ||
-      new URLSearchParams(window.location.search).get('startapp') ||
+      pathStartParam ||
+      queryStartParam ||
+      (hashStartParam.startsWith('bookly-connect-') ? hashStartParam : '') ||
       '';
 
     if (startParam.startsWith('bookly-connect-')) {

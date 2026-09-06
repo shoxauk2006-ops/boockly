@@ -29,7 +29,7 @@ async def main():
     async def start(message: Message):
         args=(message.text or '').split(maxsplit=1)
         slug=args[1] if len(args)>1 else ''
-        url=WEBAPP_URL + (f"?startapp={slug}" if slug else '')
+        url=WEBAPP_URL + (f"/connect/{slug}" if slug else '')
         lang=normalize_bot_language(getattr(message.from_user, "language_code", None))
         button_text, answer_text = BOOKLY_BOT_TEXTS[lang]
         kb=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=button_text, web_app=WebAppInfo(url=url))]])
