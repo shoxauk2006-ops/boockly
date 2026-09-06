@@ -241,7 +241,12 @@ def account_paddle_checkout_token(authorization: str = Header(default="")):
         business = db.get(Business, account.business_id) if account.business_id else None
         if not business:
             raise HTTPException(400, "Bookly business not found")
-        if int(business.account_id or 0) != int(account.id):
+
+        account_id = db.execute(
+            text("SELECT account_id FROM businesses WHERE id = :business_id"),
+            {"business_id": business.id},
+        ).scalar_one_or_none()
+        if int(account_id or 0) != int(account.id):
             raise HTTPException(403, "Bookly business is not linked to this account")
 
         return {
