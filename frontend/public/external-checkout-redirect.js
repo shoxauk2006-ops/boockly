@@ -2,6 +2,7 @@
   'use strict';
 
   var redirected = false;
+  var BILLING_STORAGE_KEY = 'bookly_billing_period';
 
   function getLimit(options) {
     try {
@@ -34,6 +35,16 @@
     }
   }
 
+  function getBillingPeriod() {
+    try {
+      return localStorage.getItem(BILLING_STORAGE_KEY) === 'year'
+        ? 'year'
+        : 'month';
+    } catch (_) {
+      return 'month';
+    }
+  }
+
   function redirectToExternalCheckout(options) {
     if (redirected) return;
 
@@ -43,9 +54,15 @@
 
     redirected = true;
 
-    var url = new URL('/pricing.html', window.location.origin);
+    var billing = getBillingPeriod();
+    var path = billing === 'year'
+      ? '/pricing-year.html'
+      : '/pricing.html';
+
+    var url = new URL(path, window.location.origin);
     url.searchParams.set('token', token);
     url.searchParams.set('limit', String(getLimit(options)));
+    url.searchParams.set('billing', billing);
 
     var apiUrl = getApiUrl();
     if (apiUrl) {
