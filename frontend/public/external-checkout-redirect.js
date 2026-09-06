@@ -6,6 +6,12 @@
 
   function getLimit(options) {
     try {
+      var customData = (options && options.customData) || {};
+      var explicit = Number(customData.services_limit || 0);
+      if ([10,20,30,50,100].indexOf(explicit) !== -1) {
+        return explicit;
+      }
+
       var items = Array.isArray(options && options.items)
         ? options.items
         : [];
@@ -35,7 +41,15 @@
     }
   }
 
-  function getBillingPeriod() {
+  function getBillingPeriod(options) {
+    try {
+      var customData = (options && options.customData) || {};
+      var explicit = String(customData.billing_period || '').toLowerCase();
+      if (explicit === 'year' || explicit === 'month') {
+        return explicit;
+      }
+    } catch (_) {}
+
     try {
       var runtime = String(window.__booklyBillingPeriod || '').toLowerCase();
       if (runtime === 'year' || runtime === 'month') {
@@ -61,7 +75,7 @@
 
     redirected = true;
 
-    var billing = getBillingPeriod();
+    var billing = getBillingPeriod(options);
     var url = new URL('/pricing-v2.html', window.location.origin);
     url.searchParams.set('token', token);
     url.searchParams.set('limit', String(getLimit(options)));
