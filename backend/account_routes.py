@@ -7,17 +7,10 @@ from datetime import datetime, timedelta
 
 from fastapi import Header, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import BigInteger, DateTime, Integer, String, text
+from sqlalchemy import BigInteger, DateTime, Integer, String, inspect, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .app import (
-    Base,
-    Business,
-    SessionLocal,
-    app,
-    engine,
-    telegram_user,
-)
+from .app import Base, Business, SessionLocal, app, engine, telegram_user
 
 
 class BooklyAccount(Base):
@@ -43,16 +36,12 @@ class BooklySession(Base):
 
 Base.metadata.create_all(engine)
 
-
-# Business.account_id is deliberately added as a compatibility column instead
-# of changing the existing Business ORM model in this first migration step.
 with engine.begin() as conn:
-    if "businesses" in conn.inspect(conn).get_table_names() if False else False:
-        pass
-    columns = {c["name"] for c in __import__("sqlalchemy").inspect(conn).get_columns("businesses")}
-    if "account_id" not in columns:
-        conn.execute(text("ALTER TABLE businesses ADD COLUMN account_id INTEGER"))
-    conn.execute(text("CREATE INDEX IF NOT EXISTS ix_businesses_account_id ON businesses (account_id)"))
+    if "businesses" in inspect(conn).get_table_names():
+        columns = {c["name"] for c in inspect(conn).get_columns("businesses")}
+        if "account_id" not in columns:
+            conn.execute(text("ALTER TABLE businesses ADD COLUMN account_id INTEGER"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_businesses_account_id ON businesses (account_id)"))
 
 
 SESSION_DAYS = 30
@@ -133,14 +122,8 @@ def account_register(x: AccountRegisterIn):
         db.add(account)
         db.flush()
 
-        # A web-created account gets a placeholder business. It is not visible
-        # to Telegram until the owner explicitly connects Telegram.
         slug = f"account-{account.id}-{secrets.token_hex(4)}"
-        business = Business(
-            owner_telegram_id=0,
-            name="My Business",
-            slug=slug,
-        )
+        business = Business(owner_telegram_id=0, name="My Business", slug=slug)
         db.add(business)
         db.flush()
         db.execute(
@@ -198,13 +181,11 @@ def account_connect_telegram(
     authorization: str = Header(default=""),
     x_telegram_init_data: str = Header(default=""),
 ):
-    # Telegram identity is always validated server-side through initData.
     user = telegram_user(x_telegram_init_data)
     telegram_id = int(user["id"])
 
     with SessionLocal() as db:
         account = _account_from_header(db, authorization)
-
         existing = (
             db.query(BooklyAccount)
             .filter(BooklyAccount.telegram_user_id == telegram_id)
@@ -218,8 +199,6 @@ def account_connect_telegram(
         if not business:
             raise HTTPException(400, "Bookly business not found")
 
-        # Preserve the existing Telegram-based authorization model: once linked,
-        # the business owner is the verified Telegram user ID.
         business.owner_telegram_id = telegram_id
         account.telegram_user_id = telegram_id
         db.commit()
@@ -234,9 +213,6 @@ def account_connect_telegram(
 
 @app.get("/account/paddle/checkout-token")
 def account_paddle_checkout_token(authorization: str = Header(default="")):
-    # Paddle checkout remains on the standalone Bookly web surface. This route
-    # only issues the short-lived token used to bind the purchase to the linked
-    # Bookly business; it does not expose Paddle credentials.
     from . import paddle_original
 
     with SessionLocal() as db:
