@@ -208,8 +208,68 @@ def _sync_business_from_subscription(
     )
 
 
+def _sync_limit_from_paddle_event(payload: dict) -> None:
+    """Persist the real Bookly service limit from Paddle subscription items."""
+    event_type = str(payload.get("event_type") or "")
+    if not event_type.startswith("subscription."):
+        return
+
+    data = payload.get("data") or {}
+    subscription_id = str(data.get("id") or "").strip()
+    if not subscription_id:
+        return
+
+    items = data.get("items") or []
+    if not items:
+        return
+
+    try:
+        detected_limit = _limit_from_items(items)
+    except Exception as exc:
+        print(
+            "BOOKLY PADDLE LIMIT SYNC SKIPPED:",
+            repr(exc),
+        )
+        return
+
+    with _original.SessionLocal() as db:
+        subscription = (
+            db.query(_original.Subscription)
+            .filter(
+                _original.Subscription.external_subscription_id
+                == subscription_id
+            )
+            .first()
+        )
+        if not subscription:
+            return
+
+        # Only overwrite the stored limit when Paddle's payload actually
+        # identifies a Bookly tier. This prevents a partial payload from
+        # accidentally resetting a package back to 10 services.
+        subscription.current_services_limit = detected_limit
+        subscription.current_price = (
+            _original.calculate_subscription_price(
+                detected_limit
+            )
+        )
+
+        business = db.get(
+            _original.Business,
+            subscription.business_id,
+        )
+        if business is not None:
+            _original_sync(
+                business,
+                subscription,
+            )
+
+        db.commit()
+
+
 def _apply_paddle_event(payload: dict) -> None:
-    return _original_apply(payload)
+    _original_apply(payload)
+    _sync_limit_from_paddle_event(payload)
 
 
 # Make the original route functions resolve these patched helpers at runtime.
