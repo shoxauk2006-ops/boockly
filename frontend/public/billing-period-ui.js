@@ -211,6 +211,7 @@
       });
 
       yearButton.addEventListener('click', function(){
+        if (yearButton.disabled) return;
         yearButton.disabled = true;
         loadPackages('year').then(function(){
           setBilling('year');
@@ -224,6 +225,9 @@
         }).catch(function(){
           yearButton.disabled = false;
           setBilling('month');
+          host.setAttribute('data-billing-current','month');
+          styleToggleButton(monthButton,true);
+          styleToggleButton(yearButton,false);
         });
       });
 
@@ -247,6 +251,14 @@
   function decorate(){
     var card = findCard();
     if (!card) return;
+
+    var existing = card.querySelector('[data-bookly-billing-toggle-v2]');
+    if (existing) {
+      var yearButton = existing.querySelector('[data-billing="year"]');
+      if (yearButton) yearButton.disabled = !Number.isFinite(state.prices.year[10]);
+      return;
+    }
+
     render(card);
   }
   function boot(){
