@@ -23,123 +23,33 @@
       .business-photo-settings{margin-top:18px}
       .business-photo-settings > strong{display:block;font-size:16px;margin-bottom:6px}
       .business-photo-settings > .muted{margin:0 0 12px}
-      .business-photo-preview{
-        display:block;
-        width:140px;
-        height:90px;
-        object-fit:cover;
-        object-position:center;
-        border-radius:14px;
-        background:#f3f4f6;
-        border:1px solid #e7eaee;
-      }
-      .business-photo-empty{
-        width:100%;
-        min-height:150px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:24px;
-        text-align:center;
-        color:#8a919b;
-        background:#f3f4f6;
-        border:1px dashed #d9dde2;
-        border-radius:18px;
-      }
-      .business-photo-actions{
-        display:flex;
-        flex-wrap:wrap;
-        gap:9px;
-        margin-top:10px;
-      }
-      .business-photo-actions .admin-action-button{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        width:auto;
-        margin:0;
-        cursor:pointer;
-      }
-      .business-photo-actions input[type="file"][hidden]{
-        display:none!important;
-      }
-      .business-photo-actions .ghost{
-        margin:0;
-      }
+      .business-photo-preview{display:block;width:140px;height:90px;object-fit:cover;object-position:center;border-radius:14px;background:#f3f4f6;border:1px solid #e7eaee}
+      .business-photo-empty{width:100%;min-height:150px;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#8a919b;background:#f3f4f6;border:1px dashed #d9dde2;border-radius:18px}
+      .business-photo-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:10px}
+      .business-photo-actions .admin-action-button{display:inline-flex;align-items:center;justify-content:center;width:auto;margin:0;cursor:pointer}
+      .business-photo-actions input[type="file"][hidden]{display:none!important}
+      .business-photo-actions .ghost{margin:0}
 
       /* Admin navigation stays in its normal bottom position. */
-      .admin-bottom-nav{
-        position:fixed!important;
-        left:50%!important;
-        bottom:12px!important;
-        transform:translateX(-50%)!important;
-        width:min(100% - 24px, 400px)!important;
-        margin:0!important;
-        z-index:10000!important;
-      }
-
-      /* Leave room for the fixed navigation in the document flow. */
-      body:has(.admin-bottom-nav) .app{
-        padding-bottom:110px!important;
-      }
-
-      /* Keep the element being edited above the fixed navigation. */
-      html,body,#root,.app{
-        scroll-padding-bottom:120px;
-      }
+      .admin-bottom-nav{position:fixed!important;left:50%!important;bottom:12px!important;transform:translateX(-50%)!important;width:min(100% - 24px, 400px)!important;margin:0!important;z-index:10000!important}
+      body:has(.admin-bottom-nav) .app{padding-bottom:110px!important}
+      html,body,#root,.app{scroll-padding-bottom:120px}
     </style>
     <script>
       (function () {
         var focusTimer = null;
-
         function scrollFocusedFieldIntoView() {
           var active = document.activeElement;
-
-          if (!active) {
-            return;
-          }
-
+          if (!active) return;
           var tag = active.tagName;
-
-          if (
-            tag !== 'INPUT' &&
-            tag !== 'TEXTAREA' &&
-            tag !== 'SELECT'
-          ) {
-            return;
-          }
-
-          if (focusTimer) {
-            clearTimeout(focusTimer);
-          }
-
-          /*
-           * Telegram/mobile WebViews resize the visible area a moment
-           * after the keyboard animation starts. Wait for that resize,
-           * then move only the focused control into the visible area.
-           */
+          if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') return;
+          if (focusTimer) clearTimeout(focusTimer);
           focusTimer = setTimeout(function () {
-            try {
-              active.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest'
-              });
-            } catch (_) {}
+            try { active.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'}); } catch (_) {}
           }, 220);
         }
-
-        document.addEventListener(
-          'focusin',
-          scrollFocusedFieldIntoView
-        );
-
-        if (window.visualViewport) {
-          window.visualViewport.addEventListener(
-            'resize',
-            scrollFocusedFieldIntoView
-          );
-        }
+        document.addEventListener('focusin', scrollFocusedFieldIntoView);
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', scrollFocusedFieldIntoView);
       })();
     </script>
   </head>
@@ -147,6 +57,7 @@
     <div id="root"></div>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="/external-checkout-redirect.js"></script>
+    <script src="/billing-period-ui.js"></script>
     <script type="module" src="/src/ux2-language-completion.ts"></script>
     <script type="module" src="/src/ux2-slot-spinner.ts"></script>
     <script type="module" src="/src/ux2-currency-filter.ts"></script>
