@@ -80,8 +80,15 @@
     window.location.href = url.toString();
   }
 
-  // The Mini App uses this compatibility stub instead of loading Paddle.js.
-  // Checkout therefore always continues on the external Bookly pricing page.
+  // Telegram/browser history may restore the Mini App from BFCache after
+  // returning from the external checkout page. In that case the old
+  // redirected flag must not block the next checkout attempt.
+  try {
+    window.addEventListener('pageshow', function () {
+      redirected = false;
+    });
+  } catch (_) {}
+
   try {
     window.Paddle = {
       __booklyInitialized: true,
