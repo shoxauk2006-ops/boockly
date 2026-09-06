@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
+import json
 import secrets
+import time
 from datetime import datetime, timedelta
 
 from fastapi import Header, HTTPException
@@ -45,6 +48,7 @@ with engine.begin() as conn:
 
 
 SESSION_DAYS = 30
+CHECKOUT_TOKEN_SECONDS = 600
 
 
 def _hash_password(password: str, salt: bytes | None = None) -> str:
@@ -98,6 +102,25 @@ def _account_from_header(db, authorization: str) -> BooklyAccount:
     return account
 
 
+def _account_checkout_token(account_id: int, business_id: int) -> str:
+    from . import paddle_original
+
+    secret = paddle_original.PADDLE_WEBHOOK_SECRET
+    if not secret:
+        raise HTTPException(500, "Paddle webhook secret is not configured")
+
+    payload = {
+        "business_id": int(business_id),
+        "owner_telegram_id": 0,
+        "account_id": int(account_id),
+        "exp": int(time.time()) + CHECKOUT_TOKEN_SECONDS,
+    }
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    encoded = base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+    signature = hmac.new(secret.encode("utf-8"), encoded.encode("ascii"), hashlib.sha256).hexdigest()
+    return f"{encoded}.{signature}"
+
+
 class AccountRegisterIn(BaseModel):
     email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=8, max_length=128)
@@ -138,7 +161,7 @@ def account_register(x: AccountRegisterIn):
             "ok": True,
             "token": token,
             "account": {"id": account.id, "email": account.email, "business_id": business.id},
-            "next": "connect_telegram",
+            "next": "choose_plan",
         }
 
 
@@ -213,20 +236,16 @@ def account_connect_telegram(
 
 @app.get("/account/paddle/checkout-token")
 def account_paddle_checkout_token(authorization: str = Header(default="")):
-    from . import paddle_original
-
     with SessionLocal() as db:
         account = _account_from_header(db, authorization)
-        if account.telegram_user_id is None:
-            raise HTTPException(400, "Connect Telegram before starting checkout")
         business = db.get(Business, account.business_id) if account.business_id else None
-        if not business or int(business.owner_telegram_id) != int(account.telegram_user_id):
-            raise HTTPException(403, "Bookly business is not linked to this Telegram account")
+        if not business:
+            raise HTTPException(400, "Bookly business not found")
+        if int(business.account_id or 0) != int(account.id):
+            raise HTTPException(403, "Bookly business is not linked to this account")
+
         return {
             "ok": True,
-            "checkout_token": paddle_original._create_checkout_token(
-                business.id,
-                account.telegram_user_id,
-            ),
+            "checkout_token": _account_checkout_token(account.id, business.id),
             "business_id": business.id,
         }
