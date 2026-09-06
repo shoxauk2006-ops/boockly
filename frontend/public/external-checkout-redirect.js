@@ -80,9 +80,6 @@
     window.location.href = url.toString();
   }
 
-  // Telegram/browser history may restore the Mini App from BFCache after
-  // returning from the external checkout page. In that case the old
-  // redirected flag must not block the next checkout attempt.
   try {
     window.addEventListener('pageshow', function () {
       redirected = false;
@@ -92,6 +89,7 @@
   try {
     window.Paddle = {
       __booklyInitialized: true,
+      __booklyExternalRedirect: true,
       Checkout: {
         open: redirectToExternalCheckout
       }
