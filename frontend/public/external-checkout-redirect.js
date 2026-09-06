@@ -37,6 +37,13 @@
 
   function getBillingPeriod() {
     try {
+      var runtime = String(window.__booklyBillingPeriod || '').toLowerCase();
+      if (runtime === 'year' || runtime === 'month') {
+        return runtime;
+      }
+    } catch (_) {}
+
+    try {
       return localStorage.getItem(BILLING_STORAGE_KEY) === 'year'
         ? 'year'
         : 'month';
