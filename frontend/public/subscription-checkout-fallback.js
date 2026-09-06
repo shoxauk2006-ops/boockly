@@ -9,6 +9,14 @@
     ar: 'المتابعة إلى الدفع'
   };
 
+  var loadingLabels = {
+    ru: 'Загрузка...',
+    en: 'Loading...',
+    uz: 'Yuklanmoqda...',
+    tr: 'Yükleniyor...',
+    ar: 'جارٍ التحميل...'
+  };
+
   function getLanguage() {
     try {
       var selector = document.querySelector('.language-select');
@@ -23,7 +31,11 @@
     return labels[browser] ? browser : 'en';
   }
 
-  function restoreCheckoutButton() {
+  function isCheckoutButton(button) {
+    return button && button.classList.contains('primary') && button.classList.contains('full');
+  }
+
+  function restoreInitialCheckoutButton() {
     var cards = Array.prototype.slice.call(
       document.querySelectorAll('.card.subscription')
     );
@@ -37,36 +49,44 @@
       );
 
       buttons.forEach(function (button) {
-        var text = String(button.textContent || '').trim().toLowerCase();
-        if (text !== 'загрузка...' && text !== 'loading...') return;
+        if (!isCheckoutButton(button)) return;
+        if (button.dataset.booklyClickLoading === '1') return;
 
-        button.disabled = false;
-        button.textContent = labels[getLanguage()];
-        button.dataset.booklyCheckoutFallback = '1';
+        var text = String(button.textContent || '').trim().toLowerCase();
+        if (text === 'загрузка...' || text === 'loading...' || text === 'yuklanmoqda...' || text === 'yükleniyor...' || text === 'جارٍ التحميل...') {
+          button.disabled = false;
+          button.textContent = labels[getLanguage()];
+          button.dataset.booklyCheckoutFallback = '1';
+        }
       });
     });
   }
 
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!(target instanceof Element)) return;
+
+    var button = target.closest('.card.subscription button.primary.full');
+    if (!button || !isCheckoutButton(button)) return;
+
+    button.dataset.booklyClickLoading = '1';
+    button.disabled = true;
+    button.textContent = loadingLabels[getLanguage()];
+
+    window.setTimeout(function () {
+      button.dataset.booklyClickLoading = '0';
+    }, 8000);
+  }, true);
+
   function boot() {
-    restoreCheckoutButton();
+    restoreInitialCheckoutButton();
 
     var attempts = 0;
     var timer = window.setInterval(function () {
-      restoreCheckoutButton();
+      restoreInitialCheckoutButton();
       attempts += 1;
-      if (attempts >= 30) {
-        window.clearInterval(timer);
-      }
+      if (attempts >= 12) window.clearInterval(timer);
     }, 500);
-
-    var observer = new MutationObserver(function () {
-      restoreCheckoutButton();
-    });
-
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true
-    });
   }
 
   if (document.readyState === 'loading') {
@@ -74,4 +94,14 @@
   } else {
     boot();
   }
+
+  try {
+    window.addEventListener('pageshow', function () {
+      var buttons = document.querySelectorAll('.card.subscription button.primary.full');
+      buttons.forEach(function (button) {
+        button.dataset.booklyClickLoading = '0';
+      });
+      restoreInitialCheckoutButton();
+    });
+  } catch (_) {}
 })();
