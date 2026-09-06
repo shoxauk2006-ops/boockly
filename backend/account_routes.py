@@ -111,7 +111,9 @@ def _account_checkout_token(account_id: int, business_id: int) -> str:
 
     payload = {
         "business_id": int(business_id),
-        "owner_telegram_id": 0,
+        # Negative values are reserved for unconnected web accounts so the
+        # legacy Telegram owner field remains unambiguous.
+        "owner_telegram_id": -int(account_id),
         "account_id": int(account_id),
         "exp": int(time.time()) + CHECKOUT_TOKEN_SECONDS,
     }
@@ -146,7 +148,7 @@ def account_register(x: AccountRegisterIn):
         db.flush()
 
         slug = f"account-{account.id}-{secrets.token_hex(4)}"
-        business = Business(owner_telegram_id=0, name="My Business", slug=slug)
+        business = Business(owner_telegram_id=-account.id, name="My Business", slug=slug)
         db.add(business)
         db.flush()
         db.execute(
