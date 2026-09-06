@@ -6207,12 +6207,89 @@ function Subscription({
     };
   }, [business?.id, business?.subscription_active, business?.external_subscription_id]);
 
-  const addonPrices: Record<number, number> = {
-    20: 4.99,
-    30: 7.99,
-    50: 11.99,
-    100: 19.99
+  const [pricing, setPricing] = useState<any>(null);
+
+useEffect(() => {
+  let cancelled = false;
+
+  const loadPricing = async () => {
+    if (
+      !business?.subscription_active ||
+      !business?.external_subscription_id
+    ) {
+      setPricing(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        API + '/admin/subscription/pricing',
+        {
+          headers: headers()
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('subscription pricing request failed');
+      }
+
+      const data = await response.json();
+
+      if (!cancelled) {
+        setPricing(data);
+      }
+    } catch {
+      if (!cancelled) {
+        setPricing(null);
+      }
+    }
   };
+
+  loadPricing();
+
+  return () => {
+    cancelled = true;
+  };
+}, [
+  business?.id,
+  business?.subscription_active,
+  business?.external_subscription_id
+]);
+
+const periodPrice = (limit: number) => {
+  const fallback: Record<number, number> = {
+    10: 7.99,
+    20: 12.98,
+    30: 15.98,
+    50: 19.98,
+    100: 27.98
+  };
+
+  return Number(
+    pricing?.prices?.[String(limit)] ??
+    fallback[limit] ??
+    0
+  );
+};
+
+const billingUnit =
+  billingPeriod === 'year'
+    ? '/ год'
+    : t('owner.perMonth', '/ месяц');
+
+const addonPrice = (limit: number) =>
+  Math.max(
+    0,
+    periodPrice(limit) - periodPrice(10)
+  );
+
+const currentAddonPrice =
+  addonPrice(currentServicesLimit);
+
+const pendingAddonPrice =
+  pendingLimitChange
+    ? addonPrice(pendingServicesLimit)
+    : 0;
 
   const currentAddonPrice =
     addonPrices[currentServicesLimit] || 0;
@@ -6236,10 +6313,10 @@ function Subscription({
   const cancelledButActive =
     (status === 'cancelled' || status === 'canceled') && active;
 
-  const displayedMonthlyPrice =
+  const displayedPlanPrice =
   packageCancellationPending
-    ? 7.99
-    : currentPrice;
+    ? periodPrice(10)
+    : periodPrice(currentServicesLimit);
 
   const [subscriptionModal, setSubscriptionModal] =
     useState(false);
@@ -6282,11 +6359,7 @@ function Subscription({
   setChangingServiceLimitValue(newLimit);
 
   try {
-    const nextPrice =
-      newLimit === 20 ? 12.98 :
-      newLimit === 30 ? 15.98 :
-      newLimit === 50 ? 19.98 :
-      27.98;
+    const nextPrice = periodPrice(newLimit);
 
     /*
      * UPGRADE:
@@ -6332,7 +6405,7 @@ const recurringTotal =
       const confirmed = await confirmAsync(
         t(
           'owner.increaseServiceLimitConfirm',
-          'Увеличить лимит с {current} до {limit} услуг?\n\nСейчас к оплате: ${now}\nСо следующего продления: ${next}/мес.'
+          'Увеличить лимит с {current} до {limit} услуг?\n\nСейчас к оплате: ${now}\nСо следующего продления: ${next}${billingUnit}'
         )
           .replace(
             '{current}',
@@ -6371,7 +6444,7 @@ const recurringTotal =
       const confirmed = await confirmAsync(
         t(
           'owner.decreaseServiceLimitConfirm',
-          'Уменьшить лимит с {current} до {limit} услуг?\n\nВозврата за текущий оплаченный период не будет.\nТекущий лимит останется действовать до конца периода.\n\nС следующего продления лимит станет {limit} услуг.\nНовая цена: ${price}/мес.'
+          'Уменьшить лимит с {current} до {limit} услуг?\n\nВозврата за текущий оплаченный период не будет.\nТекущий лимит останется действовать до конца периода.\n\nС следующего продления лимит станет {limit} услуг.\nНовая цена: ${price}${billingUnit}'
         )
           .replace(
             '{current}',
@@ -6708,7 +6781,9 @@ await refreshAfterChange({
           <div>
             <h3>Bookly Pro</h3>
             <p>
-              <b>${displayedMonthlyPrice.toFixed(2)} {t('owner.perMonth')}</b>
+              <b>
+  ${displayedPlanPrice.toFixed(2)} {billingUnit}
+</b>>
             </p>
             <p>
               <span>{t('owner.billingPeriod', 'Период')}</span>{' '}
@@ -6821,7 +6896,7 @@ await refreshAfterChange({
     <p className="muted">
       {t(
         'owner.scheduledLimitChangeDescription',
-        'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}/мес.'
+        'Сейчас у вас {current} услуг. До конца оплаченного периода текущий лимит сохраняется. Со следующего продления будет {pending} услуг за ${price}${billingUnit}'
       )
         .replace('{current}', String(currentServicesLimit))
         .replace('{pending}', String(pendingServicesLimit))
@@ -6873,8 +6948,21 @@ await refreshAfterChange({
                     {t('owner.price', 'Стоимость')}
                   </span>
                   <strong>
-  ${displayedMonthlyPrice.toFixed(2)} {t('owner.perMonth')}
+  ${displayedPlanPrice.toFixed(2)} {billingUnit}
 </strong>
+                  <div style={{ marginTop: 10 }}>
+  <span>
+    {t('owner.billingPeriod', 'Период')}
+  </span>
+
+  <strong style={{ display: 'block', marginTop: 3 }}>
+    {billingPeriod === 'year'
+      ? 'Ежегодно'
+      : billingPeriod === 'month'
+        ? 'Ежемесячно'
+        : '—'}
+  </strong>
+</div>
                 </div>
 
                 <div>
@@ -6944,20 +7032,20 @@ await refreshAfterChange({
                       marginTop: 12
                     }}
                   >
-                    {[
-  { limit: 20, price: '$4.99' },
-  { limit: 30, price: '$7.99' },
-  { limit: 50, price: '$11.99' },
-  { limit: 100, price: '$19.99' }
-]
-  .filter(option => option.limit !== currentServicesLimit)
-  .map(option => (
+                    {[20, 30, 50, 100]
+  .filter(limit => limit !== currentServicesLimit)
+  .map(limit => (
     <button
-      key={option.limit}
+      key={limit}
       type="button"
       className="subscription-manage-button"
-      disabled={changingServiceLimit || subscriptionActionLoading}
-      onClick={() => changeServiceLimit(option.limit)}
+      disabled={
+        changingServiceLimit ||
+        subscriptionActionLoading
+      }
+      onClick={() =>
+        changeServiceLimit(limit)
+      }
       style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -6965,24 +7053,28 @@ await refreshAfterChange({
         width: '100%'
       }}
     >
- {changingServiceLimit &&
- changingServiceLimitValue === option.limit ? (
-  <span className="btn-spinner" />
-) : (
-                            <>
-                              <span>
-  {t('owner.upToServices')}
-                                {' '}
-  {option.limit}{' '}
-  {t('owner.services')}
-</span>
-                              <strong>
-  {option.price} {t('owner.perMonth')}
-</strong>
-                            </>
-                          )}
-                        </button>
-                      ))}
+      {changingServiceLimit &&
+      changingServiceLimitValue === limit ? (
+        <span className="btn-spinner" />
+      ) : (
+        <>
+          <span>
+            {t('owner.upToServices')}
+            {' '}
+            {limit}
+            {' '}
+            {t('owner.services')}
+          </span>
+
+          <strong>
+            ${periodPrice(limit).toFixed(2)}
+            {' '}
+            {billingUnit}
+          </strong>
+        </>
+      )}
+    </button>
+  ))}
                   </div>
                 </div>
               )}
