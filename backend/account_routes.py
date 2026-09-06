@@ -55,9 +55,7 @@ with engine.begin() as conn:
     inspector = inspect(conn)
     tables = set(inspector.get_table_names())
 
-    # The Telegram-link table existed in an earlier version as raw SQL with
-    # `id INTEGER PRIMARY KEY` and no auto-generated value on PostgreSQL.
-    # Repair that existing schema so ORM inserts cannot fail with a NULL id.
+    # Repair the legacy PostgreSQL link table if its id column has no default.
     if "bookly_telegram_links" in tables and engine.dialect.name == "postgresql":
         id_info = conn.execute(text("""
             SELECT column_default, is_identity
@@ -154,8 +152,6 @@ def _account_checkout_token(account_id: int, business_id: int) -> str:
 
     payload = {
         "business_id": int(business_id),
-        # Negative values are reserved for unconnected web accounts so the
-        # legacy Telegram owner field remains unambiguous.
         "owner_telegram_id": -int(account_id),
         "account_id": int(account_id),
         "exp": int(time.time()) + CHECKOUT_TOKEN_SECONDS,
@@ -311,10 +307,12 @@ def account_telegram_link(authorization: str = Header(default="")):
         if len(start_parameter) > 64:
             raise HTTPException(500, "Telegram connection parameter is too long")
 
+        # Use the bot's /start deep link. The bot.py /start handler then
+        # carries this exact token into the Mini App's startapp query.
         return {
             "ok": True,
             "business_id": business.id,
-            "telegram_url": f"https://t.me/{bot_username}?startapp={start_parameter}",
+            "telegram_url": f"https://t.me/{bot_username}?start={start_parameter}",
             "expires_in": 600,
         }
 
