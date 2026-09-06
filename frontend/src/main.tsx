@@ -6783,7 +6783,7 @@ await refreshAfterChange({
             <p>
               <b>
   ${displayedPlanPrice.toFixed(2)} {billingUnit}
-</b>>
+</b>
             </p>
             <p>
               <span>{t('owner.billingPeriod', 'Период')}</span>{' '}
