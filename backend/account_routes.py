@@ -52,8 +52,39 @@ class BooklySession(Base):
 Base.metadata.create_all(engine)
 
 with engine.begin() as conn:
-    if "businesses" in inspect(conn).get_table_names():
-        columns = {c["name"] for c in inspect(conn).get_columns("businesses")}
+    inspector = inspect(conn)
+    tables = set(inspector.get_table_names())
+
+    # The Telegram-link table existed in an earlier version as raw SQL with
+    # `id INTEGER PRIMARY KEY` and no auto-generated value on PostgreSQL.
+    # Repair that existing schema so ORM inserts cannot fail with a NULL id.
+    if "bookly_telegram_links" in tables and engine.dialect.name == "postgresql":
+        id_info = conn.execute(text("""
+            SELECT column_default, is_identity
+            FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND table_name = 'bookly_telegram_links'
+              AND column_name = 'id'
+        """)).mappings().first()
+        if id_info and not id_info["column_default"] and id_info["is_identity"] != "YES":
+            conn.execute(text("CREATE SEQUENCE IF NOT EXISTS bookly_telegram_links_id_seq"))
+            next_id = conn.execute(text(
+                "SELECT COALESCE(MAX(id), 0) + 1 FROM bookly_telegram_links"
+            )).scalar_one()
+            conn.execute(text(
+                "SELECT setval('bookly_telegram_links_id_seq', :next_id, false)"
+            ), {"next_id": int(next_id)})
+            conn.execute(text(
+                "ALTER SEQUENCE bookly_telegram_links_id_seq "
+                "OWNED BY bookly_telegram_links.id"
+            ))
+            conn.execute(text(
+                "ALTER TABLE bookly_telegram_links "
+                "ALTER COLUMN id SET DEFAULT nextval('bookly_telegram_links_id_seq')"
+            ))
+
+    if "businesses" in tables:
+        columns = {c["name"] for c in inspector.get_columns("businesses")}
         if "account_id" not in columns:
             conn.execute(text("ALTER TABLE businesses ADD COLUMN account_id INTEGER"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_businesses_account_id ON businesses (account_id)"))
@@ -236,9 +267,6 @@ def account_connect_telegram(
         if not business:
             raise HTTPException(400, "Bookly business not found")
 
-        # If this account used its trial on the standalone website, transfer
-        # that trial-used marker to the real Telegram owner before changing the
-        # business owner. This prevents a second trial after connecting Telegram.
         from . import paddle_original
         web_owner_id = -int(account.id)
         if paddle_original._profile_trial_used(db, web_owner_id):
