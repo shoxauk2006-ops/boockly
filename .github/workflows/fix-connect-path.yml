@@ -1,0 +1,53 @@
+name: Fix Telegram connect path
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch connect handoff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          bot = Path('bot.py')
+          s = bot.read_text()
+          old = "url=WEBAPP_URL + (f\"?startapp={slug}\" if slug else '')"
+          new = "url=WEBAPP_URL + (f\"/connect/{slug}\" if slug else '')"
+          if old not in s:
+              raise SystemExit('bot.py target not found')
+          bot.write_text(s.replace(old, new, 1))
+
+          main = Path('frontend/src/main.tsx')
+          s = main.read_text()
+          old = """    const startParam =\n      tg()?.initDataUnsafe?.start_param ||\n      new URLSearchParams(window.location.search).get('startapp') ||\n      '';"""
+          new = """    const pathMatch = window.location.pathname.match(/^\\/connect\\/(.+)$/);\n    const pathStartParam = pathMatch ? decodeURIComponent(pathMatch[1]) : '';\n    const queryStartParam = new URLSearchParams(window.location.search).get('startapp') || '';\n    const hashStartParam = window.location.hash.replace(/^#/, '');\n\n    const startParam =\n      tg()?.initDataUnsafe?.start_param ||\n      pathStartParam ||\n      queryStartParam ||\n      (hashStartParam.startsWith('bookly-connect-') ? hashStartParam : '') ||\n      '';"""
+          if old not in s:
+              raise SystemExit('main.tsx target not found')
+          main.write_text(s.replace(old, new, 1))
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add bot.py frontend/src/main.tsx
+          git diff --cached --quiet && { echo 'No changes'; exit 0; }
+          git commit -m 'fix: preserve Telegram connection token in web app path'
+          git push
+
+      - name: Remove temporary workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git rm .github/workflows/fix-connect-path.yml
+          git commit -m 'chore: remove temporary connect fix workflow'
+          git push
