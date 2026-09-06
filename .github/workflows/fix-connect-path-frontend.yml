@@ -1,0 +1,30 @@
+name: Fix Telegram connection path
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch main.tsx
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+          old = """    const startParam =\n      tg()?.initDataUnsafe?.start_param ||\n      new URLSearchParams(window.location.search).get('startapp') ||\n      '';"""
+          new = """    const pathConnectMatch = window.location.pathname.match(/^\\/connect\\/(bookly-connect-.+)$/);\n    const pathConnectParam = pathConnectMatch?.[1] || '';\n\n    const hashConnectMatch = window.location.hash.match(/^#\\/connect\\/(bookly-connect-.+)$/);\n    const hashConnectParam = hashConnectMatch?.[1] || '';\n\n    const startParam =\n      tg()?.initDataUnsafe?.start_param ||\n      new URLSearchParams(window.location.search).get('startapp') ||\n      pathConnectParam ||\n      hashConnectParam ||\n      '';"""
+          if old not in s:
+              raise SystemExit('Expected startParam block not found')
+          p.write_text(s.replace(old, new, 1))
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/main.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: read Telegram connection token from path'
+          git push
