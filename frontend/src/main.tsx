@@ -6230,7 +6230,9 @@ useEffect(() => {
       );
 
       if (!response.ok) {
-        throw new Error('subscription pricing request failed');
+        throw new Error(
+          'subscription pricing request failed'
+        );
       }
 
       const data = await response.json();
@@ -6277,6 +6279,10 @@ const billingUnit =
     ? '/ год'
     : t('owner.perMonth', '/ месяц');
 
+const pendingLimitChange =
+  pendingServicesLimit > 0 &&
+  pendingServicesLimit !== currentServicesLimit;
+
 const addonPrice = (limit: number) =>
   Math.max(
     0,
@@ -6291,29 +6297,20 @@ const pendingAddonPrice =
     ? addonPrice(pendingServicesLimit)
     : 0;
 
-  const currentAddonPrice =
-    addonPrices[currentServicesLimit] || 0;
+const packageCancellationPending =
+  currentServicesLimit > 10 &&
+  pendingServicesLimit === 10;
 
-  const pendingLimitChange =
-  pendingServicesLimit > 0 &&
-  pendingServicesLimit !== currentServicesLimit;
+const paymentFailed =
+  status === 'past_due' ||
+  status === 'unpaid';
 
-  const pendingAddonPrice =
-    pendingLimitChange
-      ? (addonPrices[pendingServicesLimit] || 0)
-      : 0;
+const cancelledButActive =
+  (status === 'cancelled' ||
+    status === 'canceled') &&
+  active;
 
-  const packageCancellationPending =
-    currentServicesLimit > 10 &&
-    pendingServicesLimit === 10;
-
-  const paymentFailed =
-    status === 'past_due' || status === 'unpaid';
-
-  const cancelledButActive =
-    (status === 'cancelled' || status === 'canceled') && active;
-
-  const displayedPlanPrice =
+const displayedPlanPrice =
   packageCancellationPending
     ? periodPrice(10)
     : periodPrice(currentServicesLimit);
@@ -6900,7 +6897,10 @@ await refreshAfterChange({
       )
         .replace('{current}', String(currentServicesLimit))
         .replace('{pending}', String(pendingServicesLimit))
-        .replace('{price}', (7.99 + pendingAddonPrice).toFixed(2))}
+        .replace(
+          '{price}',
+          periodPrice(pendingServicesLimit).toFixed(2)
+)}
     </p>
   </div>
 )}
