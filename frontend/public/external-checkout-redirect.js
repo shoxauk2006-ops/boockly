@@ -55,11 +55,7 @@
     redirected = true;
 
     var billing = getBillingPeriod();
-    var path = billing === 'year'
-      ? '/pricing-year.html'
-      : '/pricing.html';
-
-    var url = new URL(path, window.location.origin);
+    var url = new URL('/pricing-v2.html', window.location.origin);
     url.searchParams.set('token', token);
     url.searchParams.set('limit', String(getLimit(options)));
     url.searchParams.set('billing', billing);
@@ -89,7 +85,6 @@
   try {
     window.Paddle = {
       __booklyInitialized: true,
-      __booklyExternalRedirect: true,
       Checkout: {
         open: redirectToExternalCheckout
       }
