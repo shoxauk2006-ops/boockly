@@ -301,18 +301,18 @@ def account_telegram_link(authorization: str = Header(default="")):
         ))
         db.commit()
 
-        import os
-        bot_username = os.getenv("BOT_USERNAME", "BooklyBot").lstrip("@").strip()
+        bot_username = ""  # placeholder replaced below
+        bot_username = __import__("os").getenv("BOT_USERNAME", "BooklyBot").lstrip("@").strip()
         start_parameter = "bookly-connect-" + raw
         if len(start_parameter) > 64:
             raise HTTPException(500, "Telegram connection parameter is too long")
 
-        # Use the bot's /start deep link. The bot.py /start handler then
-        # carries this exact token into the Mini App's startapp query.
+        # Main Mini App deep links officially carry startapp into the Mini App
+        # as Telegram.WebApp.initDataUnsafe.start_param / tgWebAppStartParam.
         return {
             "ok": True,
             "business_id": business.id,
-            "telegram_url": f"https://t.me/{bot_username}?start={start_parameter}",
+            "telegram_url": f"https://t.me/{bot_username}?startapp={start_parameter}",
             "expires_in": 600,
         }
 
