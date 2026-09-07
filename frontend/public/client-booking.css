@@ -146,6 +146,94 @@ body:has(.client-hero) .hero,
 body:has(.client-hero) .client-header{
   color:#111;
 }
+
+/* Booking flow — stronger hierarchy while preserving the existing state and API logic. */
+body:has(.client-hero) .client-hero + .card,
+body:has(.client-hero) .client-hero + section .card{
+  margin-top:4px;
+}
+body:has(.client-hero) .card h3{
+  font-size:19px;
+  line-height:1.2;
+}
+body:has(.client-hero) .card h3 + .muted,
+body:has(.client-hero) .card h2 + .muted{
+  margin-top:-4px;
+}
+body:has(.client-hero) .card label{
+  display:block;
+  margin:14px 0 5px;
+  color:#636b75;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.1px;
+}
+body:has(.client-hero) .card input,
+body:has(.client-hero) .card textarea,
+body:has(.client-hero) .card select{
+  min-height:46px;
+  margin:7px 0;
+  box-shadow:inset 0 1px 2px rgba(15,23,42,.02);
+}
+body:has(.client-hero) .card textarea{
+  min-height:96px;
+  resize:vertical;
+}
+body:has(.client-hero) .grid3 + .muted,
+body:has(.client-hero) .slots + .muted{
+  margin-top:10px;
+}
+body:has(.client-hero) .grid3,
+body:has(.client-hero) .slots{
+  margin-bottom:4px;
+}
+body:has(.client-hero) .grid3 button:hover,
+body:has(.client-hero) .slots button:hover{
+  border-color:#cfd4da;
+  background:#eef0f3;
+}
+body:has(.client-hero) .grid3 button.selected:hover,
+body:has(.client-hero) .slots button.selected:hover{
+  background:#111;
+  border-color:#111;
+}
+body:has(.client-hero) .card .primary.full,
+body:has(.client-hero) .card > .primary:last-child{
+  margin-top:14px;
+}
+body:has(.client-hero) .card > .primary.full{
+  width:100%;
+}
+body:has(.client-hero) .selected{
+  outline:none;
+}
+
+/* Date/time controls feel like selectable booking choices rather than plain form fields. */
+body:has(.client-hero) input[type="date"],
+body:has(.client-hero) input[type="time"]{
+  min-height:48px;
+  font-weight:700;
+  letter-spacing:.1px;
+}
+body:has(.client-hero) input[type="date"]::-webkit-calendar-picker-indicator,
+body:has(.client-hero) input[type="time"]::-webkit-calendar-picker-indicator{
+  opacity:.65;
+}
+
+/* Compact confirmation / progress feel. */
+body:has(.client-hero) .card:has(input[type="text"]):has(input[type="tel"]){
+  background:linear-gradient(145deg,#fff 0%,#f8f9fb 100%);
+}
+body:has(.client-hero) .card:has(input[type="text"]):has(input[type="tel"])::before{
+  content:"BOOKING DETAILS";
+  display:block;
+  margin-bottom:8px;
+  color:#8a919b;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+
 @media(max-width:420px){
   body:has(.client-hero) .app{padding-left:12px;padding-right:12px}
   body:has(.client-hero) .client-hero{padding-bottom:14px}
@@ -153,4 +241,7 @@ body:has(.client-hero) .client-header{
   body:has(.client-hero) .card{padding:17px}
   body:has(.client-hero) .grid3{grid-template-columns:repeat(2,1fr)}
   body:has(.client-hero) .slots{grid-template-columns:repeat(2,1fr)}
+  body:has(.client-hero) .card label{margin-top:11px}
+  body:has(.client-hero) .card .primary.full,
+  body:has(.client-hero) .card > .primary:last-child{margin-top:12px}
 }
