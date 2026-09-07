@@ -1,9 +1,4 @@
 /* Bookly Home — compact business owner access. */
-body:has(.personal-home){
-  display:flex;
-  flex-direction:column;
-}
-
 body:has(.personal-home) .personal-home{
   display:flex;
   flex-direction:column;
