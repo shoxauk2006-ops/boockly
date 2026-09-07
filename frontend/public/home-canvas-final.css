@@ -1,0 +1,145 @@
+/* Bookly Home — continuous page canvas
+   Decorations belong to the page itself, not to the Hero/card box. */
+body:has(.personal-home) .personal-home{
+  position:relative!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(520px 360px at 86% 9%, rgba(255,255,255,.98) 0%, rgba(255,255,255,.65) 34%, transparent 68%),
+    radial-gradient(420px 420px at -8% 34%, rgba(255,255,255,.92) 0%, transparent 68%),
+    radial-gradient(500px 380px at 90% 62%, rgba(17,17,17,.035) 0%, transparent 70%),
+    linear-gradient(180deg,#f7f8fa 0%,#f3f4f6 48%,#f6f7f9 100%)!important;
+}
+
+/* Global decorative layer: circles/rings behind the entire Home content. */
+body:has(.personal-home) .personal-home::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  top:86px!important;
+  right:-86px!important;
+  width:300px!important;
+  height:300px!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  border:1px solid rgba(17,17,17,.045)!important;
+  box-shadow:
+    0 0 0 28px rgba(17,17,17,.018),
+    0 0 0 56px rgba(17,17,17,.013),
+    0 0 0 84px rgba(17,17,17,.009)!important;
+}
+
+/* Global decorative B: it can visually continue behind headings, cards and buttons. */
+body:has(.personal-home) .personal-home::after{
+  content:"B"!important;
+  position:absolute!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  top:210px!important;
+  right:-62px!important;
+  width:220px!important;
+  height:220px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:60px!important;
+  background:linear-gradient(145deg,#111 0%,#222 100%)!important;
+  color:#fff!important;
+  font-size:170px!important;
+  line-height:.7!important;
+  font-weight:850!important;
+  letter-spacing:-18px!important;
+  transform:rotate(8deg)!important;
+  box-shadow:0 28px 60px rgba(15,23,42,.12)!important;
+  opacity:.98!important;
+}
+
+/* Hero is now only the textual content area — not a visual container. */
+body:has(.personal-home) .personal-home-hero{
+  position:relative!important;
+  z-index:1!important;
+  min-height:255px!important;
+  margin:0!important;
+  padding:26px 24px 24px 4px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+
+/* The Hero no longer owns the B/rings; the page canvas does. */
+body:has(.personal-home) .personal-home-hero::before,
+body:has(.personal-home) .personal-home-hero::after{
+  content:none!important;
+  display:none!important;
+}
+
+body:has(.personal-home) .personal-home-hero > *{
+  position:relative!important;
+  z-index:2!important;
+}
+
+body:has(.personal-home) .personal-home-hero h1{
+  max-width:70%!important;
+  margin:11px 0 12px!important;
+  font-size:clamp(36px,8vw,52px)!important;
+  line-height:.98!important;
+  letter-spacing:-2px!important;
+}
+
+body:has(.personal-home) .personal-home-hero p{
+  max-width:48%!important;
+  margin:0!important;
+  font-size:15px!important;
+  line-height:1.55!important;
+}
+
+/* Business search remains an independent foreground card. */
+body:has(.personal-home) .personal-home-hero + .personal-card{
+  position:relative!important;
+  z-index:2!important;
+  margin-top:4px!important;
+}
+
+body:has(.personal-home) .personal-business-card,
+body:has(.personal-home) .personal-business-skeleton,
+body:has(.personal-home) .personal-bottom-nav{
+  position:relative!important;
+  z-index:2!important;
+}
+
+@media(max-width:520px){
+  body:has(.personal-home) .personal-home::before{
+    top:92px!important;
+    right:-105px!important;
+    width:270px!important;
+    height:270px!important;
+  }
+
+  body:has(.personal-home) .personal-home::after{
+    top:232px!important;
+    right:-76px!important;
+    width:190px!important;
+    height:190px!important;
+    border-radius:54px!important;
+    font-size:148px!important;
+    letter-spacing:-15px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero{
+    min-height:250px!important;
+    padding:24px 20px 18px 4px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero h1{
+    max-width:74%!important;
+    font-size:34px!important;
+    letter-spacing:-1.7px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero p{
+    max-width:61%!important;
+    font-size:13px!important;
+  }
+}
