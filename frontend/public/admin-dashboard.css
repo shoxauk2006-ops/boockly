@@ -101,6 +101,86 @@ body:has(.admin-bottom-nav) .card:has(select) .muted{color:#808894}
 body:has(.admin-bottom-nav) .settings-danger,
 body:has(.admin-bottom-nav) button.danger{box-shadow:none}
 
+/* Subscription — premium but still recognizably part of the same admin surface. */
+body:has(.admin-bottom-nav) .subscription{
+  position:relative;
+  overflow:hidden;
+  padding:22px;
+  background:
+    radial-gradient(circle at 100% 0,rgba(17,17,17,.06),transparent 34%),
+    linear-gradient(145deg,#ffffff 0%,#f7f8fa 100%);
+  border-color:#dfe3e8;
+  box-shadow:0 14px 34px rgba(15,23,42,.07);
+}
+body:has(.admin-bottom-nav) .subscription::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:3px;
+  background:#111;
+}
+body:has(.admin-bottom-nav) .subscription-head{
+  gap:16px;
+}
+body:has(.admin-bottom-nav) .subscription-head > div:first-child{
+  min-width:0;
+}
+body:has(.admin-bottom-nav) .subscription-head h3{
+  margin:0 0 5px;
+  font-size:22px;
+  letter-spacing:-.55px;
+}
+body:has(.admin-bottom-nav) .subscription-head p{
+  margin:0;
+  color:#7d858f;
+  font-size:13px;
+  line-height:1.45;
+}
+body:has(.admin-bottom-nav) .subscription-head p b{
+  display:inline-flex;
+  margin-top:5px;
+  padding:6px 9px;
+  border-radius:10px;
+  background:#eef0f3;
+  color:#20242a;
+  font-size:12px;
+}
+body:has(.admin-bottom-nav) .subscription ul{
+  margin:16px 0;
+  padding:14px 16px 14px 30px;
+  border:1px solid #e8eaed;
+  border-radius:15px;
+  background:rgba(255,255,255,.75);
+  color:#4f5863;
+  line-height:1.8;
+  font-size:13px;
+}
+body:has(.admin-bottom-nav) .subscription-manage-button{
+  width:100%;
+  min-height:48px;
+  margin-top:4px;
+  border:1px solid #111;
+  border-radius:14px;
+  background:#111;
+  color:#fff;
+  box-shadow:0 10px 22px rgba(17,17,17,.13);
+  font-weight:750;
+}
+body:has(.admin-bottom-nav) .subscription-manage-button:hover{background:#222}
+body:has(.admin-bottom-nav) .subscription-danger-button{
+  width:100%;
+  min-height:44px;
+  margin-top:9px;
+  border:1px solid #ead2d2;
+  border-radius:13px;
+  background:#fff8f8;
+  color:#a52a30;
+  font-weight:700;
+}
+body:has(.admin-bottom-nav) .subscription-danger-button:hover{background:#fff0f0}
+
 @media(max-width:420px){
   body:has(.admin-bottom-nav) .app{padding-left:12px;padding-right:12px}
   body:has(.admin-bottom-nav) .business-head h1{font-size:27px}
@@ -114,4 +194,8 @@ body:has(.admin-bottom-nav) button.danger{box-shadow:none}
   body:has(.admin-bottom-nav) .card:has(input[type="date"]).row{display:flex;flex-direction:column;gap:14px}
   body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
   body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child button{min-width:0}
+  body:has(.admin-bottom-nav) .subscription{padding:17px}
+  body:has(.admin-bottom-nav) .subscription-head{display:block}
+  body:has(.admin-bottom-nav) .subscription-head h3{font-size:20px}
+  body:has(.admin-bottom-nav) .subscription ul{padding-left:28px}
 }
