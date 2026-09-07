@@ -29,7 +29,16 @@ async def main():
     async def start(message: Message):
         args=(message.text or '').split(maxsplit=1)
         slug=args[1] if len(args)>1 else ''
-        url=WEBAPP_URL + (f"?startapp={slug}" if slug else '')
+
+        # Connection tokens are carried in the path. Telegram preserves the
+        # WebApp URL path reliably, while a plain ?startapp= query on a
+        # WebAppInfo URL is not guaranteed to reach the Mini App as a
+        # start_param. The Mini App already supports /connect/<token>.
+        if slug.startswith("bookly-connect-"):
+            url=WEBAPP_URL.rstrip("/") + "/connect/" + slug
+        else:
+            url=WEBAPP_URL + (f"?startapp={slug}" if slug else '')
+
         lang=normalize_bot_language(getattr(message.from_user, "language_code", None))
         button_text, answer_text = BOOKLY_BOT_TEXTS[lang]
         kb=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=button_text, web_app=WebAppInfo(url=url))]])
