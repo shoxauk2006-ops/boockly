@@ -1,1 +1,2 @@
-/* Keep current background layer */
+/* Bookly Home — final artwork background */
+body:has(.personal-home) .personal-home{background:#f7f8fa!important}
