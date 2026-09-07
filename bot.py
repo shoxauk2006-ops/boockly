@@ -30,18 +30,23 @@ async def main():
         args=(message.text or '').split(maxsplit=1)
         slug=args[1] if len(args)>1 else ''
 
-        # Connection tokens are carried in the path. Telegram preserves the
-        # WebApp URL path reliably, while a plain ?startapp= query on a
-        # WebAppInfo URL is not guaranteed to reach the Mini App as a
-        # start_param. The Mini App already supports /connect/<token>.
-        if slug.startswith("bookly-connect-"):
-            url=WEBAPP_URL.rstrip("/") + "/connect/" + slug
-        else:
-            url=WEBAPP_URL + (f"?startapp={slug}" if slug else '')
-
         lang=normalize_bot_language(getattr(message.from_user, "language_code", None))
         button_text, answer_text = BOOKLY_BOT_TEXTS[lang]
-        kb=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=button_text, web_app=WebAppInfo(url=url))]])
+
+        # For web-to-Telegram account linking, use Telegram's official Main
+        # Mini App deep link. This preserves startapp as start_param inside
+        # the Mini App. The visible "Открыть Bookly" button remains.
+        if slug.startswith("bookly-connect-"):
+            url=f"https://t.me/{BOT_USERNAME}?startapp={slug}"
+            kb=InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text=button_text, url=url)]]
+            )
+        else:
+            url=WEBAPP_URL + (f"?startapp={slug}" if slug else '')
+            kb=InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text=button_text, web_app=WebAppInfo(url=url))]]
+            )
+
         await message.answer(answer_text, reply_markup=kb)
     await dp.start_polling(bot)
 
