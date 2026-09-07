@@ -75,6 +75,23 @@ body:has(.personal-home) .personal-home-hero + .personal-business-card{
   margin-top:0!important;
 }
 
+/* The info control is a floating utility on Home and stays fixed while the page scrolls. */
+body:has(.personal-home) .personal-home-menu{
+  position:fixed!important;
+  top:84px!important;
+  right:12px!important;
+  z-index:10050!important;
+}
+
+body:has(.personal-home) .personal-menu-button{
+  width:40px!important;
+  height:40px!important;
+  border-radius:13px!important;
+  background:rgba(255,255,255,.97)!important;
+  border:1px solid #e0e4e8!important;
+  box-shadow:0 8px 22px rgba(15,23,42,.08)!important;
+}
+
 @media(max-width:480px){
   body:has(.personal-home) .personal-business-card{
     margin-bottom:10px!important;
@@ -89,5 +106,10 @@ body:has(.personal-home) .personal-home-hero + .personal-business-card{
     min-height:40px!important;
     padding:9px 12px!important;
     font-size:12px!important;
+  }
+
+  body:has(.personal-home) .personal-home-menu{
+    top:80px!important;
+    right:10px!important;
   }
 }
