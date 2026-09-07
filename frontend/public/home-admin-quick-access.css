@@ -11,7 +11,7 @@ body:has(.personal-home) .personal-home-hero + .personal-card{order:30!important
 body:has(.personal-home) .personal-page{order:20!important}
 body:has(.personal-home) .personal-bottom-nav{order:100!important}
 
-/* Turn the old large owner card into a compact, always-visible access bar. */
+/* Compact owner access bar. */
 body:has(.personal-home) .personal-business-card{
   min-height:0!important;
   margin:0 0 12px!important;
@@ -75,7 +75,7 @@ body:has(.personal-home) .personal-home-hero + .personal-business-card{
   margin-top:0!important;
 }
 
-/* The info control is a floating utility on Home and stays fixed while the page scrolls. */
+/* Fixed utility button. */
 body:has(.personal-home) .personal-home-menu{
   position:fixed!important;
   top:84px!important;
@@ -90,6 +90,42 @@ body:has(.personal-home) .personal-menu-button{
   background:rgba(255,255,255,.97)!important;
   border:1px solid #e0e4e8!important;
   box-shadow:0 8px 22px rgba(15,23,42,.08)!important;
+}
+
+/* Useful daily snapshot for business owners. */
+body:has(.personal-home) .personal-business-card .home-admin-stats{
+  grid-column:1 / -1!important;
+  grid-row:3!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin-top:10px!important;
+}
+
+body:has(.personal-home) .personal-business-card .home-admin-stat{
+  min-width:0!important;
+  padding:9px 10px!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:13px!important;
+  background:rgba(255,255,255,.07)!important;
+}
+
+body:has(.personal-home) .personal-business-card .home-admin-stat-label{
+  display:block!important;
+  color:rgba(255,255,255,.58)!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  letter-spacing:.12em!important;
+  text-transform:uppercase!important;
+}
+
+body:has(.personal-home) .personal-business-card .home-admin-stat-value{
+  display:block!important;
+  margin-top:3px!important;
+  color:#fff!important;
+  font-size:18px!important;
+  line-height:1!important;
+  font-weight:850!important;
 }
 
 @media(max-width:480px){
@@ -111,5 +147,15 @@ body:has(.personal-home) .personal-menu-button{
   body:has(.personal-home) .personal-home-menu{
     top:80px!important;
     right:10px!important;
+  }
+
+  body:has(.personal-home) .personal-business-card .home-admin-stats{
+    gap:7px!important;
+    margin-top:9px!important;
+  }
+
+  body:has(.personal-home) .personal-business-card .home-admin-stat{
+    padding:8px 9px!important;
+    border-radius:12px!important;
   }
 }
