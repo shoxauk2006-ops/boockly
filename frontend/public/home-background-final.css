@@ -23,7 +23,6 @@ body:has(.personal-home) .personal-home{
   isolation:isolate!important;
 }
 
-/* Remove all previous Hero/page pseudo-art so the new artwork has a single source. */
 body:has(.personal-home) .personal-home::before,
 body:has(.personal-home) .personal-home::after,
 body:has(.personal-home) .personal-home-hero::before,
@@ -34,7 +33,6 @@ body:has(.personal-home) .personal-card::after{
   display:none!important;
 }
 
-/* Hero is text only. Its surface is completely transparent. */
 body:has(.personal-home) .personal-home-hero{
   position:relative!important;
   z-index:2!important;
@@ -57,7 +55,6 @@ body:has(.personal-home) .personal-page{
   z-index:2!important;
 }
 
-/* Foreground surfaces remain readable but no longer create a hard visual wall. */
 body:has(.personal-home) .personal-card{
   background:rgba(255,255,255,.90)!important;
   border-color:rgba(220,224,229,.88)!important;
@@ -72,7 +69,6 @@ body:has(.personal-home) .personal-business-card{
   -webkit-backdrop-filter:blur(12px)!important;
 }
 
-/* Top Bookly controls stay above the artwork and align with the real chrome. */
 body:has(.personal-home) .personal-home-menu{
   position:fixed!important;
   top:4px!important;
@@ -80,7 +76,6 @@ body:has(.personal-home) .personal-home-menu{
   z-index:10050!important;
 }
 
-/* Bottom nav is viewport-fixed, independent of page scroll. */
 body:has(.personal-home) .personal-bottom-nav{
   position:fixed!important;
   left:50%!important;
