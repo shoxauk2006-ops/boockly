@@ -59,39 +59,28 @@ body:has(.admin-bottom-nav) .card.row button:not(.danger){background:#f7f8fa;col
 body:has(.admin-bottom-nav) .card.row button:not(.danger):hover{background:#eef0f3}
 
 /* Working hours — cleaner day rows, clearer open/closed state, same controls and API. */
-body:has(.admin-bottom-nav) .card:has(input[type="time"]){
-  background:linear-gradient(145deg,#fff 0%,#f8f9fb 100%);
-}
-body:has(.admin-bottom-nav) .card:has(input[type="time"]) > div{
-  border-color:#edf0f3 !important;
-}
-body:has(.admin-bottom-nav) .card:has(input[type="time"]) input[type="time"]{
-  min-height:46px;
-  font-weight:700;
-  letter-spacing:.1px;
-}
-body:has(.admin-bottom-nav) .card:has(input[type="time"]) input[type="checkbox"]{
-  width:20px;
-  height:20px;
-  margin:0;
-  accent-color:#111;
-}
-body:has(.admin-bottom-nav) .card:has(input[type="time"]) label{
-  font-size:13px;
-  font-weight:700;
-  color:#4d5560;
-}
-body:has(.admin-bottom-nav) .card:has(input[type="time"]) button.primary{
-  min-height:48px;
-  border-radius:14px;
-  box-shadow:0 10px 22px rgba(17,17,17,.12);
-}
-body:has(.admin-bottom-nav) .card:has(input[type="time"]) button:not(.primary){
-  min-height:48px;
-  border-radius:14px;
-  background:#f5f6f8;
-  border:1px solid #e0e3e7;
-}
+body:has(.admin-bottom-nav) .card:has(input[type="time"]){background:linear-gradient(145deg,#fff 0%,#f8f9fb 100%)}
+body:has(.admin-bottom-nav) .card:has(input[type="time"]) > div{border-color:#edf0f3 !important}
+body:has(.admin-bottom-nav) .card:has(input[type="time"]) input[type="time"]{min-height:46px;font-weight:700;letter-spacing:.1px}
+body:has(.admin-bottom-nav) .card:has(input[type="time"]) input[type="checkbox"]{width:20px;height:20px;margin:0;accent-color:#111}
+body:has(.admin-bottom-nav) .card:has(input[type="time"]) label{font-size:13px;font-weight:700;color:#4d5560}
+body:has(.admin-bottom-nav) .card:has(input[type="time"]) button.primary{min-height:48px;border-radius:14px;box-shadow:0 10px 22px rgba(17,17,17,.12)}
+body:has(.admin-bottom-nav) .card:has(input[type="time"]) button:not(.primary){min-height:48px;border-radius:14px;background:#f5f6f8;border:1px solid #e0e3e7}
+
+/* Blocks — make the existing create/edit form and block list feel like one polished control surface. */
+body:has(.admin-bottom-nav) .card:has(input[type="date"]){background:linear-gradient(145deg,#fff 0%,#f8f9fb 100%)}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]) h2{margin:0 0 14px;font-size:22px;letter-spacing:-.55px}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]) input[type="date"],
+body:has(.admin-bottom-nav) .card:has(input[type="date"]) input[type="time"]{min-height:46px;font-weight:700}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]) button.primary{min-height:48px;border-radius:14px;box-shadow:0 10px 22px rgba(17,17,17,.12)}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]) button:not(.primary){min-height:48px;border-radius:14px;background:#f5f6f8;border:1px solid #e0e3e7}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]) .muted{color:#7d858f}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]).row{align-items:center}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:first-child b{display:block;font-size:16px;letter-spacing:-.2px}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:first-child p{margin:6px 0 0;color:#777;font-size:13px}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child{display:flex;gap:8px}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child button{min-width:82px}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]).row .danger{background:#fff1f1;color:#b42318;border:1px solid #f3d1d1}
 
 @media(max-width:420px){
   body:has(.admin-bottom-nav) .app{padding-left:12px;padding-right:12px}
@@ -103,4 +92,7 @@ body:has(.admin-bottom-nav) .card:has(input[type="time"]) button:not(.primary){
   body:has(.admin-bottom-nav) .card.row > div:last-child{display:flex;flex-direction:column;gap:7px}
   body:has(.admin-bottom-nav) .card.row > div:last-child button{min-width:76px;padding:10px 11px}
   body:has(.admin-bottom-nav) .card:has(input[type="time"]) input[type="time"]{min-height:44px}
+  body:has(.admin-bottom-nav) .card:has(input[type="date"]).row{display:flex;flex-direction:column;gap:14px}
+  body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child button{min-width:0}
 }
