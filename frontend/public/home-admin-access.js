@@ -4,6 +4,7 @@
   var ADMIN_VALUE = 'admin';
   var AUTO_OPEN_DELAY = 120;
   var CREATE_TEXT_RE = /создать|create|yarat|oluştur|إنشاء|создать бизнес|create business/i;
+  var autoOpenAttempted = false;
 
   function isClientEntry() {
     try {
@@ -12,6 +13,9 @@
         (telegram && telegram.initDataUnsafe && telegram.initDataUnsafe.start_param) ||
         new URLSearchParams(window.location.search).get('startapp') ||
         '';
+      if (startParam) {
+        autoOpenAttempted = true;
+      }
       return Boolean(startParam);
     } catch (_) {
       return false;
@@ -49,7 +53,7 @@
   }
 
   function tryAutoOpenAdmin() {
-    if (isClientEntry()) return;
+    if (autoOpenAttempted || isClientEntry()) return;
 
     try {
       if (localStorage.getItem(STORAGE_KEY) !== ADMIN_VALUE) return;
@@ -66,6 +70,7 @@
     var button = card.querySelector('.personal-white-button');
     if (!button || button.dataset.booklyAutoOpened === '1') return;
 
+    autoOpenAttempted = true;
     button.dataset.booklyAutoOpened = '1';
     window.setTimeout(function () {
       try {
