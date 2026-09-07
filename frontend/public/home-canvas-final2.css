@@ -1,0 +1,150 @@
+/* Bookly Home — final canvas alignment */
+
+/* The page artwork is allowed to extend naturally with the whole document.
+   Do not clip it at a fixed Hero/card boundary. */
+body:has(.personal-home) .personal-home{
+  position:relative!important;
+  overflow:visible!important;
+  isolation:isolate;
+  min-height:100vh!important;
+  background:
+    radial-gradient(620px 440px at 92% 8%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.65) 32%,transparent 68%),
+    radial-gradient(520px 520px at 4% 38%,rgba(255,255,255,.88) 0%,transparent 70%),
+    radial-gradient(620px 460px at 88% 70%,rgba(17,17,17,.028) 0%,transparent 72%),
+    linear-gradient(180deg,#f7f8fa 0%,#f2f4f6 46%,#f6f7f9 100%)!important;
+}
+
+/* Global artwork: behind all content, with no relationship to Hero dimensions. */
+body:has(.personal-home) .personal-home::before{
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  top:78px!important;
+  right:-110px!important;
+  width:340px!important;
+  height:340px!important;
+  border-radius:50%!important;
+  border:1px solid rgba(17,17,17,.045)!important;
+  box-shadow:0 0 0 30px rgba(17,17,17,.017),0 0 0 60px rgba(17,17,17,.012),0 0 0 90px rgba(17,17,17,.008)!important;
+}
+
+body:has(.personal-home) .personal-home::after{
+  content:"B"!important;
+  position:absolute!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  top:235px!important;
+  right:-72px!important;
+  width:200px!important;
+  height:200px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:58px!important;
+  background:linear-gradient(145deg,#121212 0%,#252525 100%)!important;
+  color:#fff!important;
+  font-size:154px!important;
+  line-height:.72!important;
+  font-weight:850!important;
+  letter-spacing:-17px!important;
+  transform:rotate(7deg)!important;
+  box-shadow:0 25px 55px rgba(15,23,42,.12)!important;
+}
+
+/* Hero itself is transparent content only. */
+body:has(.personal-home) .personal-home-hero{
+  position:relative!important;
+  z-index:2!important;
+  min-height:250px!important;
+  margin:0!important;
+  padding:26px 24px 22px 4px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+body:has(.personal-home) .personal-home-hero::before,
+body:has(.personal-home) .personal-home-hero::after{content:none!important;display:none!important}
+body:has(.personal-home) .personal-home-hero > *{position:relative!important;z-index:3!important}
+
+/* Prevent foreground sections from accidentally becoming the page artwork container. */
+body:has(.personal-home) .personal-card,
+body:has(.personal-home) .personal-business-card,
+body:has(.personal-home) .personal-business-skeleton{
+  position:relative!important;
+  z-index:3!important;
+}
+
+/* Info control always lives in the top chrome. */
+body:has(.personal-home) .personal-home-menu{
+  position:fixed!important;
+  top:4px!important;
+  right:max(8px,calc((100vw - 640px)/2 + 8px))!important;
+  z-index:10010!important;
+}
+
+/* Bottom navigation must stay fixed and never participate in document flow. */
+body:has(.personal-home) .personal-bottom-nav{
+  position:fixed!important;
+  left:50%!important;
+  bottom:10px!important;
+  top:auto!important;
+  transform:translateX(-50%)!important;
+  z-index:10020!important;
+  width:min(calc(100% - 28px),400px)!important;
+  margin:0!important;
+}
+
+/* Give the page enough room under the fixed nav. */
+body:has(.personal-home){padding-bottom:0!important}
+body:has(.personal-home) .personal-home{padding-bottom:140px!important}
+
+/* Keep the global canvas subtle under the white search/business surfaces. */
+body:has(.personal-home) .personal-card::before{
+  content:""!important;
+  position:absolute!important;
+  top:-140px!important;
+  right:-150px!important;
+  width:300px!important;
+  height:300px!important;
+  border-radius:50%!important;
+  border:1px solid rgba(17,17,17,.04)!important;
+  box-shadow:0 0 0 26px rgba(17,17,17,.012),0 0 0 52px rgba(17,17,17,.008)!important;
+  pointer-events:none!important;
+  z-index:0!important;
+}
+
+body:has(.personal-home) .personal-card > *,
+body:has(.personal-home) .personal-business-card > *{position:relative;z-index:2}
+
+@media(max-width:520px){
+  body:has(.personal-home) .personal-home::before{
+    top:78px!important;
+    right:-108px!important;
+    width:285px!important;
+    height:285px!important;
+  }
+  body:has(.personal-home) .personal-home::after{
+    top:255px!important;
+    right:-70px!important;
+    width:175px!important;
+    height:175px!important;
+    border-radius:52px!important;
+    font-size:134px!important;
+    letter-spacing:-14px!important;
+  }
+  body:has(.personal-home) .personal-home-hero{
+    min-height:252px!important;
+    padding:24px 18px 18px 4px!important;
+  }
+  body:has(.personal-home) .personal-home-hero h1{
+    max-width:74%!important;
+    font-size:34px!important;
+  }
+  body:has(.personal-home) .personal-home-hero p{
+    max-width:62%!important;
+    font-size:13px!important;
+  }
+}
