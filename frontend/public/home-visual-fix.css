@@ -1,0 +1,76 @@
+/* Bookly Home — final viewport/composition cleanup */
+
+/* Telegram WebView should keep scrolling, but the native scrollbar must not become part of the UI. */
+html, body{
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+  width:0;
+  height:0;
+  display:none;
+}
+body:has(.personal-home){
+  overflow-x:hidden;
+}
+
+/* Keep the information control in the Bookly chrome at the very top. */
+body:has(.personal-home) .personal-home-menu{
+  top:2px!important;
+}
+
+/* Reduce the visual weight of the secondary Bookly header. */
+body:has(.personal-home) header{
+  padding-top:7px!important;
+  padding-bottom:9px!important;
+}
+body:has(.personal-home) header > div:first-child b{
+  font-size:21px!important;
+}
+body:has(.personal-home) header > div:first-child small{
+  font-size:9px!important;
+}
+
+/* Refine the hero artwork: smaller, higher, and no longer visually cut in half. */
+body:has(.personal-home) .personal-home-hero::before{
+  width:168px!important;
+  height:168px!important;
+  right:-14px!important;
+  bottom:-28px!important;
+  font-size:136px!important;
+  border-radius:50px!important;
+  transform:rotate(7deg)!important;
+}
+
+/* Give the hero/card stack enough separation from the fixed navigation. */
+body:has(.personal-home) .personal-home-hero + .personal-card{
+  margin-top:14px!important;
+}
+body:has(.personal-home) .personal-business-card{
+  margin-bottom:18px!important;
+}
+body:has(.personal-home) .personal-bottom-nav{
+  bottom:8px!important;
+  width:min(calc(100% - 24px),400px)!important;
+}
+
+/* On short phone screens, keep the first viewport clean and leave a little scroll room. */
+@media(max-width:480px){
+  body:has(.personal-home) .personal-home{
+    padding-bottom:142px!important;
+  }
+  body:has(.personal-home) .personal-home-hero::before{
+    width:142px!important;
+    height:142px!important;
+    right:-12px!important;
+    bottom:-24px!important;
+    font-size:116px!important;
+  }
+  body:has(.personal-home) .personal-home-hero h1{
+    max-width:68%!important;
+  }
+  body:has(.personal-home) .personal-home-hero p{
+    max-width:58%!important;
+  }
+}
