@@ -70,8 +70,7 @@ body:has(.admin-bottom-nav) .card:has(input[type="time"]) button:not(.primary){m
 /* Blocks — make the existing create/edit form and block list feel like one polished control surface. */
 body:has(.admin-bottom-nav) .card:has(input[type="date"]){background:linear-gradient(145deg,#fff 0%,#f8f9fb 100%)}
 body:has(.admin-bottom-nav) .card:has(input[type="date"]) h2{margin:0 0 14px;font-size:22px;letter-spacing:-.55px}
-body:has(.admin-bottom-nav) .card:has(input[type="date"]) input[type="date"],
-body:has(.admin-bottom-nav) .card:has(input[type="date"]) input[type="time"]{min-height:46px;font-weight:700}
+body:has(.admin-bottom-nav) .card:has(input[type="date"]) input[type="date"],body:has(.admin-bottom-nav) .card:has(input[type="date"]) input[type="time"]{min-height:46px;font-weight:700}
 body:has(.admin-bottom-nav) .card:has(input[type="date"]) button.primary{min-height:48px;border-radius:14px;box-shadow:0 10px 22px rgba(17,17,17,.12)}
 body:has(.admin-bottom-nav) .card:has(input[type="date"]) button:not(.primary){min-height:48px;border-radius:14px;background:#f5f6f8;border:1px solid #e0e3e7}
 body:has(.admin-bottom-nav) .card:has(input[type="date"]) .muted{color:#7d858f}
@@ -81,6 +80,26 @@ body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:first-child 
 body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child{display:flex;gap:8px}
 body:has(.admin-bottom-nav) .card:has(input[type="date"]).row > div:last-child button{min-width:82px}
 body:has(.admin-bottom-nav) .card:has(input[type="date"]).row .danger{background:#fff1f1;color:#b42318;border:1px solid #f3d1d1}
+
+/* Settings — organize the existing account/business controls into clear visual groups. */
+body:has(.admin-bottom-nav) .card:has(input[type="tel"]),
+body:has(.admin-bottom-nav) .card:has(textarea){background:linear-gradient(145deg,#fff 0%,#f8f9fb 100%)}
+body:has(.admin-bottom-nav) .card:has(input[type="tel"]) h2,
+body:has(.admin-bottom-nav) .card:has(textarea) h2{margin:0 0 14px;font-size:22px;letter-spacing:-.55px}
+body:has(.admin-bottom-nav) .card:has(input[type="tel"]) label,
+body:has(.admin-bottom-nav) .card:has(textarea) label{display:block;margin:12px 0 5px;font-size:12px;font-weight:800;color:#6b737d;letter-spacing:.1px}
+body:has(.admin-bottom-nav) .card:has(input[type="tel"]) input,
+body:has(.admin-bottom-nav) .card:has(textarea) input,
+body:has(.admin-bottom-nav) .card:has(textarea) textarea{margin:0}
+body:has(.admin-bottom-nav) .card:has(textarea) textarea{min-height:104px;resize:vertical}
+body:has(.admin-bottom-nav) .card:has(input[type="tel"]) button.primary,
+body:has(.admin-bottom-nav) .card:has(textarea) button.primary{min-height:48px;border-radius:14px;box-shadow:0 10px 22px rgba(17,17,17,.12)}
+body:has(.admin-bottom-nav) .card:has(input[type="tel"]) button:not(.primary),
+body:has(.admin-bottom-nav) .card:has(textarea) button:not(.primary){min-height:48px;border-radius:14px;background:#f5f6f8;border:1px solid #e0e3e7}
+body:has(.admin-bottom-nav) .card:has(select) > h3{margin-top:0;}
+body:has(.admin-bottom-nav) .card:has(select) .muted{color:#808894}
+body:has(.admin-bottom-nav) .settings-danger,
+body:has(.admin-bottom-nav) button.danger{box-shadow:none}
 
 @media(max-width:420px){
   body:has(.admin-bottom-nav) .app{padding-left:12px;padding-right:12px}
