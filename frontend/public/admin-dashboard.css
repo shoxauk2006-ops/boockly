@@ -60,6 +60,29 @@ body:has(.admin-bottom-nav) .card .danger:hover{background:#ffe8e8}
 body:has(.admin-bottom-nav) .card.row button:not(.danger){background:#f7f8fa;color:#111;border:1px solid #e1e4e8}
 body:has(.admin-bottom-nav) .card.row button:not(.danger):hover{background:#eef0f3}
 
+/* Bookings — keep the existing BookingRow and actions, refine hierarchy only. */
+body:has(.admin-bottom-nav) .booking{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  min-height:66px;
+  padding:14px 0;
+  margin:0;
+  border-top:1px solid #edf0f2;
+}
+body:has(.admin-bottom-nav) .booking:first-of-type{border-top:0}
+body:has(.admin-bottom-nav) .booking > div:first-child{min-width:0;flex:1}
+body:has(.admin-bottom-nav) .booking > div:first-child b{display:block;font-size:15px;line-height:1.25;letter-spacing:-.15px;color:#17191d}
+body:has(.admin-bottom-nav) .booking > div:first-child span{display:block;margin-top:4px;font-size:12px;color:#7f8791;line-height:1.35}
+body:has(.admin-bottom-nav) .booking > div:last-child{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
+body:has(.admin-bottom-nav) .booking em{display:inline-flex;align-items:center;justify-content:center;min-width:78px;padding:7px 10px;border:1px solid #e2e5e9;background:#f7f8fa;color:#505760;font-size:11px;line-height:1;letter-spacing:.1px}
+body:has(.admin-bottom-nav) .booking button{min-height:36px;padding:8px 11px;border:1px solid #e1e4e8;border-radius:11px;background:#fff;color:#111;font-size:12px;font-weight:700;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+body:has(.admin-bottom-nav) .booking button:hover{background:#f5f6f8}
+body:has(.admin-bottom-nav) .booking button.danger{border-color:#f0d1d1;background:#fff5f5;color:#b42318}
+body:has(.admin-bottom-nav) .booking button.danger:hover{background:#ffeaea}
+body:has(.admin-bottom-nav) .booking .primary{background:#111;color:#fff;border-color:#111;box-shadow:0 6px 16px rgba(17,17,17,.12)}
+
 @media(max-width:420px){
   body:has(.admin-bottom-nav) .app{padding-left:12px;padding-right:12px}
   body:has(.admin-bottom-nav) .business-head h1{font-size:27px}
@@ -69,4 +92,8 @@ body:has(.admin-bottom-nav) .card.row button:not(.danger):hover{background:#eef0
   body:has(.admin-bottom-nav) .card.row{align-items:flex-start}
   body:has(.admin-bottom-nav) .card.row > div:last-child{display:flex;flex-direction:column;gap:7px}
   body:has(.admin-bottom-nav) .card.row > div:last-child button{min-width:76px;padding:10px 11px}
+  body:has(.admin-bottom-nav) .booking{align-items:flex-start;gap:10px;padding:13px 0}
+  body:has(.admin-bottom-nav) .booking > div:last-child{flex-direction:column;align-items:stretch;gap:6px}
+  body:has(.admin-bottom-nav) .booking em{min-width:72px}
+  body:has(.admin-bottom-nav) .booking button{width:100%;white-space:nowrap}
 }
