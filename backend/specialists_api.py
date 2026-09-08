@@ -5,7 +5,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 
-from app import (
+from .app import (
     SessionLocal,
     Business,
     Service,

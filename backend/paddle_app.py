@@ -8,6 +8,9 @@ from . import paddle_original as _original
 
 app = _original.app
 
+from .specialists_api import router as specialists_router
+app.include_router(specialists_router)
+
 # Remove payment entry points that belong to abandoned providers. Paddle is
 # the only payment provider exposed by the running API.
 def _remove_legacy_payment_routes() -> None:
