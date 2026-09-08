@@ -5856,10 +5856,7 @@ return (
             <button
   className="admin-action-button"
   onClick={() => {
-    if (subscriptionLocked) {
-      showProModal('link');
-      return;
-    }
+
 
     copyLink();
   }}
@@ -5898,10 +5895,6 @@ return (
             <button
   className="admin-action-button"
   onClick={() => {
-    if (subscriptionLocked) {
-      showProModal('page');
-      return;
-    }
 
     openBusinessPage();
   }}
