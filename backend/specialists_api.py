@@ -12,6 +12,7 @@ from .app import (
     Specialist,
     SpecialistService,
     SpecialistWorkingHour,
+    Booking,
     telegram_user,
 )
 
@@ -56,23 +57,14 @@ class SpecialistResponse(BaseModel):
 
 
 def _owner_business(db, telegram_id: int, business_id: int) -> Business:
-    business = db.scalar(
-        select(Business).where(
-            Business.id == business_id,
-            Business.owner_telegram_id == telegram_id,
-        )
-    )
+    business = db.scalar(select(Business).where(Business.id == business_id, Business.owner_telegram_id == telegram_id))
     if business is None:
         raise HTTPException(404, "Business not found")
     return business
 
 
 def _get_business_id(db, telegram_id: int) -> int:
-    business = db.scalar(
-        select(Business)
-        .where(Business.owner_telegram_id == telegram_id)
-        .order_by(Business.id.asc())
-    )
+    business = db.scalar(select(Business).where(Business.owner_telegram_id == telegram_id).order_by(Business.id.asc()))
     if business is None:
         raise HTTPException(404, "Business not found")
     return business.id
@@ -82,12 +74,7 @@ def _validate_service_ids(db, business_id: int, service_ids: list[int]) -> list[
     unique_ids = list(dict.fromkeys(int(value) for value in service_ids))
     if not unique_ids:
         return []
-    rows = db.scalars(
-        select(Service.id).where(
-            Service.business_id == business_id,
-            Service.id.in_(unique_ids),
-        )
-    ).all()
+    rows = db.scalars(select(Service.id).where(Service.business_id == business_id, Service.id.in_(unique_ids))).all()
     found = {int(value) for value in rows}
     if found != set(unique_ids):
         raise HTTPException(400, "One or more services do not belong to this business")
@@ -177,9 +164,8 @@ def delete_specialist(specialist_id: int, x_telegram_init_data: str = Header(def
         specialist = db.scalar(select(Specialist).where(Specialist.id == specialist_id, Specialist.business_id == business_id))
         if specialist is None:
             raise HTTPException(404, "Specialist not found")
-        # Existing bookings keep their specialist_id nullable; detach before deleting the specialist.
-        db.query(SpecialistService).filter(SpecialistService.specialist_id == specialist.id).delete(synchronize_session=False)
-        db.query(SpecialistWorkingHour).filter(SpecialistWorkingHour.specialist_id == specialist.id).delete(synchronize_session=False)
+        db.execute(delete(SpecialistService).where(SpecialistService.specialist_id == specialist.id))
+        db.execute(delete(SpecialistWorkingHour).where(SpecialistWorkingHour.specialist_id == specialist.id))
         db.query(Booking).filter(Booking.specialist_id == specialist.id).update({Booking.specialist_id: None}, synchronize_session=False)
         db.delete(specialist)
         db.commit()
