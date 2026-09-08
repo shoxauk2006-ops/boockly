@@ -66,7 +66,7 @@ body:has(.personal-home) .personal-menu-button{
   line-height:1;
 }
 
-/* Compact Hero: no oversized empty window, no decoration escaping the top edge. */
+/* Compact Hero with intentional, fully contained artwork. */
 body:has(.personal-home) .personal-home-hero{
   position:relative;
   overflow:hidden!important;
@@ -76,47 +76,52 @@ body:has(.personal-home) .personal-home-hero{
   border:1px solid #e5e8ec!important;
   border-radius:22px!important;
   background:
-    radial-gradient(circle at 86% 14%,rgba(255,255,255,.98) 0 15%,transparent 35%),
+    radial-gradient(circle at 84% 14%,rgba(255,255,255,.99) 0 19%,rgba(249,250,251,.72) 34%,transparent 48%),
     linear-gradient(145deg,#ffffff 0%,#fafbfc 62%,#f3f5f7 100%)!important;
   box-shadow:0 14px 34px rgba(15,23,42,.065)!important;
   isolation:isolate!important;
   clip-path:inset(0 round 22px)!important;
 }
 
-/* Small signature mark inside the card instead of a giant overlapping circle. */
-body:has(.personal-home) .personal-home-hero::after{
-  content:"B"!important;
-  position:absolute!important;
-  right:-12px!important;
-  bottom:-34px!important;
-  width:108px!important;
-  height:108px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  border-radius:32px!important;
-  background:#111!important;
-  color:#fff!important;
-  font-size:88px!important;
-  line-height:.72!important;
-  font-weight:850!important;
-  letter-spacing:-10px!important;
-  transform:rotate(7deg)!important;
-  box-shadow:0 18px 36px rgba(15,23,42,.15)!important;
-  pointer-events:none!important;
-}
-
-/* Soft brand ring stays fully inside the Hero. */
+/* Soft "resting sun" — a filled glowing center with concentric halos. */
 body:has(.personal-home) .personal-home-hero::before{
   content:""!important;
   position:absolute!important;
-  width:88px!important;
-  height:88px!important;
-  right:88px!important;
-  top:18px!important;
+  width:76px!important;
+  height:76px!important;
+  right:74px!important;
+  top:16px!important;
   border-radius:50%!important;
-  border:1px solid rgba(17,17,17,.055)!important;
-  box-shadow:0 0 0 14px rgba(17,17,17,.016),0 0 0 28px rgba(17,17,17,.009)!important;
+  background:
+    radial-gradient(circle at 50% 50%,#ffffff 0 35%,#fbfbfa 50%,rgba(241,242,242,.72) 64%,rgba(255,255,255,0) 78%)!important;
+  border:1px solid rgba(17,17,17,.045)!important;
+  box-shadow:
+    0 0 0 12px rgba(17,17,17,.018),
+    0 0 0 24px rgba(17,17,17,.010),
+    0 10px 26px rgba(17,17,17,.025)!important;
+  pointer-events:none!important;
+}
+
+/* Signature B stays visibly inside the Hero instead of hiding behind its bottom edge. */
+body:has(.personal-home) .personal-home-hero::after{
+  content:"B"!important;
+  position:absolute!important;
+  right:8px!important;
+  bottom:12px!important;
+  width:98px!important;
+  height:98px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:30px!important;
+  background:linear-gradient(145deg,#111 0%,#242424 100%)!important;
+  color:#fff!important;
+  font-size:80px!important;
+  line-height:.72!important;
+  font-weight:850!important;
+  letter-spacing:-9px!important;
+  transform:rotate(7deg)!important;
+  box-shadow:0 18px 36px rgba(15,23,42,.15)!important;
   pointer-events:none!important;
 }
 
@@ -198,19 +203,19 @@ body:has(.personal-home) .personal-black-button{
   }
 
   body:has(.personal-home) .personal-home-hero::before{
-    width:72px!important;
-    height:72px!important;
-    right:66px!important;
-    top:15px!important;
+    width:68px!important;
+    height:68px!important;
+    right:60px!important;
+    top:14px!important;
   }
 
   body:has(.personal-home) .personal-home-hero::after{
-    right:-10px!important;
-    bottom:-29px!important;
-    width:96px!important;
-    height:96px!important;
-    border-radius:28px!important;
-    font-size:78px!important;
+    right:8px!important;
+    bottom:11px!important;
+    width:90px!important;
+    height:90px!important;
+    border-radius:27px!important;
+    font-size:73px!important;
     letter-spacing:-8px!important;
   }
 
