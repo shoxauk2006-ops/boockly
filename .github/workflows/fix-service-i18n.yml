@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   apply:
-    if: ${{ !contains(github.event.head_commit.message, '[bookly-ui-fix]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,400 +16,48 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Patch frontend
+      - name: Patch client specialist flow
+        shell: python
         run: |
-          python3 - <<'PY'
           from pathlib import Path
-          import re
+          path = Path('frontend/src/main.tsx')
+          s = path.read_text(encoding='utf-8')
 
-          p = Path('frontend/src/main.tsx')
-          s = p.read_text(encoding='utf-8')
+          old = '''          setServices(\n            data.services || []\n          );'''
+          new = '''          setServices(\n            data.services || []\n          );\n\n          try {\n            const specialistsResponse = await fetch(\n              API + `/businesses/${data.business.id}/specialists`\n            );\n            if (specialistsResponse.ok) {\n              const specialistsData = await specialistsResponse.json();\n              setSpecialists(Array.isArray(specialistsData) ? specialistsData.filter((item: any) => item?.active !== false) : []);\n            } else {\n              setSpecialists([]);\n            }\n          } catch (specialistsError) {\n            console.error('CLIENT SPECIALISTS LOAD ERROR:', specialistsError);\n            setSpecialists([]);\n          }'''
+          if old not in s and new not in s:
+              raise SystemExit('specialist load marker not found')
+          if new not in s:
+              s = s.replace(old, new, 1)
 
-          # Add map picker component once.
-          if 'function MapPicker({' not in s:
-              marker = 'function Settings({'
-              component = r'''function MapPicker({
-            latitude,
-            longitude,
-            onSelect,
-            onClose,
-            t
-          }: {
-            latitude: number | null;
-            longitude: number | null;
-            onSelect: (lat: number, lng: number, address?: string) => void;
-            onClose: () => void;
-            t: (key: string, fallback?: string) => string;
-          }) {
-            const mapRef = useRef<HTMLDivElement | null>(null);
-            const mapInstanceRef = useRef<any>(null);
-            const markerRef = useRef<any>(null);
-            const selectedRef = useRef<{ lat: number; lng: number; address?: string } | null>(
-              latitude != null && longitude != null ? { lat: latitude, lng: longitude } : null
-            );
-            const [selected, setSelected] = useState<{ lat: number; lng: number; address?: string } | null>(selectedRef.current);
-            const [loading, setLoading] = useState(true);
+          start = s.index('  const chooseService = async (service: any) => {')
+          end = s.index('\n  const chooseTime = (', start)
+          replacement = '''  const chooseService = async (service: any) => {\n    if (!business) return;\n    setSelected(service);\n    setSelectedTime('');\n    setSlots([]);\n    setError('');\n    setSlotsLoading(true);\n    try {\n      await findFirstAvailableDay(service, selectedSpecialist);\n    } catch (e) {\n      console.error('SERVICE AVAILABILITY ERROR:', e);\n      setSlots([]);\n      setError(t('client.availabilityError'));\n    } finally {\n      setSlotsLoading(false);\n    }\n  };\n\n  const chooseSpecialist = (specialist: any) => {\n    setSelectedSpecialist(specialist);\n    setSelected(null);\n    setSelectedTime('');\n    setSlots([]);\n    setDay(getClientLocalDateKey());\n    setError('');\n  };\n'''
+          s = s[:start] + replacement + s[end:]
 
-            useEffect(() => {
-              let cancelled = false;
+          ui_start = s.index("      <h2>\n        {t('client.services')}")
+          ui_end = s.index('\n\n    </section>', ui_start)
+          ui = '''      {specialists.length > 0 ? (\n        <>\n          <h2>{t('client.chooseSpecialist', 'Выберите специалиста')}</h2>\n          {!selectedSpecialist ? (\n            <div className="card">\n              <div style={{ display: 'grid', gap: 10 }}>\n                {specialists.map((specialist) => (\n                  <button type="button" key={specialist.id} className="full" onClick={() => chooseSpecialist(specialist)} style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>\n                    {specialist.photo ? <img src={specialist.photo} alt={specialist.name} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} /> : <span style={{ width: 52, height: 52, borderRadius: '50%', background: '#f0f1f3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>{String(specialist.name || '?').charAt(0).toUpperCase()}</span>}\n                    <span style={{ display: 'grid', gap: 2 }}><strong>{specialist.name}</strong>{specialist.position && <small style={{ opacity: 0.7 }}>{specialist.position}</small>}</span>\n                  </button>\n                ))}\n              </div>\n            </div>\n          ) : (\n            <>\n              <div className="card">\n                <button type="button" className="ghost full" onClick={() => { setSelectedSpecialist(null); setSelected(null); setSelectedTime(''); setSlots([]); setDay(getClientLocalDateKey()); }}>← {t('client.chooseSpecialist', 'Выбрать специалиста')}</button>\n                <p style={{ margin: '12px 0 0', fontWeight: 600 }}>{selectedSpecialist.name}</p>\n              </div>\n              <h2>{t('client.services')}</h2>\n              {(() => {\n                const specialistServices = selectedSpecialist.service_ids?.length ? services.filter((service: any) => selectedSpecialist.service_ids.includes(service.id)) : services;\n                return specialistServices.length === 0 ? <div className="card"><p>{t('client.noServices')}</p></div> : specialistServices.map((service: any) => (\n                  <div className={selected?.id === service.id ? 'client-service-card selected' : 'client-service-card'} key={service.id}>\n                    <div className="client-service-info"><strong>{service.name}</strong><div className="client-service-meta">{money(service.price, service.currency)}<span>·</span>{service.duration_min} {t('owner.minutes')}</div>{service.description && <p>{service.description}</p>}</div>\n                    <button className="client-service-button" onClick={() => chooseService(service)}>{t('client.chooseService')}</button>\n                  </div>\n                ));\n              })()}\n            </>\n          )}\n        </>\n      ) : (\n        <>\n          <h2>{t('client.services')}</h2>\n          {services.length === 0 ? <div className="card"><p>{t('client.noServices')}</p></div> : services.map((service: any) => (\n            <div className={selected?.id === service.id ? 'client-service-card selected' : 'client-service-card'} key={service.id}>\n              <div className="client-service-info"><strong>{service.name}</strong><div className="client-service-meta">{money(service.price, service.currency)}<span>·</span>{service.duration_min} {t('owner.minutes')}</div>{service.description && <p>{service.description}</p>}</div>\n              <button className="client-service-button" onClick={() => chooseService(service)}>{t('client.chooseService')}</button>\n            </div>\n          ))}\n        </>\n      )}\n\n      {selected && (\n        <>\n          <div className="card">\n            <h2>{t('client.chooseDate')}</h2>\n            <input type="date" min={getClientLocalDateKey()} value={day} onChange={async e => { const newDay = e.target.value; setDay(newDay); setSelectedTime(''); await loadSlots(selected, newDay, selectedSpecialist); }} />\n          </div>\n          <div className="card">\n            <h2>{t('client.chooseTime')}</h2>\n            {slotsLoading ? <p className="muted">{t('owner.loadingSlots')}</p> : slots.length > 0 ? <div className="slots">{slots.map(time => <button key={time} className={selectedTime === time ? 'selected' : ''} onClick={() => chooseTime(time)}>{time}</button>)}</div> : <p>{t('client.noSlots')}</p>}\n          </div>\n          {selectedTime && (\n            <div id="booking-form" className="card">\n              <h2>{t('client.yourData')}</h2>\n              <div className="success"><b>{selected.name}</b><br />{selectedSpecialist?.name && <>{selectedSpecialist.name}<br /></>}{day} · {selectedTime}</div>\n              <input type="text" placeholder={t('client.name')} value={clientName} onChange={e => setClientName(e.target.value)} />\n              <PhoneInput value={phone} onChange={setPhone} placeholder={t('client.phone')} />\n              <button className="primary full" disabled={bookingLoading} onClick={submitBooking}>{bookingLoading ? t('client.bookingLoading') : t('client.confirmBooking')}</button>\n            </div>\n          )}\n        </>\n      )}'''
+          s = s[:ui_start] + ui + s[ui_end:]
+          path.write_text(s, encoding='utf-8')
 
-              const loadLeaflet = () => new Promise<void>((resolve, reject) => {
-                if ((window as any).L) {
-                  resolve();
-                  return;
-                }
-                const existing = document.querySelector('script[data-bookly-leaflet]') as HTMLScriptElement | null;
-                if (existing) {
-                  existing.addEventListener('load', () => resolve(), { once: true });
-                  existing.addEventListener('error', () => reject(new Error('Leaflet failed')), { once: true });
-                  return;
-                }
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                link.dataset.booklyLeaflet = '1';
-                document.head.appendChild(link);
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                script.async = true;
-                script.dataset.booklyLeaflet = '1';
-                script.onload = () => resolve();
-                script.onerror = () => reject(new Error('Leaflet failed'));
-                document.body.appendChild(script);
-              });
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+          if [ -f tsconfig.json ]; then npx tsc --noEmit; fi
 
-              const init = async () => {
-                try {
-                  await loadLeaflet();
-                  if (cancelled || !mapRef.current) return;
-                  const L = (window as any).L;
-                  const defaultLat = latitude ?? 41.3111;
-                  const defaultLng = longitude ?? 69.2797;
-                  const map = L.map(mapRef.current).setView(
-                    [defaultLat, defaultLng],
-                    latitude != null && longitude != null ? 16 : 12
-                  );
-                  mapInstanceRef.current = map;
-                  L.tileLayer(
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    { attribution: '&copy; OpenStreetMap contributors' }
-                  ).addTo(map);
-
-                  const updatePoint = async (lat: number, lng: number) => {
-                    if (!markerRef.current) {
-                      markerRef.current = L.marker([lat, lng], { draggable: true }).addTo(map);
-                      markerRef.current.on('dragend', () => {
-                        const point = markerRef.current.getLatLng();
-                        void updatePoint(point.lat, point.lng);
-                      });
-                    } else {
-                      markerRef.current.setLatLng([lat, lng]);
-                    }
-                    map.panTo([lat, lng]);
-                    const next = { lat, lng };
-                    selectedRef.current = next;
-                    setSelected(next);
-
-                    try {
-                      const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&accept-language=${encodeURIComponent(getStoredLanguage())}`
-                      );
-                      const data = await response.json();
-                      if (data?.display_name && !cancelled) {
-                        const withAddress = { lat, lng, address: data.display_name };
-                        selectedRef.current = withAddress;
-                        setSelected(withAddress);
-                      }
-                    } catch {}
-                  };
-
-                  if (latitude != null && longitude != null) {
-                    markerRef.current = L.marker([latitude, longitude], { draggable: true }).addTo(map);
-                    markerRef.current.on('dragend', () => {
-                      const point = markerRef.current.getLatLng();
-                      void updatePoint(point.lat, point.lng);
-                    });
-                  }
-
-                  map.on('click', (event: any) => {
-                    void updatePoint(event.latlng.lat, event.latlng.lng);
-                  });
-
-                  setLoading(false);
-                  setTimeout(() => map.invalidateSize(), 100);
-                } catch (error) {
-                  console.error('MAP PICKER ERROR:', error);
-                  setLoading(false);
-                }
-              };
-
-              void init();
-
-              return () => {
-                cancelled = true;
-                if (mapInstanceRef.current) {
-                  mapInstanceRef.current.remove();
-                  mapInstanceRef.current = null;
-                }
-                markerRef.current = null;
-              };
-            }, []);
-
-            const confirm = () => {
-              if (selectedRef.current) {
-                onSelect(
-                  selectedRef.current.lat,
-                  selectedRef.current.lng,
-                  selectedRef.current.address
-                );
-              }
-              onClose();
-            };
-
-            return (
-              <div className="subscription-modal-overlay" onClick={onClose}>
-                <div
-                  className="subscription-modal"
-                  onClick={e => e.stopPropagation()}
-                  style={{ maxWidth: 620 }}
-                >
-                  <button type="button" className="subscription-modal-close" onClick={onClose}>×</button>
-                  <span className="personal-eyebrow">BOOKLY</span>
-                  <h2>{t('settings.mapTitle', 'Выберите адрес на карте')}</h2>
-                  <p className="muted">
-                    {t('settings.mapHint', 'Нажмите на карту или перетащите метку в нужное место.')}
-                  </p>
-                  <div
-                    ref={mapRef}
-                    style={{
-                      width: '100%',
-                      height: 360,
-                      borderRadius: 14,
-                      overflow: 'hidden',
-                      marginTop: 12,
-                      background: '#eee'
-                    }}
-                  />
-                  {loading && <p className="muted" style={{ marginTop: 10 }}>{t('common.loading', 'Загрузка…')}</p>}
-                  {selected && (
-                    <p className="muted" style={{ marginTop: 10 }}>
-                      {selected.address || `${selected.lat.toFixed(6)}, ${selected.lng.toFixed(6)}`}
-                    </p>
-                  )}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
-                    <button type="button" onClick={onClose}>{t('common.cancel', 'Отмена')}</button>
-                    <button type="button" className="primary" disabled={!selected} onClick={confirm}>{t('common.confirm', 'Готово')}</button>
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          '''
-              if marker not in s:
-                  raise SystemExit('Settings marker not found')
-              s = s.replace(marker, component + marker, 1)
-
-          if 'const [mapPickerOpen, setMapPickerOpen]' not in s:
-              anchor = '  const [settingsTimezone, setSettingsTimezone] ='
-              pos = s.find(anchor)
-              if pos < 0:
-                  raise SystemExit('Settings state anchor not found')
-              s = s[:pos] + "  const [mapPickerOpen, setMapPickerOpen] = useState(false);\n" + s[pos:]
-
-          old_map = '''        <div className="two">
-          <input
-            placeholder={t('settings.latitudeOptional')}
-            value={latitude}
-            onChange={e =>
-              setLatitude(
-                e.target.value
-              )
-            }
-          />
-
-          <input
-            placeholder={t('settings.longitudeOptional')}
-            value={longitude}
-            onChange={e =>
-              setLongitude(
-                e.target.value
-              )
-            }
-          />
-        </div>'''
-          new_map = '''        <button
-          type="button"
-          className="ghost full"
-          onClick={() => setMapPickerOpen(true)}
-        >
-          {latitude !== '' && longitude !== ''
-            ? t('settings.changeMapLocation', 'Изменить точку на карте')
-            : t('settings.chooseMapLocation', 'Выбрать адрес на карте')}
-        </button>
-
-        {latitude !== '' && longitude !== '' && (
-          <p className="muted">
-            {Number(latitude).toFixed(6)}, {Number(longitude).toFixed(6)}
-          </p>
-        )}
-
-        {mapPickerOpen && (
-          <MapPicker
-            latitude={latitude === '' ? null : Number(latitude)}
-            longitude={longitude === '' ? null : Number(longitude)}
-            onSelect={(lat, lng, selectedAddress) => {
-              setLatitude(String(lat));
-              setLongitude(String(lng));
-              if (selectedAddress) setAddress(selectedAddress);
-            }}
-            onClose={() => setMapPickerOpen(false)}
-            t={t}
-          />
-        )}'''
-          if old_map in s:
-              s = s.replace(old_map, new_map, 1)
-
-          # Remove Services business contacts card and supporting state/function.
-          start_fn = s.find('function Services(')
-          if start_fn >= 0:
-              card_start = s.find('      <div className="card">\n        <h2>\n          {t(\n            \'owner.businessContacts\'', start_fn)
-              if card_start >= 0:
-                  form_start = s.find('      <div\n  className="card"\n  ref={serviceFormRef}', card_start)
-                  if form_start >= 0:
-                      s = s[:card_start] + s[form_start:]
-
-          state_block = '''  const [businessPhone, setBusinessPhone] =
-    useState(business?.phone || '');
-
-  const [businessAddress, setBusinessAddress] =
-    useState(business?.address || '');
-
-  const [savingBusiness, setSavingBusiness] =
-    useState(false);
-'''
-          if state_block in s:
-              s = s.replace(state_block, '', 1)
-
-          effect_block = '''  useEffect(() => {
-    setBusinessPhone(
-      business?.phone || ''
-    );
-
-    setBusinessAddress(
-      business?.address || ''
-    );
-  }, [business]);
-
-'''
-          if effect_block in s:
-              s = s.replace(effect_block, '', 1)
-
-          fn_start = s.find('  const saveBusinessContacts =')
-          if fn_start >= 0:
-              fn_end = s.find('  const saveService =', fn_start)
-              if fn_end >= 0:
-                  s = s[:fn_start] + s[fn_end:]
-
-          # Auto-find next available date on client service selection.
-          if 'MAX_DAYS_TO_SEARCH = 90' not in s:
-              choose_start = s.find('  const chooseService = async (\n    service: any\n  ) => {')
-              if choose_start >= 0:
-                  choose_end = s.find('  const chooseTime =', choose_start)
-                  if choose_end < 0:
-                      raise SystemExit('chooseService end marker not found')
-                  new_choose = '''  const chooseService = async (
-    service: any
-  ) => {
-    setSelected(service);
-    setSelectedTime('');
-    setSlots([]);
-    setSlotsLoading(true);
-    setError('');
-
-    try {
-      const startDate = new Date(`${day}T12:00:00`);
-      const MAX_DAYS_TO_SEARCH = 90;
-
-      for (let offset = 0; offset < MAX_DAYS_TO_SEARCH; offset += 1) {
-        const candidate = new Date(startDate);
-        candidate.setDate(startDate.getDate() + offset);
-
-        const candidateDay = [
-          candidate.getFullYear(),
-          String(candidate.getMonth() + 1).padStart(2, '0'),
-          String(candidate.getDate()).padStart(2, '0')
-        ].join('-');
-
-        const response = await fetch(
-          API +
-            `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-            t('client.availabilityError')
-          );
-        }
-
-        const candidateSlots = Array.isArray(data?.slots)
-          ? data.slots
-          : [];
-
-        if (candidateSlots.length > 0) {
-          setDay(candidateDay);
-          setSlots(candidateSlots);
-          return;
-        }
-      }
-
-      setSlots([]);
-    } catch (e) {
-      console.error(
-        'FIND NEXT AVAILABILITY ERROR:',
-        e
-      );
-      setSlots([]);
-      setError(t('client.availabilityError'));
-    } finally {
-      setSlotsLoading(false);
-    }
-  };
-
-'''
-                  s = s[:choose_start] + new_choose + s[choose_end:]
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Commit changes
+      - name: Commit and remove temporary workflows
+        shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add frontend/src/main.tsx
-          git commit -m 'feat: map picker and next availability [bookly-ui-fix]' || exit 0
+          git commit -m 'fix: correct client specialist booking order' || true
           git push
-
-      - name: Validate build
-        continue-on-error: true
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
-
-      - name: Remove temporary workflow
-        if: always()
-        run: |
           git fetch origin main
-          git checkout main
           git reset --hard origin/main
-          if [ -f .github/workflows/fix-service-i18n.yml ]; then
-            git rm .github/workflows/fix-service-i18n.yml
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'chore: remove temporary Bookly UI workflow [bookly-ui-fix]'
-            git push
-          fi
+          git rm .github/workflows/fix-service-i18n.yml .github/workflows/fix-client-specialist-flow.yml 2>/dev/null || true
+          git commit -m 'chore: remove temporary UI workflows' || true
+          git push
