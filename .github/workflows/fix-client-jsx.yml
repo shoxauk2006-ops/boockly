@@ -1,0 +1,78 @@
+name: Verify and repair client build
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repair client JSX and remove temporary duplicates
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+          marker = '          {(!specialists.length || selectedSpecialist) && ('
+          start = s.find(marker)
+          if start < 0:
+              raise SystemExit('Specialist booking conditional not found')
+
+          after = s[start:]
+          opening = marker + '\n            <div className="card">'
+          fixed, count = after.replace(
+              opening,
+              marker + '\n            <>\n              <div className="card">',
+              1,
+          ), 0
+          if opening in after:
+              count = 1
+          else:
+              # It may already be repaired; accept that state.
+              fixed = after
+              if '<>\n              <div className="card">' not in fixed[:300]:
+                  raise SystemExit('Unexpected specialist JSX opening')
+
+          bad_close = '\n          </div>\n        )}\n\n        </>\n      )}'
+          good_close = '\n            </>\n          )}\n\n        </>\n      )}'
+          if bad_close in fixed:
+              fixed = fixed.replace(bad_close, good_close, 1)
+          elif good_close not in fixed:
+              raise SystemExit('Unexpected specialist JSX closing')
+
+          s = s[:start] + fixed
+          p.write_text(s)
+          PY
+
+      - name: Verify source and build
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+          if [ -f tsconfig.json ]; then npx tsc --noEmit; fi
+
+      - name: Commit verified repair and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx .github/workflows/fix-client-jsx.yml
+          if git diff --cached --quiet; then
+            echo "No source changes needed"
+          else
+            git commit -m "fix: repair specialist booking JSX"
+          fi
+          git rm .github/workflows/fix-client-jsx.yml
+          git commit -m "chore: remove temporary build repair workflow"
+          git push
