@@ -16,7 +16,6 @@ export default function Specialists({ services, reload, t }: Props) {
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<Specialist | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [hours, setHours] = useState<Array<{ weekday: number; start: string; end: string; active: boolean }>>(dayLabels.map((_, weekday) => ({ weekday, start: '09:00', end: '18:00', active: weekday < 5 })));
 
@@ -77,4 +76,3 @@ export default function Specialists({ services, reload, t }: Props) {
     {items.length === 0 ? <div className="card" style={{ textAlign: 'center' }}><div style={{ fontSize: 36, marginBottom: 8 }}>👤</div><h3>{t('specialists.emptyTitle', 'Пока нет специалистов')}</h3><p className="muted">{t('specialists.emptyText', 'Добавьте первого специалиста, если клиенты должны выбирать его при записи.')}</p><button className="primary full" onClick={startCreate}>{t('specialists.add', 'Добавить специалиста')}</button></div> : items.map(item => <div className="card" key={item.id}><div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>{item.photo ? <img src={item.photo} alt={item.name} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 14 }} /> : <div style={{ width: 64, height: 64, borderRadius: 14, background: '#f1f3f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 25 }}>👤</div>}<div style={{ flex: 1 }}><strong style={{ fontSize: 18 }}>{item.name}</strong>{item.position && <p className="muted" style={{ margin: '3px 0 0' }}>{item.position}</p>}<small className="muted">{item.active ? t('specialists.active', 'Активен') : t('specialists.inactive', 'Неактивен')}</small></div></div>{item.description && <p className="muted">{item.description}</p>}<p className="muted" style={{ marginBottom: 12 }}>{t('specialists.servicesCount', 'Услуг')}: {item.service_ids?.length || 0}</p><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}><button onClick={() => startEdit(item)}>{t('common.edit', 'Изменить')}</button><button onClick={() => remove(item)}>{t('common.delete', 'Удалить')}</button></div></div>)}
   </section>;
 }
-// Trigger form-state fix workflow.
