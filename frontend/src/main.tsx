@@ -470,8 +470,6 @@ function App(){
   useState<'help' | 'rules'>('help');
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertModalMessage, setAlertModalMessage] = useState('');
-  const [proModalOpen, setProModalOpen] =
-  useState(false);
   const [alertModalTitle, setAlertModalTitle] =
   useState('Bookly');
 
