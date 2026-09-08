@@ -2574,8 +2574,8 @@ def business_specialists(business_id: int, service_id: Optional[int] = None):
         result = []
         for item in rows:
             service_ids = [
-                int(value)
-                for value in db.query(SpecialistService.service_id)
+                int(row[0])
+                for row in db.query(SpecialistService.service_id)
                 .filter(SpecialistService.specialist_id == item.id)
                 .all()
             ]
