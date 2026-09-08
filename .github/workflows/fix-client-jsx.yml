@@ -1,0 +1,56 @@
+name: Fix client JSX build
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix adjacent JSX elements
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+
+          old = '''          {(!specialists.length || selectedSpecialist) && (\n            <div className="card">'''
+          new = '''          {(!specialists.length || selectedSpecialist) && (\n            <>\n            <div className="card">'''
+          if old not in s:
+              raise SystemExit('Opening JSX pattern not found')
+          s = s.replace(old, new, 1)
+
+          old = '''          </div>\n        )}\n\n        </>\n      )}\n\n    </section>'''
+          new = '''          </div>\n            </>\n          )}\n\n        </>\n      )}\n\n    </section>'''
+          if old not in s:
+              raise SystemExit('Closing JSX pattern not found')
+          s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+
+      - name: Verify frontend build
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Commit fix and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx .github/workflows/fix-client-jsx.yml
+          git commit -m "fix: wrap specialist booking cards in JSX fragment"
+          git rm .github/workflows/fix-client-jsx.yml
+          git commit -m "chore: remove temporary JSX fix workflow"
+          git push
