@@ -5800,16 +5800,11 @@ return (
           </h3>
 
           <p className="muted">
-            {subscriptionLocked
-              ? t(
-                  'owner.activateToAccessFeatures',
-                  'Активируйте подписку, чтобы открыть доступ к функциям Bookly Pro'
-                )
-              : t(
-                  'owner.shareBusinessHint',
-                  'Поделитесь страницей бизнеса с клиентами'
-                )}
-          </p>
+  {t(
+    'owner.shareBusinessHint',
+    'Поделитесь страницей бизнеса с клиентами'
+  )}
+</p>
         </div>
 
         <div className="subscription-feature-list">
