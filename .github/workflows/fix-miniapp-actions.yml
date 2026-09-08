@@ -1,0 +1,68 @@
+name: Fix Mini App quick actions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Patch Mini App copy and policy
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          files = [Path('frontend/src/main.tsx'), Path('frontend/src/i18n.ts')]
+          replacements = {
+              'Чтобы начать принимать записи от клиентов, активируйте подписку Bookly Pro. После активации вы получите клиентскую ссылку и сможете начать принимать записи.': 'После настройки бизнеса клиенты смогут находить его по клиентской ссылке и самостоятельно записываться на услуги.',
+              'Чтобы клиенты могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Bookly Pro.': 'Клиенты смогут найти ваш бизнес по клиентской ссылке и самостоятельно записываться на услуги.',
+              'Активируйте подписку, чтобы открыть доступ к функциям Bookly Pro': 'Управляйте функциями Bookly прямо здесь',
+              'Активируйте подписку, чтобы получить клиентскую ссылку': 'Используйте клиентскую ссылку, чтобы делиться страницей бизнеса',
+              'Активируйте подписку, чтобы получить QR-код': 'QR-код страницы бизнеса',
+              'Активируйте Bookly Pro, чтобы получить QR-код': 'QR-код страницы бизнеса',
+              'Активируйте подписку, чтобы получить полный доступ': 'Полный доступ к функциям Bookly',
+              'Активировать Bookly Pro': 'Открыть Bookly',
+              'Оплатите подписку, чтобы активировать Bookly.': 'Настройте бизнес, чтобы начать работу с Bookly.',
+              'Функции Bookly Pro': 'Функции Bookly',
+              'Bookly Pro открывает клиентскую часть Bookly:': 'Клиентская часть Bookly включает:',
+          }
+
+          for p in files:
+              s = p.read_text(encoding='utf-8')
+              for old, new in replacements.items():
+                  s = s.replace(old, new)
+              p.write_text(s, encoding='utf-8')
+
+          p = Path('frontend/public/miniapp-policy.js')
+          s = p.read_text(encoding='utf-8')
+          old = '''    document.querySelectorAll('div,section,article').forEach(function (node) {
+      if (node.classList.contains('subscription-modal') || node.closest('.subscription-modal')) return;
+      var text = normalized(node);
+      if (!text || text.length > 220 || !BILLING_RE.test(text)) return;
+      if (node.querySelector('input,textarea,select') || node.children.length > 8) return;
+      if (/без\\s+подписки|activate\\s+subscription|активируйте\\s+подписку|bookly\\s+pro/i.test(text)) {
+        node.classList.add('bookly-policy-hidden');
+      }
+    });
+'''
+          if old not in s:
+              raise SystemExit('Expected broad billing container filter was not found')
+          s = s.replace(old, '', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/src/main.tsx frontend/src/i18n.ts frontend/public/miniapp-policy.js
+          git commit -m 'Fix Mini App quick actions and activation copy'
+          git push
