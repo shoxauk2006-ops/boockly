@@ -1,13 +1,15 @@
 name: Fix Mini App quick actions
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   fix:
+    if: ${{ !contains(github.event.head_commit.message, '[bookly-miniapp-fix]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,10 +61,25 @@ jobs:
           p.write_text(s, encoding='utf-8')
           PY
 
-      - name: Commit
+      - name: Commit patch
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add frontend/src/main.tsx frontend/src/i18n.ts frontend/public/miniapp-policy.js
-          git commit -m 'Fix Mini App quick actions and activation copy'
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Fix Mini App quick actions and activation copy [bookly-miniapp-fix]'
           git push
+
+      - name: Remove temporary workflow
+        if: success()
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+          if [ -f .github/workflows/fix-miniapp-actions.yml ]; then
+            git rm .github/workflows/fix-miniapp-actions.yml
+            git commit -m 'Remove temporary Mini App fix workflow [bookly-miniapp-fix]'
+            git push
+          fi
