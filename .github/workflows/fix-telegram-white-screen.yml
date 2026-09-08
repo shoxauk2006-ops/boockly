@@ -1,6 +1,8 @@
 name: Fix Telegram white screen
 on:
-  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/fix-telegram-white-screen.yml
 jobs:
   patch:
     runs-on: ubuntu-latest
