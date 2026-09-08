@@ -13,6 +13,7 @@ import PhoneInput, {
 } from './PhoneInput';
 import QRCode from 'qrcode';
 import './style.css';
+import Specialists from './Specialists';
 declare global {
   interface Window {
     Telegram:any;
@@ -3823,6 +3824,14 @@ borderTopColor: '#d32f2f',
 />
       )}
 
+      {tab === 'specialists' && (
+        <Specialists
+          services={services}
+          reload={load}
+          t={t}
+        />
+      )}
+
       {tab === 'services' && (
         <Services
           services={services}
@@ -3869,6 +3878,14 @@ borderTopColor: '#d32f2f',
   <div className="admin-more-page">
     <div className="card">
       <h2>{t('nav.more')}</h2>
+
+      <button
+        className="admin-more-item"
+        onClick={() => setTab('specialists')}
+      >
+        <span>{t('nav.specialists', 'Специалисты')}</span>
+        <b>→</b>
+      </button>
 
       <button
         className="admin-more-item"
