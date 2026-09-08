@@ -24,18 +24,17 @@ jobs:
           p = Path('frontend/src/main.tsx')
           s = p.read_text()
 
-          old = '''          {(!specialists.length || selectedSpecialist) && (\n            <div className="card">'''
-          new = '''          {(!specialists.length || selectedSpecialist) && (\n            <>\n            <div className="card">'''
-          if old not in s:
-              raise SystemExit('Opening JSX pattern not found')
-          s = s.replace(old, new, 1)
+          # The specialist/date/time block must return one JSX root.
+          opening = '''          {(!specialists.length || selectedSpecialist) && (\n            <>\n            <div className="card">'''
+          if opening not in s:
+              raise SystemExit('Specialist fragment opening not found')
 
-          old = '''          </div>\n        )}\n\n        </>\n      )}\n\n    </section>'''
-          new = '''          </div>\n            </>\n          )}\n\n        </>\n      )}\n\n    </section>'''
-          if old not in s:
-              raise SystemExit('Closing JSX pattern not found')
-          s = s.replace(old, new, 1)
+          closing = '''          </div>\n        )}\n\n        </>\n      )}\n\n    </section>'''
+          replacement = '''          </div>\n            </>\n          )}\n\n        </>\n      )}\n\n    </section>'''
+          if closing not in s:
+              raise SystemExit('Specialist fragment closing pattern not found')
 
+          s = s.replace(closing, replacement, 1)
           p.write_text(s)
           PY
 
@@ -50,7 +49,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add frontend/src/main.tsx .github/workflows/fix-client-jsx.yml
-          git commit -m "fix: wrap specialist booking cards in JSX fragment"
+          git commit -m "fix: close specialist JSX fragment correctly"
           git rm .github/workflows/fix-client-jsx.yml
           git commit -m "chore: remove temporary JSX fix workflow"
           git push
