@@ -1,0 +1,123 @@
+name: Fix public specialist list
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: ${{ !contains(github.event.head_commit.message, '[specialist-list-fix]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fix public specialist endpoint
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
+          old = '''@app.get("/businesses/{business_id}/specialists")
+          def business_specialists(business_id: int, service_id: int):
+              with SessionLocal() as db:
+                  business = db.get(Business, business_id)
+                  service = db.get(Service, service_id)
+                  if not business or not service or service.business_id != business_id or not service.active:
+                      raise HTTPException(404, "Not found")
+                  rows = (
+                      db.query(Specialist)
+                      .join(SpecialistService, SpecialistService.specialist_id == Specialist.id)
+                      .filter(
+                          Specialist.business_id == business_id,
+                          SpecialistService.service_id == service_id,
+                          Specialist.active == True
+                      )
+                      .order_by(Specialist.id.asc())
+                      .all()
+                  )
+                  return [
+                      {
+                          "id": item.id,
+                          "name": item.name,
+                          "position": item.position or "",
+                          "description": item.description or "",
+                          "photo": item.photo or "",
+                      }
+                      for item in rows
+                  ]
+          '''
+          new = '''@app.get("/businesses/{business_id}/specialists")
+          def business_specialists(business_id: int, service_id: Optional[int] = None):
+              with SessionLocal() as db:
+                  business = db.get(Business, business_id)
+                  if not business:
+                      raise HTTPException(404, "Not found")
+
+                  query = db.query(Specialist).filter(
+                      Specialist.business_id == business_id,
+                      Specialist.active == True
+                  )
+
+                  if service_id is not None:
+                      service = db.get(Service, service_id)
+                      if not service or service.business_id != business_id or not service.active:
+                          raise HTTPException(404, "Not found")
+                      query = query.join(
+                          SpecialistService,
+                          SpecialistService.specialist_id == Specialist.id
+                      ).filter(SpecialistService.service_id == service_id)
+
+                  rows = query.order_by(Specialist.id.asc()).all()
+
+                  result = []
+                  for item in rows:
+                      service_ids = [
+                          int(value)
+                          for value in db.query(SpecialistService.service_id)
+                          .filter(SpecialistService.specialist_id == item.id)
+                          .all()
+                      ]
+                      result.append({
+                          "id": item.id,
+                          "name": item.name,
+                          "position": item.position or "",
+                          "description": item.description or "",
+                          "photo": item.photo or "",
+                          "service_ids": service_ids,
+                      })
+                  return result
+          '''
+          if old not in s:
+              raise SystemExit('Expected specialist endpoint block not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Validate backend syntax
+        run: python3 -m py_compile backend/app.py backend/specialists_api.py backend/paddle_app.py
+
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/app.py
+          git commit -m 'fix: restore client specialist list endpoint [specialist-list-fix]'
+          git push
+
+      - name: Remove temporary workflow
+        if: always()
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+          if [ -f .github/workflows/fix-specialist-public-list.yml ]; then
+            git rm .github/workflows/fix-specialist-public-list.yml
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'chore: remove specialist list fix workflow [specialist-list-fix]'
+            git push
+          fi
