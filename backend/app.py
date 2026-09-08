@@ -2549,33 +2549,45 @@ def is_free(
     return not legacy_booking and not legacy_block
 
 @app.get("/businesses/{business_id}/specialists")
-def business_specialists(business_id: int, service_id: int):
+def business_specialists(business_id: int, service_id: Optional[int] = None):
     with SessionLocal() as db:
         business = db.get(Business, business_id)
-        service = db.get(Service, service_id)
-        if not business or not service or service.business_id != business_id or not service.active:
+        if not business:
             raise HTTPException(404, "Not found")
-        rows = (
-            db.query(Specialist)
-            .join(SpecialistService, SpecialistService.specialist_id == Specialist.id)
-            .filter(
-                Specialist.business_id == business_id,
-                SpecialistService.service_id == service_id,
-                Specialist.active == True
-            )
-            .order_by(Specialist.id.asc())
-            .all()
+
+        query = db.query(Specialist).filter(
+            Specialist.business_id == business_id,
+            Specialist.active == True
         )
-        return [
-            {
+
+        if service_id is not None:
+            service = db.get(Service, service_id)
+            if not service or service.business_id != business_id or not service.active:
+                raise HTTPException(404, "Not found")
+            query = query.join(
+                SpecialistService,
+                SpecialistService.specialist_id == Specialist.id
+            ).filter(SpecialistService.service_id == service_id)
+
+        rows = query.order_by(Specialist.id.asc()).all()
+
+        result = []
+        for item in rows:
+            service_ids = [
+                int(value)
+                for value in db.query(SpecialistService.service_id)
+                .filter(SpecialistService.specialist_id == item.id)
+                .all()
+            ]
+            result.append({
                 "id": item.id,
                 "name": item.name,
                 "position": item.position or "",
                 "description": item.description or "",
                 "photo": item.photo or "",
-            }
-            for item in rows
-        ]
+                "service_ids": service_ids,
+            })
+        return result
 
 @app.get("/businesses/{slug}")
 def get_business(slug: str):
