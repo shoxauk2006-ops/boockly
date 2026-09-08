@@ -1,0 +1,63 @@
+name: Fix client specialist flow
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rewrite client specialist flow
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('frontend/src/main.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          # 1) Load specialists once when the public business page opens.
+          old = '''          setServices(\n            data.services || []\n          );'''
+          new = '''          setServices(\n            data.services || []\n          );\n\n          try {\n            const specialistsResponse = await fetch(\n              API + `/businesses/${data.business.id}/specialists`\n            );\n\n            if (specialistsResponse.ok) {\n              const specialistsData = await specialistsResponse.json();\n              setSpecialists(\n                Array.isArray(specialistsData)\n                  ? specialistsData.filter((item: any) => item?.active !== false)\n                  : []\n              );\n            } else {\n              setSpecialists([]);\n            }\n          } catch (specialistsError) {\n            console.error('CLIENT SPECIALISTS LOAD ERROR:', specialistsError);\n            setSpecialists([]);\n          }'''
+          if old not in text:
+              raise SystemExit('initial specialist insertion marker not found')
+          text = text.replace(old, new, 1)
+
+          # 2) Selecting a specialist must happen before selecting a service.
+          start = text.index('  const chooseService = async (service: any) => {')
+          end = text.index('\n  const chooseTime = (', start)
+          replacement = '''  const chooseService = async (service: any) => {\n    if (!business) return;\n\n    setSelected(service);\n    setSelectedTime('');\n    setSlots([]);\n    setError('');\n    setSlotsLoading(true);\n\n    try {\n      await findFirstAvailableDay(\n        service,\n        selectedSpecialist\n      );\n    } catch (e) {\n      console.error('SERVICE AVAILABILITY ERROR:', e);\n      setSlots([]);\n      setError(t('client.availabilityError'));\n    } finally {\n      setSlotsLoading(false);\n    }\n  };\n\n  const chooseSpecialist = (specialist: any) => {\n    setSelectedSpecialist(specialist);\n    setSelected(null);\n    setSelectedTime('');\n    setSlots([]);\n    setDay(getClientLocalDateKey());\n    setError('');\n  };\n'''
+          text = text[:start] + replacement + text[end:]
+
+          # 3) Replace the client booking UI with the intended order:
+          #    specialists -> services -> date -> time -> client data.
+          ui_start = text.index("      <h2>\n        {t('client.services')}")
+          ui_end = text.index('\n\n    </section>', ui_start)
+
+          ui = '''      {specialists.length > 0 ? (\n        <>\n          <h2>\n            {t('client.chooseSpecialist', 'Выберите специалиста')}\n          </h2>\n\n          {!selectedSpecialist ? (\n            <div className="card">\n              <div style={{ display: 'grid', gap: 10 }}>\n                {specialists.map((specialist) => (\n                  <button\n                    type="button"\n                    key={specialist.id}\n                    className="full"\n                    onClick={() => chooseSpecialist(specialist)}\n                    style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}\n                  >\n                    {specialist.photo ? (\n                      <img\n                        src={specialist.photo}\n                        alt={specialist.name}\n                        style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}\n                      />\n                    ) : (\n                      <span style={{ width: 52, height: 52, borderRadius: '50%', background: '#f0f1f3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>\n                        {String(specialist.name || '?').charAt(0).toUpperCase()}\n                      </span>\n                    )}\n                    <span style={{ display: 'grid', gap: 2 }}>\n                      <strong>{specialist.name}</strong>\n                      {specialist.position && <small style={{ opacity: 0.7 }}>{specialist.position}</small>}\n                    </span>\n                  </button>\n                ))}\n              </div>\n            </div>\n          ) : (\n            <>\n              <div className="card">\n                <button\n                  type="button"\n                  className="ghost full"\n                  onClick={() => {\n                    setSelectedSpecialist(null);\n                    setSelected(null);\n                    setSelectedTime('');\n                    setSlots([]);\n                    setDay(getClientLocalDateKey());\n                  }}\n                >\n                  ← {t('client.chooseSpecialist', 'Выбрать специалиста')}\n                </button>\n                <p style={{ margin: '12px 0 0', fontWeight: 600 }}>\n                  {selectedSpecialist.name}\n                </p>\n              </div>\n\n              <h2>\n                {t('client.services')}\n              </h2>\n\n              {(selectedSpecialist.service_ids?.length\n                ? services.filter((service: any) => selectedSpecialist.service_ids.includes(service.id))\n                : services\n              ).length === 0 ? (\n                <div className="card">\n                  <p>{t('client.noServices')}</p>\n                </div>\n              ) : (\n                (selectedSpecialist.service_ids?.length\n                  ? services.filter((service: any) => selectedSpecialist.service_ids.includes(service.id))\n                  : services\n                ).map((service: any) => (\n                  <div\n                    className={selected?.id === service.id ? 'client-service-card selected' : 'client-service-card'}\n                    key={service.id}\n                  >\n                    <div className="client-service-info">\n                      <strong>{service.name}</strong>\n                      <div className="client-service-meta">\n                        {money(service.price, service.currency)}\n                        <span>·</span>\n                        {service.duration_min} {t('owner.minutes')}\n                      </div>\n                      {service.description && <p>{service.description}</p>}\n                    </div>\n                    <button\n                      className="client-service-button"\n                      onClick={() => chooseService(service)}\n                    >\n                      {t('client.chooseService')}\n                    </button>\n                  </div>\n                ))\n              )}\n            </>\n          )}\n        </>\n      ) : (\n        <>\n          <h2>\n            {t('client.services')}\n          </h2>\n\n          {services.length === 0 ? (\n            <div className="card">\n              <p>{t('client.noServices')}</p>\n            </div>\n          ) : (\n            services.map((service: any) => (\n              <div\n                className={selected?.id === service.id ? 'client-service-card selected' : 'client-service-card'}\n                key={service.id}\n              >\n                <div className="client-service-info">\n                  <strong>{service.name}</strong>\n                  <div className="client-service-meta">\n                    {money(service.price, service.currency)}\n                    <span>·</span>\n                    {service.duration_min} {t('owner.minutes')}\n                  </div>\n                  {service.description && <p>{service.description}</p>}\n                </div>\n                <button\n                  className="client-service-button"\n                  onClick={() => chooseService(service)}\n                >\n                  {t('client.chooseService')}\n                </button>\n              </div>\n            ))\n          )}\n        </>\n      )}\n\n      {selected && (\n        <>\n          <div className="card">\n            <h2>{t('client.chooseDate')}</h2>\n            <input\n              type="date"\n              min={getClientLocalDateKey()}\n              value={day}\n              onChange={async e => {\n                const newDay = e.target.value;\n                setDay(newDay);\n                setSelectedTime('');\n                await loadSlots(selected, newDay, selectedSpecialist);\n              }}\n            />\n          </div>\n\n          <div className="card">\n            <h2>{t('client.chooseTime')}</h2>\n            {slotsLoading ? (\n              <p className="muted">{t('owner.loadingSlots')}</p>\n            ) : slots.length > 0 ? (\n              <div className="slots">\n                {slots.map(time => (\n                  <button\n                    key={time}\n                    className={selectedTime === time ? 'selected' : ''}\n                    onClick={() => chooseTime(time)}\n                  >\n                    {time}\n                  </button>\n                ))}\n              </div>\n            ) : (\n              <p>{t('client.noSlots')}</p>\n            )}\n          </div>\n\n          {selectedTime && (\n            <div id="booking-form" className="card">\n              <h2>{t('client.yourData')}</h2>\n              <div className="success">\n                <b>{selected.name}</b>\n                <br />\n                {selectedSpecialist?.name && (\n                  <>\n                    {selectedSpecialist.name}\n                    <br />\n                  </>\n                )}\n                {day} · {selectedTime}\n              </div>\n              <input\n                type="text"\n                placeholder={t('client.name')}\n                value={clientName}\n                onChange={e => setClientName(e.target.value)}\n              />\n              <PhoneInput\n                value={phone}\n                onChange={setPhone}\n                placeholder={t('client.phone')}\n              />\n              <button\n                className="primary full"\n                disabled={bookingLoading}\n                onClick={submitBooking}\n              >\n                {bookingLoading\n                  ? t('client.bookingLoading')\n                  : t('client.confirmBooking')}\n              </button>\n            </div>\n          )}\n        </>\n      )}'''
+
+          text = text[:ui_start] + ui + text[ui_end:]
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+          if [ -f tsconfig.json ]; then npx tsc --noEmit; fi
+
+      - name: Commit verified fix and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx
+          git commit -m "fix: correct client specialist booking order" || true
+          git push
+          git rm .github/workflows/fix-client-specialist-flow.yml
+          git commit -m "chore: remove temporary specialist flow workflow"
+          git push
