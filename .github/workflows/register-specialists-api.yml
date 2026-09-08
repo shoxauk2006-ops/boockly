@@ -1,0 +1,42 @@
+name: Register specialist API
+
+on:
+  push:
+    paths:
+      - 'backend/specialists_api.py'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Register router
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('backend/app.py')
+          text = path.read_text()
+          marker = '\nif __name__ == "__main__":'
+          addition = '\n\nfrom specialists_api import router as specialists_router\napp.include_router(specialists_router)\n'
+          if 'from specialists_api import router as specialists_router' not in text:
+              if marker not in text:
+                  raise SystemExit('Could not find app main marker')
+              text = text.replace(marker, addition + marker, 1)
+              path.write_text(text)
+          PY
+          python -m py_compile backend/app.py backend/specialists_api.py
+      - name: Commit router registration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/app.py
+          git commit -m 'Register specialist API router' || exit 0
+          git push
+      - name: Remove temporary workflow
+        run: |
+          rm .github/workflows/register-specialists-api.yml
+          git add .github/workflows/register-specialists-api.yml
+          git commit -m 'Remove temporary specialist API workflow' || exit 0
+          git push
