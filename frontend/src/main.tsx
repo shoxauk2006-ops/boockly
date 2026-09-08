@@ -9623,6 +9623,12 @@ function Client({
   const [selected, setSelected] =
     useState<any>(null);
 
+  const [specialists, setSpecialists] =
+    useState<any[]>([]);
+
+  const [selectedSpecialist, setSelectedSpecialist] =
+    useState<any>(null);
+
   const clientTimeZone = getClientTimeZone();
 
   const [day, setDay] = useState(getClientLocalDateKey());
@@ -9858,7 +9864,8 @@ function Client({
 
   const loadSlots = async (
     service: any,
-    selectedDay: string
+    selectedDay: string,
+    specialist: any = selectedSpecialist
   ) => {
     if (!business) {
       return;
@@ -9872,7 +9879,7 @@ function Client({
       const response =
         await fetch(
           API +
-            `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}`
+            `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}${specialist?.id ? `&specialist_id=${specialist.id}` : ''}`
         );
 
       const data =
@@ -9900,65 +9907,78 @@ function Client({
     }
   };
 
-  const chooseService = async (
-    service: any
-  ) => {
+  const findFirstAvailableDay = async (service: any, specialist: any = null) => {
+    const startDate = new Date(`${day}T12:00:00`);
+    const MAX_DAYS_TO_SEARCH = 90;
+    for (let offset = 0; offset < MAX_DAYS_TO_SEARCH; offset += 1) {
+      const candidate = new Date(startDate);
+      candidate.setDate(startDate.getDate() + offset);
+      const candidateDay = [
+        candidate.getFullYear(),
+        String(candidate.getMonth() + 1).padStart(2, '0'),
+        String(candidate.getDate()).padStart(2, '0')
+      ].join('-');
+      const specialistQuery = specialist?.id ? `&specialist_id=${specialist.id}` : '';
+      const response = await fetch(
+        API +
+          `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}${specialistQuery}`
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.detail || t('client.availabilityError'));
+      }
+      const candidateSlots = Array.isArray(data?.slots) ? data.slots : [];
+      if (candidateSlots.length > 0) {
+        setDay(candidateDay);
+        setSlots(candidateSlots);
+        return true;
+      }
+    }
+    setSlots([]);
+    return false;
+  };
+
+  const chooseService = async (service: any) => {
     setSelected(service);
+    setSelectedTime('');
+    setSlots([]);
+    setSpecialists([]);
+    setSelectedSpecialist(null);
+    setSlotsLoading(true);
+    setError('');
+    try {
+      const response = await fetch(
+        API + `/businesses/${business.id}/specialists?service_id=${service.id}`
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.detail || t('client.specialistsError', 'Не удалось загрузить специалистов'));
+      }
+      const availableSpecialists = Array.isArray(data) ? data : [];
+      setSpecialists(availableSpecialists);
+      if (availableSpecialists.length === 0) {
+        await findFirstAvailableDay(service);
+      }
+    } catch (e) {
+      console.error('SPECIALISTS/AVAILABILITY ERROR:', e);
+      setSlots([]);
+      setError(t('client.availabilityError'));
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const chooseSpecialist = async (specialist: any) => {
+    if (!selected) return;
+    setSelectedSpecialist(specialist);
     setSelectedTime('');
     setSlots([]);
     setSlotsLoading(true);
     setError('');
-
     try {
-      // Start from the currently selected day and automatically move
-      // forward until the first day with at least one real free slot.
-      // This prevents an empty today/tomorrow from looking like a bug.
-      const startDate = new Date(`${day}T12:00:00`);
-      const MAX_DAYS_TO_SEARCH = 90;
-
-      for (let offset = 0; offset < MAX_DAYS_TO_SEARCH; offset += 1) {
-        const candidate = new Date(startDate);
-        candidate.setDate(startDate.getDate() + offset);
-
-        const candidateDay = [
-          candidate.getFullYear(),
-          String(candidate.getMonth() + 1).padStart(2, '0'),
-          String(candidate.getDate()).padStart(2, '0')
-        ].join('-');
-
-        const response = await fetch(
-          API +
-            `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data?.detail ||
-            t('client.availabilityError')
-          );
-        }
-
-        const candidateSlots = Array.isArray(data?.slots)
-          ? data.slots
-          : [];
-
-        if (candidateSlots.length > 0) {
-          setDay(candidateDay);
-          setSlots(candidateSlots);
-          return;
-        }
-      }
-
-      // No availability in the search window. Keep the selected day
-      // and show the normal empty-state message.
-      setSlots([]);
+      await findFirstAvailableDay(selected, specialist);
     } catch (e) {
-      console.error(
-        'FIND NEXT AVAILABILITY ERROR:',
-        e
-      );
+      console.error('SPECIALIST AVAILABILITY ERROR:', e);
       setSlots([]);
       setError(t('client.availabilityError'));
     } finally {
@@ -10036,6 +10056,8 @@ function Client({
                 business.id,
               service_id:
                 selected.id,
+              specialist_id:
+                selectedSpecialist?.id || null,
               client_name: name,
               client_phone:
                 clientPhone,
@@ -10421,9 +10443,39 @@ function Client({
       {selected && (
         <>
 
-          <div className="card">
-            <h2>
-              {t('client.chooseDate')}
+          {specialists.length > 0 && (
+            <div className="card">
+              <h2>{t('client.chooseSpecialist', 'Выберите специалиста')}</h2>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {specialists.map((specialist) => (
+                  <button
+                    type="button"
+                    key={specialist.id}
+                    className={selectedSpecialist?.id === specialist.id ? 'primary full' : 'full'}
+                    onClick={() => chooseSpecialist(specialist)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}
+                  >
+                    {specialist.photo ? (
+                      <img src={specialist.photo} alt={specialist.name} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                    ) : (
+                      <span style={{ width: 52, height: 52, borderRadius: '50%', background: '#f0f1f3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
+                        {String(specialist.name || '?').charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span style={{ display: 'grid', gap: 2 }}>
+                      <strong>{specialist.name}</strong>
+                      {specialist.position && <small style={{ opacity: 0.7 }}>{specialist.position}</small>}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(!specialists.length || selectedSpecialist) && (
+            <div className="card">
+              <h2>
+                {t('client.chooseDate')}
             </h2>
 
             <input
@@ -10439,7 +10491,8 @@ function Client({
 
                 await loadSlots(
                   selected,
-                  newDay
+                  newDay,
+                  selectedSpecialist
                 );
               }}
             />
@@ -10541,6 +10594,8 @@ function Client({
               </button>
             </div>
           )}
+          </div>
+        )}
 
         </>
       )}

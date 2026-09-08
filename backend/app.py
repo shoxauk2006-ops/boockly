@@ -1329,6 +1329,7 @@ class BlockIn(BaseModel):
 class BookingIn(BaseModel):
     business_id: int
     service_id: int
+    specialist_id: Optional[int] = None
     client_telegram_id: int = 0
     client_name: str = "Telegram user"
     client_phone: str = ""
@@ -2465,26 +2466,53 @@ def admin_create_booking(
         return booking
 
 # ---------- client ----------
-def get_work_windows(db, business_id:int, day:date):
-    hours=db.query(WorkingHour).filter_by(business_id=business_id,weekday=day.weekday(),active=True).order_by(WorkingHour.start).all()
-    if hours:return [(h.start,h.end) for h in hours]
-    # Friendly first-run default until owner configures schedule.
+def get_work_windows(db, business_id:int, day:date, specialist_id: Optional[int] = None):
+    if specialist_id is not None:
+        specialist_hours = (
+            db.query(SpecialistWorkingHour)
+            .filter_by(specialist_id=specialist_id, weekday=day.weekday(), active=True)
+            .order_by(SpecialistWorkingHour.start)
+            .all()
+        )
+        if specialist_hours:
+            return [(h.start, h.end) for h in specialist_hours]
+
+    hours = (
+        db.query(WorkingHour)
+        .filter_by(business_id=business_id, weekday=day.weekday(), active=True)
+        .order_by(WorkingHour.start)
+        .all()
+    )
+    if hours:
+        return [(h.start, h.end) for h in hours]
     return [(time(9,0),time(18,0))]
 
-def is_free(db, business_id: int, day: date, st: time, en: time, timezone_name: str | None = None):
+def is_free(
+    db,
+    business_id: int,
+    day: date,
+    st: time,
+    en: time,
+    timezone_name: str | None = None,
+    specialist_id: Optional[int] = None
+):
     zone = _bookly_zone(timezone_name or "Asia/Tashkent")
     start_at_utc = _bookly_to_utc(datetime.combine(day, st, tzinfo=zone))
     end_at_utc = _bookly_to_utc(datetime.combine(day, en, tzinfo=zone))
 
-    booking = db.query(Booking).filter(
+    booking_query = db.query(Booking).filter(
         Booking.business_id == business_id,
         Booking.status == "confirmed",
         Booking.start_at_utc.is_not(None),
         Booking.end_at_utc.is_not(None),
         Booking.start_at_utc < end_at_utc,
         Booking.end_at_utc > start_at_utc,
-    ).first()
-    if booking:
+    )
+    if specialist_id is not None:
+        booking_query = booking_query.filter(
+            (Booking.specialist_id == specialist_id) | Booking.specialist_id.is_(None)
+        )
+    if booking_query.first():
         return False
 
     blocked = db.query(BlockedSlot).filter(
@@ -2497,14 +2525,20 @@ def is_free(db, business_id: int, day: date, st: time, en: time, timezone_name: 
     if blocked:
         return False
 
-    legacy_booking = db.query(Booking).filter(
+    legacy_booking_query = db.query(Booking).filter(
         Booking.business_id == business_id,
         Booking.day == day,
         Booking.status == "confirmed",
         Booking.start_at_utc.is_(None),
         Booking.start < en,
         Booking.end > st,
-    ).first()
+    )
+    if specialist_id is not None:
+        legacy_booking_query = legacy_booking_query.filter(
+            (Booking.specialist_id == specialist_id) | Booking.specialist_id.is_(None)
+        )
+    legacy_booking = legacy_booking_query.first()
+
     legacy_block = db.query(BlockedSlot).filter(
         BlockedSlot.business_id == business_id,
         BlockedSlot.day == day,
@@ -2513,6 +2547,35 @@ def is_free(db, business_id: int, day: date, st: time, en: time, timezone_name: 
         BlockedSlot.end > st,
     ).first()
     return not legacy_booking and not legacy_block
+
+@app.get("/businesses/{business_id}/specialists")
+def business_specialists(business_id: int, service_id: int):
+    with SessionLocal() as db:
+        business = db.get(Business, business_id)
+        service = db.get(Service, service_id)
+        if not business or not service or service.business_id != business_id or not service.active:
+            raise HTTPException(404, "Not found")
+        rows = (
+            db.query(Specialist)
+            .join(SpecialistService, SpecialistService.specialist_id == Specialist.id)
+            .filter(
+                Specialist.business_id == business_id,
+                SpecialistService.service_id == service_id,
+                Specialist.active == True
+            )
+            .order_by(Specialist.id.asc())
+            .all()
+        )
+        return [
+            {
+                "id": item.id,
+                "name": item.name,
+                "position": item.position or "",
+                "description": item.description or "",
+                "photo": item.photo or "",
+            }
+            for item in rows
+        ]
 
 @app.get("/businesses/{slug}")
 def get_business(slug: str):
@@ -2608,14 +2671,23 @@ def availability(
     business_id: int,
     service_id: int,
     day: date,
-    time_zone: Optional[str] = None
+    time_zone: Optional[str] = None,
+    specialist_id: Optional[int] = None
 ):
     with SessionLocal() as db:
         b = db.get(Business, business_id)
         s = db.get(Service, service_id)
-
         if not b or not s or s.business_id != business_id or not s.active:
             raise HTTPException(404, "Not found")
+
+        if specialist_id is not None:
+            specialist = db.get(Specialist, specialist_id)
+            assigned = db.query(SpecialistService).filter(
+                SpecialistService.specialist_id == specialist_id,
+                SpecialistService.service_id == service_id
+            ).first()
+            if not specialist or specialist.business_id != business_id or not specialist.active or not assigned:
+                raise HTTPException(404, "Specialist not found")
 
         business_zone = _bookly_zone(b.timezone)
         client_zone = _bookly_zone(time_zone or b.timezone)
@@ -2626,7 +2698,8 @@ def availability(
             Booking.end_at_utc,
             Booking.day,
             Booking.start,
-            Booking.end
+            Booking.end,
+            Booking.specialist_id
         ).filter(
             Booking.business_id == business_id,
             Booking.status == "confirmed"
@@ -2638,38 +2711,16 @@ def availability(
             BlockedSlot.day,
             BlockedSlot.start,
             BlockedSlot.end
-        ).filter(
-            BlockedSlot.business_id == business_id
-        ).all()
+        ).filter(BlockedSlot.business_id == business_id).all()
 
         slots = []
         seen = set()
-
-        # One client-local day can overlap adjacent business-local days.
-        for business_day in (
-            day - timedelta(days=1),
-            day,
-            day + timedelta(days=1)
-        ):
-            for win_start, win_end in get_work_windows(
-                db,
-                business_id,
-                business_day
-            ):
-                cursor = datetime.combine(
-                    business_day,
-                    win_start,
-                    tzinfo=business_zone
-                )
-                endday = datetime.combine(
-                    business_day,
-                    win_end,
-                    tzinfo=business_zone
-                )
-
+        for business_day in (day - timedelta(days=1), day, day + timedelta(days=1)):
+            for win_start, win_end in get_work_windows(db, business_id, business_day, specialist_id):
+                cursor = datetime.combine(business_day, win_start, tzinfo=business_zone)
+                endday = datetime.combine(business_day, win_end, tzinfo=business_zone)
                 while cursor + timedelta(minutes=s.duration_min) <= endday:
                     slot_end = cursor + timedelta(minutes=s.duration_min)
-
                     if business_day == now_business.date() and cursor <= now_business:
                         cursor += timedelta(minutes=s.duration_min)
                         continue
@@ -2677,17 +2728,14 @@ def availability(
                     start_utc = _bookly_to_utc(cursor)
                     end_utc = _bookly_to_utc(slot_end)
                     occupied = False
-
-                    for bs, be, legacy_day, legacy_start, legacy_end in bookings:
+                    for bs, be, legacy_day, legacy_start, legacy_end, booking_specialist_id in bookings:
+                        if specialist_id is not None and booking_specialist_id not in (None, specialist_id):
+                            continue
                         if bs is not None and be is not None:
                             if bs < end_utc and be > start_utc:
                                 occupied = True
                                 break
-                        elif (
-                            legacy_day == business_day
-                            and legacy_start < slot_end.time()
-                            and legacy_end > cursor.time()
-                        ):
+                        elif legacy_day == business_day and legacy_start < slot_end.time() and legacy_end > cursor.time():
                             occupied = True
                             break
 
@@ -2697,24 +2745,17 @@ def availability(
                                 if bs < end_utc and be > start_utc:
                                     occupied = True
                                     break
-                            elif (
-                                legacy_day == business_day
-                                and legacy_start < slot_end.time()
-                                and legacy_end > cursor.time()
-                            ):
+                            elif legacy_day == business_day and legacy_start < slot_end.time() and legacy_end > cursor.time():
                                 occupied = True
                                 break
 
                     if not occupied:
-                        client_local = start_utc.replace(
-                            tzinfo=timezone.utc
-                        ).astimezone(client_zone)
+                        client_local = start_utc.replace(tzinfo=timezone.utc).astimezone(client_zone)
                         if client_local.date() == day:
                             value = client_local.strftime("%H:%M")
                             if value not in seen:
                                 seen.add(value)
                                 slots.append(value)
-
                     cursor += timedelta(minutes=s.duration_min)
 
         slots.sort()
@@ -2745,6 +2786,15 @@ def create_booking(
         if not b.subscription_active:
             raise HTTPException(403, "Business inactive")
 
+        if x.specialist_id is not None:
+            specialist = db.get(Specialist, x.specialist_id)
+            assigned = db.query(SpecialistService).filter(
+                SpecialistService.specialist_id == x.specialist_id,
+                SpecialistService.service_id == x.service_id
+            ).first()
+            if not specialist or specialist.business_id != x.business_id or not specialist.active or not assigned:
+                raise HTTPException(404, "Specialist not found")
+
         client_zone = _bookly_zone(x.client_timezone)
         selected_local = datetime.combine(
             x.day,
@@ -2768,7 +2818,8 @@ def create_booking(
             business_start.date(),
             business_start.time(),
             business_end.time(),
-            b.timezone
+            b.timezone,
+            x.specialist_id
         ):
             raise HTTPException(
                 409,
@@ -2782,6 +2833,7 @@ def create_booking(
         booking = Booking(
             business_id=x.business_id,
             service_id=x.service_id,
+            specialist_id=x.specialist_id,
             client_telegram_id=x.client_telegram_id,
             client_name=x.client_name,
             client_phone=x.client_phone,
