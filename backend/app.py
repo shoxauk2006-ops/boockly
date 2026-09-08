@@ -328,6 +328,11 @@ class Booking(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
     service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))
+    specialist_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("specialists.id"),
+        nullable=True,
+        index=True
+    )
 
     client_telegram_id: Mapped[int] = mapped_column(BigInteger, index=True)
     client_name: Mapped[str] = mapped_column(String(120))
@@ -346,6 +351,49 @@ class Booking(Base):
     reminder_24_sent: Mapped[bool] = mapped_column(Boolean, default=False)
     reminder_2_sent: Mapped[bool] = mapped_column(Boolean, default=False)
 
+
+
+class Specialist(Base):
+    __tablename__ = "specialists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    business_id: Mapped[int] = mapped_column(
+        ForeignKey("businesses.id"),
+        index=True
+    )
+    name: Mapped[str] = mapped_column(String(120))
+    position: Mapped[str] = mapped_column(String(120), default="")
+    description: Mapped[str] = mapped_column(String(500), default="")
+    photo: Mapped[str] = mapped_column(Text, default="")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class SpecialistService(Base):
+    __tablename__ = "specialist_services"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    specialist_id: Mapped[int] = mapped_column(
+        ForeignKey("specialists.id"),
+        index=True
+    )
+    service_id: Mapped[int] = mapped_column(
+        ForeignKey("services.id"),
+        index=True
+    )
+
+
+class SpecialistWorkingHour(Base):
+    __tablename__ = "specialist_working_hours"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    specialist_id: Mapped[int] = mapped_column(
+        ForeignKey("specialists.id"),
+        index=True
+    )
+    weekday: Mapped[int] = mapped_column(Integer)
+    start: Mapped[time] = mapped_column(Time)
+    end: Mapped[time] = mapped_column(Time)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 class TelegramUserLanguage(Base):
@@ -720,6 +768,27 @@ def ensure_subscription_schema():
 
 
 ensure_subscription_schema()
+def ensure_specialist_schema():
+    """Add specialist tables/booking column to an existing database."""
+    with engine.begin() as conn:
+        inspector = inspect(conn)
+        tables = inspector.get_table_names()
+
+        # Base.metadata.create_all() creates the three new specialist tables.
+        # Existing bookings need an additive nullable column.
+        if "bookings" in tables:
+            existing = {c["name"] for c in inspector.get_columns("bookings")}
+            if "specialist_id" not in existing:
+                conn.execute(
+                    text(
+                        "ALTER TABLE bookings ADD COLUMN specialist_id INTEGER"
+                    )
+                )
+
+
+ensure_specialist_schema()
+
+
 def ensure_business_schema():
     """
     Добавляет новые колонки в существующую БД,
