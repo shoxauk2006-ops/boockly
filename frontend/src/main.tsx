@@ -416,37 +416,14 @@ const formatGMTOffset = (
     : `GMT${sign}${hours}`;
 };
 
-const TIMEZONE_BY_OFFSET =
-  Array.from(
-    new Set(
-      ALL_TIMEZONES.map(
-        (zone: string) =>
-          getTimeZoneOffsetMinutes(zone)
-      )
-    )
-  )
-    .sort(
-      (a, b) => a - b
-    )
-    .map(offset => {
-      const zone =
-        ALL_TIMEZONES.find(
-          (item: string) =>
-            getTimeZoneOffsetMinutes(
-              item
-            ) === offset
-        ) || '';
-      
-              return {
-        zone,
-        offset,
-        label: `${formatGMTOffset(
-          offset
-        )} — ${
-          getTimeZoneLabel(zone)
-        }`
-      };
-    });
+const TIMEZONE_BY_OFFSET = TIMEZONE_OPTIONS.map(([zone]) => {
+  const offset = getTimeZoneOffsetMinutes(zone);
+  return {
+    zone,
+    offset,
+    label: `${formatGMTOffset(offset)} — ${getTimeZoneLabel(zone)}`
+  };
+});
 
 function App(){
     const [language, setLanguage] = useState<Language>(() => getStoredLanguage());
