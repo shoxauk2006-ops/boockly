@@ -16,6 +16,7 @@ export default function Specialists({ services, reload, t }: Props) {
   const [error, setError] = useState('');
   const [editing, setEditing] = useState<Specialist | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [hours, setHours] = useState<Array<{ weekday: number; start: string; end: string; active: boolean }>>(dayLabels.map((_, weekday) => ({ weekday, start: '09:00', end: '18:00', active: weekday < 5 })));
 
