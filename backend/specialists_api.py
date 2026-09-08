@@ -103,19 +103,8 @@ def _parse_time(value: str):
 
 
 def _serialize(db, specialist: Specialist) -> dict:
-    service_ids = [
-        int(value)
-        for value in db.scalars(
-            select(SpecialistService.service_id).where(
-                SpecialistService.specialist_id == specialist.id
-            )
-        ).all()
-    ]
-    hours = db.scalars(
-        select(SpecialistWorkingHour)
-        .where(SpecialistWorkingHour.specialist_id == specialist.id)
-        .order_by(SpecialistWorkingHour.weekday, SpecialistWorkingHour.start)
-    ).all()
+    service_ids = [int(value) for value in db.scalars(select(SpecialistService.service_id).where(SpecialistService.specialist_id == specialist.id)).all()]
+    hours = db.scalars(select(SpecialistWorkingHour).where(SpecialistWorkingHour.specialist_id == specialist.id).order_by(SpecialistWorkingHour.weekday, SpecialistWorkingHour.start)).all()
     return {
         "id": specialist.id,
         "business_id": specialist.business_id,
@@ -125,16 +114,7 @@ def _serialize(db, specialist: Specialist) -> dict:
         "photo": specialist.photo or "",
         "active": bool(specialist.active),
         "service_ids": service_ids,
-        "working_hours": [
-            {
-                "id": hour.id,
-                "weekday": hour.weekday,
-                "start": hour.start.strftime("%H:%M"),
-                "end": hour.end.strftime("%H:%M"),
-                "active": bool(hour.active),
-            }
-            for hour in hours
-        ],
+        "working_hours": [{"id": h.id, "weekday": h.weekday, "start": h.start.strftime("%H:%M"), "end": h.end.strftime("%H:%M"), "active": bool(h.active)} for h in hours],
     }
 
 
@@ -144,32 +124,18 @@ def list_specialists(x_telegram_init_data: str = Header(default="")):
     telegram_id = int(user["id"])
     with SessionLocal() as db:
         business_id = _get_business_id(db, telegram_id)
-        specialists = db.scalars(
-            select(Specialist)
-            .where(Specialist.business_id == business_id)
-            .order_by(Specialist.id.asc())
-        ).all()
+        specialists = db.scalars(select(Specialist).where(Specialist.business_id == business_id).order_by(Specialist.id.asc())).all()
         return [_serialize(db, specialist) for specialist in specialists]
 
 
 @router.post("", status_code=201)
-def create_specialist(
-    payload: SpecialistIn,
-    x_telegram_init_data: str = Header(default=""),
-):
+def create_specialist(payload: SpecialistIn, x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
     telegram_id = int(user["id"])
     with SessionLocal() as db:
         business_id = _get_business_id(db, telegram_id)
         service_ids = _validate_service_ids(db, business_id, payload.service_ids)
-        specialist = Specialist(
-            business_id=business_id,
-            name=payload.name.strip(),
-            position=payload.position.strip(),
-            description=payload.description.strip(),
-            photo=payload.photo.strip(),
-            active=payload.active,
-        )
+        specialist = Specialist(business_id=business_id, name=payload.name.strip(), position=payload.position.strip(), description=payload.description.strip(), photo=payload.photo.strip(), active=payload.active)
         db.add(specialist)
         db.flush()
         for service_id in service_ids:
@@ -180,106 +146,62 @@ def create_specialist(
 
 
 @router.patch("/{specialist_id}")
-def update_specialist(
-    specialist_id: int,
-    payload: SpecialistUpdate,
-    x_telegram_init_data: str = Header(default=""),
-):
+def update_specialist(specialist_id: int, payload: SpecialistUpdate, x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
     telegram_id = int(user["id"])
     with SessionLocal() as db:
         business_id = _get_business_id(db, telegram_id)
-        specialist = db.scalar(
-            select(Specialist).where(
-                Specialist.id == specialist_id,
-                Specialist.business_id == business_id,
-            )
-        )
+        specialist = db.scalar(select(Specialist).where(Specialist.id == specialist_id, Specialist.business_id == business_id))
         if specialist is None:
             raise HTTPException(404, "Specialist not found")
-
         data = payload.model_dump(exclude_unset=True)
         service_ids = data.pop("service_ids", None)
         for key, value in data.items():
-            if isinstance(value, str):
-                value = value.strip()
-            setattr(specialist, key, value)
-
+            setattr(specialist, key, value.strip() if isinstance(value, str) else value)
         if service_ids is not None:
             service_ids = _validate_service_ids(db, business_id, service_ids)
-            db.execute(
-                delete(SpecialistService).where(
-                    SpecialistService.specialist_id == specialist.id
-                )
-            )
+            db.execute(delete(SpecialistService).where(SpecialistService.specialist_id == specialist.id))
             for service_id in service_ids:
                 db.add(SpecialistService(specialist_id=specialist.id, service_id=service_id))
-
         db.commit()
         db.refresh(specialist)
         return _serialize(db, specialist)
 
 
 @router.delete("/{specialist_id}")
-def delete_specialist(
-    specialist_id: int,
-    x_telegram_init_data: str = Header(default=""),
-):
+def delete_specialist(specialist_id: int, x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
     telegram_id = int(user["id"])
     with SessionLocal() as db:
         business_id = _get_business_id(db, telegram_id)
-        specialist = db.scalar(
-            select(Specialist).where(
-                Specialist.id == specialist_id,
-                Specialist.business_id == business_id,
-            )
-        )
+        specialist = db.scalar(select(Specialist).where(Specialist.id == specialist_id, Specialist.business_id == business_id))
         if specialist is None:
             raise HTTPException(404, "Specialist not found")
-
-        db.execute(delete(SpecialistService).where(SpecialistService.specialist_id == specialist.id))
-        db.execute(delete(SpecialistWorkingHour).where(SpecialistWorkingHour.specialist_id == specialist.id))
+        # Existing bookings keep their specialist_id nullable; detach before deleting the specialist.
+        db.query(SpecialistService).filter(SpecialistService.specialist_id == specialist.id).delete(synchronize_session=False)
+        db.query(SpecialistWorkingHour).filter(SpecialistWorkingHour.specialist_id == specialist.id).delete(synchronize_session=False)
+        db.query(Booking).filter(Booking.specialist_id == specialist.id).update({Booking.specialist_id: None}, synchronize_session=False)
         db.delete(specialist)
         db.commit()
         return {"ok": True}
 
 
 @router.put("/{specialist_id}/working-hours")
-def replace_specialist_working_hours(
-    specialist_id: int,
-    payload: list[SpecialistWorkingHourIn],
-    x_telegram_init_data: str = Header(default=""),
-):
+def replace_specialist_working_hours(specialist_id: int, payload: list[SpecialistWorkingHourIn], x_telegram_init_data: str = Header(default="")):
     user = telegram_user(x_telegram_init_data)
     telegram_id = int(user["id"])
     with SessionLocal() as db:
         business_id = _get_business_id(db, telegram_id)
-        specialist = db.scalar(
-            select(Specialist).where(
-                Specialist.id == specialist_id,
-                Specialist.business_id == business_id,
-            )
-        )
+        specialist = db.scalar(select(Specialist).where(Specialist.id == specialist_id, Specialist.business_id == business_id))
         if specialist is None:
             raise HTTPException(404, "Specialist not found")
-
         db.execute(delete(SpecialistWorkingHour).where(SpecialistWorkingHour.specialist_id == specialist.id))
         for item in payload:
             start = _parse_time(item.start)
             end = _parse_time(item.end)
             if start >= end:
                 raise HTTPException(400, "Working hour end must be after start")
-            db.add(
-                SpecialistWorkingHour(
-                    specialist_id=specialist.id,
-                    weekday=item.weekday,
-                    start=start,
-                    end=end,
-                    active=item.active,
-                )
-            )
+            db.add(SpecialistWorkingHour(specialist_id=specialist.id, weekday=item.weekday, start=start, end=end, active=item.active))
         db.commit()
         db.refresh(specialist)
         return _serialize(db, specialist)
-
