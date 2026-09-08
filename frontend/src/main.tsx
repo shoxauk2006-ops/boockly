@@ -4443,6 +4443,11 @@ function Dashboard({
     React.SetStateAction<'7' | '30'>
   >;
 }) {
+  // Legacy subscription UI was removed from the Mini App.
+  // Keep these values only as compatibility guards for stale JSX while the website owns billing.
+  const subscriptionLocked = false;
+  const showProModal = (_reason: string) => {};
+
   const today = getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent');
 
   const todayBookings = bookings.filter(
