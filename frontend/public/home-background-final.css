@@ -1,4 +1,4 @@
-/* Bookly Home — visible full-page background */
+/* Bookly Home — stable page background. */
 body:has(.personal-home){background:#f4f5f7!important}
 body:has(.personal-home) .personal-home{
   position:relative!important;
@@ -9,11 +9,7 @@ body:has(.personal-home) .personal-home{
   padding-right:14px!important;
   padding-bottom:150px!important;
   box-sizing:border-box!important;
-  background-color:#f4f5f7!important;
-  background-image:url('/bookly-home-bg.jpg')!important;
-  background-position:center top!important;
-  background-size:100% auto!important;
-  background-repeat:repeat-y!important;
+  background:#f4f5f7!important;
   overflow:visible!important;
   isolation:isolate!important;
 }
@@ -59,6 +55,6 @@ body:has(.personal-home) .personal-bottom-nav{
   z-index:10000!important;
 }
 @media(max-width:520px){
-  body:has(.personal-home) .personal-home{padding-left:12px!important;padding-right:12px!important;padding-bottom:150px!important;background-size:100% auto!important}
+  body:has(.personal-home) .personal-home{padding-left:12px!important;padding-right:12px!important;padding-bottom:150px!important}
   body:has(.personal-home) .personal-home-hero{min-height:250px!important;padding:24px 18px 18px 4px!important}
 }
