@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   fix:
-    if: ${{ !contains(github.event.head_commit.message, '[bookly-miniapp-fix]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,10 +67,10 @@ jobs:
           git add frontend/src/main.tsx frontend/src/i18n.ts frontend/public/miniapp-policy.js
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
-            exit 0
+          else
+            git commit -m 'Fix Mini App quick actions and activation copy [bookly-miniapp-fix]'
+            git push
           fi
-          git commit -m 'Fix Mini App quick actions and activation copy [bookly-miniapp-fix]'
-          git push
 
       - name: Remove temporary workflow
         if: success()
