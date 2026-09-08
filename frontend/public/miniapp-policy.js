@@ -79,6 +79,8 @@
       [/Оплатите подписку, чтобы активировать Bookly\./g, 'Настройте бизнес, чтобы начать работу с Bookly.'],
       [/Функции Bookly Pro/g, 'Функции Bookly'],
       [/Bookly Pro открывает клиентскую часть Bookly:/g, 'Клиентская часть Bookly включает:'],
+      [/Без подписки вы можете создать и настраивать бизнес, добавлять услуги, управлять графиком, блокировками и записями в админке\. Подписка нужна для подключения клиентов и начала приёма онлайн-записей\./g, 'В Bookly вы настраиваете бизнес, добавляете услуги, управляете графиком, блокировками и записями. Клиенты записываются через клиентскую страницу бизнеса.'],
+      [/До 10 услуг в базовом тарифе/gi, 'Добавляйте услуги и устанавливайте цены'],
       [/Activate your subscription to get the client link/gi, 'Use the client link to share your business page'],
       [/Activate your subscription to get the QR code/gi, 'Business page QR code'],
       [/Activate your subscription to get full access/gi, 'Full access to Bookly features'],
@@ -132,7 +134,7 @@
 
   function hideSubscriptions() {
     document.querySelectorAll(
-      '.subscription, .subscription-feature-list, .subscription-head, .subscription-page, [data-tab="subscription"]'
+      '.subscription, .subscription-head, .subscription-page, [data-tab="subscription"]'
     ).forEach(function (node) {
       if (!node.classList.contains('subscription-modal')) {
         node.classList.add('bookly-policy-hidden');
