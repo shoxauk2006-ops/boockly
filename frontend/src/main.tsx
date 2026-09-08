@@ -10473,7 +10473,8 @@ function Client({
           )}
 
           {(!specialists.length || selectedSpecialist) && (
-            <div className="card">
+            <>
+              <div className="card">
               <h2>
                 {t('client.chooseDate')}
             </h2>
@@ -10594,8 +10595,8 @@ function Client({
               </button>
             </div>
           )}
-          </div>
-        )}
+            </>
+          )}
 
         </>
       )}
