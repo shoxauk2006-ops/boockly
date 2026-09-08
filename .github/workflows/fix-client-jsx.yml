@@ -28,25 +28,19 @@ jobs:
           if start < 0:
               raise SystemExit('Specialist booking opening not found')
 
-          opening_end = s.find('\n', start)
-          next_line_end = s.find('\n', opening_end + 1)
-          next_line = s[opening_end + 1:next_line_end]
-          if '<>' not in s[opening_end + 1:next_line_end + 1]:
-              s = s[:opening_end + 1] + '            <>\n' + s[opening_end + 1:]
+          opening = '          {(!specialists.length || selectedSpecialist) && (\n            <div className="card">'
+          if opening not in s[start:]:
+              raise SystemExit('Expected specialist booking opening not found')
 
-          # Close the fragment immediately before the conditional expression's closing )}.
-          boundary = s.find('\n        </>\n      )}\n\n    </section>', start)
-          if boundary < 0:
-              raise SystemExit('Outer Client section boundary not found')
+          s = s.replace(opening,
+                        '          {(!specialists.length || selectedSpecialist) && (\n            <>\n              <div className="card">', 1)
 
-          prefix = s[:boundary]
-          closing = '          </div>\n        )}'
-          pos = prefix.rfind(closing)
-          if pos < 0:
-              raise SystemExit('Specialist booking closing div not found')
+          bad = '          </div>\n        )}\n\n        </>\n      )}\n\n    </section>'
+          good = '          </div>\n            </>\n          )}\n\n        </>\n      )}\n\n    </section>'
+          if bad not in s[start:]:
+              raise SystemExit('Expected specialist booking closing boundary not found')
 
-          replacement = '          </div>\n            </>\n          )}'
-          s = prefix[:pos] + prefix[pos:].replace(closing, replacement, 1) + s[boundary:]
+          s = s.replace(bad, good, 1)
           p.write_text(s)
           PY
 
