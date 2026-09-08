@@ -1,6 +1,6 @@
 /* Bookly Mini App policy layer.
-   The Telegram Mini App is an operating interface only:
-   business creation and Bookly billing stay on the standalone website. */
+   Telegram is the operating interface; account/business creation and
+   Bookly billing remain on the standalone website. */
 (function () {
   'use strict';
 
@@ -9,7 +9,47 @@
 
   var WEBSITE_URL = 'https://boockly.vercel.app/landing.html';
   var CREATE_RE = /создать\s+бизнес|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط/i;
-  var BILLING_RE = /подписк|subscription|тариф|tariff|plan|trial|оплат|payment|billing|checkout|bookly\s*pro|telegram\s*stars|\bXTR\b|период\s+оплаты/i;
+  var BILLING_RE = /подписк|subscription|тариф|tariff|trial|оплат|payment|billing|checkout|bookly\s*pro|telegram\s*stars|\bXTR\b|период\s+оплаты/i;
+
+  var LABELS = {
+    ru: {
+      title: 'Создать бизнес через Bookly',
+      text: 'Создание бизнеса доступно на сайте Bookly. Там же проходит регистрация и подключение сервиса.',
+      button: 'Открыть сайт Bookly'
+    },
+    en: {
+      title: 'Create your business on Bookly',
+      text: 'Business creation is available on the Bookly website. Registration and setup are completed there.',
+      button: 'Open Bookly website'
+    },
+    uz: {
+      title: 'Bookly orqali biznes yaratish',
+      text: 'Biznes yaratish Bookly saytida mavjud. Ro‘yxatdan o‘tish va sozlash ham shu yerda bajariladi.',
+      button: 'Bookly saytini ochish'
+    },
+    tr: {
+      title: 'Bookly üzerinden işletme oluştur',
+      text: 'İşletme oluşturma Bookly web sitesinde yapılır. Kayıt ve kurulum da orada tamamlanır.',
+      button: 'Bookly sitesini aç'
+    },
+    ar: {
+      title: 'إنشاء نشاط عبر Bookly',
+      text: 'إنشاء النشاط متاح على موقع Bookly. يتم التسجيل والإعداد هناك أيضًا.',
+      button: 'فتح موقع Bookly'
+    }
+  };
+
+  function language() {
+    try {
+      return (localStorage.getItem('bookly_language') || 'en').slice(0, 2);
+    } catch (_) {
+      return 'en';
+    }
+  }
+
+  function labels() {
+    return LABELS[language()] || LABELS.en;
+  }
 
   function openWebsite() {
     try {
@@ -42,20 +82,20 @@
 
   function addWebsiteCard(anchor) {
     if (!anchor || document.querySelector('.bookly-web-create')) return;
+    var copy = labels();
     var card = document.createElement('div');
     card.className = 'bookly-web-create';
-    card.innerHTML = '<strong>Создать бизнес через Bookly</strong>' +
-      '<span>Создание бизнеса доступно на сайте Bookly. Там же проходит регистрация и подключение сервиса.</span>' +
-      '<button type="button">Открыть сайт Bookly</button>';
+    card.innerHTML = '<strong>' + copy.title + '</strong>' +
+      '<span>' + copy.text + '</span>' +
+      '<button type="button">' + copy.button + '</button>';
     card.querySelector('button').addEventListener('click', openWebsite);
-    anchor.parentNode.insertBefore(card, anchor);
+    if (anchor.parentNode) anchor.parentNode.insertBefore(card, anchor);
   }
 
   function hideSubscriptions() {
-    var classTargets = document.querySelectorAll(
+    document.querySelectorAll(
       '.subscription, .subscription-feature-list, .subscription-head, .subscription-page, [data-tab="subscription"]'
-    );
-    classTargets.forEach(function (node) {
+    ).forEach(function (node) {
       if (!node.classList.contains('subscription-modal')) {
         node.classList.add('bookly-policy-hidden');
       }
@@ -64,17 +104,14 @@
     document.querySelectorAll('button,a,[role="button"],[role="tab"]').forEach(function (node) {
       var text = normalized(node);
       if (!text || !BILLING_RE.test(text)) return;
-
       node.classList.add('bookly-policy-hidden');
     });
 
     document.querySelectorAll('div,section,article').forEach(function (node) {
       if (node.classList.contains('subscription-modal') || node.closest('.subscription-modal')) return;
       var text = normalized(node);
-      if (!text || text.length > 220) return;
-      if (!BILLING_RE.test(text)) return;
-      if (node.querySelector('input,textarea,select')) return;
-      if (node.children.length > 8) return;
+      if (!text || text.length > 220 || !BILLING_RE.test(text)) return;
+      if (node.querySelector('input,textarea,select') || node.children.length > 8) return;
       if (/без\s+подписки|activate\s+subscription|активируйте\s+подписку|bookly\s+pro/i.test(text)) {
         node.classList.add('bookly-policy-hidden');
       }
@@ -93,7 +130,8 @@
 
       var personalBusinessCard = button.closest('.personal-business-card');
       if (personalBusinessCard && personalBusinessCard.querySelector('h2')) {
-        button.textContent = 'Открыть сайт Bookly';
+        var copy = labels();
+        button.textContent = copy.button;
         button.addEventListener('click', function (event) {
           event.preventDefault();
           event.stopImmediatePropagation();
@@ -103,8 +141,10 @@
       }
 
       var container = button.closest('form, .card, section, article, div');
-      if (container) container.classList.add('bookly-policy-hidden');
-      addWebsiteCard(container || button.parentElement);
+      if (container) {
+        container.classList.add('bookly-policy-hidden');
+        addWebsiteCard(container.parentElement || container);
+      }
     });
 
     document.querySelectorAll('input,textarea').forEach(function (field) {
