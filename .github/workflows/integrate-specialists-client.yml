@@ -2,7 +2,8 @@ name: Integrate specialists into client booking
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -11,131 +12,29 @@ jobs:
   integrate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Patch backend and client flow
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
+      - name: Apply specialist integration
+        run: python scripts/integrate_specialists.py
 
-          app = Path('backend/app.py')
-          text = app.read_text()
-
-          old = '''class BookingIn(BaseModel):\n    business_id: int\n    service_id: int\n    client_telegram_id: int = 0\n    client_name: str = "Telegram user"\n    client_phone: str = ""\n    day: date\n    start: time\n    client_timezone: str = "UTC"\n    \nclass AdminBookingIn'''
-          new = '''class BookingIn(BaseModel):\n    business_id: int\n    service_id: int\n    specialist_id: Optional[int] = None\n    client_telegram_id: int = 0\n    client_name: str = "Telegram user"\n    client_phone: str = ""\n    day: date\n    start: time\n    client_timezone: str = "UTC"\n    \nclass AdminBookingIn'''
-          if old in text:
-              text = text.replace(old, new, 1)
-          elif 'specialist_id: Optional[int] = None' not in text[text.find('class BookingIn'):text.find('class AdminBookingIn')]:
-              raise SystemExit('BookingIn pattern not found')
-
-          start = text.index('def get_work_windows(db, business_id:int, day:date):')
-          end = text.index('\ndef is_free(', start)
-          text = text[:start] + '''def get_work_windows(db, business_id:int, day:date, specialist_id: Optional[int] = None):\n    if specialist_id is not None:\n        specialist_hours = (\n            db.query(SpecialistWorkingHour)\n            .filter_by(\n                specialist_id=specialist_id,\n                weekday=day.weekday(),\n                active=True\n            )\n            .order_by(SpecialistWorkingHour.start)\n            .all()\n        )\n        if specialist_hours:\n            return [(h.start, h.end) for h in specialist_hours]\n\n    hours = (\n        db.query(WorkingHour)\n        .filter_by(\n            business_id=business_id,\n            weekday=day.weekday(),\n            active=True\n        )\n        .order_by(WorkingHour.start)\n        .all()\n    )\n    if hours:\n        return [(h.start, h.end) for h in hours]\n\n    # Friendly first-run default until owner configures schedule.\n    return [(time(9,0),time(18,0))]\n\n''' + text[end+1:]
-
-          start = text.index('def is_free(')
-          end = text.index('\n@app.get("/businesses/{slug}")', start)
-          text = text[:start] + '''def is_free(\n    db,\n    business_id: int,\n    day: date,\n    st: time,\n    en: time,\n    timezone_name: str | None = None,\n    specialist_id: Optional[int] = None\n):\n    zone = _bookly_zone(timezone_name or "Asia/Tashkent")\n    start_at_utc = _bookly_to_utc(datetime.combine(day, st, tzinfo=zone))\n    end_at_utc = _bookly_to_utc(datetime.combine(day, en, tzinfo=zone))\n\n    booking_query = db.query(Booking).filter(\n        Booking.business_id == business_id,\n        Booking.status == "confirmed",\n        Booking.start_at_utc.is_not(None),\n        Booking.end_at_utc.is_not(None),\n        Booking.start_at_utc < end_at_utc,\n        Booking.end_at_utc > start_at_utc,\n    )\n    if specialist_id is not None:\n        booking_query = booking_query.filter(\n            (Booking.specialist_id == specialist_id) |\n            (Booking.specialist_id.is_(None))\n        )\n\n    if booking_query.first():\n        return False\n\n    blocked = db.query(BlockedSlot).filter(\n        BlockedSlot.business_id == business_id,\n        BlockedSlot.start_at_utc.is_not(None),\n        BlockedSlot.end_at_utc.is_not(None),\n        BlockedSlot.start_at_utc < end_at_utc,\n        BlockedSlot.end_at_utc > start_at_utc,\n    ).first()\n    if blocked:\n        return False\n\n    legacy_booking_query = db.query(Booking).filter(\n        Booking.business_id == business_id,\n        Booking.day == day,\n        Booking.status == "confirmed",\n        Booking.start_at_utc.is_(None),\n        Booking.start < en,\n        Booking.end > st,\n    )\n    if specialist_id is not None:\n        legacy_booking_query = legacy_booking_query.filter(\n            (Booking.specialist_id == specialist_id) |\n            (Booking.specialist_id.is_(None))\n        )\n\n    legacy_booking = legacy_booking_query.first()\n    legacy_block = db.query(BlockedSlot).filter(\n        BlockedSlot.business_id == business_id,\n        BlockedSlot.day == day,\n        BlockedSlot.start_at_utc.is_(None),\n        BlockedSlot.start < en,\n        BlockedSlot.end > st,\n    ).first()\n    return not legacy_booking and not legacy_block\n\n''' + text[end+1:]
-
-          # Public endpoint for the client: only active specialists assigned to the selected service.\n          marker = '@app.get("/businesses/{slug}")\n'
-          if '@app.get("/businesses/{business_id}/specialists")' not in text:
-              endpoint = '''@app.get("/businesses/{business_id}/specialists")\ndef business_specialists(\n    business_id: int,\n    service_id: int\n):\n    with SessionLocal() as db:\n        business = db.get(Business, business_id)\n        service = db.get(Service, service_id)\n\n        if not business or not service or service.business_id != business_id or not service.active:\n            raise HTTPException(404, "Not found")\n\n        rows = (\n            db.query(Specialist)\n            .join(\n                SpecialistService,\n                SpecialistService.specialist_id == Specialist.id\n            )\n            .filter(\n                Specialist.business_id == business_id,\n                SpecialistService.service_id == service_id,\n                Specialist.active == True\n            )\n            .order_by(Specialist.id.asc())\n            .all()\n        )\n\n        return [\n            {\n                "id": item.id,\n                "name": item.name,\n                "position": item.position or "",\n                "description": item.description or "",\n                "photo": item.photo or "",\n            }\n            for item in rows\n        ]\n\n'''
-              text = text.replace(marker, endpoint + marker, 1)
-
-          # Replace availability implementation only.\n          start = text.index('@app.get("/businesses/{business_id}/availability")')
-          end = text.index('\n@app.post("/bookings")', start)
-          availability = '''@app.get("/businesses/{business_id}/availability")\ndef availability(\n    business_id: int,\n    service_id: int,\n    day: date,\n    time_zone: Optional[str] = None,\n    specialist_id: Optional[int] = None\n):\n    with SessionLocal() as db:\n        b = db.get(Business, business_id)\n        s = db.get(Service, service_id)\n\n        if not b or not s or s.business_id != business_id or not s.active:\n            raise HTTPException(404, "Not found")\n\n        specialist = None\n        if specialist_id is not None:\n            specialist = db.get(Specialist, specialist_id)\n            if (\n                not specialist\n                or specialist.business_id != business_id\n                or not specialist.active\n                or not db.query(SpecialistService).filter(\n                    SpecialistService.specialist_id == specialist_id,\n                    SpecialistService.service_id == service_id\n                ).first()\n            ):\n                raise HTTPException(404, "Specialist not found")\n\n        business_zone = _bookly_zone(b.timezone)\n        client_zone = _bookly_zone(time_zone or b.timezone)\n        now_business = datetime.now(business_zone)\n\n        bookings = db.query(\n            Booking.start_at_utc,\n            Booking.end_at_utc,\n            Booking.day,\n            Booking.start,\n            Booking.end,\n            Booking.specialist_id\n        ).filter(\n            Booking.business_id == business_id,\n            Booking.status == "confirmed"\n        ).all()\n\n        blocked_slots = db.query(\n            BlockedSlot.start_at_utc,\n            BlockedSlot.end_at_utc,\n            BlockedSlot.day,\n            BlockedSlot.start,\n            BlockedSlot.end\n        ).filter(\n            BlockedSlot.business_id == business_id\n        ).all()\n\n        slots = []\n        seen = set()\n\n        for business_day in (\n            day - timedelta(days=1),\n            day,\n            day + timedelta(days=1)\n        ):\n            for win_start, win_end in get_work_windows(\n                db,\n                business_id,\n                business_day,\n                specialist_id\n            ):\n                cursor = datetime.combine(\n                    business_day,\n                    win_start,\n                    tzinfo=business_zone\n                )\n                endday = datetime.combine(\n                    business_day,\n                    win_end,\n                    tzinfo=business_zone\n                )\n\n                while cursor + timedelta(minutes=s.duration_min) <= endday:\n                    slot_end = cursor + timedelta(minutes=s.duration_min)\n\n                    if business_day == now_business.date() and cursor <= now_business:\n                        cursor += timedelta(minutes=s.duration_min)\n                        continue\n\n                    start_utc = _bookly_to_utc(cursor)\n                    end_utc = _bookly_to_utc(slot_end)\n                    occupied = False\n\n                    for bs, be, legacy_day, legacy_start, legacy_end, booking_specialist_id in bookings:\n                        if specialist_id is not None and booking_specialist_id not in (None, specialist_id):\n                            continue\n                        if bs is not None and be is not None:\n                            if bs < end_utc and be > start_utc:\n                                occupied = True\n                                break\n                        elif (\n                            legacy_day == business_day\n                            and legacy_start < slot_end.time()\n                            and legacy_end > cursor.time()\n                        ):\n                            occupied = True\n                            break\n\n                    if not occupied:\n                        for bs, be, legacy_day, legacy_start, legacy_end in blocked_slots:\n                            if bs is not None and be is not None:\n                                if bs < end_utc and be > start_utc:\n                                    occupied = True\n                                    break\n                            elif (\n                                legacy_day == business_day\n                                and legacy_start < slot_end.time()\n                                and legacy_end > cursor.time()\n                            ):\n                                occupied = True\n                                break\n\n                    if not occupied:\n                        client_local = start_utc.replace(\n                            tzinfo=timezone.utc\n                        ).astimezone(client_zone)\n                        if client_local.date() == day:\n                            value = client_local.strftime("%H:%M")\n                            if value not in seen:\n                                seen.add(value)\n                                slots.append(value)\n\n                    cursor += timedelta(minutes=s.duration_min)\n\n        slots.sort()\n        return {"slots": slots}\n'''
-          text = text[:start] + availability + text[end:]
-
-          # Add specialist validation and persist specialist_id in client booking.\n          booking_start = text.index('@app.post("/bookings")')
-          booking_end = text.index('\n@app.post("/bookings/{booking_id}/cancel")', booking_start)
-          booking_block = text[booking_start:booking_end]
-          booking_block = booking_block.replace(\
-'''        if not b.subscription_active:\n            raise HTTPException(403, "Business inactive")\n\n        client_zone''',\
-'''        if not b.subscription_active:\n            raise HTTPException(403, "Business inactive")\n\n        specialist = None\n        if x.specialist_id is not None:\n            specialist = db.get(Specialist, x.specialist_id)\n            if (\n                not specialist\n                or specialist.business_id != x.business_id\n                or not specialist.active\n                or not db.query(SpecialistService).filter(\n                    SpecialistService.specialist_id == x.specialist_id,\n                    SpecialistService.service_id == x.service_id\n                ).first()\n            ):\n                raise HTTPException(404, "Specialist not found")\n\n        client_zone''', 1)
-          booking_block = booking_block.replace(\
-'''            b.id,\n            business_start.date(),''',\
-'''            b.id,\n            business_start.date(),''')
-          booking_block = booking_block.replace(\
-'''            b.timezone\n        ):''',\
-'''            b.timezone,\n            x.specialist_id\n        ):''', 1)
-          booking_block = booking_block.replace(\
-'''            service_id=x.service_id,\n            client_telegram_id=x.client_telegram_id,''',\
-'''            service_id=x.service_id,\n            specialist_id=x.specialist_id,\n            client_telegram_id=x.client_telegram_id,''', 1)
-          text = text[:booking_start] + booking_block + text[booking_end:]
-
-          app.write_text(text)
-
-          # Frontend client booking flow.\n          front = Path('frontend/src/main.tsx')
-          f = front.read_text()
-
-          anchor = '''  const [selected, setSelected] =\n    useState<any>(null);\n\n  const clientTimeZone'''
-          replacement = '''  const [selected, setSelected] =\n    useState<any>(null);\n\n  const [specialists, setSpecialists] =\n    useState<any[]>([]);\n\n  const [selectedSpecialist, setSelectedSpecialist] =\n    useState<any>(null);\n\n  const clientTimeZone'''
-          if anchor not in f:
-              raise SystemExit('Client state anchor not found')
-          f = f.replace(anchor, replacement, 1)
-
-          old = '''            `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}`'''
-          new = '''            `/businesses/${business.id}/availability?service_id=${service.id}&day=${selectedDay}&time_zone=${encodeURIComponent(clientTimeZone)}${selectedSpecialist?.id ? `&specialist_id=${selectedSpecialist.id}` : ''}`'''
-          if old not in f:
-              raise SystemExit('loadSlots availability URL not found')
-          f = f.replace(old, new, 1)
-
-          # loadSlots needs the current specialist as a parameter to avoid stale state.\n          f = f.replace(\
-'''  const loadSlots = async (\n    service: any,\n    selectedDay: string\n  ) => {''',\
-'''  const loadSlots = async (\n    service: any,\n    selectedDay: string,\n    specialist: any = selectedSpecialist\n  ) => {''', 1)
-          f = f.replace(\
-'''${selectedSpecialist?.id ? `&specialist_id=${selectedSpecialist.id}` : ''}`''',\
-'''${specialist?.id ? `&specialist_id=${specialist.id}` : ''}`''', 1)
-
-          # Replace chooseService with specialist-aware flow.\n          cs_start = f.index('  const chooseService = async (')
-          cs_end = f.index('\n  const chooseTime = (', cs_start)
-          choose_service = '''  const findFirstAvailableDay = async (\n    service: any,\n    specialist: any = null\n  ) => {\n    const startDate = new Date(`${day}T12:00:00`);\n    const MAX_DAYS_TO_SEARCH = 90;\n\n    for (let offset = 0; offset < MAX_DAYS_TO_SEARCH; offset += 1) {\n      const candidate = new Date(startDate);\n      candidate.setDate(startDate.getDate() + offset);\n\n      const candidateDay = [\n        candidate.getFullYear(),\n        String(candidate.getMonth() + 1).padStart(2, '0'),\n        String(candidate.getDate()).padStart(2, '0')\n      ].join('-');\n\n      const specialistQuery = specialist?.id\n        ? `&specialist_id=${specialist.id}`\n        : '';\n\n      const response = await fetch(\n        API +\n          `/businesses/${business.id}/availability?service_id=${service.id}&day=${candidateDay}&time_zone=${encodeURIComponent(clientTimeZone)}${specialistQuery}`\n      );\n\n      const data = await response.json();\n\n      if (!response.ok) {\n        throw new Error(\n          data?.detail ||\n          t('client.availabilityError')\n        );\n      }\n\n      const candidateSlots = Array.isArray(data?.slots)\n        ? data.slots\n        : [];\n\n      if (candidateSlots.length > 0) {\n        setDay(candidateDay);\n        setSlots(candidateSlots);\n        return true;\n      }\n    }\n\n    setSlots([]);\n    return false;\n  };\n\n  const chooseService = async (service: any) => {\n    setSelected(service);\n    setSelectedTime('');\n    setSlots([]);\n    setSpecialists([]);\n    setSelectedSpecialist(null);\n    setSlotsLoading(true);\n    setError('');\n\n    try {\n      const response = await fetch(\n        API +\n          `/businesses/${business.id}/specialists?service_id=${service.id}`\n      );\n\n      const data = await response.json();\n\n      if (!response.ok) {\n        throw new Error(\n          data?.detail ||\n          t('client.specialistsError', 'Не удалось загрузить специалистов')\n        );\n      }\n\n      const availableSpecialists = Array.isArray(data) ? data : [];\n      setSpecialists(availableSpecialists);\n\n      if (availableSpecialists.length === 0) {\n        await findFirstAvailableDay(service);\n      }\n    } catch (e) {\n      console.error('SPECIALISTS/AVAILABILITY ERROR:', e);\n      setSlots([]);\n      setError(t('client.availabilityError'));\n    } finally {\n      setSlotsLoading(false);\n    }\n  };\n\n  const chooseSpecialist = async (specialist: any) => {\n    if (!selected) return;\n\n    setSelectedSpecialist(specialist);\n    setSelectedTime('');\n    setSlots([]);\n    setSlotsLoading(true);\n    setError('');\n\n    try {\n      await findFirstAvailableDay(selected, specialist);\n    } catch (e) {\n      console.error('SPECIALIST AVAILABILITY ERROR:', e);\n      setSlots([]);\n      setError(t('client.availabilityError'));\n    } finally {\n      setSlotsLoading(false);\n    }\n  };\n'''
-          f = f[:cs_start] + choose_service + f[cs_end:]
-
-          # Include specialist in availability calls from date picker.\n          f = f.replace(\
-'''                await loadSlots(\n                  selected,\n                  newDay\n                );''',\
-'''                await loadSlots(\n                  selected,\n                  newDay,\n                  selectedSpecialist\n                );''', 1)
-
-          # Include specialist in booking payload.\n          f = f.replace(\
-'''              service_id:\n                selected.id,\n              client_name:''',\
-'''              service_id:\n                selected.id,\n              specialist_id:\n                selectedSpecialist?.id || null,\n              client_name:''', 1)
-
-          # Insert specialist selection card before date selection.\n          marker = '''      {selected && (\n        <>\n\n          <div className="card">\n            <h2>\n              {t('client.chooseDate')}'''
-          insert = '''      {selected && (\n        <>\n\n          {specialists.length > 0 && (\n            <div className="card">\n              <h2>\n                {t('client.chooseSpecialist', 'Выберите специалиста')}\n              </h2>\n\n              <div style={{ display: 'grid', gap: 10 }}>\n                {specialists.map((specialist) => (\n                  <button\n                    type="button"\n                    key={specialist.id}\n                    className={selectedSpecialist?.id === specialist.id ? 'primary full' : 'full'}\n                    onClick={() => chooseSpecialist(specialist)}\n                    style={{\n                      display: 'flex',\n                      alignItems: 'center',\n                      gap: 12,\n                      textAlign: 'left'\n                    }}\n                  >\n                    {specialist.photo ? (\n                      <img\n                        src={specialist.photo}\n                        alt={specialist.name}\n                        style={{\n                          width: 52,\n                          height: 52,\n                          borderRadius: '50%',\n                          objectFit: 'cover',\n                          flexShrink: 0\n                        }}\n                      />\n                    ) : (\n                      <span\n                        style={{\n                          width: 52,\n                          height: 52,\n                          borderRadius: '50%',\n                          background: '#f0f1f3',\n                          display: 'flex',\n                          alignItems: 'center',\n                          justifyContent: 'center',\n                          fontWeight: 700,\n                          flexShrink: 0\n                        }}\n                      >\n                        {String(specialist.name || '?').charAt(0).toUpperCase()}\n                      </span>\n                    )}\n\n                    <span style={{ display: 'grid', gap: 2 }}>\n                      <strong>{specialist.name}</strong>\n                      {specialist.position && (\n                        <small style={{ opacity: 0.7 }}>{specialist.position}</small>\n                      )}\n                    </span>\n                  </button>\n                ))}\n              </div>\n            </div>\n          )}\n\n          {(!specialists.length || selectedSpecialist) && (\n            <div className="card">\n              <h2>\n                {t('client.chooseDate')}'''
-          if marker not in f:
-              raise SystemExit('Client date marker not found')
-          f = f.replace(marker, insert, 1)
-
-          # Close the conditional wrapper immediately after the date card.\n          marker2 = '''          </div>\n\n          <div className="card">\n            <h2>\n              {t('client.chooseTime')}'''
-          replacement2 = '''          </div>\n\n          <div className="card">\n            <h2>\n              {t('client.chooseTime')}'''
-          # The time card remains inside the wrapper; close it after booking form.\n          # Replace the final fragment before the selected block closes.\n          tail = '''          )}\n\n        </>\n      )}\n\n    </section>'''
-          tail_repl = '''          )}\n\n          </div>\n        )}\n\n        </>\n      )}\n\n    </section>'''
-          if tail not in f:
-              raise SystemExit('Client tail marker not found')
-          f = f.replace(tail, tail_repl, 1)
-
-          front.write_text(f)
-          print('Specialist client integration patched')
-          PY
-
-      - name: Commit changes
+      - name: Commit integration
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add backend/app.py frontend/src/main.tsx
           git diff --cached --check
           git diff --cached --stat
-          git commit -m "feat: integrate specialists into client booking" || exit 0
+          git commit -m "feat: integrate specialists into client booking"
           git push
 
-      - name: Remove temporary workflow
+      - name: Remove temporary patch files
         if: always()
         run: |
-          git rm -f .github/workflows/integrate-specialists-client.yml || true
+          git rm -f scripts/integrate_specialists.py .github/workflows/integrate-specialists-client.yml || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: remove temporary specialist integration workflow" || true
+          git commit -m "chore: remove temporary specialist integration files" || true
           git push || true
