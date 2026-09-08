@@ -1,0 +1,36 @@
+name: Add specialist endpoint now
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[specialist-endpoint]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('backend/app.py')
+          s=p.read_text()
+          marker='@app.get("/businesses/{slug}")'
+          if '@app.get("/businesses/{business_id}/specialists")' not in s:
+              endpoint='''@app.get("/businesses/{business_id}/specialists")\ndef business_specialists(business_id: int, service_id: Optional[int] = None):\n    with SessionLocal() as db:\n        business = db.get(Business, business_id)\n        if not business:\n            raise HTTPException(404, "Not found")\n        query = db.query(Specialist).filter(Specialist.business_id == business_id, Specialist.active == True)\n        if service_id is not None:\n            service = db.get(Service, service_id)\n            if not service or service.business_id != business_id or not service.active:\n                raise HTTPException(404, "Not found")\n            query = query.join(SpecialistService, SpecialistService.specialist_id == Specialist.id).filter(SpecialistService.service_id == service_id)\n        rows = query.order_by(Specialist.id.asc()).all()\n        result = []\n        for item in rows:\n            ids = db.query(SpecialistService.service_id).filter(SpecialistService.specialist_id == item.id).all()\n            result.append({"id": item.id, "name": item.name, "position": item.position or "", "description": item.description or "", "photo": item.photo or "", "service_ids": [int(row[0]) for row in ids]})\n        return result\n\n'''
+              if marker not in s: raise SystemExit('marker missing')
+              s=s.replace(marker,endpoint+marker,1)
+              p.write_text(s)
+          PY
+          git diff -- backend/app.py
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add backend/app.py
+          git commit -m 'fix: add public specialist endpoint [specialist-endpoint]'
+          git push
