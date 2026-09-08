@@ -13,7 +13,6 @@ import PhoneInput, {
 } from './PhoneInput';
 import QRCode from 'qrcode';
 import './style.css';
-import './paddle-env-bridge';
 declare global {
   interface Window {
     Telegram:any;
