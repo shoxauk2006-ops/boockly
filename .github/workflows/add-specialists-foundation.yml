@@ -1,0 +1,60 @@
+name: Add specialist foundation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch backend schema
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
+
+          booking_old = '''    service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))\n\n    client_telegram_id'''
+          booking_new = '''    service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))\n    specialist_id: Mapped[Optional[int]] = mapped_column(\n        ForeignKey("specialists.id"),\n        nullable=True,\n        index=True\n    )\n\n    client_telegram_id'''
+          if booking_old not in s:
+              raise SystemExit('Booking insertion point not found')
+          s = s.replace(booking_old, booking_new, 1)
+
+          marker = '''class TelegramUserLanguage(Base):\n'''
+          models = '''class Specialist(Base):\n    __tablename__ = "specialists"\n\n    id: Mapped[int] = mapped_column(Integer, primary_key=True)\n    business_id: Mapped[int] = mapped_column(\n        ForeignKey("businesses.id"),\n        index=True\n    )\n    name: Mapped[str] = mapped_column(String(120))\n    position: Mapped[str] = mapped_column(String(120), default="")\n    description: Mapped[str] = mapped_column(String(500), default="")\n    photo: Mapped[str] = mapped_column(Text, default="")\n    active: Mapped[bool] = mapped_column(Boolean, default=True)\n\n\nclass SpecialistService(Base):\n    __tablename__ = "specialist_services"\n\n    id: Mapped[int] = mapped_column(Integer, primary_key=True)\n    specialist_id: Mapped[int] = mapped_column(\n        ForeignKey("specialists.id"),\n        index=True\n    )\n    service_id: Mapped[int] = mapped_column(\n        ForeignKey("services.id"),\n        index=True\n    )\n\n\nclass SpecialistWorkingHour(Base):\n    __tablename__ = "specialist_working_hours"\n\n    id: Mapped[int] = mapped_column(Integer, primary_key=True)\n    specialist_id: Mapped[int] = mapped_column(\n        ForeignKey("specialists.id"),\n        index=True\n    )\n    weekday: Mapped[int] = mapped_column(Integer)\n    start: Mapped[time] = mapped_column(Time)\n    end: Mapped[time] = mapped_column(Time)\n    active: Mapped[bool] = mapped_column(Boolean, default=True)\n\n\n'''
+          if marker not in s:
+              raise SystemExit('Model insertion point not found')
+          s = s.replace(marker, models + marker, 1)
+
+          schema_marker = '''def ensure_business_schema():\n'''
+          schema_fn = '''def ensure_specialist_schema():\n    """Add specialist tables/booking column to an existing database."""\n    with engine.begin() as conn:\n        inspector = inspect(conn)\n        tables = inspector.get_table_names()\n\n        # Base.metadata.create_all() creates the three new specialist tables.\n        # Existing bookings need an additive nullable column.\n        if "bookings" in tables:\n            existing = {c["name"] for c in inspector.get_columns("bookings")}\n            if "specialist_id" not in existing:\n                conn.execute(\n                    text(\n                        "ALTER TABLE bookings ADD COLUMN specialist_id INTEGER"\n                    )\n                )\n\n\nensure_specialist_schema()\n\n\n'''
+          if schema_marker not in s:
+              raise SystemExit('Schema insertion point not found')
+          s = s.replace(schema_marker, schema_fn + schema_marker, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Verify Python syntax
+        run: python -m py_compile backend/app.py
+
+      - name: Commit backend foundation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/app.py
+          git commit -m "Add specialist data model foundation"
+          git push
+
+      - name: Remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/add-specialists-foundation.yml
+          git commit -m "Remove temporary specialist migration workflow"
+          git push
