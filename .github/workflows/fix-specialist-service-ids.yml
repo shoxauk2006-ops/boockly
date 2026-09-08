@@ -1,0 +1,39 @@
+name: Fix specialist service ids
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-specialist-service-ids.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix tuple handling
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text(encoding='utf-8')
+          old = '''            service_ids = [\n                int(value)\n                for value in db.query(SpecialistService.service_id)\n                .filter(SpecialistService.specialist_id == item.id)\n                .all()\n            ]'''
+          new = '''            service_ids = [\n                int(row[0])\n                for row in db.query(SpecialistService.service_id)\n                .filter(SpecialistService.specialist_id == item.id)\n                .all()\n            ]'''
+          if old not in s:
+              raise SystemExit('target code not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit fix and remove temporary workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add backend/app.py
+          git rm .github/workflows/fix-specialist-service-ids.yml
+          git commit -m 'fix: return specialist service ids correctly'
+          git push
