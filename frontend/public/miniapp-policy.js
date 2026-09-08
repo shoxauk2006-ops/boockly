@@ -66,6 +66,44 @@
     return ((node && (node.innerText || node.textContent)) || '').replace(/\s+/g, ' ').trim();
   }
 
+  function replaceLegacyActivationCopy() {
+    var replacements = [
+      [/Чтобы начать принимать записи от клиентов, активируйте подписку Bookly Pro\. После активации вы получите клиентскую ссылку и сможете начать принимать записи\./g, 'После настройки бизнеса клиенты смогут находить его по клиентской ссылке и самостоятельно записываться на услуги.'],
+      [/Чтобы клиентов? могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Bookly Pro\./g, 'Клиенты смогут найти ваш бизнес по клиентской ссылке и самостоятельно записываться на услуги.'],
+      [/Активируйте подписку, чтобы открыть доступ к функциям Bookly Pro/g, 'Управляйте функциями Bookly прямо здесь'],
+      [/Активируйте подписку, чтобы получить клиентскую ссылку/g, 'Используйте клиентскую ссылку, чтобы делиться страницей бизнеса'],
+      [/Активируйте подписку, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
+      [/Активируйте Bookly Pro, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
+      [/Активируйте подписку, чтобы получить полный доступ/g, 'Полный доступ к функциям Bookly'],
+      [/Активировать Bookly Pro/g, 'Открыть Bookly'],
+      [/Оплатите подписку, чтобы активировать Bookly\./g, 'Настройте бизнес, чтобы начать работу с Bookly.'],
+      [/Функции Bookly Pro/g, 'Функции Bookly'],
+      [/Bookly Pro открывает клиентскую часть Bookly:/g, 'Клиентская часть Bookly включает:'],
+      [/Activate your subscription to get the client link/gi, 'Use the client link to share your business page'],
+      [/Activate your subscription to get the QR code/gi, 'Business page QR code'],
+      [/Activate your subscription to get full access/gi, 'Full access to Bookly features'],
+      [/Activate Bookly Pro/gi, 'Open Bookly'],
+      [/Activate your subscription/gi, 'Use Bookly'],
+      [/Bookly Pro opens the client side of Bookly:/gi, 'The Bookly client side includes:'],
+      [/activate your subscription/gi, 'use Bookly'],
+      [/Bookly Pro/gi, 'Bookly']
+    ];
+
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    var nodes = [];
+    var node;
+    while ((node = walker.nextNode())) nodes.push(node);
+
+    nodes.forEach(function (textNode) {
+      var value = textNode.nodeValue || '';
+      var next = value;
+      replacements.forEach(function (entry) {
+        next = next.replace(entry[0], entry[1]);
+      });
+      if (next !== value) textNode.nodeValue = next;
+    });
+  }
+
   function addStyle() {
     if (document.getElementById('bookly-miniapp-policy-style')) return;
     var style = document.createElement('style');
@@ -105,16 +143,6 @@
       var text = normalized(node);
       if (!text || !BILLING_RE.test(text)) return;
       node.classList.add('bookly-policy-hidden');
-    });
-
-    document.querySelectorAll('div,section,article').forEach(function (node) {
-      if (node.classList.contains('subscription-modal') || node.closest('.subscription-modal')) return;
-      var text = normalized(node);
-      if (!text || text.length > 220 || !BILLING_RE.test(text)) return;
-      if (node.querySelector('input,textarea,select') || node.children.length > 8) return;
-      if (/без\s+подписки|activate\s+subscription|активируйте\s+подписку|bookly\s+pro/i.test(text)) {
-        node.classList.add('bookly-policy-hidden');
-      }
     });
   }
 
@@ -162,6 +190,7 @@
     addStyle();
     hideSubscriptions();
     protectCreation();
+    replaceLegacyActivationCopy();
   }
 
   if (document.readyState === 'loading') {
