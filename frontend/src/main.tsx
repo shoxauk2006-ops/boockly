@@ -1776,12 +1776,7 @@ function Admin({
   const [statisticsLoading, setStatisticsLoading] = useState(false);
   const [statisticsPeriod, setStatisticsPeriod] =
     useState<'7' | '30'>('7');
-  const [serviceLimit, setServiceLimit] = useState(10);
-  const [newServiceLimit, setNewServiceLimit] = useState(10);
-  const [savingServiceLimit, setSavingServiceLimit] = useState(false);
-  const [limitModalOpen, setLimitModalOpen] = useState(false);
-  const [limitPreview, setLimitPreview] = useState<any>(null);
-  const [limitSaving, setLimitSaving] = useState(false);
+  
   
 
   const [loading, setLoading] = useState(true);
@@ -1984,17 +1979,7 @@ const [newBusinessHours, setNewBusinessHours] =
           const businessData =
             await businessResponse.json();
 
-          const savedLimit = Number(
-            businessData?.services_limit
-          );
-
-          if (
-            Number.isInteger(savedLimit) &&
-            savedLimit >= 10
-          ) {
-            setServiceLimit(savedLimit);
-            setNewServiceLimit(savedLimit);
-          }
+          
         }
       } catch (error) {
         console.error(
@@ -2119,36 +2104,6 @@ const [newBusinessHours, setNewBusinessHours] =
     statisticsResult.value || null
   );
 }
-  };
-  const changeServiceLimit = async () => {
-  const limit = Number(newServiceLimit);
-
-  if (!Number.isInteger(limit) || limit < 10) {
-    alert(
-      t(
-        'owner.invalidServiceLimit',
-        'Введите корректный лимит услуг'
-       )
-     );
-    return;
-  }
-
-  if (limit === serviceLimit) {
-  alert(
-    t(
-      'owner.serviceLimitAlreadySet',
-      'Лимит уже установлен на этом уровне'
-    )
-  );
-  return;
-}
-
-  const priceByLimit: Record<number, number> = {
-    10: 7.99,
-    20: 12.98,
-    30: 15.98,
-    50: 19.98,
-    100: 27.98
   };
  
     
@@ -2461,26 +2416,14 @@ alert(paymentMessage);
       load();
     };
 
-    const refreshSubscription = () => {
-      window.setTimeout(() => {
-        load();
-      }, 1200);
-    };
 
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
-    window.addEventListener(
-      'bookly:subscription-updated',
-      refreshSubscription
-    );
+    
 
     return () => {
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
-      window.removeEventListener(
-        'bookly:subscription-updated',
-        refreshSubscription
-      );
     };
   }, []);
 
@@ -2504,131 +2447,6 @@ alert(paymentMessage);
 
     setLoading(false);
   };
-
-    const createBusiness = async () => {
-  const name = newBusinessName.trim();
-
-  if (!name) {
-    alert(
-      t(
-        'owner.enterBusinessName',
-        'Введите название бизнеса'
-      )
-    );
-    return;
-  }
-
-      if (!newBusinessPhone.trim()) {
-  alert(
-    t(
-      'owner.enterBusinessPhone',
-      'Введите номер телефона бизнеса'
-    )
-  );
-  return;
-}
-
-if (!isPhoneValid(newBusinessPhone)) {
-  alert(
-    t(
-      'owner.invalidPhone',
-      'Введите корректный номер телефона'
-    )
-  );
-  return;
-}
-
-  setCreatingBusiness(true);
-
-  try {
-    const response = await fetch(
-      API + '/admin/businesses',
-      {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify({
-          name,
-          description: newBusinessDescription.trim(),
-          phone: newBusinessPhone.trim(),
-          address: newBusinessAddress.trim(),
-          latitude: newBusinessLatitude,
-          longitude: newBusinessLongitude,
-          timezone: newBusinessTimezone,
-          business_image: newBusinessImage,
-          hours: newBusinessHours.map(day => ({
-            weekday: day.weekday,
-            start: day.start,
-            end: day.end,
-            active: day.enabled
-          }))
-        })
-      }
-    );
-
-    const data = await response
-      .json()
-      .catch(() => null);
-
-    if (!response.ok) {
-      throw new Error(
-        data?.detail ||
-        t(
-          'owner.createBusinessError',
-          'Не удалось создать бизнес'
-        )
-      );
-    }
-
-    try {
-      localStorage.setItem(
-        'bookly_active_business_id',
-        String(data.id)
-      );
-    } catch {}
-
-    setNewBusinessName('');
-    setNewBusinessDescription('');
-    setNewBusinessPhone('');
-    setNewBusinessAddress('');
-    setNewBusinessLatitude(null);
-    setNewBusinessLongitude(null);
-    setNewBusinessImage('');
-
-    setBusiness(data);
-    setBusinessPanel('closed');
-    setBusinessCreatedNotice(true);
-
-    const updated = await fetch(
-      API + '/admin/businesses',
-      {
-        headers: headers()
-      }
-    ).then(r =>
-      r.ok ? r.json() : []
-    );
-
-    setBusinesses(
-      Array.isArray(updated)
-        ? updated
-        : []
-    );
-
-    await loadBusinessData(data);
-
-    setTab('home');
-
-  } catch (e: any) {
-    alert(
-      e?.message ||
-      t(
-        'owner.createBusinessError',
-        'Не удалось создать бизнес'
-      )
-    );
-  } finally {
-    setCreatingBusiness(false);
-  }
-};
 
   if (loading) {
     return (
