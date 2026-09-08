@@ -24,17 +24,22 @@ jobs:
           p = Path('frontend/src/main.tsx')
           s = p.read_text()
 
-          # The specialist/date/time block must return one JSX root.
-          opening = '''          {(!specialists.length || selectedSpecialist) && (\n            <>\n            <div className="card">'''
-          if opening not in s:
-              raise SystemExit('Specialist fragment opening not found')
+          opening = '''          {(!specialists.length || selectedSpecialist) && (\n            <div className="card">'''
+          wrapped_opening = '''          {(!specialists.length || selectedSpecialist) && (\n            <div className="client-booking-flow">\n            <div className="card">'''
+
+          if opening in s:
+              s = s.replace(opening, wrapped_opening, 1)
+          elif 'client-booking-flow' not in s:
+              raise SystemExit('Specialist booking opening pattern not found')
 
           closing = '''          </div>\n        )}\n\n        </>\n      )}\n\n    </section>'''
-          replacement = '''          </div>\n            </>\n          )}\n\n        </>\n      )}\n\n    </section>'''
-          if closing not in s:
-              raise SystemExit('Specialist fragment closing pattern not found')
+          wrapped_closing = '''          </div>\n          </div>\n        )}\n\n        </>\n      )}\n\n    </section>'''
 
-          s = s.replace(closing, replacement, 1)
+          if closing in s:
+              s = s.replace(closing, wrapped_closing, 1)
+          elif wrapped_closing not in s:
+              raise SystemExit('Specialist booking closing pattern not found')
+
           p.write_text(s)
           PY
 
@@ -49,7 +54,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add frontend/src/main.tsx .github/workflows/fix-client-jsx.yml
-          git commit -m "fix: close specialist JSX fragment correctly"
+          git commit -m "fix: wrap specialist booking flow in JSX container"
           git rm .github/workflows/fix-client-jsx.yml
           git commit -m "chore: remove temporary JSX fix workflow"
           git push
