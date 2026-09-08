@@ -281,3 +281,4 @@ def replace_specialist_working_hours(
         db.commit()
         db.refresh(specialist)
         return _serialize(db, specialist)
+
