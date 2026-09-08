@@ -4313,21 +4313,6 @@ borderTopColor: '#d32f2f',
       </ul>
     </div>
 
-    <button
-      type="button"
-      className="primary full"
-      style={{
-        marginTop: 14
-      }}
-      onClick={() => {
-        checkout(
-          'paddle',
-          business.id
-        );
-      }}
-    >
-      {t('owner.activateBooklyPro')}
-    </button>
   </div>
 )}
 
@@ -5804,13 +5789,8 @@ return (
         )}
       </div>
 
-      <div
-        className={
-          subscriptionLocked
-            ? 'card admin-quick-actions subscription-locked'
-            : 'card admin-quick-actions'
-        }
-      >
+        <div className="card admin-quick-actions">
+          
         <div className="admin-section-title">
           <h3>
             {t(
