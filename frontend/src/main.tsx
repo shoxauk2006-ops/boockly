@@ -9735,6 +9735,21 @@ function Client({
           setServices(
             data.services || []
           );
+
+          try {
+            const specialistsResponse = await fetch(
+              API + `/businesses/${data.business.id}/specialists`
+            );
+            if (specialistsResponse.ok) {
+              const specialistsData = await specialistsResponse.json();
+              setSpecialists(Array.isArray(specialistsData) ? specialistsData.filter((item: any) => item?.active !== false) : []);
+            } else {
+              setSpecialists([]);
+            }
+          } catch (specialistsError) {
+            console.error('CLIENT SPECIALISTS LOAD ERROR:', specialistsError);
+            setSpecialists([]);
+          }
         }
       } catch (e: any) {
         console.error(
@@ -9939,28 +9954,16 @@ function Client({
   };
 
   const chooseService = async (service: any) => {
+    if (!business) return;
     setSelected(service);
     setSelectedTime('');
     setSlots([]);
-    setSpecialists([]);
-    setSelectedSpecialist(null);
-    setSlotsLoading(true);
     setError('');
+    setSlotsLoading(true);
     try {
-      const response = await fetch(
-        API + `/businesses/${business.id}/specialists?service_id=${service.id}`
-      );
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.detail || t('client.specialistsError', 'Не удалось загрузить специалистов'));
-      }
-      const availableSpecialists = Array.isArray(data) ? data : [];
-      setSpecialists(availableSpecialists);
-      if (availableSpecialists.length === 0) {
-        await findFirstAvailableDay(service);
-      }
+      await findFirstAvailableDay(service, selectedSpecialist);
     } catch (e) {
-      console.error('SPECIALISTS/AVAILABILITY ERROR:', e);
+      console.error('SERVICE AVAILABILITY ERROR:', e);
       setSlots([]);
       setError(t('client.availabilityError'));
     } finally {
@@ -9968,22 +9971,13 @@ function Client({
     }
   };
 
-  const chooseSpecialist = async (specialist: any) => {
-    if (!selected) return;
+  const chooseSpecialist = (specialist: any) => {
     setSelectedSpecialist(specialist);
+    setSelected(null);
     setSelectedTime('');
     setSlots([]);
-    setSlotsLoading(true);
+    setDay(getClientLocalDateKey());
     setError('');
-    try {
-      await findFirstAvailableDay(selected, specialist);
-    } catch (e) {
-      console.error('SPECIALIST AVAILABILITY ERROR:', e);
-      setSlots([]);
-      setError(t('client.availabilityError'));
-    } finally {
-      setSlotsLoading(false);
-    }
   };
 
   const chooseTime = (
@@ -10382,222 +10376,70 @@ function Client({
 
       
 
-      <h2>
-        {t('client.services')}
-      </h2>
-
-      {services.length === 0 ? (
-        <div className="card">
-          <p>
-            {t('client.noServices')}
-          </p>
-        </div>
-      ) : (
-        services.map(
-  service => (
-    <div
-      className={
-        selected?.id === service.id
-          ? 'client-service-card selected'
-          : 'client-service-card'
-      }
-      key={service.id}
-    >
-      <div className="client-service-info">
-        <strong>
-          {service.name}
-        </strong>
-
-        <div className="client-service-meta">
-          {money(
-            service.price,
-            service.currency
-          )}
-
-          <span>·</span>
-
-          {service.duration_min}{' '}
-          {t('owner.minutes')}
-        </div>
-
-        {service.description && (
-          <p>
-            {service.description}
-          </p>
-        )}
-      </div>
-
-      <button
-        className="client-service-button"
-        onClick={() =>
-          chooseService(service)
-        }
-      >
-        {t('client.chooseService')}
-      </button>
-    </div>
-  )
-)
-      )}
-
-      {selected && (
+      {specialists.length > 0 ? (
         <>
-
-          {specialists.length > 0 && (
+          <h2>{t('client.chooseSpecialist', 'Выберите специалиста')}</h2>
+          {!selectedSpecialist ? (
             <div className="card">
-              <h2>{t('client.chooseSpecialist', 'Выберите специалиста')}</h2>
               <div style={{ display: 'grid', gap: 10 }}>
                 {specialists.map((specialist) => (
-                  <button
-                    type="button"
-                    key={specialist.id}
-                    className={selectedSpecialist?.id === specialist.id ? 'primary full' : 'full'}
-                    onClick={() => chooseSpecialist(specialist)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}
-                  >
-                    {specialist.photo ? (
-                      <img src={specialist.photo} alt={specialist.name} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                    ) : (
-                      <span style={{ width: 52, height: 52, borderRadius: '50%', background: '#f0f1f3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
-                        {String(specialist.name || '?').charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                    <span style={{ display: 'grid', gap: 2 }}>
-                      <strong>{specialist.name}</strong>
-                      {specialist.position && <small style={{ opacity: 0.7 }}>{specialist.position}</small>}
-                    </span>
+                  <button type="button" key={specialist.id} className="full" onClick={() => chooseSpecialist(specialist)} style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+                    {specialist.photo ? <img src={specialist.photo} alt={specialist.name} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} /> : <span style={{ width: 52, height: 52, borderRadius: '50%', background: '#f0f1f3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>{String(specialist.name || '?').charAt(0).toUpperCase()}</span>}
+                    <span style={{ display: 'grid', gap: 2 }}><strong>{specialist.name}</strong>{specialist.position && <small style={{ opacity: 0.7 }}>{specialist.position}</small>}</span>
                   </button>
                 ))}
               </div>
             </div>
-          )}
-
-          {(!specialists.length || selectedSpecialist) && (
+          ) : (
             <>
               <div className="card">
-              <h2>
-                {t('client.chooseDate')}
-            </h2>
-
-            <input
-              type="date"
-              min={getClientLocalDateKey()}
-              value={day}
-              onChange={async e => {
-                const newDay =
-                  e.target.value;
-
-                setDay(newDay);
-                setSelectedTime('');
-
-                await loadSlots(
-                  selected,
-                  newDay,
-                  selectedSpecialist
-                );
-              }}
-            />
-          </div>
-
-          <div className="card">
-            <h2>
-              {t('client.chooseTime')}
-            </h2>
-
-            {slotsLoading ? (
-              <p className="muted">
-                {t('owner.loadingSlots')}
-              </p>
-            ) : slots.length > 0 ? (
-              <div className="slots">
-                {slots.map(
-                  time => (
-                    <button
-                      key={time}
-                      className={
-                        selectedTime ===
-                        time
-                          ? 'selected'
-                          : ''
-                      }
-                      onClick={() =>
-                        chooseTime(
-                          time
-                        )
-                      }
-                    >
-                      {time}
-                    </button>
-                  )
-                )}
+                <button type="button" className="ghost full" onClick={() => { setSelectedSpecialist(null); setSelected(null); setSelectedTime(''); setSlots([]); setDay(getClientLocalDateKey()); }}>← {t('client.chooseSpecialist', 'Выбрать специалиста')}</button>
+                <p style={{ margin: '12px 0 0', fontWeight: 600 }}>{selectedSpecialist.name}</p>
               </div>
-            ) : (
-              <p>
-                {t('client.noSlots')}
-              </p>
-            )}
-          </div>
-
-          {selectedTime && (
-            <div
-              id="booking-form"
-              className="card"
-            >
-              <h2>
-                {t('client.yourData')}
-              </h2>
-
-              <div className="success">
-                <b>
-                  {selected.name}
-                </b>
-
-                <br />
-
-                {day}
-                {' · '}
-                {selectedTime}
-              </div>
-
-              <input
-                type="text"
-                placeholder={
-                  t('client.name')
-                }
-                value={clientName}
-                onChange={e =>
-                  setClientName(
-                    e.target.value
-                  )
-                }
-              />
-
-<PhoneInput
-  value={phone}
-  onChange={setPhone}
-  placeholder={t(
-    'client.phone'
-  )}
-/>
-
-              <button
-                className="primary full"
-                disabled={
-                  bookingLoading
-                }
-                onClick={
-                  submitBooking
-                }
-              >
-                {bookingLoading
-                  ? t('client.bookingLoading')
-                  : t('client.confirmBooking')}
-              </button>
-            </div>
-          )}
+              <h2>{t('client.services')}</h2>
+              {(() => {
+                const specialistServices = selectedSpecialist.service_ids?.length ? services.filter((service: any) => selectedSpecialist.service_ids.includes(service.id)) : services;
+                return specialistServices.length === 0 ? <div className="card"><p>{t('client.noServices')}</p></div> : specialistServices.map((service: any) => (
+                  <div className={selected?.id === service.id ? 'client-service-card selected' : 'client-service-card'} key={service.id}>
+                    <div className="client-service-info"><strong>{service.name}</strong><div className="client-service-meta">{money(service.price, service.currency)}<span>·</span>{service.duration_min} {t('owner.minutes')}</div>{service.description && <p>{service.description}</p>}</div>
+                    <button className="client-service-button" onClick={() => chooseService(service)}>{t('client.chooseService')}</button>
+                  </div>
+                ));
+              })()}
             </>
           )}
+        </>
+      ) : (
+        <>
+          <h2>{t('client.services')}</h2>
+          {services.length === 0 ? <div className="card"><p>{t('client.noServices')}</p></div> : services.map((service: any) => (
+            <div className={selected?.id === service.id ? 'client-service-card selected' : 'client-service-card'} key={service.id}>
+              <div className="client-service-info"><strong>{service.name}</strong><div className="client-service-meta">{money(service.price, service.currency)}<span>·</span>{service.duration_min} {t('owner.minutes')}</div>{service.description && <p>{service.description}</p>}</div>
+              <button className="client-service-button" onClick={() => chooseService(service)}>{t('client.chooseService')}</button>
+            </div>
+          ))}
+        </>
+      )}
 
+      {selected && (
+        <>
+          <div className="card">
+            <h2>{t('client.chooseDate')}</h2>
+            <input type="date" min={getClientLocalDateKey()} value={day} onChange={async e => { const newDay = e.target.value; setDay(newDay); setSelectedTime(''); await loadSlots(selected, newDay, selectedSpecialist); }} />
+          </div>
+          <div className="card">
+            <h2>{t('client.chooseTime')}</h2>
+            {slotsLoading ? <p className="muted">{t('owner.loadingSlots')}</p> : slots.length > 0 ? <div className="slots">{slots.map(time => <button key={time} className={selectedTime === time ? 'selected' : ''} onClick={() => chooseTime(time)}>{time}</button>)}</div> : <p>{t('client.noSlots')}</p>}
+          </div>
+          {selectedTime && (
+            <div id="booking-form" className="card">
+              <h2>{t('client.yourData')}</h2>
+              <div className="success"><b>{selected.name}</b><br />{selectedSpecialist?.name && <>{selectedSpecialist.name}<br /></>}{day} · {selectedTime}</div>
+              <input type="text" placeholder={t('client.name')} value={clientName} onChange={e => setClientName(e.target.value)} />
+              <PhoneInput value={phone} onChange={setPhone} placeholder={t('client.phone')} />
+              <button className="primary full" disabled={bookingLoading} onClick={submitBooking}>{bookingLoading ? t('client.bookingLoading') : t('client.confirmBooking')}</button>
+            </div>
+          )}
         </>
       )}
 
