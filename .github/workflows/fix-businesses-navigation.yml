@@ -1,0 +1,89 @@
+name: Fix businesses navigation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-businesses-navigation.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch navigation
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('frontend/src/main.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          old = """  onAdmin={() => {
+    setAdminTab('businesses');
+    setMode('admin');
+  }}"""
+          new = """  onAdmin={() => {
+    setAdminTab('home');
+    setMode('admin');
+  }}"""
+          if old not in text:
+              raise SystemExit('onAdmin block not found')
+          text = text.replace(old, new, 1)
+
+          old = """    setBusiness(null);
+    setBusinessPanel('list');
+    return null;"""
+          new = """    setBusiness(null);
+    if (initialTab === 'businesses') {
+      setBusinessPanel('list');
+    } else {
+      setBusinessPanel('closed');
+    }
+    return null;"""
+          if old not in text:
+              raise SystemExit('empty-business load block not found')
+          text = text.replace(old, new, 1)
+
+          old = """            onClick={() => setBusinessPanel('create')}
+          >
+            + {t('owner.addBusiness', 'Добавить бизнес')}
+          </button>"""
+          new = """            onClick={() => tg()?.openLink('https://boockly.vercel.app/landing.html')}
+          >
+            + {t('owner.addBusiness', 'Добавить бизнес')}
+          </button>"""
+          if old not in text:
+              raise SystemExit('empty-state add-business button not found')
+          text = text.replace(old, new, 1)
+
+          old = """            onClick={() =>
+              setBusinessPanel(
+                'create'
+              )
+            }
+          >
+            + {t('owner.addBusiness')}
+          </button>"""
+          new = """            onClick={() => tg()?.openLink('https://boockly.vercel.app/landing.html')}
+          >
+            + {t('owner.addBusiness')}
+          </button>"""
+          if old not in text:
+              raise SystemExit('business-list add-business button not found')
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Remove temporary workflow after patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/src/main.tsx
+          git rm .github/workflows/fix-businesses-navigation.yml
+          git commit -m "fix: restore businesses navigation behavior"
+          git push
