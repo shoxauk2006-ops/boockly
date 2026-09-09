@@ -446,6 +446,7 @@ function App(){
   const [infoModal,setInfoModal]=useState(false);
   const [infoSection, setInfoSection] =
   useState<'help' | 'rules'>('help');
+  const [infoMenuOpen, setInfoMenuOpen] = useState(false);
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertModalMessage, setAlertModalMessage] = useState('');
   const [alertModalTitle, setAlertModalTitle] =
@@ -1231,7 +1232,6 @@ function PersonalHome({
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [page, setPage] = useState<'home' | 'bookings' | 'saved'>('home');
   const [loading, setLoading] = useState(true);
-  const [infoMenuOpen, setInfoMenuOpen] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
 
   useEffect(() => {
