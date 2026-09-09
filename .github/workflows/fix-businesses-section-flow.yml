@@ -62,3 +62,4 @@ jobs:
           git rm .github/workflows/fix-businesses-section-flow.yml
           git commit -m 'chore: remove temporary businesses flow workflow [businesses-section-flow]'
           git push
+# trigger patch workflow
