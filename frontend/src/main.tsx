@@ -10326,31 +10326,33 @@ function Client({
       ? t('client.savedBusiness')
       : t('client.saveBusiness')}
   </button>
+        <div className="client-timezone-info">
+          <p
+            className="muted"
+            style={{ marginTop: 10, marginBottom: 5, fontSize: 13 }}
+          >
+            {t('client.businessTimezone', 'Часовой пояс бизнеса')}: {business.timezone
+              ? formatGMTOffset(getTimeZoneOffsetMinutes(business.timezone))
+              : 'GMT+0'}
+          </p>
+          <p
+            className="muted"
+            style={{ marginBottom: 0, fontSize: 13 }}
+          >
+            {t(
+              'client.slotsShownInYourTimezone',
+              'Время свободных слотов отображается по вашему часовому поясу'
+            )}: {formatGMTOffset(getTimeZoneOffsetMinutes(getClientTimeZone()))}
+          </p>
+        </div>
         <p
-  className="muted"
-  style={{
-    marginTop: 10,
-    marginBottom: 8,
-    fontSize: 13
-  }}
->
-  {t('client.timezone')}{' '}
-  {business.timezone
-    ? formatGMTOffset(
-        getTimeZoneOffsetMinutes(
-          business.timezone
-        )
-      )
-    : 'GMT+0'}
-</p>
-  <p
-    className="muted"
-    style={{
-      marginBottom: 0
-    }}
-  >
-    {t('client.chooseServiceHint')}
-  </p>
+          className="muted"
+          style={{ marginTop: 8, marginBottom: 0 }}
+        >
+          {specialists.length
+            ? t('client.chooseSpecialistHint', 'Выберите специалиста ниже, чтобы продолжить.')
+            : t('client.chooseServiceHint')}
+        </p>
 
 </div>
 
