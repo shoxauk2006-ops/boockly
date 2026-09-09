@@ -1,0 +1,25 @@
+/* Final client polish: selectors are scoped to actual client markup, not .client-hero. */
+.client-business-header{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important}
+.client-business-header-info{min-width:0!important;flex:1!important}
+.client-business-header h1{margin:0 0 6px!important;font-size:28px!important;line-height:1.05!important;letter-spacing:-.9px!important}
+.client-business-header-info p{margin:0!important;color:#7a828c!important;font-size:13px!important;line-height:1.4!important}
+.bookly-business-avatar,.client-business-thumb{width:92px!important;height:92px!important;flex:0 0 92px!important;object-fit:cover!important;object-position:center!important;border-radius:20px!important;border:1px solid #e5e8ec!important;box-shadow:0 8px 22px rgba(15,23,42,.07)!important}
+.client-contact-actions{display:grid!important;gap:8px!important;margin-top:16px!important;padding-top:14px!important;border-top:1px solid #eef0f2!important}
+.client-phone-row,.client-contact-button{min-height:44px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:10px 12px!important;border-radius:14px!important;background:#f7f8fa!important;border:1px solid #e7eaee!important}
+.client-phone-number,.client-contact-label{min-width:0!important;color:#303640!important;font-size:13px!important;font-weight:650!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.client-copy-button{flex:0 0 auto!important;margin:0!important;padding:8px 10px!important;min-height:34px!important;border-radius:10px!important;background:#fff!important;color:#111!important;border:1px solid #e0e4e8!important;box-shadow:none!important}
+.client-contact-arrow{color:#9299a2!important;font-size:21px!important}
+.client-save-button{width:100%!important;margin-top:10px!important;background:#111!important;color:#fff!important;border-radius:14px!important}
+.client-save-button.saved{background:#eef0f3!important;color:#111!important;box-shadow:none!important}
+/* Specialist picker */
+section > .card:has(> div > button.full){padding:10px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+section > .card:has(> div > button.full) > div{gap:12px!important}
+section > .card:has(> div > button.full) > div > button.full{position:relative!important;min-height:82px!important;margin:0!important;padding:13px 48px 13px 13px!important;border:1px solid #e5e8ec!important;border-radius:20px!important;background:#fff!important;color:#111!important;box-shadow:0 8px 24px rgba(15,23,42,.045)!important;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease!important;text-align:left!important}
+section > .card:has(> div > button.full) > div > button.full::after{content:'›'!important;position:absolute!important;right:15px!important;top:50%!important;transform:translateY(-50%)!important;width:32px!important;height:32px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:#f1f3f5!important;color:#111!important;font-size:25px!important;font-weight:400!important;line-height:1!important}
+section > .card:has(> div > button.full) > div > button.full img,section > .card:has(> div > button.full) > div > button.full > span:first-child{width:58px!important;height:58px!important;border-radius:18px!important;object-fit:cover!important;background:#f0f1f3!important;color:#111!important;font-size:20px!important;font-weight:800!important;flex-shrink:0!important}
+section > .card:has(> div > button.full) > div > button.full > span:last-child{gap:4px!important}
+section > .card:has(> div > button.full) > div > button.full strong{font-size:17px!important;letter-spacing:-.25px!important;color:#111!important}
+section > .card:has(> div > button.full) > div > button.full small{color:#8a919b!important;font-size:12px!important}
+section > .card:has(> div > button.full) > div > button.full:active{transform:scale(.985)!important;box-shadow:0 4px 14px rgba(15,23,42,.04)!important}
+section > .card:has(> button.ghost.full){padding:12px 14px!important;background:#fff!important}
+@media(max-width:420px){.client-business-header h1{font-size:25px!important}.bookly-business-avatar,.client-business-thumb{width:78px!important;height:78px!important;flex-basis:78px!important}section > .card:has(> div > button.full) > div > button.full{min-height:76px!important;padding-right:44px!important}section > .card:has(> div > button.full) > div > button.full img,section > .card:has(> div > button.full) > div > button.full > span:first-child{width:54px!important;height:54px!important;border-radius:17px!important}}
