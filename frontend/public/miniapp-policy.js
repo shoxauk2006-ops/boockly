@@ -8,7 +8,7 @@
   if (!telegram || !telegram.initData) return;
 
   var WEBSITE_URL = 'https://boockly.vercel.app/landing.html';
-  var CREATE_RE = /создать\s+бизнес|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط/i;
+  var CREATE_RE = /создать\s+бизнес|создание\s+бизнеса|добавить\s+бизнес|add\s+business|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط/i;
   var BILLING_RE = /подписк|subscription|тариф|tariff|trial|оплат|payment|billing|checkout|bookly\s*pro|telegram\s*stars|\bXTR\b|период\s+оплаты/i;
 
   var LABELS = {
