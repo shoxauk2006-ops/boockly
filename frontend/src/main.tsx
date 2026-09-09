@@ -618,6 +618,47 @@ const openClient = (
       </option>
     ))}
   </select>
+   <div className="personal-home-menu">
+  <button
+    type="button"
+    className="personal-menu-button"
+    onClick={() => setInfoMenuOpen(!infoMenuOpen)}
+  >
+    ⓘ
+  </button>
+
+  {infoMenuOpen && (
+    <div className="personal-info-menu">
+      <button
+        type="button"
+        onClick={() => {
+          setInfoMenuOpen(false);
+          setInfoSection('help');
+          setInfoModal();
+        }}
+      >
+        ℹ️ {t(
+          'info.howBooklyWorks',
+          'Как работает Bookly'
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setInfoMenuOpen(false);
+          setInfoSection('rules');
+          setInfoModal();
+        }}
+      >
+        📄 {t(
+          'info.rulesAndContacts',
+          'Правила и контакты'
+        )}
+      </button>
+    </div>
+  )}
+</div>
 </header>
 
   {menuOpen && (
@@ -1232,47 +1273,7 @@ function PersonalHome({
 
   return (
     <section className="personal-home">
-      <div className="personal-home-menu">
-  <button
-    type="button"
-    className="personal-menu-button"
-    onClick={() => setInfoMenuOpen(!infoMenuOpen)}
-  >
-    ⓘ
-  </button>
-
-  {infoMenuOpen && (
-    <div className="personal-info-menu">
-     <button
-  type="button"
-  onClick={() => {
-    setInfoMenuOpen(false);
-    setInfoSection('help');
-    setInfoModal();
-  }}
->
-  ℹ️ {t(
-  'info.howBooklyWorks',
-  'Как работает Bookly'
-)}
-</button>
-
-<button
-  type="button"
-  onClick={() => {
-    setInfoMenuOpen(false);
-    setInfoSection('rules');
-    setInfoModal();
-  }}
->
-  📄 {t(
-  'info.rulesAndContacts',
-  'Правила и контакты'
-)}
-</button>
-    </div>
-  )}
-</div>
+      
 
       {page === 'home' && (
         <>
