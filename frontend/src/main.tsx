@@ -1295,10 +1295,15 @@ function PersonalHome({
             </p>
           </div>
 
-          <div className="personal-card">
-            <div className="personal-decor" aria-hidden="true" />
-            
-            <span className="personal-eyebrow">
+<div className="personal-card personal-open-business-card">
+  <div className="personal-open-decor" aria-hidden="true">
+    <span />
+    <span />
+    <span />
+    <span />
+  </div>
+
+  <span className="personal-eyebrow">
               {t('home.openBusiness', 'Найти место')}
             </span>
 
