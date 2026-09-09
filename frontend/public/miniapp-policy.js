@@ -13,44 +13,17 @@
   var ADD_BUSINESS_RE = /^(добавить\s+бизнес|add\s+business|biznes\s+yaratish|işletme\s+oluştur)$/i;
 
   var LABELS = {
-    ru: {
-      title: 'Создать бизнес через Bookly',
-      text: 'Создание бизнеса доступно на сайте Bookly. Там же проходит регистрация и подключение сервиса.',
-      button: 'Открыть сайт Bookly'
-    },
-    en: {
-      title: 'Create your business on Bookly',
-      text: 'Business creation is available on the Bookly website. Registration and setup are completed there.',
-      button: 'Open Bookly website'
-    },
-    uz: {
-      title: 'Bookly orqali biznes yaratish',
-      text: 'Biznes yaratish Bookly saytida mavjud. Ro‘yxatdan o‘tish va sozlash ham shu yerda bajariladi.',
-      button: 'Bookly saytini ochish'
-    },
-    tr: {
-      title: 'Bookly üzerinden işletme oluştur',
-      text: 'İşletme oluşturma Bookly web sitesinde yapılır. Kayıt ve kurulum da orada tamamlanır.',
-      button: 'Bookly sitesini aç'
-    },
-    ar: {
-      title: 'إنشاء نشاط عبر Bookly',
-      text: 'إنشاء النشاط متاح على موقع Bookly. يتم التسجيل والإعداد هناك أيضًا.',
-      button: 'فتح موقع Bookly'
-    }
+    ru: { title: 'Создать бизнес через Bookly', text: 'Создание бизнеса доступно на сайте Bookly. Там же проходит регистрация и подключение сервиса.', button: 'Открыть сайт Bookly' },
+    en: { title: 'Create your business on Bookly', text: 'Business creation is available on the Bookly website. Registration and setup are completed there.', button: 'Open Bookly website' },
+    uz: { title: 'Bookly orqali biznes yaratish', text: 'Biznes yaratish Bookly saytida mavjud. Ro‘yxatdan o‘tish va sozlash ham shu yerda bajariladi.', button: 'Bookly saytini ochish' },
+    tr: { title: 'Bookly üzerinden işletme oluştur', text: 'İşletme oluşturma Bookly web sitesinde yapılır. Kayıt ve kurulum da orada tamamlanır.', button: 'Bookly sitesini aç' },
+    ar: { title: 'إنشاء نشاط عبر Bookly', text: 'إنشاء النشاط متاح على موقع Bookly. يتم التسجيل والإعداد هناك أيضًا.', button: 'فتح موقع Bookly' }
   };
 
   function language() {
-    try {
-      return (localStorage.getItem('bookly_language') || 'en').slice(0, 2);
-    } catch (_) {
-      return 'en';
-    }
+    try { return (localStorage.getItem('bookly_language') || 'en').slice(0, 2); } catch (_) { return 'en'; }
   }
-
-  function labels() {
-    return LABELS[language()] || LABELS.en;
-  }
+  function labels() { return LABELS[language()] || LABELS.en; }
 
   function openWebsite() {
     try {
@@ -59,7 +32,6 @@
         return;
       }
     } catch (_) {}
-
     window.open(WEBSITE_URL, '_blank', 'noopener,noreferrer');
   }
 
@@ -91,18 +63,12 @@
       [/activate your subscription/gi, 'use Bookly'],
       [/Bookly Pro/gi, 'Bookly']
     ];
-
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    var nodes = [];
-    var node;
+    var nodes = [], node;
     while ((node = walker.nextNode())) nodes.push(node);
-
     nodes.forEach(function (textNode) {
-      var value = textNode.nodeValue || '';
-      var next = value;
-      replacements.forEach(function (entry) {
-        next = next.replace(entry[0], entry[1]);
-      });
+      var value = textNode.nodeValue || '', next = value;
+      replacements.forEach(function (entry) { next = next.replace(entry[0], entry[1]); });
       if (next !== value) textNode.nodeValue = next;
     });
   }
@@ -126,66 +92,38 @@
     var copy = labels();
     var card = document.createElement('div');
     card.className = 'bookly-web-create';
-    card.innerHTML = '<strong>' + copy.title + '</strong>' +
-      '<span>' + copy.text + '</span>' +
-      '<button type="button">' + copy.button + '</button>';
+    card.innerHTML = '<strong>' + copy.title + '</strong><span>' + copy.text + '</span><button type="button">' + copy.button + '</button>';
     card.querySelector('button').addEventListener('click', openWebsite);
     if (anchor.parentNode) anchor.parentNode.insertBefore(card, anchor);
   }
 
   function hideSubscriptions() {
-    document.querySelectorAll(
-      '.subscription, .subscription-head, .subscription-page, [data-tab="subscription"]'
-    ).forEach(function (node) {
-      if (!node.classList.contains('subscription-modal')) {
-        node.classList.add('bookly-policy-hidden');
-      }
+    document.querySelectorAll('.subscription, .subscription-head, .subscription-page, [data-tab="subscription"]').forEach(function (node) {
+      if (!node.classList.contains('subscription-modal')) node.classList.add('bookly-policy-hidden');
     });
-
     document.querySelectorAll('button,a,[role="button"],[role="tab"]').forEach(function (node) {
       var text = normalized(node);
-      if (!text || !BILLING_RE.test(text)) return;
-      node.classList.add('bookly-policy-hidden');
+      if (text && BILLING_RE.test(text)) node.classList.add('bookly-policy-hidden');
     });
   }
 
   function restoreAdminLanding() {
-    try {
-      if (sessionStorage.getItem('bookly_admin_landing_fixed') === '1') return;
-    } catch (_) {}
-
     var bodyText = normalized(document.body);
     if (!/мои\s+бизнесы|my\s+businesses|bizneslarim|işletmelerim/i.test(bodyText)) return;
-
-    var hasBack = false;
-    var homeButton = null;
-    document.querySelectorAll('button,a,[role="button"]').forEach(function (node) {
-      var text = normalized(node);
-      if (/^(←\s*)?(назад|back|orqaga|geri)$/i.test(text)) {
-        hasBack = true;
-      }
-      if (!homeButton && /^(главная|home|bosh\s+sahifa|ana\s+sayfa)$/i.test(text)) {
-        homeButton = node;
-      }
-    });
-
-    if (!hasBack || !homeButton) return;
-
     try {
-      sessionStorage.setItem('bookly_admin_landing_fixed', '1');
+      if (sessionStorage.getItem('bookly_admin_landing_v2') === '1') return;
+      var homeButton = document.querySelector('.admin-bottom-nav button:first-child');
+      if (!homeButton) return;
+      sessionStorage.setItem('bookly_admin_landing_v2', '1');
+      window.setTimeout(function () {
+        try { homeButton.click(); } catch (_) {}
+      }, 80);
     } catch (_) {}
-
-    window.setTimeout(function () {
-      try { homeButton.click(); } catch (_) {}
-    }, 0);
   }
 
   function protectCreation() {
-    var createButtons = [];
     document.querySelectorAll('button,a,[role="button"]').forEach(function (node) {
-      var text = normalized(node);
-      var cleanText = text.replace(/^\+\s*/, '').trim();
-
+      var text = normalized(node), cleanText = text.replace(/^\+\s*/, '').trim();
       if (ADD_BUSINESS_RE.test(cleanText)) {
         if (node.dataset.booklyAddBusinessBound !== '1') {
           node.dataset.booklyAddBusinessBound = '1';
@@ -197,27 +135,19 @@
         }
         return;
       }
-
-      if (CREATE_RE.test(text)) createButtons.push(node);
-    });
-
-    createButtons.forEach(function (button) {
-      if (button.dataset.booklyPolicyBound === '1') return;
-      button.dataset.booklyPolicyBound = '1';
-
-      var personalBusinessCard = button.closest('.personal-business-card');
+      if (!CREATE_RE.test(text) || node.dataset.booklyPolicyBound === '1') return;
+      node.dataset.booklyPolicyBound = '1';
+      var personalBusinessCard = node.closest('.personal-business-card');
       if (personalBusinessCard && personalBusinessCard.querySelector('h2')) {
-        var copy = labels();
-        button.textContent = copy.button;
-        button.addEventListener('click', function (event) {
+        node.textContent = labels().button;
+        node.addEventListener('click', function (event) {
           event.preventDefault();
           event.stopImmediatePropagation();
           openWebsite();
         }, true);
         return;
       }
-
-      var container = button.closest('form, .card, section, article, div');
+      var container = node.closest('form, .card, section, article, div');
       if (container) {
         container.classList.add('bookly-policy-hidden');
         addWebsiteCard(container.parentElement || container);
@@ -234,6 +164,19 @@
       }
     });
   }
+
+  // Capture the action before React's onClick can change businessPanel to the
+  // obsolete create state. This removes the race that exposed createBusiness.
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    var node = target && target.closest ? target.closest('button,a,[role="button"]') : null;
+    if (!node) return;
+    var text = normalized(node).replace(/^\+\s*/, '').trim();
+    if (!ADD_BUSINESS_RE.test(text)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openWebsite();
+  }, true);
 
   function scan() {
     addStyle();
