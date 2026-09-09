@@ -21,13 +21,17 @@ jobs:
           s = p.read_text()
 
           if 'client_specialist_notification_marker' in s:
-              raise SystemExit('patch already applied')
+              raise SystemExit('already patched')
 
-          marker = '''        telegram_api(
-            "sendMessage",
-            {
-                "chat_id": booking.client_telegram_id,
-'''
+          success = '"text": (\n                    "✅ <b>Вы успешно записаны!</b>\\n\\n"\n                    f"💈 {s.name}\\n"'
+          pos = s.rfind(success)
+          if pos < 0:
+              raise SystemExit('client success notification not found')
+
+          block_start = s.rfind('        telegram_api(', 0, pos)
+          if block_start < 0:
+              raise SystemExit('client telegram_api call not found')
+
           specialist_code = '''        # client_specialist_notification_marker
         specialist = (
             db.get(Specialist, booking.specialist_id)
@@ -41,20 +45,13 @@ jobs:
         )
 
 '''
-          if marker not in s:
-              raise SystemExit('client notification marker not found')
+          s = s[:block_start] + specialist_code + s[block_start:]
 
-          s = s.replace(marker, specialist_code + marker, 1)
-
-          service_line = '                    f"💈 {s.name}\\n"\n'
-          if service_line not in s:
-              raise SystemExit('client service line not found')
-
-          s = s.replace(
-              service_line,
-              service_line + '                    f"{specialist_line}"\n',
-              1,
-          )
+          pos = s.rfind(success)
+          if pos < 0:
+              raise SystemExit('client success notification disappeared')
+          insert_at = pos + len(success)
+          s = s[:insert_at] + '                    f"{specialist_line}"\n' + s[insert_at:]
 
           p.write_text(s)
           PY
