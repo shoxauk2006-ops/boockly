@@ -35,8 +35,9 @@
   top:auto!important;
   right:auto!important;
   transform:none!important;
-  z-index:10001!important;
   flex:0 0 auto;
+  display:flex;
+  align-items:center;
 }
 
 .personal-menu-button{
