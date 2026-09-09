@@ -389,10 +389,6 @@
   .personal-info-menu,.skeleton-line,.skeleton-button{animation:none!important}
 }
 
-/* Main home chrome: keep the info control in the Bookly header, not inside the hero. */
-body:has(.personal-home) header{
-  padding-right:64px!important;
-}
 body:has(.personal-home) header .language-select{
   width:82px!important;
   min-width:82px!important;
@@ -407,7 +403,6 @@ body:has(.personal-home) header .language-select{
 }
 
 @media(max-width:520px){
-  body:has(.personal-home) header{padding-right:60px!important}
   body:has(.personal-home) header .language-select{width:78px!important;min-width:78px!important}
 }
 .header-actions{
