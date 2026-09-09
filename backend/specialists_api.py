@@ -221,7 +221,7 @@ def _telegram_api_with_client_specialist(method, payload):
                             payload = dict(payload)
                             payload["text"] = text_value.replace(
                                 "📅",
-                                f"👨‍💼 {specialist.name}\\n📅",
+                                f"👨‍💼 {specialist.name}\n📅",
                                 1,
                             )
             except Exception:
