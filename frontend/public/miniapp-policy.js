@@ -151,7 +151,16 @@
   function protectCreation() {
     var createButtons = [];
     document.querySelectorAll('button,a,[role="button"]').forEach(function (node) {
-      if (CREATE_RE.test(normalized(node))) createButtons.push(node);
+      var text = normalized(node);
+      var cleanText = text.replace(/^\+\s*/, '').trim();
+
+      // The Businesses list must keep its explicit Add Business action.
+      // Once it opens the creation form, the form itself is redirected to the website.
+      if (/^(создать\s+бизнес|добавить\s+бизнес|add\s+business|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط)$/i.test(cleanText)) {
+        return;
+      }
+
+      if (CREATE_RE.test(text)) createButtons.push(node);
     });
 
     createButtons.forEach(function (button) {
