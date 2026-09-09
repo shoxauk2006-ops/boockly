@@ -1,0 +1,38 @@
+name: Fix client specialist notification
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[client-specialist-notification]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch notification
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text()
+          old = '''        telegram_api(\n            "sendMessage",\n            {\n                "chat_id": booking.client_telegram_id,\n                "text": (\n                    "✅ <b>Вы успешно записаны!</b>\\n\\n"\n                    f"💈 {s.name}\\n"\n                    f"📅 {display_day}\\n"\n                    f"🕐 {display_start}–"\n                    f"{display_end}'''
+          new = '''        specialist = (\n            db.get(Specialist, booking.specialist_id)\n            if booking.specialist_id is not None\n            else None\n        )\n        specialist_line = (\n            f"👨‍💼 {specialist.name}\\n"\n            if specialist and specialist.name\n            else ""\n        )\n\n        telegram_api(\n            "sendMessage",\n            {\n                "chat_id": booking.client_telegram_id,\n                "text": (\n                    "✅ <b>Вы успешно записаны!</b>\\n\\n"\n                    f"💈 {s.name}\\n"\n                    f"{specialist_line}"\n                    f"📅 {display_day}\\n"\n                    f"🕐 {display_start}–"\n                    f"{display_end}'''
+          if old not in s:
+              raise SystemExit('expected client confirmation block not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+          python3 -m py_compile backend/app.py
+      - name: Commit and remove workflow
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add backend/app.py .github/workflows/fix-client-specialist-notification.yml
+          git commit -m 'fix: include specialist in client booking notification [client-specialist-notification]'
+          git push
+          git rm .github/workflows/fix-client-specialist-notification.yml
+          git commit -m 'chore: remove client specialist notification workflow [client-specialist-notification]'
+          git push
