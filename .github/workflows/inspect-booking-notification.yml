@@ -1,0 +1,27 @@
+name: Inspect booking notification
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('backend/app.py').read_text()
+          for needle in ['_BOOKLY_NOTIFY_TEXT','client_name','service.name','sendMessage','chat_id','new']:
+              print('\n===', needle, '===')
+              start=0
+              n=0
+              while True:
+                  i=s.find(needle,start)
+                  if i<0 or n>=8: break
+                  print(s[max(0,i-700):i+1200])
+                  print('\n---')
+                  start=i+len(needle); n+=1
+          PY
