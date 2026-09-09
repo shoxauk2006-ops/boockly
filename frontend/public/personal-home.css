@@ -31,9 +31,10 @@
 }
 
 .personal-home-menu{
-  position:fixed!important;
-  top:44px!important;
-  right:max(12px,calc((100vw - 640px)/2 + 14px))!important;
+  position:absolute!important;
+  top:50%!important;
+  right:0!important;
+  transform:translateY(-50%)!important;
   z-index:10001!important;
 }
 
