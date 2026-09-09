@@ -1,4 +1,4 @@
-name: Fix businesses section flow
+name: Fix client timezone copy
 on:
   push:
     branches: [main]
@@ -6,59 +6,95 @@ permissions:
   contents: write
 jobs:
   patch:
-    if: ${{ !contains(github.event.head_commit.message, '[businesses-section-flow-applied]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[client-timezone-copy]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
-      - name: Patch businesses flow
+      - name: Patch client copy
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('frontend/src/main.tsx')
           s = p.read_text()
-
-          old = """  const [businessPanel, setBusinessPanel] =\n    useState<'closed' | 'list' | 'create'>('closed');"""
-          new = """  const [businessPanel, setBusinessPanel] =\n    useState<'closed' | 'list' | 'create'>(\n      initialTab === 'businesses' ? 'list' : 'closed'\n    );"""
+          old = '''<p
+  className="muted"
+  style={{
+    marginTop: 10,
+    marginBottom: 8,
+    fontSize: 13
+  }}
+>
+  {t('client.timezone')}{' '}
+  {business.timezone
+    ? formatGMTOffset(
+        getTimeZoneOffsetMinutes(
+          business.timezone
+        )
+      )
+    : 'GMT+0'}
+</p>
+  <p
+  className="muted"
+  style={{
+    marginBottom: 0
+  }}
+>
+    {t('client.chooseServiceHint')}
+  </p>'''
+          new = '''<div
+  className="bookly-timezone-note"
+  style={{
+    marginTop: 12,
+    marginBottom: 4,
+    padding: '11px 13px',
+    borderRadius: 14,
+    background: '#f7f8fa',
+    border: '1px solid #e7eaee'
+  }}
+>
+  <p
+    className="muted"
+    style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}
+  >
+    <strong>{t('owner.businessTimezone', 'Часовой пояс бизнеса')}:</strong>{' '}
+    {business.timezone
+      ? formatGMTOffset(
+          getTimeZoneOffsetMinutes(
+            business.timezone
+          )
+        )
+      : 'GMT+0'}
+  </p>
+  <p
+    className="muted"
+    style={{ margin: '5px 0 0', fontSize: 12, lineHeight: 1.45 }}
+  >
+    Время свободных слотов отображается по вашему часовому поясу:{' '}
+    <strong>{formatGMTOffset(getTimeZoneOffsetMinutes(getClientTimeZone()))}</strong>
+  </p>
+</div>
+  <p
+  className="muted"
+  style={{
+    marginBottom: 0
+  }}
+>
+    Выберите специалиста ниже, чтобы продолжить.
+  </p>'''
           if old not in s:
-              raise SystemExit('businessPanel state block not found')
-          s = s.replace(old, new, 1)
-
-          old = """    setBusiness(null);\n    return null;\n  };"""
-          new = """    setBusiness(null);\n    setBusinessPanel('list');\n    return null;\n  };"""
-          if old not in s:
-              raise SystemExit('loadBusinesses empty-state block not found')
-          s = s.replace(old, new, 1)
-
-          old = """  if (!business) {\n    return (\n      <section>"""
-          new = """  if (!business && businessPanel !== 'create') {\n    return (\n      <section>\n        <button\n          className=\"back\"\n          onClick={onBack}\n        >\n          ← {t('common.back')}\n        </button>\n\n        <div className=\"card\">\n          <h2>{t('nav.businesses', 'Мои бизнесы')}</h2>\n          <p className=\"muted\">\n            {t('home.createBusinessHint', 'Добавьте бизнес, чтобы начать работу в Bookly.')}\n          </p>\n          <button\n            className=\"primary full\"\n            style={{ marginTop: 12 }}\n            onClick={() => setBusinessPanel('create')}\n          >\n            + {t('owner.addBusiness', 'Добавить бизнес')}\n          </button>\n        </div>\n      </section>\n    );\n  }\n\n  if (!business) {\n    return (\n      <section>"""
-          if old not in s:
-              raise SystemExit('no-business branch start not found')
-          s = s.replace(old, new, 1)
-
-          old = """  onAdmin={() => {\n    setAdminTab('home');\n    setMode('admin');\n  }}"""
-          new = """  onAdmin={() => {\n    setAdminTab('businesses');\n    setMode('admin');\n  }}"""
-          if old not in s:
-              raise SystemExit('PersonalHome onAdmin block not found')
-          s = s.replace(old, new, 1)
-
-          old = """    <h2>\n      {businesses.length\n        ? businesses.length === 1\n          ? businesses[0].name\n          : t('nav.businesses', 'Мои бизнесы')\n        : t('owner.addBusiness', 'Создать бизнес')}\n    </h2>\n\n    <p>\n      {businesses.length\n        ? t(\n            'home.manageBusiness',\n            'Управляйте своим бизнесом в Bookly'\n          )\n        : t(\n            'home.createBusinessHint',\n            'Создайте свой бизнес в Bookly'\n          )}\n    </p>\n\n    <button\n      className=\"personal-white-button\"\n      onClick={onAdmin}\n    >\n      {businesses.length\n        ? t('home.manage', 'Управлять')\n        : t('owner.createBusiness', 'Создать бизнес')}\n    </button>"""
-          new = """    <h2>\n      {t('nav.businesses', 'Мои бизнесы')}\n    </h2>\n\n    <p>\n      {businesses.length\n        ? t(\n            'home.manageBusiness',\n            'Управляйте своими бизнесами в Bookly'\n          )\n        : t(\n            'home.createBusinessHint',\n            'Добавьте свой бизнес в Bookly'\n          )}\n    </p>\n\n    <button\n      className=\"personal-white-button\"\n      onClick={onAdmin}\n    >\n      {t('common.open', 'Открыть')}\n    </button>"""
-          if old not in s:
-              raise SystemExit('PersonalHome business card block not found')
-          s = s.replace(old, new, 1)
-
-          p.write_text(s)
+              raise SystemExit('expected client timezone block not found')
+          p.write_text(s.replace(old, new, 1))
           PY
       - name: Commit and remove workflow
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add frontend/src/main.tsx .github/workflows/fix-client-timezone-copy.yml
-          git commit -m 'fix: open businesses section before business creation [businesses-section-flow-applied]'
+          git commit -m 'fix: clarify client timezone display [client-timezone-copy]'
           git push
           git rm .github/workflows/fix-client-timezone-copy.yml
-          git commit -m 'chore: remove temporary businesses flow workflow [businesses-section-flow-applied]'
+          git commit -m 'chore: remove temporary timezone workflow [client-timezone-copy]'
           git push
