@@ -1066,19 +1066,39 @@ def telegram_api(method: str, payload: dict):
 
 
 def notify_owner_new_booking(db, booking, service):
-    business=db.get(Business, booking.business_id)
+    business = db.get(Business, booking.business_id)
     if not business:
         return
-    text=(
-        "🔔 <b>Новая запись в Bookly</b>\n\n"
-        f"👤 {booking.client_name}\n"
-        f"📞 {booking.client_phone or 'номер не передан'}\n"
-        f"💈 {service.name}\n"
-        f"📅 {booking.day.isoformat()}\n"
-        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\n"
-        f"🆔 #{booking.id}"
+
+    specialist = None
+    if getattr(booking, "specialist_id", None) is not None:
+        specialist = db.get(Specialist, booking.specialist_id)
+
+    lines = [
+        "🔔 <b>Новая запись в Bookly</b>",
+        "",
+        f"👤 {booking.client_name}",
+        f"📞 {booking.client_phone or 'номер не передан'}",
+        f"💈 {service.name}",
+    ]
+
+    if specialist and specialist.name:
+        lines.append(f"👨‍💼 Специалист: {specialist.name}")
+
+    lines.extend([
+        f"📅 {booking.day.isoformat()}",
+        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}",
+        f"🆔 #{booking.id}",
+    ])
+
+    telegram_api(
+        "sendMessage",
+        {
+            "chat_id": business.owner_telegram_id,
+            "text": "\n".join(lines),
+            "parse_mode": "HTML",
+        },
     )
-    telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
 
 _BOOKLY_FINAL_NOTIFICATION_WRAPPER = True
 
