@@ -13,25 +13,58 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Patch notification
+      - name: Patch client confirmation
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('backend/app.py')
           s = p.read_text()
-          old = '''        telegram_api(\n            "sendMessage",\n            {\n                "chat_id": booking.client_telegram_id,\n                "text": (\n                    "✅ <b>Вы успешно записаны!</b>\\n\\n"\n                    f"💈 {s.name}\\n"\n                    f"📅 {display_day}\\n"\n                    f"🕐 {display_start}–"\n                    f"{display_end}'''
-          new = '''        specialist = (\n            db.get(Specialist, booking.specialist_id)\n            if booking.specialist_id is not None\n            else None\n        )\n        specialist_line = (\n            f"👨‍💼 {specialist.name}\\n"\n            if specialist and specialist.name\n            else ""\n        )\n\n        telegram_api(\n            "sendMessage",\n            {\n                "chat_id": booking.client_telegram_id,\n                "text": (\n                    "✅ <b>Вы успешно записаны!</b>\\n\\n"\n                    f"💈 {s.name}\\n"\n                    f"{specialist_line}"\n                    f"📅 {display_day}\\n"\n                    f"🕐 {display_start}–"\n                    f"{display_end}'''
-          if old not in s:
-              raise SystemExit('expected client confirmation block not found')
-          p.write_text(s.replace(old, new, 1))
+
+          if 'client_specialist_notification_marker' in s:
+              raise SystemExit('patch already applied')
+
+          marker = '''        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": booking.client_telegram_id,
+'''
+          specialist_code = '''        # client_specialist_notification_marker
+        specialist = (
+            db.get(Specialist, booking.specialist_id)
+            if booking.specialist_id is not None
+            else None
+        )
+        specialist_line = (
+            f"👨‍💼 {specialist.name}\\n"
+            if specialist and specialist.name
+            else ""
+        )
+
+'''
+          if marker not in s:
+              raise SystemExit('client notification marker not found')
+
+          s = s.replace(marker, specialist_code + marker, 1)
+
+          service_line = '                    f"💈 {s.name}\\n"\n'
+          if service_line not in s:
+              raise SystemExit('client service line not found')
+
+          s = s.replace(
+              service_line,
+              service_line + '                    f"{specialist_line}"\n',
+              1,
+          )
+
+          p.write_text(s)
           PY
           python3 -m py_compile backend/app.py
-      - name: Commit and remove workflow
+      - name: Commit patch and remove workflow
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add backend/app.py .github/workflows/fix-client-specialist-notification.yml
-          git commit -m 'fix: include specialist in client booking notification [client-specialist-notification]'
+          git commit -m 'fix: include specialist in client booking confirmation [client-specialist-notification]'
           git push
           git rm .github/workflows/fix-client-specialist-notification.yml
           git commit -m 'chore: remove client specialist notification workflow [client-specialist-notification]'
