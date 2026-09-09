@@ -5,6 +5,7 @@ from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 
+from . import app as app_module
 from .app import (
     SessionLocal,
     Business,
@@ -191,3 +192,41 @@ def replace_specialist_working_hours(specialist_id: int, payload: list[Specialis
         db.commit()
         db.refresh(specialist)
         return _serialize(db, specialist)
+
+
+# The client confirmation is built inside app.py. Wrap the already-final telegram
+# sender here so confirmations sent to clients also include the selected specialist.
+_original_telegram_api = app_module.telegram_api
+
+
+def _telegram_api_with_client_specialist(method, payload):
+    if method == "sendMessage" and isinstance(payload, dict):
+        text_value = payload.get("text")
+        chat_id = payload.get("chat_id")
+        if isinstance(text_value, str) and "Вы успешно записаны!" in text_value and chat_id:
+            try:
+                with SessionLocal() as db:
+                    booking = (
+                        db.query(Booking)
+                        .filter(
+                            Booking.client_telegram_id == int(chat_id),
+                            Booking.status == "confirmed",
+                        )
+                        .order_by(Booking.created_at.desc(), Booking.id.desc())
+                        .first()
+                    )
+                    if booking and booking.specialist_id is not None:
+                        specialist = db.get(Specialist, booking.specialist_id)
+                        if specialist and specialist.name and "👨‍💼" not in text_value:
+                            payload = dict(payload)
+                            payload["text"] = text_value.replace(
+                                "📅",
+                                f"👨‍💼 {specialist.name}\\n📅",
+                                1,
+                            )
+            except Exception:
+                pass
+    return _original_telegram_api(method, payload)
+
+
+app_module.telegram_api = _telegram_api_with_client_specialist
