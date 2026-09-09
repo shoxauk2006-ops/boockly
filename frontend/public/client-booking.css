@@ -245,3 +245,196 @@ body:has(.client-hero) .card:has(input[type="text"]):has(input[type="tel"])::bef
   body:has(.client-hero) .card .primary.full,
   body:has(.client-hero) .card > .primary:last-child{margin-top:12px}
 }
+
+/* Specialist picker — spacious profile cards instead of dense black buttons. */
+body:has(.client-hero) section > .card:has(> div > button.full){
+  padding:10px;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div{
+  gap:12px!important;
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full{
+  position:relative;
+  min-height:82px;
+  margin:0;
+  padding:13px 48px 13px 13px;
+  border:1px solid #e5e8ec;
+  border-radius:20px;
+  background:#fff;
+  color:#111;
+  box-shadow:0 8px 24px rgba(15,23,42,.045);
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full::after{
+  content:'›';
+  position:absolute;
+  right:15px;
+  top:50%;
+  transform:translateY(-50%);
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#f1f3f5;
+  color:#111;
+  font-size:25px;
+  font-weight:400;
+  line-height:1;
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full:active{
+  transform:scale(.985);
+  box-shadow:0 4px 14px rgba(15,23,42,.04);
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full img,
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full > span:first-child{
+  width:58px!important;
+  height:58px!important;
+  border-radius:18px!important;
+  background:#f0f1f3!important;
+  color:#111!important;
+  font-size:20px!important;
+  font-weight:800!important;
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full > span:last-child{
+  gap:4px!important;
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full strong{
+  font-size:17px;
+  letter-spacing:-.25px;
+}
+body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full small{
+  color:#8a919b;
+  font-size:12px;
+}
+
+/* Selected specialist summary. */
+body:has(.client-hero) section > .card:has(> button.ghost.full){
+  padding:12px 14px;
+  background:#fff;
+}
+body:has(.client-hero) section > .card:has(> button.ghost.full) > p{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* Business card — more editorial and spacious, matching the specialist cards. */
+body:has(.client-hero) .client-business-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+body:has(.client-hero) .client-business-header-info{
+  min-width:0;
+  flex:1;
+}
+body:has(.client-hero) .client-business-header h1{
+  margin:0 0 6px;
+  font-size:28px;
+  line-height:1.05;
+  letter-spacing:-.9px;
+}
+body:has(.client-hero) .client-business-header-info p{
+  margin:0;
+  color:#7a828c;
+  font-size:13px;
+  line-height:1.4;
+}
+body:has(.client-hero) .bookly-business-avatar,
+body:has(.client-hero) .client-business-thumb{
+  width:92px!important;
+  height:92px!important;
+  flex:0 0 92px;
+  object-fit:cover;
+  object-position:center;
+  border-radius:20px;
+  border:1px solid #e5e8ec;
+  box-shadow:0 8px 22px rgba(15,23,42,.07);
+}
+body:has(.client-hero) .client-contact-actions{
+  display:grid;
+  gap:8px;
+  margin-top:16px;
+  padding-top:14px;
+  border-top:1px solid #eef0f2;
+}
+body:has(.client-hero) .client-phone-row,
+body:has(.client-hero) .client-contact-button{
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  background:#f7f8fa;
+  border:1px solid #e7eaee;
+}
+body:has(.client-hero) .client-phone-number,
+body:has(.client-hero) .client-contact-label{
+  min-width:0;
+  color:#303640;
+  font-size:13px;
+  font-weight:650;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body:has(.client-hero) .client-copy-button{
+  flex:0 0 auto;
+  margin:0!important;
+  padding:8px 10px!important;
+  min-height:34px!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  color:#111!important;
+  border:1px solid #e0e4e8!important;
+  box-shadow:none!important;
+}
+body:has(.client-hero) .client-contact-arrow{
+  color:#9299a2;
+  font-size:21px;
+}
+body:has(.client-hero) .client-save-button{
+  width:100%;
+  margin-top:10px;
+  background:#111;
+  color:#fff;
+  border-radius:14px;
+}
+body:has(.client-hero) .client-save-button.saved{
+  background:#eef0f3;
+  color:#111;
+  box-shadow:none;
+}
+
+/* Timezone note: keep the business zone visible while making the display rule clearer. */
+body:has(.client-hero) .client-business-header + .client-contact-actions + .client-save-button + p.muted{
+  padding:10px 12px;
+  margin-top:10px!important;
+  border-radius:13px;
+  background:#f7f8fa;
+  color:#737b86!important;
+  line-height:1.45;
+}
+
+@media(max-width:420px){
+  body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full{
+    min-height:76px;
+    padding-right:44px;
+  }
+  body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full img,
+  body:has(.client-hero) section > .card:has(> div > button.full) > div > button.full > span:first-child{
+    width:54px!important;
+    height:54px!important;
+    border-radius:17px!important;
+  }
+  body:has(.client-hero) .client-business-header h1{font-size:25px}
+  body:has(.client-hero) .bookly-business-avatar,
+  body:has(.client-hero) .client-business-thumb{width:78px!important;height:78px!important;flex-basis:78px}
+}
