@@ -410,7 +410,7 @@ body:has(.personal-home) header .language-select{
 }
 
 /* Open business page: exact, straight film-strip rectangles kept fully inside the card. */
-.personal-home .personal-card:has(.personal-search){
+d:has(.personal-search){
   overflow:hidden!important;
 }
 
@@ -418,12 +418,12 @@ body:has(.personal-home) header .language-select{
   content:"";
   position:absolute;
   top:18px;
-  right:12px;
-  width:48px;
-  height:150px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='150' viewBox='0 0 48 150'%3E%3Cg fill='none' stroke='%23111' stroke-width='3'%3E%3Crect x='1.5' y='1.5' width='45' height='30'/%3E%3Crect x='1.5' y='41.5' width='45' height='30'/%3E%3Crect x='1.5' y='81.5' width='45' height='30'/%3E%3Crect x='1.5' y='121.5' width='45' height='30'/%3E%3C/g%3E%3C/svg%3E");
+  right:24px;
+  width:64px;
+  height:190px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='190' viewBox='0 0 64 190'%3E%3Cg fill='none' stroke='%23111' stroke-width='3'%3E%3Crect x='0' y='0' width='64' height='30'/%3E%3Crect x='0' y='40' width='64' height='30'/%3E%3Crect x='0' y='80' width='64' height='30'/%3E%3Crect x='0' y='120' width='64' height='30'/%3E%3Crect x='0' y='160' width='64' height='30'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat:no-repeat;
-  background-size:48px 150px;
+  background-size:64px 190px;
   pointer-events:none;
   z-index:0;
 }
