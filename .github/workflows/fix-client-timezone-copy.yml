@@ -1,0 +1,100 @@
+name: Fix client timezone copy
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[client-timezone-copy]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch client copy
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/src/main.tsx')
+          s = p.read_text()
+          old = '''<p
+  className="muted"
+  style={{
+    marginTop: 10,
+    marginBottom: 8,
+    fontSize: 13
+  }}
+>
+  {t('client.timezone')}{' '}
+  {business.timezone
+    ? formatGMTOffset(
+        getTimeZoneOffsetMinutes(
+          business.timezone
+        )
+      )
+    : 'GMT+0'}
+</p>
+  <p
+  className="muted"
+  style={{
+    marginBottom: 0
+  }}
+>
+    {t('client.chooseServiceHint')}
+  </p>'''
+          new = '''<div
+  className="bookly-timezone-note"
+  style={{
+    marginTop: 12,
+    marginBottom: 4,
+    padding: '11px 13px',
+    borderRadius: 14,
+    background: '#f7f8fa',
+    border: '1px solid #e7eaee'
+  }}
+>
+  <p
+    className="muted"
+    style={{ margin: 0, fontSize: 12, lineHeight: 1.45 }}
+  >
+    <strong>{t('owner.businessTimezone', 'Часовой пояс бизнеса')}:</strong>{' '}
+    {business.timezone
+      ? formatGMTOffset(
+          getTimeZoneOffsetMinutes(
+            business.timezone
+          )
+        )
+      : 'GMT+0'}
+  </p>
+  <p
+    className="muted"
+    style={{ margin: '5px 0 0', fontSize: 12, lineHeight: 1.45 }}
+  >
+    Время свободных слотов отображается по вашему часовому поясу:{' '}
+    <strong>{formatGMTOffset(getTimeZoneOffsetMinutes(getClientTimeZone()))}</strong>
+  </p>
+</div>
+  <p
+  className="muted"
+  style={{
+    marginBottom: 0
+  }}
+>
+    Выберите специалиста ниже, чтобы продолжить.
+  </p>'''
+          if old not in s:
+              raise SystemExit('expected client timezone block not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+      - name: Commit and remove workflow
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add frontend/src/main.tsx .github/workflows/fix-client-timezone-copy.yml
+          git commit -m 'fix: clarify client timezone display [client-timezone-copy]'
+          git push
+          git rm .github/workflows/fix-client-timezone-copy.yml
+          git commit -m 'chore: remove temporary timezone workflow [client-timezone-copy]'
+          git push
