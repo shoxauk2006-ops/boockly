@@ -75,14 +75,6 @@ body:has(.personal-home) .personal-home-hero + .personal-business-card{
   margin-top:0!important;
 }
 
-/* Fixed utility button. */
-body:has(.personal-home) .personal-home-menu{
-  position:fixed!important;
-  top:84px!important;
-  right:12px!important;
-  z-index:10050!important;
-}
-
 body:has(.personal-home) .personal-menu-button{
   width:40px!important;
   height:40px!important;
@@ -128,26 +120,6 @@ body:has(.personal-home) .personal-business-card .home-admin-stat-value{
   font-weight:850!important;
 }
 
-@media(max-width:480px){
-  body:has(.personal-home) .personal-business-card{
-    margin-bottom:10px!important;
-    padding:12px 13px!important;
-    grid-template-columns:minmax(0,1fr) auto!important;
-    column-gap:10px!important;
-  }
-
-  body:has(.personal-home) .personal-business-card h2{font-size:16px!important}
-  body:has(.personal-home) .personal-business-card .personal-white-button{
-    min-width:104px!important;
-    min-height:40px!important;
-    padding:9px 12px!important;
-    font-size:12px!important;
-  }
-
-  body:has(.personal-home) .personal-home-menu{
-    top:80px!important;
-    right:10px!important;
-  }
 
   body:has(.personal-home) .personal-business-card .home-admin-stats{
     gap:7px!important;
