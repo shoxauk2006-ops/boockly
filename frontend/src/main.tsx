@@ -768,7 +768,7 @@ const openClient = (
  {mode==='home' && (
   <PersonalHome
   onAdmin={() => {
-    setAdminTab('businesses');
+    setAdminTab('home');
     setMode('admin');
   }}
   slug={clientSlug}
