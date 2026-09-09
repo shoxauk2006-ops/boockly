@@ -1296,6 +1296,8 @@ function PersonalHome({
           </div>
 
           <div className="personal-card">
+            <div className="personal-decor" aria-hidden="true" />
+            
             <span className="personal-eyebrow">
               {t('home.openBusiness', 'Найти место')}
             </span>
