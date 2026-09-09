@@ -995,10 +995,7 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   z-index:5;
 }
 .personal-home-menu{
-  position:fixed;
-  top:44px!important;
-  top:14px;
-  right:14px;
+  position:relative;
   z-index:10000;
 }
 
