@@ -154,9 +154,8 @@
       var text = normalized(node);
       var cleanText = text.replace(/^\+\s*/, '').trim();
 
-      // The Businesses list must keep its explicit Add Business action.
-      // Once it opens the creation form, the form itself is redirected to the website.
-      if (/^(создать\s+бизнес|добавить\s+бизнес|add\s+business|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط)$/i.test(cleanText)) {
+      // Keep the Businesses-list action. The actual creation form is handled below.
+      if (/^(добавить\s+бизнес|add\s+business|biznes\s+yaratish|işletme\s+oluştur)$/i.test(cleanText)) {
         return;
       }
 
