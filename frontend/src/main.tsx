@@ -634,7 +634,18 @@ const openClient = (
   </div>
 </header>
 
-  {menuOpen && (
+<button
+  type="button"
+  className="global-info-button"
+  onClick={() => {
+    setInfoSection('help');
+    setInfoModal(true);
+  }}
+>
+  ⓘ
+</button>
+
+{menuOpen && (
     <>
       <div
         className="menu-overlay"
@@ -666,31 +677,6 @@ const openClient = (
             }}>
               🏠 {t('nav.home')}
             </button>
-            <button
-  onClick={() => {
-    setInfoSection('help');
-    setInfoModal(true);
-    setMenuOpen(false);
-  }}
->
-  ℹ️ {t(
-  'info.howBooklyWorks',
-  'Как работает Bookly'
-)}
-</button>
-
-<button
-  onClick={() => {
-    setInfoSection('rules');
-    setInfoModal(true);
-    setMenuOpen(false);
-  }}
->
-  📄 {t(
-  'info.rulesAndContacts',
-  'Правила и контакты'
-)}
-</button>
 
             <button onClick={()=>{
               setAdminTab('services');
@@ -746,31 +732,7 @@ const openClient = (
             }}>
               🏠 {t('nav.home')}
             </button>
-            <button
-  onClick={() => {
-    setInfoSection('help');
-    setInfoModal(true);
-    setMenuOpen(false);
-  }}
->
-  ℹ️ {t(
-  'info.howBooklyWorks',
-  'Как работает Bookly'
-)}
-</button>
-
-<button
-  onClick={() => {
-    setInfoSection('rules');
-    setInfoModal(true);
-    setMenuOpen(false);
-  }}
->
-  📄 {t(
-  'info.rulesAndContacts',
-  'Правила и контакты'
-)}
-</button>
+            
 
           </nav>
         )}
