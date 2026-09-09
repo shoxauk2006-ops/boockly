@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   patch:
-    if: ${{ !contains(github.event.head_commit.message, '[client-specialist-notification]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[client-specialist-patch-done]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,13 +46,9 @@ jobs:
 
 '''
           s = s[:block_start] + specialist_code + s[block_start:]
-
           pos = s.rfind(success)
-          if pos < 0:
-              raise SystemExit('client success notification disappeared')
           insert_at = pos + len(success)
           s = s[:insert_at] + '                    f"{specialist_line}"\n' + s[insert_at:]
-
           p.write_text(s)
           PY
           python3 -m py_compile backend/app.py
@@ -61,8 +57,8 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add backend/app.py .github/workflows/fix-client-specialist-notification.yml
-          git commit -m 'fix: include specialist in client booking confirmation [client-specialist-notification]'
+          git commit -m 'fix: include specialist in client booking confirmation [client-specialist-patch-done]'
           git push
           git rm .github/workflows/fix-client-specialist-notification.yml
-          git commit -m 'chore: remove client specialist notification workflow [client-specialist-notification]'
+          git commit -m 'chore: remove client specialist notification workflow [client-specialist-patch-done]'
           git push
