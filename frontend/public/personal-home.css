@@ -409,7 +409,6 @@ body:has(.personal-home) header .language-select{
 @media(max-width:520px){
   body:has(.personal-home) header{padding-right:60px!important}
   body:has(.personal-home) header .language-select{width:78px!important;min-width:78px!important}
-  .personal-home-menu{top:44px!important}
 }
 .header-actions{
   display:flex;
