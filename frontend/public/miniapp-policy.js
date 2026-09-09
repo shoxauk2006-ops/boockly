@@ -11,6 +11,7 @@
   var CREATE_RE = /создать\s+бизнес|создание\s+бизнеса|добавить\s+бизнес|add\s+business|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط/i;
   var BILLING_RE = /подписк|subscription|тариф|tariff|trial|оплат|payment|billing|checkout|bookly\s*pro|telegram\s*stars|\bXTR\b|период\s+оплаты/i;
   var ADD_BUSINESS_RE = /^(добавить\s+бизнес|add\s+business|biznes\s+yaratish|işletme\s+oluştur)$/i;
+  var adminLandingCheckScheduled = false;
 
   var LABELS = {
     ru: { title: 'Создать бизнес через Bookly', text: 'Создание бизнеса доступно на сайте Bookly. Там же проходит регистрация и подключение сервиса.', button: 'Открыть сайт Bookly' },
@@ -108,17 +109,18 @@
   }
 
   function restoreAdminLanding() {
-    var bodyText = normalized(document.body);
-    if (!/мои\s+бизнесы|my\s+businesses|bizneslarim|işletmelerim/i.test(bodyText)) return;
-    try {
-      if (sessionStorage.getItem('bookly_admin_landing_v2') === '1') return;
+    if (adminLandingCheckScheduled) return;
+    adminLandingCheckScheduled = true;
+
+    // This is only an initial-entry guard. It must never fire again after
+    // the owner deliberately opens the Businesses section.
+    window.setTimeout(function () {
+      var bodyText = normalized(document.body);
+      if (!/мои\s+бизнесы|my\s+businesses|bizneslarim|işletmelerim/i.test(bodyText)) return;
       var homeButton = document.querySelector('.admin-bottom-nav button:first-child');
       if (!homeButton) return;
-      sessionStorage.setItem('bookly_admin_landing_v2', '1');
-      window.setTimeout(function () {
-        try { homeButton.click(); } catch (_) {}
-      }, 80);
-    } catch (_) {}
+      try { homeButton.click(); } catch (_) {}
+    }, 1200);
   }
 
   function protectCreation() {
