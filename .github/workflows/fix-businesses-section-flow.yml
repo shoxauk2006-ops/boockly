@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   patch:
-    if: ${{ !contains(github.event.head_commit.message, '[businesses-section-flow]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[businesses-section-flow-applied]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,9 +57,8 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add frontend/src/main.tsx .github/workflows/fix-businesses-section-flow.yml
-          git commit -m 'fix: open businesses section before business creation [businesses-section-flow]'
+          git commit -m 'fix: open businesses section before business creation [businesses-section-flow-applied]'
           git push
           git rm .github/workflows/fix-businesses-section-flow.yml
-          git commit -m 'chore: remove temporary businesses flow workflow [businesses-section-flow]'
+          git commit -m 'chore: remove temporary businesses flow workflow [businesses-section-flow-applied]'
           git push
-# trigger patch workflow
