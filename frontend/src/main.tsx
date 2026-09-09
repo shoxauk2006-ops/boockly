@@ -768,7 +768,7 @@ const openClient = (
  {mode==='home' && (
   <PersonalHome
   onAdmin={() => {
-    setAdminTab('home');
+    setAdminTab('businesses');
     setMode('admin');
   }}
   slug={clientSlug}
@@ -1339,22 +1339,18 @@ function PersonalHome({
     </span>
 
     <h2>
-      {businesses.length
-        ? businesses.length === 1
-          ? businesses[0].name
-          : t('nav.businesses', 'Мои бизнесы')
-        : t('owner.addBusiness', 'Создать бизнес')}
+      {t('nav.businesses', 'Мои бизнесы')}
     </h2>
 
     <p>
       {businesses.length
         ? t(
             'home.manageBusiness',
-            'Управляйте своим бизнесом в Bookly'
+            'Управляйте своими бизнесами в Bookly'
           )
         : t(
             'home.createBusinessHint',
-            'Создайте свой бизнес в Bookly'
+            'Добавьте свой бизнес в Bookly'
           )}
     </p>
 
@@ -1362,9 +1358,7 @@ function PersonalHome({
       className="personal-white-button"
       onClick={onAdmin}
     >
-      {businesses.length
-        ? t('home.manage', 'Управлять')
-        : t('owner.createBusiness', 'Создать бизнес')}
+      {t('common.open', 'Открыть')}
     </button>
   </div>
 )}
@@ -1760,7 +1754,9 @@ function Admin({
   const [loading, setLoading] = useState(true);
 
   const [businessPanel, setBusinessPanel] =
-    useState<'closed' | 'list' | 'create'>('closed');
+    useState<'closed' | 'list' | 'create'>(
+      initialTab === 'businesses' ? 'list' : 'closed'
+    );
 
     const [newBusinessName, setNewBusinessName] =
     useState('');
@@ -1949,6 +1945,7 @@ const [newBusinessHours, setNewBusinessHours] =
     }
 
     setBusiness(null);
+    setBusinessPanel('list');
     return null;
   };
 
@@ -2166,7 +2163,34 @@ const [newBusinessHours, setNewBusinessHours] =
     );
   }
 
-   if (!business) {
+   if (!business && businessPanel !== 'create') {
+    return (
+      <section>
+        <button
+          className="back"
+          onClick={onBack}
+        >
+          ← {t('common.back')}
+        </button>
+
+        <div className="card">
+          <h2>{t('nav.businesses', 'Мои бизнесы')}</h2>
+          <p className="muted">
+            {t('home.createBusinessHint', 'Добавьте бизнес, чтобы начать работу в Bookly.')}
+          </p>
+          <button
+            className="primary full"
+            style={{ marginTop: 12 }}
+            onClick={() => setBusinessPanel('create')}
+          >
+            + {t('owner.addBusiness', 'Добавить бизнес')}
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (!business) {
     return (
       <section>
         <button
