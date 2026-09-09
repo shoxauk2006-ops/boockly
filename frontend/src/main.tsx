@@ -605,20 +605,22 @@ const openClient = (
     <small>{t('app.tagline')}</small>
   </div>
 
-  <select
-    value={language}
-    onChange={(e) =>
-      changeLanguage(e.target.value as Language)
-    }
-    className="language-select"
-  >
-    {SUPPORTED_LANGUAGES.map((item) => (
-      <option key={item.code} value={item.code}>
-        {item.nativeLabel}
-      </option>
-    ))}
-  </select>
-   <div className="personal-home-menu">
+    <div className="header-actions">
+    <select
+      value={language}
+      onChange={(e) =>
+        changeLanguage(e.target.value as Language)
+      }
+      className="language-select"
+    >
+      {SUPPORTED_LANGUAGES.map((item) => (
+        <option key={item.code} value={item.code}>
+          {item.nativeLabel}
+        </option>
+      ))}
+    </select>
+
+    <div className="personal-home-menu">
   <button
     type="button"
     className="personal-menu-button"
@@ -658,7 +660,8 @@ const openClient = (
       </button>
     </div>
   )}
-</div>
+    </div>
+  </div>
 </header>
 
   {menuOpen && (
