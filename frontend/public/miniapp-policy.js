@@ -10,6 +10,7 @@
   var WEBSITE_URL = 'https://boockly.vercel.app/landing.html';
   var CREATE_RE = /создать\s+бизнес|создание\s+бизнеса|добавить\s+бизнес|add\s+business|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط/i;
   var BILLING_RE = /подписк|subscription|тариф|tariff|trial|оплат|payment|billing|checkout|bookly\s*pro|telegram\s*stars|\bXTR\b|период\s+оплаты/i;
+  var ADD_BUSINESS_RE = /^(добавить\s+бизнес|add\s+business|biznes\s+yaratish|işletme\s+oluştur)$/i;
 
   var LABELS = {
     ru: {
@@ -148,14 +149,52 @@
     });
   }
 
+  function restoreAdminLanding() {
+    try {
+      if (sessionStorage.getItem('bookly_admin_landing_fixed') === '1') return;
+    } catch (_) {}
+
+    var bodyText = normalized(document.body);
+    if (!/мои\s+бизнесы|my\s+businesses|bizneslarim|işletmelerim/i.test(bodyText)) return;
+
+    var hasBack = false;
+    var homeButton = null;
+    document.querySelectorAll('button,a,[role="button"]').forEach(function (node) {
+      var text = normalized(node);
+      if (/^(←\s*)?(назад|back|orqaga|geri)$/i.test(text)) {
+        hasBack = true;
+      }
+      if (!homeButton && /^(главная|home|bosh\s+sahifa|ana\s+sayfa)$/i.test(text)) {
+        homeButton = node;
+      }
+    });
+
+    if (!hasBack || !homeButton) return;
+
+    try {
+      sessionStorage.setItem('bookly_admin_landing_fixed', '1');
+    } catch (_) {}
+
+    window.setTimeout(function () {
+      try { homeButton.click(); } catch (_) {}
+    }, 0);
+  }
+
   function protectCreation() {
     var createButtons = [];
     document.querySelectorAll('button,a,[role="button"]').forEach(function (node) {
       var text = normalized(node);
       var cleanText = text.replace(/^\+\s*/, '').trim();
 
-      // Keep the Businesses-list action. The actual creation form is handled below.
-      if (/^(добавить\s+бизнес|add\s+business|biznes\s+yaratish|işletme\s+oluştur)$/i.test(cleanText)) {
+      if (ADD_BUSINESS_RE.test(cleanText)) {
+        if (node.dataset.booklyAddBusinessBound !== '1') {
+          node.dataset.booklyAddBusinessBound = '1';
+          node.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            openWebsite();
+          }, true);
+        }
         return;
       }
 
@@ -199,6 +238,7 @@
   function scan() {
     addStyle();
     hideSubscriptions();
+    restoreAdminLanding();
     protectCreation();
     replaceLegacyActivationCopy();
   }
