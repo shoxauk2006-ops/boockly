@@ -31,11 +31,12 @@
 }
 
 .personal-home-menu{
-  position:absolute!important;
-  top:50%!important;
-  right:0!important;
-  transform:translateY(-50%)!important;
+  position:relative!important;
+  top:auto!important;
+  right:auto!important;
+  transform:none!important;
   z-index:10001!important;
+  flex:0 0 auto;
 }
 
 .personal-menu-button{
