@@ -1,0 +1,79 @@
+name: Fix owner booking specialist notification
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[owner-specialist-notification]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch notification
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text()
+          old = '''def notify_owner_new_booking(db, booking, service):
+    business=db.get(Business, booking.business_id)
+    if not business:
+        return
+    text=(
+        "🔔 <b>Новая запись в Bookly</b>\\n\\n"
+        f"👤 {booking.client_name}\\n"
+        f"📞 {booking.client_phone or 'номер не передан'}\\n"
+        f"💈 {service.name}\\n"
+        f"📅 {booking.day.isoformat()}\\n"
+        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\\n"
+        f"🆔 #{booking.id}"
+    )
+    telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
+'''
+          new = '''def notify_owner_new_booking(db, booking, service):
+    business=db.get(Business, booking.business_id)
+    if not business:
+        return
+
+    specialist = (
+        db.get(Specialist, booking.specialist_id)
+        if booking.specialist_id is not None
+        else None
+    )
+    specialist_line = (
+        f"👨‍💼 {specialist.name}\\n"
+        if specialist and specialist.name
+        else ""
+    )
+
+    text=(
+        "🔔 <b>Новая запись в Bookly</b>\\n\\n"
+        f"👤 {booking.client_name}\\n"
+        f"📞 {booking.client_phone or 'номер не передан'}\\n"
+        f"💈 {service.name}\\n"
+        f"{specialist_line}"
+        f"📅 {booking.day.isoformat()}\\n"
+        f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\\n"
+        f"🆔 #{booking.id}"
+    )
+    telegram_api("sendMessage", {"chat_id":business.owner_telegram_id,"text":text,"parse_mode":"HTML"})
+'''
+          if old not in s:
+              raise SystemExit('expected notify_owner_new_booking block not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+          python3 -m py_compile backend/app.py
+      - name: Commit and remove workflow
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add backend/app.py .github/workflows/fix-owner-booking-specialist-notification.yml
+          git commit -m 'fix: include specialist in owner booking notification [owner-specialist-notification]'
+          git push
+          git rm .github/workflows/fix-owner-booking-specialist-notification.yml
+          git commit -m 'chore: remove temporary specialist notification workflow [owner-specialist-notification]'
+          git push
