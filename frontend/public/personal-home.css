@@ -411,3 +411,8 @@ body:has(.personal-home) header .language-select{
   body:has(.personal-home) header .language-select{width:78px!important;min-width:78px!important}
   .personal-home-menu{top:44px!important}
 }
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
