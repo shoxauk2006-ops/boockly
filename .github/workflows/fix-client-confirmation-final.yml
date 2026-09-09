@@ -1,0 +1,63 @@
+name: Fix client confirmation final
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('backend/app.py')
+          s = p.read_text()
+          marker = 'client_specialist_notification_marker'
+          if marker not in s:
+              success = '"text": (\n                    "✅ <b>Вы успешно записаны!</b>\\n\\n"\n                    f"💈 {s.name}\\n"'
+              pos = s.rfind(success)
+              if pos < 0:
+                  raise SystemExit('client confirmation block not found')
+              block_start = s.rfind('        telegram_api(', 0, pos)
+              if block_start < 0:
+                  raise SystemExit('client telegram call not found')
+              code = '''        # client_specialist_notification_marker
+        specialist = (
+            db.get(Specialist, booking.specialist_id)
+            if booking.specialist_id is not None
+            else None
+        )
+        specialist_line = (
+            f"👨‍💼 {specialist.name}\\n"
+            if specialist and specialist.name
+            else ""
+        )
+
+'''
+              s = s[:block_start] + code + s[block_start:]
+              pos = s.rfind(success)
+              insert_at = pos + len(success)
+              s = s[:insert_at] + '                    f"{specialist_line}"\n' + s[insert_at:]
+              p.write_text(s)
+          PY
+          python3 -m py_compile backend/app.py
+      - name: Commit and cleanup
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add backend/app.py .github/workflows/fix-client-confirmation-final.yml
+          if git diff --cached --quiet; then
+            git rm .github/workflows/fix-client-confirmation-final.yml
+            git commit -m 'chore: remove client confirmation patch workflow'
+          else
+            git commit -m 'fix: show specialist in client booking confirmation'
+            git rm .github/workflows/fix-client-confirmation-final.yml
+            git commit -m 'chore: remove client confirmation patch workflow'
+          fi
+          git push
