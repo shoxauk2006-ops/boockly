@@ -996,6 +996,7 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
 }
 .personal-home-menu{
   position:fixed;
+  top:44px!important;
   top:14px;
   right:14px;
   z-index:10000;
