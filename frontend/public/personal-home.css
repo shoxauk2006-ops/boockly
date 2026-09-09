@@ -435,12 +435,12 @@ d:has(.personal-search){
 
 @media(max-width:520px){
   .personal-home .personal-card:has(.personal-search)::before{
-    right:10px;
+    right:24px;
     top:18px;
-    width:42px;
-    height:132px;
-    background-size:42px 132px;
+    width:64px;
+    height:190px;
+    background-size:64px 190px;
   }
 
-  .personal-home-menu{top:44px!important}
+  .personal-home-menu{top:40px!important}
 }
