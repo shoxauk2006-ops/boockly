@@ -768,6 +768,7 @@ def account_billing(authorization: str = Header(default="")):
                     if subscription
                     and subscription.current_price is not None
                     else 0.0
+                ),
                  "pending_services_limit": (
     subscription.pending_services_limit
     if subscription
