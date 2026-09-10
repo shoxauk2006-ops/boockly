@@ -157,7 +157,11 @@ def _account_from_header(db, authorization: str) -> BooklyAccount:
     return account
 
 
-def _account_checkout_token(account_id: int, business_id: int) -> str:
+def _account_checkout_token(
+    account_id: int,
+    business_id: int,
+    owner_telegram_id: int,
+) -> str:
     from . import paddle_original
 
     secret = paddle_original.PADDLE_WEBHOOK_SECRET
@@ -166,13 +170,17 @@ def _account_checkout_token(account_id: int, business_id: int) -> str:
 
     payload = {
         "business_id": int(business_id),
-        "owner_telegram_id": int(business_id),
+        "owner_telegram_id": int(owner_telegram_id),
         "account_id": int(account_id),
         "exp": int(time_module.time()) + CHECKOUT_TOKEN_SECONDS,
     }
     raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     encoded = base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
-    signature = hmac.new(secret.encode("utf-8"), encoded.encode("ascii"), hashlib.sha256).hexdigest()
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        encoded.encode("ascii"),
+        hashlib.sha256,
+    ).hexdigest()
     return f"{encoded}.{signature}"
 
 
@@ -713,6 +721,10 @@ def account_paddle_checkout_token(authorization: str = Header(default="")):
 
         return {
             "ok": True,
-            "checkout_token": _account_checkout_token(account.id, business.id),
+            "checkout_token": _account_checkout_token(
+                account.id,
+                business.id,
+                business.owner_telegram_id,
+            ),
             "business_id": business.id,
         }
