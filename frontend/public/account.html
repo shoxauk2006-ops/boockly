@@ -1715,14 +1715,18 @@ businessForm.onsubmit=function(e){
   var createButton=document.getElementById('createBusiness');
 
   var editBusinessId=businessModal.dataset.editBusinessId || '';
-  var requestUrl=editBusinessId
+  var isEdit=!!editBusinessId;
+
+  var requestUrl=isEdit
     ? api+'/account/businesses/'+encodeURIComponent(editBusinessId)
     : api+'/account/businesses';
 
-  var requestMethod=editBusinessId ? 'PUT' : 'POST';
+  var requestMethod=isEdit ? 'PUT' : 'POST';
 
   createButton.disabled=true;
-  createButton.textContent='Creating...';
+  createButton.textContent=isEdit
+    ? 'Saving...'
+    : 'Creating...';
 
   fetch(requestUrl,{
     method:requestMethod,
@@ -1731,44 +1735,67 @@ businessForm.onsubmit=function(e){
       'Authorization':'Bearer '+session
     },
     body:JSON.stringify({
-  name:document.getElementById('businessName').value.trim(),
-  description:document.getElementById('businessDescription').value.trim(),
+      name:document.getElementById('businessName').value.trim(),
 
-  phone:(function(){
-    var digits=
-      document.getElementById('businessPhone')
-        .value
-        .replace(/\D/g,'');
+      description:
+        document.getElementById('businessDescription')
+          .value
+          .trim(),
 
-    var country=
-      document.getElementById('businessPhoneCountry').value;
+      phone:(function(){
+        var digits=
+          document.getElementById('businessPhone')
+            .value
+            .replace(/\D/g,'');
 
-    var code=
-      phoneCountryCodes[country] || '';
+        var country=
+          document.getElementById('businessPhoneCountry')
+            .value;
 
-    return digits
-      ? '+'+code+digits
-      : '';
-  })(),
+        var code=
+          phoneCountryCodes[country] || '';
 
-  address:document.getElementById('businessAddress').value.trim(),
-  timezone:document.getElementById('businessTimezone').value.trim() || 'Asia/Tashkent'
-})
+        return digits
+          ? '+'+code+digits
+          : '';
+      })(),
+
+      address:
+        document.getElementById('businessAddress')
+          .value
+          .trim(),
+
+      timezone:
+        document.getElementById('businessTimezone')
+          .value
+          .trim() || 'Asia/Tashkent'
+    })
   })
   .then(function(r){
     return r.json().then(function(d){
       if(!r.ok){
-        throw new Error(d.detail || d.error || 'Failed to create business');
+        throw new Error(
+          d.detail ||
+          d.error ||
+          (isEdit
+            ? 'Failed to update business'
+            : 'Failed to create business')
+        );
       }
+
       return d;
     });
   })
   .then(function(){
     closeBusinessModalWindow();
+
     delete businessModal.dataset.editBusinessId;
+
     businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
     businessModal.querySelector('h3').textContent='Add business';
+
     document.getElementById('createBusiness').textContent='Create business';
+
     loadBusinesses();
   })
   .catch(function(e){
@@ -1776,9 +1803,12 @@ businessForm.onsubmit=function(e){
   })
   .finally(function(){
     createButton.disabled=false;
-    createButton.textContent='Create business';
+
+    createButton.textContent=isEdit
+      ? 'Save changes'
+      : 'Create business';
   });
-};    
+};
 function loadBilling(){
 
   var businessEl=document.getElementById('billingBusiness');
