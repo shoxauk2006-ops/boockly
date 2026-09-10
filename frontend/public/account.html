@@ -750,6 +750,97 @@ body.logged-in .logout{
     min-width:72px;
   }
 }
+.billing-card{
+  grid-column:1 / -1;
+}
+
+.billing-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.billing-head h3{
+  margin:4px 0 5px;
+}
+
+.billing-status{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:10px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.billing-status.active{
+  color:#397044;
+  background:#f4faf5;
+  border:1px solid #dce9df;
+}
+
+.billing-status.inactive{
+  color:#737983;
+  background:#f5f6f7;
+  border:1px solid #e1e4e8;
+}
+
+.billing-details{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:9px;
+  margin-top:20px;
+}
+
+.billing-detail{
+  padding:13px;
+  border:1px solid #e5e8ec;
+  border-radius:13px;
+  background:#fafbfc;
+}
+
+.billing-detail span{
+  display:block;
+  color:#858b94;
+  font-size:10px;
+  margin-bottom:5px;
+}
+
+.billing-detail strong{
+  font-size:12px;
+  color:#17191d;
+}
+
+#billingCheckout{
+  max-width:300px;
+  margin-top:20px;
+}
+
+@media(max-width:760px){
+  .billing-details{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:560px){
+  .billing-head{
+    display:block;
+  }
+
+  .billing-status{
+    margin-top:12px;
+  }
+
+  .billing-details{
+    grid-template-columns:1fr;
+  }
+
+  #billingCheckout{
+    max-width:none;
+  }
+}
 </style>
 </head>
 <body>
@@ -794,7 +885,13 @@ body.logged-in .logout{
 >
   Businesses
 </button>
-    <button class="workspace-nav-item" type="button">Billing</button>
+    <button
+  class="workspace-nav-item"
+  type="button"
+  data-view="billing"
+>
+  Billing
+</button>
     <button class="workspace-nav-item" type="button">Account</button>
   </nav>
 
@@ -858,6 +955,58 @@ body.logged-in .logout{
     </section>
 
   </div>
+
+  <div id="billingView" class="workspace-view">
+
+  <section class="workspace-card billing-card">
+
+    <div class="billing-head">
+      <div>
+        <span class="card-label">BILLING</span>
+        <h3>Subscription</h3>
+        <p id="billingBusiness">
+          Loading business...
+        </p>
+      </div>
+
+      <span id="billingStatus" class="billing-status">
+        —
+      </span>
+    </div>
+
+    <div class="billing-details">
+
+      <div class="billing-detail">
+        <span>Plan</span>
+        <strong id="billingPlan">—</strong>
+      </div>
+
+      <div class="billing-detail">
+        <span>Services</span>
+        <strong id="billingServices">—</strong>
+      </div>
+
+      <div class="billing-detail">
+        <span>Price</span>
+        <strong id="billingPrice">—</strong>
+      </div>
+
+      <div class="billing-detail">
+        <span>Expires</span>
+        <strong id="billingExpires">—</strong>
+      </div>
+
+    </div>
+
+    <button id="billingCheckout" class="primary" type="button">
+      Continue to plans
+    </button>
+
+    <div id="billingMessage" class="status"></div>
+
+  </section>
+
+</div>
 
   <button id="logout" class="logout">Sign out</button>
 
@@ -1115,11 +1264,17 @@ document.getElementById('loginTab').onclick=function(){mode='login';this.classLi
 document.getElementById('registerTab').onclick=function(){mode='register';this.classList.add('active');document.getElementById('loginTab').classList.remove('active');submit.textContent='Create account';document.getElementById('password').autocomplete='new-password';clearErr()};
 document.getElementById('googleBtn').onclick=function(){err('Google sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};document.getElementById('appleBtn').onclick=function(){err('Apple sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};
 form.onsubmit=function(e){e.preventDefault();clearErr();submit.disabled=true;var isRegister=mode==='register';var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
+document.getElementById('billingCheckout').onclick=function(){
+  clearErr();
+  this.disabled=true;
+  goPricing();
+};
 document.getElementById('checkout').onclick=function(){clearErr();this.disabled=true;goPricing()};document.getElementById('logout').onclick=function(){
   localStorage.removeItem('bookly_session');
   document.body.classList.remove('logged-in');
   location.reload();
 };
+
 var businessModal=document.getElementById('businessModal');
 var businessForm=document.getElementById('businessForm');
 var closeBusinessModal=document.getElementById('closeBusinessModal');
@@ -1187,10 +1342,86 @@ businessForm.onsubmit=function(e){
     createButton.textContent='Create business';
   });
 };    
+function loadBilling(){
+
+  var businessEl=document.getElementById('billingBusiness');
+  var statusEl=document.getElementById('billingStatus');
+  var planEl=document.getElementById('billingPlan');
+  var servicesEl=document.getElementById('billingServices');
+  var priceEl=document.getElementById('billingPrice');
+  var expiresEl=document.getElementById('billingExpires');
+  var checkoutButton=document.getElementById('billingCheckout');
+  var messageEl=document.getElementById('billingMessage');
+
+  if(!businessEl)return;
+
+  businessEl.textContent='Loading business...';
+  statusEl.textContent='—';
+  statusEl.className='billing-status';
+  planEl.textContent='—';
+  servicesEl.textContent='—';
+  priceEl.textContent='—';
+  expiresEl.textContent='—';
+  messageEl.textContent='';
+
+  call('/account/billing',{
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  }).then(function(d){
+
+    var business=d.business;
+    var subscription=d.subscription;
+
+    businessEl.textContent=
+      'Subscription for '+business.name;
+
+    var active=!!subscription.active;
+
+    statusEl.textContent=
+      active ? 'Active' : 'Inactive';
+
+    statusEl.className=
+      'billing-status '+(active ? 'active' : 'inactive');
+
+    planEl.textContent=
+      active ? 'Active plan' : 'No active plan';
+
+    servicesEl.textContent=
+      active
+        ? String(subscription.services_limit)
+        : '—';
+
+    priceEl.textContent=
+      subscription.current_price
+        ? '$'+Number(subscription.current_price).toFixed(2)
+        : '—';
+
+    if(subscription.expires_at){
+      var date=new Date(subscription.expires_at);
+      expiresEl.textContent=
+        isNaN(date.getTime())
+          ? '—'
+          : date.toLocaleDateString();
+    }else{
+      expiresEl.textContent='—';
+    }
+
+    checkoutButton.textContent=
+      active ? 'Manage plan' : 'Continue to plans';
+
+  }).catch(function(e){
+
+    businessEl.textContent='';
+    messageEl.textContent=e.message;
+
+  });
+}
 function showWorkspaceView(view){
 
-  var overview=document.getElementById('overviewView');
-  var businesses=document.getElementById('businessesView');
+var overview=document.getElementById('overviewView');
+var businesses=document.getElementById('businessesView');
+var billing=document.getElementById('billingView');
 
   if(overview){
     overview.classList.toggle(
@@ -1205,6 +1436,13 @@ function showWorkspaceView(view){
       view==='businesses'
     );
   }
+
+  if(billing){
+  billing.classList.toggle(
+    'active',
+    view==='billing'
+  );
+}
 
   document.querySelectorAll('.workspace-nav-item').forEach(
     function(button){
@@ -1225,9 +1463,17 @@ document.querySelectorAll('.workspace-nav-item').forEach(
 
       var view=button.dataset.view;
 
-      if(view==='overview' || view==='businesses'){
-        showWorkspaceView(view);
-      }
+if(
+  view==='overview' ||
+  view==='businesses' ||
+  view==='billing'
+){
+  showWorkspaceView(view);
+
+  if(view==='billing'){
+    loadBilling();
+  }
+}
 
     };
 
