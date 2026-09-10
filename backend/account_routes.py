@@ -7,14 +7,27 @@ import json
 import os
 import secrets
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 from fastapi import Header, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import BigInteger, DateTime, Integer, String, inspect, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .app import Base, Business, Subscription, SessionLocal, app, engine, telegram_user
+from .app import (
+    Base,
+    Business,
+    Subscription,
+    SavedBusiness,
+    Booking,
+    BlockedSlot,
+    WorkingHour,
+    Service,
+    SessionLocal,
+    app,
+    engine,
+    telegram_user,
+)
 
 
 class BooklyAccount(Base):
@@ -172,6 +185,13 @@ class AccountLoginIn(BaseModel):
     email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=1, max_length=128)
 
+class BusinessCreateIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    description: str = Field(default="", max_length=500)
+    phone: str = Field(default="", max_length=40)
+    address: str = Field(default="", max_length=255)
+    timezone: str = Field(default="Asia/Tashkent", max_length=64)
+
 
 @app.post("/account/register")
 def account_register(x: AccountRegisterIn):
@@ -221,7 +241,64 @@ def account_login(x: AccountLoginIn):
             "token": token,
             "account": {"id": account.id, "email": account.email, "business_id": account.business_id},
         }
+@app.post("/account/businesses")
+def account_create_business(
+    x: BusinessCreateIn,
+    authorization: str = Header(default=""),
+):
+    with SessionLocal() as db:
+        account = _account_from_header(db, authorization)
 
+        name = x.name.strip()
+
+        if not name:
+            raise HTTPException(400, "Business name is required")
+
+        slug = f"account-{account.id}-{secrets.token_hex(6)}"
+
+        business = Business(
+            account_id=account.id,
+            owner_telegram_id=-int(account.id),
+            name=name,
+            description=x.description.strip(),
+            phone=x.phone.strip(),
+            address=x.address.strip(),
+            timezone=x.timezone.strip() or "Asia/Tashkent",
+            slug=slug,
+            subscription_active=False,
+            subscription_status="inactive",
+        )
+
+        db.add(business)
+        db.flush()
+
+        for weekday in range(7):
+            db.add(
+                WorkingHour(
+                    business_id=business.id,
+                    weekday=weekday,
+                    start=time(9, 0),
+                    end=time(18, 0),
+                    active=True,
+                )
+            )
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "business": {
+                "id": business.id,
+                "name": business.name,
+                "description": business.description,
+                "phone": business.phone,
+                "address": business.address,
+                "timezone": business.timezone,
+                "slug": business.slug,
+                "subscription_active": False,
+                "subscription_status": "inactive",
+            },
+        }
 @app.get("/account/businesses")
 def account_businesses(authorization: str = Header(default="")):
     with SessionLocal() as db:
