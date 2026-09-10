@@ -1238,6 +1238,25 @@ var phoneCountry=document.getElementById('businessPhoneCountry');
 var phoneCode=document.getElementById('businessPhoneCode');
 var phoneInput=document.getElementById('businessPhone');
 
+function populatePhoneCountries(){
+  phoneCountry.innerHTML='';
+
+  phoneCountries.forEach(function(country){
+    var option=document.createElement('option');
+
+    option.value=country;
+
+    option.textContent=
+      getPhoneCountryFlag(country)+' '+
+      getPhoneCountryName(country)+
+      ' +'+phoneCountryCodes[country];
+
+    phoneCountry.appendChild(option);
+  });
+}
+
+populatePhoneCountries();
+
 function updatePhoneCode(){
   var code=phoneCountryCodes[phoneCountry.value]||'998';
   phoneCode.textContent='+'+code;
