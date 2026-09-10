@@ -1049,13 +1049,38 @@ body.logged-in .logout{
         placeholder="Short description of your business"
       ></textarea>
 
-      <label for="businessPhone">Phone</label>
-      <input
-        id="businessPhone"
-        type="tel"
-        maxlength="40"
-        placeholder="+998 90 123 45 67"
-      >
+<label for="businessPhone">Phone</label>
+
+<div class="phone-input">
+  <select id="businessPhoneCountry" aria-label="Country">
+    <option value="UZ">🇺🇿 Uzbekistan</option>
+    <option value="RU">🇷🇺 Russia</option>
+    <option value="KZ">🇰🇿 Kazakhstan</option>
+    <option value="KG">🇰🇬 Kyrgyzstan</option>
+    <option value="TJ">🇹🇯 Tajikistan</option>
+    <option value="TR">🇹🇷 Türkiye</option>
+    <option value="US">🇺🇸 United States</option>
+    <option value="GB">🇬🇧 United Kingdom</option>
+    <option value="DE">🇩🇪 Germany</option>
+    <option value="FR">🇫🇷 France</option>
+    <option value="AE">🇦🇪 United Arab Emirates</option>
+    <option value="IN">🇮🇳 India</option>
+    <option value="CN">🇨🇳 China</option>
+  </select>
+
+  <div class="phone-number-wrap">
+    <span id="businessPhoneCode">+998</span>
+
+    <input
+      id="businessPhone"
+      type="tel"
+      inputmode="tel"
+      maxlength="20"
+      placeholder="Business phone"
+      autocomplete="tel"
+    >
+  </div>
+</div>
 
       <label for="businessAddress">Address</label>
       <input
