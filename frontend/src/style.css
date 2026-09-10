@@ -1577,3 +1577,31 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
     right:12px!important;
   }
 }
+.global-info-button,
+.admin-info-button{
+  position:fixed!important;
+  top:52px!important;
+  right:16px!important;
+  z-index:10001!important;
+  width:42px!important;
+  height:42px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #e0e4e8!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.94)!important;
+  color:#111!important;
+  box-shadow:0 8px 24px rgba(15,23,42,.08)!important;
+  font-size:20px!important;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+
+@media(max-width:520px){
+  .global-info-button,
+  .admin-info-button{
+    top:52px!important;
+    right:12px!important;
+  }
+}
