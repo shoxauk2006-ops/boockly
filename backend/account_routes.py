@@ -6,7 +6,7 @@ import hmac
 import json
 import os
 import secrets
-import time
+import time as time_module
 from datetime import datetime, timedelta, time
 
 from fastapi import Header, HTTPException
@@ -168,7 +168,7 @@ def _account_checkout_token(account_id: int, business_id: int) -> str:
         "business_id": int(business_id),
         "owner_telegram_id": -int(account_id),
         "account_id": int(account_id),
-        "exp": int(time.time()) + CHECKOUT_TOKEN_SECONDS,
+        "exp": int(time_module.time()) + CHECKOUT_TOKEN_SECONDS,
     }
     raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     encoded = base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
