@@ -2740,6 +2740,26 @@ borderTopColor: '#d32f2f',
         ← {t('common.back')}
       </button>
 
+      <div className="business-head">
+  <div>
+    <h1>
+      Обзор
+    </h1>
+  </div>
+
+  <span
+    className={
+      business.subscription_active
+        ? 'pill ok'
+        : 'pill'
+    }
+  >
+    {business.subscription_active
+      ? t('owner.active')
+      : t('owner.inactive')}
+  </span>
+</div>
+
       <div className="card">
         {business.business_image && (
   <img
@@ -3482,26 +3502,6 @@ borderTopColor: '#d32f2f',
             </button>
           </div>
         )}
-
-      <div className="business-head">
-        <div>
-          <h1>
-            Обзор
-          </h1>
-        </div>
-
-        <span
-          className={
-            business.subscription_active
-              ? 'pill ok'
-              : 'pill'
-          }
-        >
-          {business.subscription_active
-            ? t('owner.active')
-            : t('owner.inactive')}
-        </span>
-      </div>
 
      {businessCreatedNotice && (
   <div
