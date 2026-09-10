@@ -302,7 +302,7 @@ body.logged-in .card{
 </main></div>
 <script>
 (function(){'use strict';
-var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var auth=document.getElementById('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
+var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var auth=yId('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
 function err(msg){error.textContent=msg;error.hidden=false}function clearErr(){error.hidden=true;error.textContent=''}
 function call(path,options){return fetch(api+path,options||{}).then(function(r){return r.json().catch(function(){return null}).then(function(d){if(!r.ok)throw new Error((d&&d.detail)||('Request failed ('+r.status+')'));return d})}).catch(function(e){if(e instanceof TypeError)throw new Error('Cannot connect to Bookly API: '+api);throw e})}
 function goPricing(){call('/account/paddle/checkout-token',{headers:{Authorization:'Bearer '+session}}).then(function(d){location.href='pricing-v2.html?token='+encodeURIComponent(d.checkout_token)+'&api='+encodeURIComponent(api)}).catch(function(e){err(e.message);document.getElementById('checkout').disabled=false})}
@@ -366,7 +366,11 @@ document.getElementById('loginTab').onclick=function(){mode='login';this.classLi
 document.getElementById('registerTab').onclick=function(){mode='register';this.classList.add('active');document.getElementById('loginTab').classList.remove('active');submit.textContent='Create account';document.getElementById('password').autocomplete='new-password';clearErr()};
 document.getElementById('googleBtn').onclick=function(){err('Google sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};document.getElementById('appleBtn').onclick=function(){err('Apple sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};
 form.onsubmit=function(e){e.preventDefault();clearErr();submit.disabled=true;var isRegister=mode==='register';var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
-document.getElementById('checkout').onclick=function(){clearErr();this.disabled=true;goPricing()};document.getElementById('logout').onclick=function(){localStorage.removeItem('bookly_session');location.reload()};check();
+document.getElementById('checkout').onclick=function(){clearErr();this.disabled=true;goPricing()};document.getElementById('logout').onclick=function(){
+  localStorage.removeItem('bookly_session');
+  document.body.classList.remove('logged-in');
+  location.reload();
+};check();
 })();
 </script>
 </body></html>
