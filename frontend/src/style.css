@@ -1659,3 +1659,28 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
     margin-top:-48px!important;
   }
 }
+.business-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 13px;
+  border:1px solid #e2e5e9;
+  border-radius:13px;
+  background:#fafbfc;
+  font-size:13px;
+}
+
+.business-item strong{
+  font-size:14px;
+}
+
+.business-item span{
+  font-size:11px;
+  font-weight:800;
+  color:#397044;
+  background:#f4faf5;
+  border:1px solid #dce9df;
+  border-radius:999px;
+  padding:5px 8px;
+}
