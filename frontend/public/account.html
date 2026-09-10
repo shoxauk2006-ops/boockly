@@ -1196,6 +1196,79 @@ var phoneCountries=phoneLib
   ? phoneLib.getCountries()
   : [];
 
+var phoneTimezoneCountry={
+  'Asia/Tashkent':'UZ',
+  'Asia/Almaty':'KZ',
+  'Asia/Bishkek':'KG',
+  'Asia/Dhaka':'BD',
+  'Asia/Karachi':'PK',
+  'Asia/Kolkata':'IN',
+  'Asia/Dubai':'AE',
+  'Asia/Riyadh':'SA',
+  'Asia/Tehran':'IR',
+  'Asia/Baghdad':'IQ',
+  'Asia/Jerusalem':'IL',
+  'Asia/Baku':'AZ',
+  'Asia/Tbilisi':'GE',
+  'Europe/Moscow':'RU',
+  'Europe/Istanbul':'TR',
+  'Europe/Kyiv':'UA',
+  'Europe/Kiev':'UA',
+  'Europe/Berlin':'DE',
+  'Europe/Paris':'FR',
+  'Europe/London':'GB',
+  'Europe/Rome':'IT',
+  'Europe/Madrid':'ES',
+  'Africa/Cairo':'EG',
+  'Africa/Johannesburg':'ZA',
+  'America/New_York':'US',
+  'America/Chicago':'US',
+  'America/Denver':'US',
+  'America/Los_Angeles':'US',
+  'America/Toronto':'CA',
+  'America/Sao_Paulo':'BR',
+  'Australia/Sydney':'AU',
+  'Pacific/Auckland':'NZ'
+};
+
+function detectPhoneCountry(){
+  try{
+    var language=navigator.language || '';
+
+    var regionMatch=language.match(
+      /[-_]([A-Z]{2})$/i
+    );
+
+    var region=regionMatch
+      ? regionMatch[1].toUpperCase()
+      : '';
+
+    if(
+      region &&
+      phoneCountries.indexOf(region)!==-1
+    ){
+      return region;
+    }
+
+    var timezone=
+      Intl.DateTimeFormat()
+        .resolvedOptions()
+        .timeZone;
+
+    var timezoneCountry=
+      phoneTimezoneCountry[timezone];
+
+    if(
+      timezoneCountry &&
+      phoneCountries.indexOf(timezoneCountry)!==-1
+    ){
+      return timezoneCountry;
+    }
+  }catch(e){}
+
+  return 'US';
+}
+
 var phoneCountryCodes={};
 
 phoneCountries.forEach(function(country){
