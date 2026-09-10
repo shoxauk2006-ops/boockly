@@ -1264,51 +1264,101 @@ body.logged-in .logout{
 
   <section class="workspace-card billing-card">
 
-    <div class="billing-head">
-      <div>
-        <span class="card-label">BILLING</span>
-        <h3>Subscription</h3>
-        <p id="billingBusiness">
-          Loading business...
-        </p>
-      </div>
-
-      <span id="billingStatus" class="billing-status">
-        —
-      </span>
+  <div class="billing-head">
+    <div>
+      <span class="card-label">BILLING</span>
+      <h3>Subscription</h3>
+      <p id="billingBusiness">
+        Loading business...
+      </p>
     </div>
 
-    <div class="billing-details">
+    <span id="billingStatus" class="billing-status">
+      —
+    </span>
+  </div>
 
-      <div class="billing-detail">
-        <span>Plan</span>
-        <strong id="billingPlan">—</strong>
-      </div>
+  <div class="billing-details">
 
-      <div class="billing-detail">
-        <span>Services</span>
-        <strong id="billingServices">—</strong>
-      </div>
-
-      <div class="billing-detail">
-        <span>Price</span>
-        <strong id="billingPrice">—</strong>
-      </div>
-
-      <div class="billing-detail">
-        <span>Expires</span>
-        <strong id="billingExpires">—</strong>
-      </div>
-
+    <div class="billing-detail">
+      <span>Plan</span>
+      <strong id="billingPlan">—</strong>
     </div>
 
-    <button id="billingCheckout" class="primary" type="button">
-      Continue to plans
+    <div class="billing-detail">
+      <span>Services</span>
+      <strong id="billingServices">—</strong>
+    </div>
+
+    <div class="billing-detail">
+      <span>Price</span>
+      <strong id="billingPrice">—</strong>
+    </div>
+
+    <div class="billing-detail">
+      <span>Expires</span>
+      <strong id="billingExpires">—</strong>
+    </div>
+
+  </div>
+
+  <div id="billingActions" class="billing-actions" hidden>
+
+    <button
+      id="billingUpgrade"
+      class="primary"
+      type="button"
+    >
+      Upgrade
     </button>
 
-    <div id="billingMessage" class="status"></div>
+    <button
+      id="billingDowngrade"
+      class="secondary"
+      type="button"
+    >
+      Downgrade
+    </button>
 
-  </section>
+    <button
+      id="billingCancel"
+      class="secondary billing-danger"
+      type="button"
+    >
+      Cancel subscription
+    </button>
+
+    <button
+      id="billingRestore"
+      class="primary"
+      type="button"
+      hidden
+    >
+      Restore subscription
+    </button>
+
+    <button
+      id="billingRestorePackage"
+      class="secondary"
+      type="button"
+      hidden
+    >
+      Restore package
+    </button>
+
+  </div>
+
+  <button
+    id="billingCheckout"
+    class="primary"
+    type="button"
+  >
+    Continue to plans
+  </button>
+
+  <div id="billingMessage" class="status"></div>
+
+</section>
 
 </div>
 
