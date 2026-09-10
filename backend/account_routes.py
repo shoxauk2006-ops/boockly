@@ -311,6 +311,8 @@ def account_create_business(
                 "phone": business.phone,
                 "address": business.address,
                 "timezone": business.timezone,
+                "latitude": business.latitude,
+                "longitude": business.longitude,
                 "slug": business.slug,
                 "subscription_active": False,
                 "subscription_status": "inactive",
