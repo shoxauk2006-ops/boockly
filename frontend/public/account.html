@@ -370,7 +370,46 @@ document.getElementById('checkout').onclick=function(){clearErr();this.disabled=
   localStorage.removeItem('bookly_session');
   document.body.classList.remove('logged-in');
   location.reload();
-};check();
+};
+    document.getElementById('addBusiness').onclick=function(){
+  clearErr();
+
+  var name=prompt('Business name');
+  if(!name || !name.trim()) return;
+
+  var description=prompt('Business description (optional)') || '';
+  var phone=prompt('Phone (optional)') || '';
+  var address=prompt('Address (optional)') || '';
+  var timezone=prompt('Timezone', 'Asia/Tashkent') || 'Asia/Tashkent';
+
+  fetch(api+'/account/businesses',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+session
+    },
+    body:JSON.stringify({
+      name:name.trim(),
+      description:description.trim(),
+      phone:phone.trim(),
+      address:address.trim(),
+      timezone:timezone.trim()
+    })
+  })
+  .then(function(r){
+    return r.json().then(function(d){
+      if(!r.ok) throw new Error(d.detail || d.error || 'Failed to create business');
+      return d;
+    });
+  })
+  .then(function(){
+    loadBusinesses();
+  })
+  .catch(function(e){
+    err(e.message);
+  });
+};        
+check();
 })();
 </script>
 </body></html>
