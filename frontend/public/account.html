@@ -2535,6 +2535,12 @@ businessForm.onsubmit=function(e){
           ? value
           : null;
       })(),
+
+      timezone:
+        document.getElementById('businessTimezone')
+          .value
+          .trim() || 'Asia/Tashkent'
+    })
   })
   .then(function(r){
     return r.json().then(function(d){
