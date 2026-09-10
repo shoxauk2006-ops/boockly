@@ -783,7 +783,6 @@ def account_billing(authorization: str = Header(default="")):
     subscription.cancel_at.isoformat()
     if subscription and subscription.cancel_at
     else None
-),
                 ),
             },
         }
