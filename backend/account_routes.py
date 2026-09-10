@@ -768,6 +768,21 @@ def account_billing(authorization: str = Header(default="")):
                     if subscription
                     and subscription.current_price is not None
                     else 0.0
+                 "pending_services_limit": (
+    subscription.pending_services_limit
+    if subscription
+    else None
+),
+"pending_price": (
+    float(subscription.pending_price)
+    if subscription and subscription.pending_price is not None
+    else None
+),
+"cancel_at": (
+    subscription.cancel_at.isoformat()
+    if subscription and subscription.cancel_at
+    else None
+),
                 ),
             },
         }
