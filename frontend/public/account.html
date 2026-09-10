@@ -841,6 +841,68 @@ body.logged-in .logout{
     max-width:none;
   }
 }
+.phone-input{
+  display:flex;
+  gap:8px;
+  width:100%;
+}
+
+.phone-input select{
+  width:150px;
+  flex:0 0 150px;
+  height:48px;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+  padding:0 10px;
+  font:inherit;
+  color:#111;
+}
+
+.phone-number-wrap{
+  display:flex;
+  align-items:center;
+  flex:1;
+  min-width:0;
+  height:48px;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+}
+
+.phone-number-wrap:focus-within{
+  border-color:#111;
+  box-shadow:0 0 0 4px rgba(17,17,17,.06);
+}
+
+.phone-number-wrap span{
+  padding-left:12px;
+  color:#666;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.phone-number-wrap input{
+  height:46px;
+  border:0;
+  outline:0;
+  box-shadow:none;
+  background:transparent;
+  padding-left:6px;
+}
+
+@media(max-width:560px){
+  .phone-input{
+    gap:6px;
+  }
+
+  .phone-input select{
+    width:125px;
+    flex-basis:125px;
+    padding:0 7px;
+    font-size:12px;
+  }
+}
 </style>
 </head>
 <body>
@@ -1127,6 +1189,44 @@ body.logged-in .logout{
 </main></div>
 <script>
 (function(){'use strict';
+var phoneCountryCodes={
+  UZ:'998',
+  RU:'7',
+  KZ:'7',
+  KG:'996',
+  TJ:'992',
+  TR:'90',
+  US:'1',
+  GB:'44',
+  DE:'49',
+  FR:'33',
+  AE:'971',
+  IN:'91',
+  CN:'86'
+};
+
+var phoneCountry=document.getElementById('businessPhoneCountry');
+var phoneCode=document.getElementById('businessPhoneCode');
+var phoneInput=document.getElementById('businessPhone');
+
+function updatePhoneCode(){
+  var code=phoneCountryCodes[phoneCountry.value]||'998';
+  phoneCode.textContent='+'+code;
+}
+
+phoneCountry.addEventListener('change',function(){
+  updatePhoneCode();
+
+  var digits=phoneInput.value.replace(/\D/g,'');
+  phoneInput.value=digits;
+});
+
+phoneInput.addEventListener('input',function(){
+  var digits=phoneInput.value.replace(/\D/g,'');
+  phoneInput.value=digits;
+});
+
+updatePhoneCode();
 var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var auth=document.getElementById('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
 function err(msg){error.textContent=msg;error.hidden=false}function clearErr(){error.hidden=true;error.textContent=''}
 function call(path,options){return fetch(api+path,options||{}).then(function(r){return r.json().catch(function(){return null}).then(function(d){if(!r.ok)throw new Error((d&&d.detail)||('Request failed ('+r.status+')'));return d})}).catch(function(e){if(e instanceof TypeError)throw new Error('Cannot connect to Bookly API: '+api);throw e})}
