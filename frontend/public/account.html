@@ -1269,10 +1269,17 @@ function detectPhoneCountry(){
   return 'US';
 }
 
+var phoneLib=window.libphonenumber;
+
+var phoneCountries=phoneLib
+  ? phoneLib.getCountries()
+  : [];
+
 var phoneCountryCodes={};
 
 phoneCountries.forEach(function(country){
-  phoneCountryCodes[country]=phoneLib.getCountryCallingCode(country);
+  phoneCountryCodes[country]=
+    phoneLib.getCountryCallingCode(country);
 });
 
 var phoneRegionNames=null;
@@ -1288,7 +1295,8 @@ try{
 
 function getPhoneCountryName(country){
   try{
-    return phoneRegionNames && phoneRegionNames.of(country)
+    return phoneRegionNames &&
+      phoneRegionNames.of(country)
       ? phoneRegionNames.of(country)
       : country;
   }catch(e){
@@ -1307,9 +1315,87 @@ function getPhoneCountryFlag(country){
   );
 }
 
-var phoneCountry=document.getElementById('businessPhoneCountry');
-var phoneCode=document.getElementById('businessPhoneCode');
-var phoneInput=document.getElementById('businessPhone');
+var phoneTimezoneCountry={
+  'Asia/Tashkent':'UZ',
+  'Asia/Almaty':'KZ',
+  'Asia/Bishkek':'KG',
+  'Asia/Dhaka':'BD',
+  'Asia/Karachi':'PK',
+  'Asia/Kolkata':'IN',
+  'Asia/Dubai':'AE',
+  'Asia/Riyadh':'SA',
+  'Asia/Tehran':'IR',
+  'Asia/Baghdad':'IQ',
+  'Asia/Jerusalem':'IL',
+  'Asia/Baku':'AZ',
+  'Asia/Tbilisi':'GE',
+  'Europe/Moscow':'RU',
+  'Europe/Istanbul':'TR',
+  'Europe/Kyiv':'UA',
+  'Europe/Kiev':'UA',
+  'Europe/Berlin':'DE',
+  'Europe/Paris':'FR',
+  'Europe/London':'GB',
+  'Europe/Rome':'IT',
+  'Europe/Madrid':'ES',
+  'Africa/Cairo':'EG',
+  'Africa/Johannesburg':'ZA',
+  'America/New_York':'US',
+  'America/Chicago':'US',
+  'America/Denver':'US',
+  'America/Los_Angeles':'US',
+  'America/Toronto':'CA',
+  'America/Sao_Paulo':'BR',
+  'Australia/Sydney':'AU',
+  'Pacific/Auckland':'NZ'
+};
+
+function detectPhoneCountry(){
+  try{
+    var language=navigator.language || '';
+
+    var regionMatch=language.match(
+      /[-_]([A-Z]{2})$/i
+    );
+
+    var region=regionMatch
+      ? regionMatch[1].toUpperCase()
+      : '';
+
+    if(
+      region &&
+      phoneCountries.indexOf(region)!==-1
+    ){
+      return region;
+    }
+
+    var timezone=
+      Intl.DateTimeFormat()
+        .resolvedOptions()
+        .timeZone;
+
+    var timezoneCountry=
+      phoneTimezoneCountry[timezone];
+
+    if(
+      timezoneCountry &&
+      phoneCountries.indexOf(timezoneCountry)!==-1
+    ){
+      return timezoneCountry;
+    }
+  }catch(e){}
+
+  return 'US';
+}
+
+var phoneCountry=
+  document.getElementById('businessPhoneCountry');
+
+var phoneCode=
+  document.getElementById('businessPhoneCode');
+
+var phoneInput=
+  document.getElementById('businessPhone');
 
 function populatePhoneCountries(){
   phoneCountry.innerHTML='';
@@ -1330,7 +1416,8 @@ function populatePhoneCountries(){
 
 populatePhoneCountries();
 
-var initialPhoneCountry=detectPhoneCountry();
+var initialPhoneCountry=
+  detectPhoneCountry();
 
 if(
   phoneCountries.indexOf(initialPhoneCountry)!==-1
@@ -1339,28 +1426,22 @@ if(
 }
 
 function updatePhoneCode(){
-  var code=phoneCountryCodes[phoneCountry.value]||'998';
+  var code=
+    phoneCountryCodes[phoneCountry.value] || '998';
+
   phoneCode.textContent='+'+code;
 }
 
 phoneCountry.addEventListener('change',function(){
-  var country=phoneCountry.value;
-  var code=phoneCountryCodes[country] || '';
+  updatePhoneCode();
 
-  var digits=phoneInput.value.replace(/\D/g,'');
-
-  phoneInput.value=digits;
-
-  var phoneCode=document.getElementById('phoneCountryCode');
-
-  if(phoneCode){
-    phoneCode.textContent=code ? '+'+code : '';
-  }
+  phoneInput.value=
+    phoneInput.value.replace(/\D/g,'');
 });
 
 phoneInput.addEventListener('input',function(){
-  var digits=phoneInput.value.replace(/\D/g,'');
-  phoneInput.value=digits;
+  phoneInput.value=
+    phoneInput.value.replace(/\D/g,'');
 });
 
 updatePhoneCode();
