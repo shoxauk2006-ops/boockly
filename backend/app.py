@@ -160,6 +160,11 @@ class Business(Base):
         Integer,
         primary_key=True
     )
+        account_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+        index=True
+    )
 
     owner_telegram_id: Mapped[int] = mapped_column(
         BigInteger,
