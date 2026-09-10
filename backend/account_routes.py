@@ -771,6 +771,451 @@ def account_billing(authorization: str = Header(default="")):
                 ),
             },
         }
+class AccountSubscriptionLimitIn(BaseModel):
+    services_limit: int = Field(ge=10, le=100)
+
+
+def _account_subscription(db, account):
+    business = (
+        db.query(Business)
+        .filter(
+            Business.id == account.business_id,
+            Business.account_id == account.id,
+        )
+        .first()
+    )
+
+    if not business:
+        raise HTTPException(
+            400,
+            "Bookly business not found"
+        )
+
+    subscription = (
+        db.query(Subscription)
+        .filter(
+            Subscription.business_id == business.id
+        )
+        .first()
+    )
+
+    if not subscription:
+        raise HTTPException(
+            400,
+            "Subscription not found"
+        )
+
+    if not subscription.active:
+        raise HTTPException(
+            400,
+            "Active subscription required"
+        )
+
+    subscription_id = (
+        subscription.external_subscription_id or ""
+    ).strip()
+
+    if not subscription_id.startswith("sub_"):
+        raise HTTPException(
+            400,
+            "Paddle subscription ID is missing"
+        )
+
+    return business, subscription, subscription_id
+
+
+@app.post("/account/subscription/change-limit")
+def account_change_subscription_limit(
+    x: AccountSubscriptionLimitIn,
+    authorization: str = Header(default=""),
+):
+    from . import paddle_original
+
+    limit = int(x.services_limit)
+
+    if limit not in paddle_original.LIMITS:
+        raise HTTPException(
+            400,
+            "Invalid services limit"
+        )
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business, subscription, subscription_id = (
+            _account_subscription(
+                db,
+                account
+            )
+        )
+
+        current = (
+            subscription.current_services_limit
+            or 10
+        )
+
+        if limit == current:
+            return {
+                "ok": True,
+                "current_services_limit": current,
+                "current_price": float(
+                    subscription.current_price or 7.99
+                ),
+                "pending_services_limit":
+                    subscription.pending_services_limit,
+                "pending_price":
+                    (
+                        float(subscription.pending_price)
+                        if subscription.pending_price is not None
+                        else None
+                    ),
+            }
+
+    mode = (
+        "prorated_immediately"
+        if limit > current
+        else "prorated_next_billing_period"
+    )
+
+    paddle_original._paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}",
+        {
+            "items":
+                paddle_original._items_for_limit(
+                    limit
+                ),
+            "proration_billing_mode": mode,
+            "on_payment_failure":
+                "prevent_change",
+        },
+    )
+
+    new_price = (
+        paddle_original.calculate_subscription_price(
+            limit
+        )
+    )
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business, subscription, subscription_id = (
+            _account_subscription(
+                db,
+                account
+            )
+        )
+
+        if limit > current:
+            subscription.current_services_limit = limit
+            subscription.current_price = new_price
+            subscription.pending_services_limit = None
+            subscription.pending_price = None
+        else:
+            subscription.pending_services_limit = limit
+            subscription.pending_price = new_price
+
+        paddle_original._sync_business_from_subscription(
+            business,
+            subscription
+        )
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "current_services_limit":
+                subscription.current_services_limit,
+            "current_price":
+                float(
+                    subscription.current_price or 7.99
+                ),
+            "pending_services_limit":
+                subscription.pending_services_limit,
+            "pending_price":
+                (
+                    float(subscription.pending_price)
+                    if subscription.pending_price is not None
+                    else None
+                ),
+        }
+
+
+@app.post("/account/subscription/resume-package")
+def account_resume_subscription_package(
+    authorization: str = Header(default=""),
+):
+    from . import paddle_original
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business, subscription, subscription_id = (
+            _account_subscription(
+                db,
+                account
+            )
+        )
+
+        current = (
+            subscription.current_services_limit
+            or 10
+        )
+
+        pending = (
+            subscription.pending_services_limit
+        )
+
+        if pending is None:
+            return {
+                "ok": True,
+                "current_services_limit": current,
+                "pending_services_limit": None,
+                "pending_price": None,
+            }
+
+    paddle_original._paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}",
+        {
+            "items":
+                paddle_original._items_for_limit(
+                    current
+                ),
+            "proration_billing_mode":
+                "do_not_bill",
+            "on_payment_failure":
+                "prevent_change",
+        },
+    )
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business, subscription, subscription_id = (
+            _account_subscription(
+                db,
+                account
+            )
+        )
+
+        subscription.pending_services_limit = None
+        subscription.pending_price = None
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "current_services_limit":
+                subscription.current_services_limit,
+            "pending_services_limit": None,
+            "pending_price": None,
+        }
+
+
+@app.post("/account/subscription/cancel")
+def account_cancel_subscription(
+    authorization: str = Header(default=""),
+):
+    from . import paddle_original
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business, subscription, subscription_id = (
+            _account_subscription(
+                db,
+                account
+            )
+        )
+
+    # Убираем возможное старое
+    # запланированное изменение.
+    paddle_original._paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}",
+        {
+            "scheduled_change": None,
+        },
+    )
+
+    data = paddle_original._paddle_request(
+        "POST",
+        f"/subscriptions/{subscription_id}/cancel",
+        {
+            "effective_from":
+                "next_billing_period"
+        },
+    )
+
+    paddle = data.get("data") or {}
+
+    expires = paddle_original._dt(
+        (
+            paddle.get("scheduled_change")
+            or {}
+        ).get("effective_at")
+    )
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == account.business_id,
+                Business.account_id == account.id,
+            )
+            .first()
+        )
+
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id == business.id
+            )
+            .first()
+            if business
+            else None
+        )
+
+        if not business or not subscription:
+            raise HTTPException(
+                404,
+                "Subscription not found"
+            )
+
+        subscription.status = "cancelled"
+        subscription.active = True
+
+        if expires:
+            subscription.expires_at = expires
+            subscription.cancel_at = expires
+
+        paddle_original._sync_business_from_subscription(
+            business,
+            subscription
+        )
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "cancelled": True,
+            "access_until":
+                (
+                    subscription.expires_at.isoformat()
+                    if subscription.expires_at
+                    else None
+                ),
+        }
+
+
+@app.post("/account/subscription/resume")
+def account_resume_subscription(
+    authorization: str = Header(default=""),
+):
+    from . import paddle_original
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business, subscription, subscription_id = (
+            _account_subscription(
+                db,
+                account
+            )
+        )
+
+    data = paddle_original._paddle_request(
+        "PATCH",
+        f"/subscriptions/{subscription_id}",
+        {
+            "scheduled_change": None,
+        },
+    )
+
+    paddle = data.get("data") or {}
+
+    next_billed_at = paddle.get(
+        "next_billed_at"
+    )
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == account.business_id,
+                Business.account_id == account.id,
+            )
+            .first()
+        )
+
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id == business.id
+            )
+            .first()
+            if business
+            else None
+        )
+
+        if not business or not subscription:
+            raise HTTPException(
+                404,
+                "Subscription not found"
+            )
+
+        subscription.status = "active"
+        subscription.active = True
+        subscription.cancel_at = None
+
+        if next_billed_at:
+            subscription.expires_at = (
+                paddle_original._dt(
+                    next_billed_at
+                )
+            )
+
+        paddle_original._sync_business_from_subscription(
+            business,
+            subscription
+        )
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "resumed": True,
+        }
 @app.get("/account/paddle/checkout-token")
 def account_paddle_checkout_token(authorization: str = Header(default="")):
     with SessionLocal() as db:
