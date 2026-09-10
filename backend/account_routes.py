@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import BigInteger, DateTime, Integer, String, inspect, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .app import Base, Business, SessionLocal, app, engine, telegram_user
+from .app import Base, Business, Subscription, SessionLocal, app, engine, telegram_user
 
 
 class BooklyAccount(Base):
