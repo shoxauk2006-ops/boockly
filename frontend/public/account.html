@@ -2696,7 +2696,6 @@ businessForm.onsubmit=function(e){
     });
   })
   .then(function(){
-    .then(function(){
   closeBusinessModalWindow();
 
   delete businessModal.dataset.editBusinessId;
@@ -2707,6 +2706,11 @@ businessForm.onsubmit=function(e){
   document.getElementById('createBusiness').textContent='Create business';
 
   loadBusinesses();
+
+  if(isEdit){
+    showSaveSuccess();
+  }
+})
 
   if(isEdit){
     showSaveSuccess();
