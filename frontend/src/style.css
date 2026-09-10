@@ -1639,3 +1639,23 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   gap:10px;
   margin-right:52px;
 }
+/* Admin dashboard spacing */
+.business-head{
+  margin-top:-48px!important;
+  margin-bottom:12px!important;
+  align-items:center!important;
+}
+
+.business-head .pill{
+  margin-top:0!important;
+}
+
+.business-head + .card{
+  margin-top:0!important;
+}
+
+@media(max-width:520px){
+  .business-head{
+    margin-top:-48px!important;
+  }
+}
