@@ -63,6 +63,22 @@ function loadBusinesses(){
     headers:{Authorization:'Bearer '+session}
   }).then(function(d){
     console.log('Bookly businesses:',d.businesses);
+
+    var container=document.getElementById('businessesList');
+    if(!container)return;
+
+    container.innerHTML='';
+
+    d.businesses.forEach(function(business){
+      var item=document.createElement('div');
+      item.className='business-item';
+
+      item.innerHTML=
+        '<strong>'+business.name+'</strong>'+
+        '<span>'+(business.subscription_active?'Active':'Inactive')+'</span>';
+
+      container.appendChild(item);
+    });
   }).catch(function(e){
     err(e.message);
   });
