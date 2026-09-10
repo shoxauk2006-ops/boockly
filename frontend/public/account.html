@@ -2513,28 +2513,28 @@ businessForm.onsubmit=function(e){
         document.getElementById('businessAddress')
           .value
           .trim(),
-    })
-    latitude:(function(){
-  var value=
-    parseFloat(
-      document.getElementById('businessLatitude').value
-    );
 
-  return Number.isFinite(value)
-    ? value
-    : null;
-})(),
+      latitude:(function(){
+        var value=
+          parseFloat(
+            document.getElementById('businessLatitude').value
+          );
 
-longitude:(function(){
-  var value=
-    parseFloat(
-      document.getElementById('businessLongitude').value
-    );
+        return Number.isFinite(value)
+          ? value
+          : null;
+      })(),
 
-  return Number.isFinite(value)
-    ? value
-    : null;
-})(),
+      longitude:(function(){
+        var value=
+          parseFloat(
+            document.getElementById('businessLongitude').value
+          );
+
+        return Number.isFinite(value)
+          ? value
+          : null;
+      })(),
   })
   .then(function(r){
     return r.json().then(function(d){
