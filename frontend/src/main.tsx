@@ -621,29 +621,22 @@ const openClient = (
       ))}
     </select>
 
-      <button
-  type="button"
-  className="personal-menu-button"
-  onClick={() => {
-    setInfoSection('help');
-    setInfoModal(true);
-  }}
->
-  ⓘ
-</button>
+      
   </div>
 </header>
 
-<button
-  type="button"
-  className="global-info-button"
-  onClick={() => {
-    setInfoSection('help');
-    setInfoModal(true);
-  }}
->
-  ⓘ
-</button>
+{mode === 'home' && (
+  <button
+    type="button"
+    className="global-info-button"
+    onClick={() => {
+      setInfoSection('help');
+      setInfoModal(true);
+    }}
+  >
+    ⓘ
+  </button>
+)}
 
 {menuOpen && (
     <>
