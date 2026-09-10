@@ -1086,6 +1086,66 @@ body.logged-in .logout{
     height:240px;
   }
 }
+.save-success-modal{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  padding:20px;
+}
+
+.save-success-modal[hidden]{
+  display:none;
+}
+
+.save-success-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(15,18,22,.45);
+  backdrop-filter:blur(4px);
+}
+
+.save-success-card{
+  position:relative;
+  width:min(420px,100%);
+  padding:30px;
+  border:1px solid #e3e6ea;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 24px 70px rgba(0,0,0,.18);
+  text-align:center;
+}
+
+.save-success-icon{
+  width:52px;
+  height:52px;
+  margin:0 auto 16px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#111;
+  color:#fff;
+  font-size:24px;
+  font-weight:800;
+}
+
+.save-success-card h3{
+  margin:0 0 8px;
+  font-size:22px;
+  font-weight:800;
+}
+
+.save-success-card p{
+  margin:0 0 22px;
+  color:#777e87;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.save-success-card .primary{
+  width:100%;
+}
 </style>
 </head>
 <body>
@@ -1426,6 +1486,28 @@ body.logged-in .logout{
       </div>
 
     </form>
+  </div>
+</div>
+
+<div id="saveSuccessModal" class="save-success-modal" hidden>
+  <div class="save-success-backdrop"></div>
+
+  <div class="save-success-card">
+    <div class="save-success-icon">✓</div>
+
+    <h3>Changes saved</h3>
+
+    <p>
+      Business details have been updated successfully.
+    </p>
+
+    <button
+      id="saveSuccessOk"
+      class="primary"
+      type="button"
+    >
+      OK
+    </button>
   </div>
 </div>
 
@@ -2037,6 +2119,57 @@ document.getElementById('checkout').onclick=function(){clearErr();this.disabled=
 };
 
 var businessModal=document.getElementById('businessModal');
+var saveSuccessModal=
+  document.getElementById('saveSuccessModal');
+
+var saveSuccessOk=
+  document.getElementById('saveSuccessOk');
+
+function showSaveSuccess(){
+  saveSuccessModal.hidden=false;
+  saveSuccessOk.focus();
+}
+
+function closeSaveSuccess(){
+  saveSuccessModal.hidden=true;
+}
+
+saveSuccessOk.addEventListener(
+  'click',
+  closeSaveSuccess
+);
+
+saveSuccessModal
+  .querySelector('.save-success-backdrop')
+  .addEventListener(
+    'click',
+    closeSaveSuccess
+);var saveSuccessModal=
+  document.getElementById('saveSuccessModal');
+
+var saveSuccessOk=
+  document.getElementById('saveSuccessOk');
+
+function showSaveSuccess(){
+  saveSuccessModal.hidden=false;
+  saveSuccessOk.focus();
+}
+
+function closeSaveSuccess(){
+  saveSuccessModal.hidden=true;
+}
+
+saveSuccessOk.addEventListener(
+  'click',
+  closeSaveSuccess
+);
+
+saveSuccessModal
+  .querySelector('.save-success-backdrop')
+  .addEventListener(
+    'click',
+    closeSaveSuccess
+);
 var businessForm=document.getElementById('businessForm');
 var closeBusinessModal=document.getElementById('closeBusinessModal');
 var cancelBusiness=document.getElementById('cancelBusiness');
@@ -2563,17 +2696,22 @@ businessForm.onsubmit=function(e){
     });
   })
   .then(function(){
-    closeBusinessModalWindow();
+    .then(function(){
+  closeBusinessModalWindow();
 
-    delete businessModal.dataset.editBusinessId;
+  delete businessModal.dataset.editBusinessId;
 
-    businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
-    businessModal.querySelector('h3').textContent='Add business';
+  businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
+  businessModal.querySelector('h3').textContent='Add business';
 
-    document.getElementById('createBusiness').textContent='Create business';
+  document.getElementById('createBusiness').textContent='Create business';
 
-    loadBusinesses();
-  })
+  loadBusinesses();
+
+  if(isEdit){
+    showSaveSuccess();
+  }
+})
   .catch(function(e){
     err(e.message);
   })
