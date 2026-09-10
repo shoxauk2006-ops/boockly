@@ -200,6 +200,13 @@ class BusinessCreateIn(BaseModel):
     address: str = Field(default="", max_length=255)
     timezone: str = Field(default="Asia/Tashkent", max_length=64)
 
+class BusinessUpdateIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    description: str = Field(default="", max_length=500)
+    phone: str = Field(default="", max_length=40)
+    address: str = Field(default="", max_length=255)
+    timezone: str = Field(default="Asia/Tashkent", max_length=64)
+
 
 @app.post("/account/register")
 def account_register(x: AccountRegisterIn):
@@ -305,6 +312,59 @@ def account_create_business(
                 "slug": business.slug,
                 "subscription_active": False,
                 "subscription_status": "inactive",
+            },
+        }
+
+@app.put("/account/businesses/{business_id}")
+def account_update_business(
+    business_id: int,
+    x: BusinessUpdateIn,
+    authorization: str = Header(default=""),
+):
+    with SessionLocal() as db:
+        account = _account_from_header(db, authorization)
+
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == business_id,
+                Business.account_id == account.id,
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        name = x.name.strip()
+
+        if not name:
+            raise HTTPException(
+                400,
+                "Business name is required"
+            )
+
+        business.name = name
+        business.description = x.description.strip()
+        business.phone = x.phone.strip()
+        business.address = x.address.strip()
+        business.timezone = x.timezone.strip() or "Asia/Tashkent"
+
+        db.commit()
+
+        return {
+            "ok": True,
+            "business": {
+                "id": business.id,
+                "name": business.name,
+                "description": business.description,
+                "phone": business.phone,
+                "address": business.address,
+                "timezone": business.timezone,
+                "slug": business.slug,
             },
         }
 @app.get("/account/businesses")
