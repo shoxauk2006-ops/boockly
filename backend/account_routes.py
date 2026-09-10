@@ -205,7 +205,8 @@ class BusinessUpdateIn(BaseModel):
     description: str = Field(default="", max_length=500)
     phone: str = Field(default="", max_length=40)
     address: str = Field(default="", max_length=255)
-    timezone: str = Field(default="Asia/Tashkent", max_length=64)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 @app.post("/account/register")
@@ -351,22 +352,25 @@ def account_update_business(
         business.description = x.description.strip()
         business.phone = x.phone.strip()
         business.address = x.address.strip()
-        business.timezone = x.timezone.strip() or "Asia/Tashkent"
+        business.latitude = x.latitude
+        business.longitude = x.longitude
 
         db.commit()
 
         return {
             "ok": True,
-            "business": {
-                "id": business.id,
-                "name": business.name,
-                "description": business.description,
-                "phone": business.phone,
-                "address": business.address,
-                "timezone": business.timezone,
-                "slug": business.slug,
-            },
-        }
+"business": {
+    "id": business.id,
+    "name": business.name,
+    "description": business.description,
+    "phone": business.phone,
+    "address": business.address,
+    "timezone": business.timezone,
+    "latitude": business.latitude,
+    "longitude": business.longitude,
+    "slug": business.slug,
+},
+}
 @app.get("/account/businesses")
 def account_businesses(authorization: str = Header(default="")):
     with SessionLocal() as db:
