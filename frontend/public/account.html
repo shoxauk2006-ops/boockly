@@ -78,9 +78,9 @@ function loadBusinesses(){
       var item=document.createElement('div');
       item.className='business-item';
 
-      item.innerHTML=
-        '<strong>'+business.name+'</strong>'+
-        '<span>'+(business.subscription_active?'Active':'Inactive')+'</span>';
+item.innerHTML=
+  '<strong>'+business.name+'</strong>'+
+  '<span>'+(business.subscription_active?'Active':'Inactive')+'</span>';
 
       container.appendChild(item);
     });
