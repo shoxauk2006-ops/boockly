@@ -1330,6 +1330,14 @@ function populatePhoneCountries(){
 
 populatePhoneCountries();
 
+var initialPhoneCountry=detectPhoneCountry();
+
+if(
+  phoneCountries.indexOf(initialPhoneCountry)!==-1
+){
+  phoneCountry.value=initialPhoneCountry;
+}
+
 function updatePhoneCode(){
   var code=phoneCountryCodes[phoneCountry.value]||'998';
   phoneCode.textContent='+'+code;
