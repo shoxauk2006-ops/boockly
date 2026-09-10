@@ -350,6 +350,174 @@ body.logged-in .card{
     order:-1;
   }
 }
+  /* ===== Account workspace redesign ===== */
+
+body.logged-in{
+  background:#f7f8fa;
+}
+
+body.logged-in .shell{
+  width:min(1180px,calc(100% - 48px));
+  max-width:none;
+  padding:38px 0 80px;
+}
+
+body.logged-in .card{
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+
+body.logged-in .account{
+  width:100%;
+}
+
+body.logged-in .workspace-head{
+  margin-bottom:24px;
+  padding:0 4px;
+}
+
+body.logged-in .workspace-head h2{
+  font-size:36px;
+  letter-spacing:-.045em;
+}
+
+body.logged-in .workspace-head p{
+  font-size:14px;
+}
+
+body.logged-in .workspace-kicker{
+  color:#5964e8;
+  font-size:10px;
+}
+
+body.logged-in .workspace-nav{
+  width:100%;
+  max-width:620px;
+  margin:0 0 18px;
+  padding:4px;
+  background:#e9ebef;
+  border-radius:13px;
+}
+
+body.logged-in .workspace-nav-item{
+  min-height:42px;
+  font-size:12px;
+}
+
+body.logged-in .workspace-nav-item.active{
+  box-shadow:0 4px 12px rgba(0,0,0,.10);
+}
+
+body.logged-in .workspace-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+body.logged-in .workspace-card{
+  min-width:0;
+  padding:22px;
+  background:rgba(255,255,255,.92);
+  border:1px solid #e1e5ea;
+  border-radius:20px;
+  box-shadow:0 12px 35px rgba(18,25,38,.045);
+}
+
+body.logged-in .businesses-card{
+  grid-column:1 / -1;
+}
+
+body.logged-in .workspace-card h3{
+  font-size:18px;
+}
+
+body.logged-in .workspace-card p{
+  font-size:12px;
+}
+
+body.logged-in .card-label{
+  color:#8b919a;
+}
+
+body.logged-in .businesses-list{
+  margin-top:18px;
+  gap:9px;
+}
+
+body.logged-in .business-item{
+  min-height:58px;
+  padding:14px 15px;
+  background:#fafbfc;
+  border:1px solid #e1e5e9;
+  border-radius:14px;
+}
+
+body.logged-in .business-item strong{
+  font-size:13px;
+}
+
+body.logged-in .small-button{
+  height:40px;
+  padding:0 13px;
+  border-radius:11px;
+}
+
+body.logged-in .detail-row{
+  padding:13px 0;
+}
+
+body.logged-in .logout{
+  margin-top:22px;
+}
+
+@media(max-width:760px){
+  body.logged-in .shell{
+    width:min(100% - 28px,680px);
+    padding-top:28px;
+  }
+
+  body.logged-in .workspace-head h2{
+    font-size:31px;
+  }
+
+  body.logged-in .workspace-grid{
+    grid-template-columns:1fr;
+  }
+
+  body.logged-in .businesses-card{
+    grid-column:auto;
+  }
+}
+
+@media(max-width:560px){
+  body.logged-in .shell{
+    width:calc(100% - 24px);
+  }
+
+  body.logged-in .workspace-head{
+    padding:0;
+  }
+
+  body.logged-in .workspace-nav{
+    max-width:none;
+  }
+
+  body.logged-in .workspace-nav-item{
+    min-height:40px;
+    font-size:10px;
+  }
+
+  body.logged-in .workspace-card{
+    padding:18px;
+    border-radius:18px;
+  }
+}
 </style>
 </head>
 <body>
