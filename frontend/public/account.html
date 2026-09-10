@@ -626,6 +626,37 @@ body.logged-in .logout{
     flex:1;
   }
 }
+  .workspace-view{
+  display:none;
+}
+
+.workspace-view.active{
+  display:contents;
+}
+
+#businessesView.active{
+  display:block;
+}
+
+#overviewView.active{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+#overviewView .account-details{
+  grid-column:1 / -1;
+}
+
+@media(max-width:760px){
+  #overviewView.active{
+    grid-template-columns:1fr;
+  }
+
+  #overviewView .account-details{
+    grid-column:auto;
+  }
+}
 </style>
 </head>
 <body>
@@ -656,14 +687,26 @@ body.logged-in .logout{
   </div>
 
   <nav class="workspace-nav">
-    <button class="workspace-nav-item active" type="button">Overview</button>
-    <button class="workspace-nav-item" type="button">Businesses</button>
+    <button
+  class="workspace-nav-item active"
+  type="button"
+  data-view="overview"
+>
+  Overview
+</button>
+    <button
+  class="workspace-nav-item"
+  type="button"
+  data-view="businesses"
+>
+  Businesses
+</button>
     <button class="workspace-nav-item" type="button">Billing</button>
     <button class="workspace-nav-item" type="button">Account</button>
   </nav>
 
   <div class="workspace-grid">
-
+    <div id="businessesView" class="workspace-view">
     <section class="workspace-card businesses-card">
       <div class="card-heading">
         <div>
@@ -679,6 +722,10 @@ body.logged-in .logout{
 
       <div id="businessesList" class="businesses-list"></div>
     </section>
+
+  </div>
+
+  <div id="overviewView" class="workspace-view">
 
     <section class="workspace-card">
       <span class="card-label">SUBSCRIPTION</span>
@@ -819,6 +866,8 @@ function call(path,options){return fetch(api+path,options||{}).then(function(r){
 function goPricing(){call('/account/paddle/checkout-token',{headers:{Authorization:'Bearer '+session}}).then(function(d){location.href='pricing-v2.html?token='+encodeURIComponent(d.checkout_token)+'&api='+encodeURIComponent(api)}).catch(function(e){err(e.message);document.getElementById('checkout').disabled=false})}
 function showAccount(data){
   document.body.classList.add('logged-in');
+
+  showWorkspaceView('overview');
   
   auth.style.display='none';
   account.style.display='block';
@@ -1052,6 +1101,52 @@ businessForm.onsubmit=function(e){
     createButton.textContent='Create business';
   });
 };    
+function showWorkspaceView(view){
+
+  var overview=document.getElementById('overviewView');
+  var businesses=document.getElementById('businessesView');
+
+  if(overview){
+    overview.classList.toggle(
+      'active',
+      view==='overview'
+    );
+  }
+
+  if(businesses){
+    businesses.classList.toggle(
+      'active',
+      view==='businesses'
+    );
+  }
+
+  document.querySelectorAll('.workspace-nav-item').forEach(
+    function(button){
+
+      var target=button.dataset.view;
+
+      button.classList.toggle(
+        'active',
+        target===view
+      );
+    }
+  );
+}       
+document.querySelectorAll('.workspace-nav-item').forEach(
+  function(button){
+
+    button.onclick=function(){
+
+      var view=button.dataset.view;
+
+      if(view==='overview' || view==='businesses'){
+        showWorkspaceView(view);
+      }
+
+    };
+
+  }
+);            
 check();
 })();
 </script>
