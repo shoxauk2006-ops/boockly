@@ -1146,6 +1146,99 @@ body.logged-in .logout{
 .save-success-card .primary{
   width:100%;
 }
+.billing-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.billing-head h3{
+  margin:6px 0 4px;
+}
+
+.billing-head p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.billing-status{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.billing-status.active{
+  background:#e8f7ed;
+  color:#1f7a3f;
+}
+
+.billing-status.inactive{
+  background:#f1f1f1;
+  color:#666;
+}
+
+.billing-details{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin-top:24px;
+}
+
+.billing-detail{
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.billing-detail span{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.billing-detail strong{
+  font-size:15px;
+}
+
+.billing-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:20px;
+}
+
+.billing-actions button{
+  min-width:150px;
+}
+
+.billing-danger{
+  color:#b42318;
+  border-color:#f0b8b3;
+}
+
+.billing-actions[hidden]{
+  display:none;
+}
+
+@media (max-width:700px){
+  .billing-details{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .billing-actions{
+    flex-direction:column;
+  }
+
+  .billing-actions button{
+    width:100%;
+  }
+}
 </style>
 </head>
 <body>
