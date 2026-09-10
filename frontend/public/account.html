@@ -24,6 +24,86 @@
 <p class="terms">By continuing, you agree to use Bookly for legitimate business activity and accept our terms.</p><div id="error" class="error" hidden></div>
 </div>
 <div id="account" class="account">
+
+  <div class="workspace-head">
+    <div>
+      <div class="workspace-kicker">BOOKLY WORKSPACE</div>
+      <h2>Account</h2>
+      <p id="accountText"></p>
+    </div>
+
+    <div class="ready">
+      <i></i> Account ready
+    </div>
+  </div>
+
+  <nav class="workspace-nav">
+    <button class="workspace-nav-item active" type="button">Overview</button>
+    <button class="workspace-nav-item" type="button">Businesses</button>
+    <button class="workspace-nav-item" type="button">Billing</button>
+    <button class="workspace-nav-item" type="button">Account</button>
+  </nav>
+
+  <div class="workspace-grid">
+
+    <section class="workspace-card businesses-card">
+      <div class="card-heading">
+        <div>
+          <span class="card-label">BUSINESSES</span>
+          <h3>My businesses</h3>
+          <p>Manage your Bookly businesses from one place.</p>
+        </div>
+
+        <button class="small-button" type="button">
+          + Add business
+        </button>
+      </div>
+
+      <div id="businessesList" class="businesses-list"></div>
+    </section>
+
+    <section class="workspace-card">
+      <span class="card-label">SUBSCRIPTION</span>
+      <h3>Choose your plan</h3>
+      <p>Select the plan for your current business. Payment is handled securely on the Bookly website.</p>
+
+      <button id="checkout" class="primary" type="button">
+        Continue to plans
+      </button>
+    </section>
+
+    <section class="workspace-card">
+      <span class="card-label">TELEGRAM</span>
+      <h3>Connect Telegram</h3>
+      <p>Connect your account to open your selected Bookly business directly in the Mini App.</p>
+
+      <button id="connect" class="primary" type="button">
+        Connect Telegram
+      </button>
+
+      <div id="connectStatus" class="status"></div>
+    </section>
+
+    <section class="workspace-card account-details">
+      <span class="card-label">ACCOUNT</span>
+      <h3>Account details</h3>
+
+      <div class="detail-row">
+        <span>Email</span>
+        <strong id="accountEmail">—</strong>
+      </div>
+
+      <div class="detail-row">
+        <span>Telegram</span>
+        <strong id="accountTelegram">—</strong>
+      </div>
+    </section>
+
+  </div>
+
+  <button id="logout" class="logout">Sign out</button>
+
+</div>
 <div class="account-head"><div><h2>Welcome to Bookly</h2><p id="accountText"></p></div><div class="ready"><i></i> Account ready</div></div>
 <div class="action" style="margin-bottom:10px">
   <h3>My businesses</h3>
@@ -48,6 +128,10 @@ function showAccount(data){
 
   document.getElementById('accountText').textContent=
     'Signed in as '+data.account.email+'. Your Bookly account is ready.';
+
+  document.getElementById('accountEmail').textContent=data.account.email;
+  document.getElementById('accountTelegram').textContent=
+    data.account.telegram_connected ? 'Connected' : 'Not connected';
 
   if(data.account.telegram_connected){
     connect.textContent='Open Bookly in Telegram';
