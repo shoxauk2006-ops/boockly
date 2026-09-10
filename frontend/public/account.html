@@ -307,6 +307,8 @@ function err(msg){error.textContent=msg;error.hidden=false}function clearErr(){e
 function call(path,options){return fetch(api+path,options||{}).then(function(r){return r.json().catch(function(){return null}).then(function(d){if(!r.ok)throw new Error((d&&d.detail)||('Request failed ('+r.status+')'));return d})}).catch(function(e){if(e instanceof TypeError)throw new Error('Cannot connect to Bookly API: '+api);throw e})}
 function goPricing(){call('/account/paddle/checkout-token',{headers:{Authorization:'Bearer '+session}}).then(function(d){location.href='pricing-v2.html?token='+encodeURIComponent(d.checkout_token)+'&api='+encodeURIComponent(api)}).catch(function(e){err(e.message);document.getElementById('checkout').disabled=false})}
 function showAccount(data){
+  document.body.classList.add('logged-in');
+  
   auth.style.display='none';
   account.style.display='block';
 
