@@ -1693,12 +1693,29 @@ businessForm.onsubmit=function(e){
       'Authorization':'Bearer '+session
     },
     body:JSON.stringify({
-      name:document.getElementById('businessName').value.trim(),
-      description:document.getElementById('businessDescription').value.trim(),
-      phone:document.getElementById('businessPhone').value.trim(),
-      address:document.getElementById('businessAddress').value.trim(),
-      timezone:document.getElementById('businessTimezone').value.trim() || 'Asia/Tashkent'
-    })
+  name:document.getElementById('businessName').value.trim(),
+  description:document.getElementById('businessDescription').value.trim(),
+
+  phone:(function(){
+    var digits=
+      document.getElementById('businessPhone')
+        .value
+        .replace(/\D/g,'');
+
+    var country=
+      document.getElementById('businessPhoneCountry').value;
+
+    var code=
+      phoneCountryCodes[country] || '';
+
+    return digits
+      ? '+'+code+digits
+      : '';
+  })(),
+
+  address:document.getElementById('businessAddress').value.trim(),
+  timezone:document.getElementById('businessTimezone').value.trim() || 'Asia/Tashkent'
+})
   })
   .then(function(r){
     return r.json().then(function(d){
