@@ -3486,7 +3486,7 @@ borderTopColor: '#d32f2f',
       <div className="business-head">
         <div>
           <h1>
-            {business.name}
+            Обзор
           </h1>
         </div>
 
