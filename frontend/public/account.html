@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f7f8fa">
 <title>Bookly — Account</title>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
 <style>
   .workspace-head{
   display:flex;
@@ -1015,6 +1019,73 @@ body.logged-in .logout{
   color:#858b94;
   font-size:11px;
 }
+  .business-address-wrap{
+  display:grid;
+  gap:9px;
+}
+
+.business-address-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+}
+
+.business-address-row input{
+  min-width:0;
+}
+
+.business-locate{
+  height:48px;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+  color:#555b64;
+  padding:0 13px;
+  font:inherit;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.business-locate:hover{
+  background:#f7f8fa;
+}
+
+.business-locate:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.business-map{
+  width:100%;
+  height:280px;
+  border:1px solid #dfe3e8;
+  border-radius:14px;
+  overflow:hidden;
+  background:#eef1f4;
+}
+
+.business-map-status{
+  min-height:16px;
+  color:#858b94;
+  font-size:11px;
+  line-height:1.4;
+}
+
+@media(max-width:560px){
+  .business-address-row{
+    grid-template-columns:1fr;
+  }
+
+  .business-locate{
+    width:100%;
+  }
+
+  .business-map{
+    height:240px;
+  }
+}
 </style>
 </head>
 <body>
@@ -1257,12 +1328,45 @@ body.logged-in .logout{
 </div>
 
       <label for="businessAddress">Address</label>
-      <input
-        id="businessAddress"
-        type="text"
-        maxlength="255"
-        placeholder="Business address"
-      >
+
+<div class="business-address-wrap">
+  <div class="business-address-row">
+    <input
+      id="businessAddress"
+      type="text"
+      placeholder="Business address"
+      autocomplete="street-address"
+    >
+
+    <button
+      id="businessLocate"
+      class="business-locate"
+      type="button"
+    >
+      Locate me
+    </button>
+  </div>
+
+  <div
+    id="businessMap"
+    class="business-map"
+  ></div>
+
+  <div
+    id="businessMapStatus"
+    class="business-map-status"
+  ></div>
+</div>
+
+<input
+  id="businessLatitude"
+  type="hidden"
+>
+
+<input
+  id="businessLongitude"
+  type="hidden"
+>
 
       <label>Timezone</label>
 
@@ -1325,6 +1429,7 @@ body.logged-in .logout{
 </section><div class="foot">Bookly · Simple online booking · <a href="landing.html">Learn more</a></div>
 </main></div>
 <script src="https://unpkg.com/libphonenumber-js@1.12.31/bundle/libphonenumber-min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){'use strict';
 var TIMEZONE_OPTIONS=[
@@ -1981,6 +2086,13 @@ function openEditBusinessModal(business){
   document.getElementById('businessAddress').value=
     business.address || '';
 
+  setBusinessCoordinates(
+    business.latitude,
+    business.longitude
+  );
+
+setBusinessMapStatus('');
+
   businessTimezoneIsEdit=true;
   businessTimezonePickerOpen=false;
   businessTimezonePicker.hidden=true;
@@ -2004,8 +2116,288 @@ function openEditBusinessModal(business){
 
   businessModal.hidden=false;
 
+  setTimeout(function(){
+  initializeBusinessMap();
+
+  if(businessMap){
+    businessMap.invalidateSize();
+
+    var lat=parseFloat(
+      businessLatitudeInput.value
+    );
+
+    var lng=parseFloat(
+      businessLongitudeInput.value
+    );
+
+    if(
+      Number.isFinite(lat) &&
+      Number.isFinite(lng)
+    ){
+      updateBusinessMarker(
+        lat,
+        lng,
+        true
+      );
+    }
+  }
+},100);
+
   document.getElementById('businessName').focus();
 }
+var businessMap=null;
+var businessMapMarker=null;
+var businessMapInitialized=false;
+
+var businessLatitudeInput=
+  document.getElementById('businessLatitude');
+
+var businessLongitudeInput=
+  document.getElementById('businessLongitude');
+
+var businessAddressInput=
+  document.getElementById('businessAddress');
+
+var businessLocateButton=
+  document.getElementById('businessLocate');
+
+var businessMapStatus=
+  document.getElementById('businessMapStatus');
+
+function setBusinessMapStatus(message){
+  businessMapStatus.textContent=message || '';
+}
+
+function setBusinessCoordinates(lat,lng){
+  businessLatitudeInput.value=
+    lat == null ? '' : String(lat);
+
+  businessLongitudeInput.value=
+    lng == null ? '' : String(lng);
+}
+
+async function reverseBusinessGeocode(lat,lng){
+  try{
+    setBusinessMapStatus('Finding address...');
+
+    var response=await fetch(
+      'https://nominatim.openstreetmap.org/reverse' +
+      '?format=jsonv2' +
+      '&lat='+encodeURIComponent(lat) +
+      '&lon='+encodeURIComponent(lng) +
+      '&accept-language=en'
+    );
+
+    if(!response.ok){
+      throw new Error('Reverse geocoding failed');
+    }
+
+    var data=await response.json();
+
+    if(data && data.display_name){
+      businessAddressInput.value=
+        data.display_name;
+
+      setBusinessMapStatus(
+        'Location selected'
+      );
+    }else{
+      setBusinessMapStatus(
+        'Location selected'
+      );
+    }
+  }catch(error){
+    setBusinessMapStatus(
+      'Location selected. Enter the address manually if needed.'
+    );
+  }
+}
+
+function updateBusinessMarker(lat,lng,moveMap){
+  if(!businessMap){
+    return;
+  }
+
+  if(!businessMapMarker){
+    businessMapMarker=
+      L.marker(
+        [lat,lng],
+        {draggable:true}
+      ).addTo(businessMap);
+
+    businessMapMarker.on(
+      'dragend',
+      function(){
+        var position=
+          businessMapMarker.getLatLng();
+
+        var nextLat=position.lat;
+        var nextLng=position.lng;
+
+        setBusinessCoordinates(
+          nextLat,
+          nextLng
+        );
+
+        reverseBusinessGeocode(
+          nextLat,
+          nextLng
+        );
+      }
+    );
+  }else{
+    businessMapMarker.setLatLng(
+      [lat,lng]
+    );
+  }
+
+  if(moveMap){
+    businessMap.setView(
+      [lat,lng],
+      16
+    );
+  }
+}
+
+function initializeBusinessMap(){
+  if(businessMapInitialized){
+    if(businessMap){
+      setTimeout(function(){
+        businessMap.invalidateSize();
+      },100);
+    }
+
+    return;
+  }
+
+  if(!window.L){
+    setBusinessMapStatus(
+      'Map is unavailable.'
+    );
+    return;
+  }
+
+  var latitude=
+    parseFloat(
+      businessLatitudeInput.value
+    );
+
+  var longitude=
+    parseFloat(
+      businessLongitudeInput.value
+    );
+
+  var hasCoordinates=
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude);
+
+  if(!hasCoordinates){
+    latitude=41.2995;
+    longitude=69.2401;
+  }
+
+  businessMap=
+    L.map('businessMap')
+      .setView(
+        [latitude,longitude],
+        hasCoordinates ? 16 : 12
+      );
+
+  L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution:
+        '&copy; OpenStreetMap contributors'
+    }
+  ).addTo(businessMap);
+
+  businessMapInitialized=true;
+
+  if(hasCoordinates){
+    updateBusinessMarker(
+      latitude,
+      longitude,
+      false
+    );
+  }
+
+  setTimeout(function(){
+    businessMap.invalidateSize();
+  },100);
+}
+
+function locateBusiness(){
+  if(!navigator.geolocation){
+    setBusinessMapStatus(
+      'Geolocation is not supported by this browser.'
+    );
+    return;
+  }
+
+  businessLocateButton.disabled=true;
+  setBusinessMapStatus(
+    'Finding your location...'
+  );
+
+  navigator.geolocation.getCurrentPosition(
+    function(position){
+      var lat=
+        position.coords.latitude;
+
+      var lng=
+        position.coords.longitude;
+
+      setBusinessCoordinates(
+        lat,
+        lng
+      );
+
+      initializeBusinessMap();
+
+      updateBusinessMarker(
+        lat,
+        lng,
+        true
+      );
+
+      reverseBusinessGeocode(
+        lat,
+        lng
+      );
+
+      businessLocateButton.disabled=false;
+    },
+    function(error){
+      businessLocateButton.disabled=false;
+
+      var message=
+        'Unable to determine your location.';
+
+      if(error.code===1){
+        message=
+          'Location permission was denied.';
+      }else if(error.code===2){
+        message=
+          'Your location is unavailable.';
+      }else if(error.code===3){
+        message=
+          'Location request timed out.';
+      }
+
+      setBusinessMapStatus(message);
+    },
+    {
+      enableHighAccuracy:true,
+      timeout:15000,
+      maximumAge:0
+    }
+  );
+}
+
+businessLocateButton.addEventListener(
+  'click',
+  locateBusiness
+);
 function openBusinessModal(){
   businessForm.reset();
 
@@ -2026,6 +2418,29 @@ function openBusinessModal(){
   document.getElementById('createBusiness').textContent='Create business';
 
   businessModal.hidden=false;
+
+  setBusinessCoordinates(null,null);
+businessAddressInput.value='';
+setBusinessMapStatus('');
+
+setTimeout(function(){
+  initializeBusinessMap();
+
+  if(businessMap){
+    businessMap.invalidateSize();
+    businessMap.setView(
+      [41.2995,69.2401],
+      12
+    );
+
+    if(businessMapMarker){
+      businessMap.removeLayer(
+        businessMapMarker
+      );
+      businessMapMarker=null;
+    }
+  }
+},100);
 
   document.getElementById('businessName').focus();
 }
@@ -2099,6 +2514,27 @@ businessForm.onsubmit=function(e){
           .value
           .trim(),
     })
+    latitude:(function(){
+  var value=
+    parseFloat(
+      document.getElementById('businessLatitude').value
+    );
+
+  return Number.isFinite(value)
+    ? value
+    : null;
+})(),
+
+longitude:(function(){
+  var value=
+    parseFloat(
+      document.getElementById('businessLongitude').value
+    );
+
+  return Number.isFinite(value)
+    ? value
+    : null;
+})(),
   })
   .then(function(r){
     return r.json().then(function(d){
