@@ -633,7 +633,69 @@ def account_connect_telegram_from_web(
             "next": "open_admin",
         }
 
+@app.get("/account/billing")
+def account_billing(authorization: str = Header(default="")):
+    with SessionLocal() as db:
+        account = _account_from_header(db, authorization)
 
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == account.business_id,
+                Business.account_id == account.id,
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                400,
+                "Bookly business not found"
+            )
+
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id == business.id
+            )
+            .first()
+        )
+
+        return {
+            "ok": True,
+            "business": {
+                "id": business.id,
+                "name": business.name,
+            },
+            "subscription": {
+                "active": (
+                    bool(subscription.active)
+                    if subscription
+                    else False
+                ),
+                "status": (
+                    subscription.status
+                    if subscription
+                    else "inactive"
+                ),
+                "expires_at": (
+                    subscription.expires_at
+                    if subscription
+                    else None
+                ),
+                "services_limit": (
+                    subscription.current_services_limit
+                    if subscription and subscription.active
+                    else 0
+                ),
+                "current_price": (
+                    float(subscription.current_price)
+                    if subscription
+                    and subscription.current_price is not None
+                    else 0.0
+                ),
+            },
+        }
 @app.get("/account/paddle/checkout-token")
 def account_paddle_checkout_token(authorization: str = Header(default="")):
     with SessionLocal() as db:
