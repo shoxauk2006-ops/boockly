@@ -296,6 +296,92 @@ body.logged-in .card{
 
   <button id="logout" class="logout">Sign out</button>
 
+  <div id="businessModal" class="business-modal" hidden>
+  <div class="business-modal-backdrop"></div>
+
+  <div class="business-modal-card">
+    <div class="business-modal-head">
+      <div>
+        <span class="card-label">NEW BUSINESS</span>
+        <h3>Add business</h3>
+        <p>Create another Bookly business for your account.</p>
+      </div>
+
+      <button
+        id="closeBusinessModal"
+        class="business-modal-close"
+        type="button"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
+
+    <form id="businessForm">
+
+      <label for="businessName">Business name</label>
+      <input
+        id="businessName"
+        type="text"
+        maxlength="120"
+        placeholder="e.g. My Beauty Studio"
+        required
+      >
+
+      <label for="businessDescription">Description</label>
+      <textarea
+        id="businessDescription"
+        maxlength="500"
+        placeholder="Short description of your business"
+      ></textarea>
+
+      <label for="businessPhone">Phone</label>
+      <input
+        id="businessPhone"
+        type="tel"
+        maxlength="40"
+        placeholder="+998 90 123 45 67"
+      >
+
+      <label for="businessAddress">Address</label>
+      <input
+        id="businessAddress"
+        type="text"
+        maxlength="255"
+        placeholder="Business address"
+      >
+
+      <label for="businessTimezone">Timezone</label>
+      <input
+        id="businessTimezone"
+        type="text"
+        maxlength="64"
+        value="Asia/Tashkent"
+        placeholder="Asia/Tashkent"
+      >
+
+      <div class="business-modal-actions">
+        <button
+          id="cancelBusiness"
+          class="business-cancel"
+          type="button"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="createBusiness"
+          class="primary"
+          type="submit"
+        >
+          Create business
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
 </div>
 
 </section><div class="foot">Bookly · Simple online booking · <a href="landing.html">Learn more</a></div>
