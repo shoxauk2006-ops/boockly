@@ -201,6 +201,155 @@ body.logged-in .card{
 }
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#101114;background:#f7f8fa}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;overflow-x:hidden}.page{min-height:100vh;position:relative}.orb{position:fixed;pointer-events:none;border-radius:999px;filter:blur(70px);opacity:.55}.orb.a{width:360px;height:360px;right:-130px;top:-120px;background:#dfe8ff}.orb.b{width:300px;height:300px;left:-160px;bottom:-120px;background:#e9ddff}.nav{height:76px;max-width:1180px;margin:auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2}.brand{font-size:15px;font-weight:900;letter-spacing:.16em}.nav-link{color:#656b75;text-decoration:none;font-size:14px;font-weight:650}.shell{width:min(1060px,calc(100% - 36px));margin:0 auto;padding:54px 0 90px;position:relative;z-index:1}.intro{text-align:center;max-width:650px;margin:0 auto 34px}.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid #e4e7ec;background:rgba(255,255,255,.72);backdrop-filter:blur(14px);padding:8px 12px;border-radius:999px;color:#626974;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.dot{width:7px;height:7px;border-radius:50%;background:#111}.intro h1{font-size:clamp(38px,6vw,62px);line-height:.98;letter-spacing:-.055em;margin:18px 0 14px}.intro p{font-size:17px;line-height:1.65;color:#6d737d;margin:0}.card{width:min(500px,100%);margin:0 auto;background:rgba(255,255,255,.9);border:1px solid #e5e8ed;border-radius:28px;padding:26px;box-shadow:0 30px 80px rgba(18,25,38,.10);backdrop-filter:blur(20px)}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#f0f2f5;padding:5px;border-radius:15px;margin-bottom:22px}.tabs button{border:0;background:transparent;color:#707680;border-radius:11px;padding:12px;font:inherit;font-weight:750;cursor:pointer}.tabs button.active{background:#111;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.12)}.socials{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:19px}.social{height:48px;border:1px solid #dfe3e8;background:#fff;border-radius:13px;font:inherit;font-weight:750;color:#17191d;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer}.social:hover{background:#fafbfc}.social span{font-size:16px}.divider{display:flex;align-items:center;gap:12px;color:#a0a6ae;font-size:12px;margin:18px 0}.divider:before,.divider:after{content:"";height:1px;background:#e8ebef;flex:1}label{display:block;font-size:12px;font-weight:800;color:#454b55;margin:15px 0 7px}input{width:100%;height:50px;border:1px solid #dfe3e8;border-radius:13px;padding:0 14px;background:#fff;color:#111;font:inherit;outline:none;transition:.18s}input:focus{border-color:#111;box-shadow:0 0 0 4px rgba(17,17,17,.07)}button.primary{width:100%;height:50px;border:0;border-radius:13px;background:#111;color:#fff;padding:0 16px;font:inherit;font-weight:800;cursor:pointer;margin-top:19px;transition:transform .15s,box-shadow .15s,opacity .15s}button.primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(17,17,17,.14)}button.primary:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}.terms{font-size:11px;color:#9298a1;line-height:1.55;text-align:center;margin:15px 4px 0}.error{background:#fff3f3;border:1px solid #ffd8d8;color:#a00000;padding:12px 13px;border-radius:13px;margin-top:14px;line-height:1.45;font-size:13px}.account{display:none}.account-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}.account-head h2{margin:0;font-size:25px;letter-spacing:-.03em}.account-head p{margin:6px 0 0;color:#737a84;font-size:13px}.ready{display:inline-flex;align-items:center;gap:6px;border:1px solid #dce9df;background:#f4faf5;color:#397044;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;white-space:nowrap}.ready i{width:6px;height:6px;background:#4d9a5d;border-radius:50%}.actions{display:grid;gap:10px}.action{border:1px solid #e2e5e9;background:#fff;border-radius:16px;padding:16px;text-align:left}.action h3{margin:0 0 5px;font-size:15px}.action p{margin:0;color:#777e87;font-size:12px;line-height:1.5}.action button{margin-top:13px}.connect-box{border-top:1px solid #eceff2;padding-top:20px;margin-top:4px}.link{border:1px solid #dfe3e7;background:#fff;border-radius:13px;height:46px;padding:0 13px;width:100%;font:inherit;font-weight:750;cursor:pointer;margin-top:10px}.status{font-size:12px;color:#737a84;margin-top:9px;line-height:1.45}.logout{border:0;background:transparent;color:#8a9098;font:inherit;font-size:12px;cursor:pointer;display:block;margin:20px auto 0}.foot{text-align:center;color:#a1a6ae;font-size:11px;margin-top:25px}.foot a{color:#7b818a;text-decoration:none}@media(max-width:560px){.nav{padding:0 18px}.shell{width:min(100% - 24px,500px);padding-top:34px}.card{padding:20px;border-radius:23px}.intro h1{font-size:43px}.intro p{font-size:15px}.socials{grid-template-columns:1fr}.account-head{display:block}.ready{margin-top:13px}.orb{opacity:.35}}
+.business-modal{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.business-modal[hidden]{
+  display:none;
+}
+
+.business-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(15,18,24,.48);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+
+.business-modal-card{
+  position:relative;
+  width:min(520px,100%);
+  max-height:calc(100vh - 40px);
+  overflow:auto;
+  background:#fff;
+  border:1px solid #e2e5e9;
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 30px 80px rgba(15,23,42,.22);
+}
+
+.business-modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.business-modal-head h3{
+  margin:4px 0 5px;
+  font-size:20px;
+  letter-spacing:-.03em;
+}
+
+.business-modal-head p{
+  margin:0;
+  color:#777e87;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.business-modal-close{
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  border:1px solid #e0e4e8;
+  border-radius:10px;
+  background:#fff;
+  color:#555b64;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.business-modal-close:hover{
+  background:#f7f8fa;
+}
+
+.business-modal-card label{
+  margin:14px 0 7px;
+}
+
+.business-modal-card input,
+.business-modal-card textarea{
+  width:100%;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+  color:#111;
+  font:inherit;
+  outline:none;
+}
+
+.business-modal-card input{
+  height:48px;
+  padding:0 13px;
+}
+
+.business-modal-card textarea{
+  min-height:88px;
+  padding:12px 13px;
+  resize:vertical;
+}
+
+.business-modal-card input:focus,
+.business-modal-card textarea:focus{
+  border-color:#111;
+  box-shadow:0 0 0 4px rgba(17,17,17,.06);
+}
+
+.business-modal-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:20px;
+}
+
+.business-modal-actions .primary{
+  margin-top:0;
+}
+
+.business-cancel{
+  height:50px;
+  border:1px solid #dfe3e8;
+  border-radius:13px;
+  background:#fff;
+  color:#555b64;
+  font:inherit;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.business-cancel:hover{
+  background:#f7f8fa;
+}
+
+@media(max-width:560px){
+  .business-modal{
+    padding:12px;
+  }
+
+  .business-modal-card{
+    max-height:calc(100vh - 24px);
+    border-radius:19px;
+    padding:18px;
+  }
+
+  .business-modal-actions{
+    grid-template-columns:1fr;
+  }
+
+  .business-modal-actions .primary{
+    order:-1;
+  }
+}
 </style>
 </head>
 <body>
@@ -457,16 +606,38 @@ document.getElementById('checkout').onclick=function(){clearErr();this.disabled=
   document.body.classList.remove('logged-in');
   location.reload();
 };
-    document.getElementById('addBusiness').onclick=function(){
+var businessModal=document.getElementById('businessModal');
+var businessForm=document.getElementById('businessForm');
+var closeBusinessModal=document.getElementById('closeBusinessModal');
+var cancelBusiness=document.getElementById('cancelBusiness');
+
+function openBusinessModal(){
+  businessForm.reset();
+  document.getElementById('businessTimezone').value='Asia/Tashkent';
+  businessModal.hidden=false;
+  document.getElementById('businessName').focus();
+}
+
+function closeBusinessModalWindow(){
+  businessModal.hidden=true;
+}
+
+document.getElementById('addBusiness').onclick=openBusinessModal;
+
+closeBusinessModal.onclick=closeBusinessModalWindow;
+cancelBusiness.onclick=closeBusinessModalWindow;
+
+businessModal.querySelector('.business-modal-backdrop').onclick=
+  closeBusinessModalWindow;
+
+businessForm.onsubmit=function(e){
+  e.preventDefault();
   clearErr();
 
-  var name=prompt('Business name');
-  if(!name || !name.trim()) return;
+  var createButton=document.getElementById('createBusiness');
 
-  var description=prompt('Business description (optional)') || '';
-  var phone=prompt('Phone (optional)') || '';
-  var address=prompt('Address (optional)') || '';
-  var timezone=prompt('Timezone', 'Asia/Tashkent') || 'Asia/Tashkent';
+  createButton.disabled=true;
+  createButton.textContent='Creating...';
 
   fetch(api+'/account/businesses',{
     method:'POST',
@@ -475,26 +646,33 @@ document.getElementById('checkout').onclick=function(){clearErr();this.disabled=
       'Authorization':'Bearer '+session
     },
     body:JSON.stringify({
-      name:name.trim(),
-      description:description.trim(),
-      phone:phone.trim(),
-      address:address.trim(),
-      timezone:timezone.trim()
+      name:document.getElementById('businessName').value.trim(),
+      description:document.getElementById('businessDescription').value.trim(),
+      phone:document.getElementById('businessPhone').value.trim(),
+      address:document.getElementById('businessAddress').value.trim(),
+      timezone:document.getElementById('businessTimezone').value.trim() || 'Asia/Tashkent'
     })
   })
   .then(function(r){
     return r.json().then(function(d){
-      if(!r.ok) throw new Error(d.detail || d.error || 'Failed to create business');
+      if(!r.ok){
+        throw new Error(d.detail || d.error || 'Failed to create business');
+      }
       return d;
     });
   })
   .then(function(){
+    closeBusinessModalWindow();
     loadBusinesses();
   })
   .catch(function(e){
     err(e.message);
+  })
+  .finally(function(){
+    createButton.disabled=false;
+    createButton.textContent='Create business';
   });
-};        
+};    
 check();
 })();
 </script>
