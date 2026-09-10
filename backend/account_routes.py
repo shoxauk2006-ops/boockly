@@ -166,7 +166,7 @@ def _account_checkout_token(account_id: int, business_id: int) -> str:
 
     payload = {
         "business_id": int(business_id),
-        "owner_telegram_id": -int(account_id),
+        "owner_telegram_id": int(business_id),
         "account_id": int(account_id),
         "exp": int(time_module.time()) + CHECKOUT_TOKEN_SECONDS,
     }
