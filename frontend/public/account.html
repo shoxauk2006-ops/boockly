@@ -1630,11 +1630,49 @@ var businessModal=document.getElementById('businessModal');
 var businessForm=document.getElementById('businessForm');
 var closeBusinessModal=document.getElementById('closeBusinessModal');
 var cancelBusiness=document.getElementById('cancelBusiness');
+function setPhoneForEdit(phone){
+  var value=String(phone || '').trim();
 
+  if(!value){
+    phoneInput.value='';
+    phoneCountry.value=detectPhoneCountry();
+    updatePhoneCode();
+    return;
+  }
+
+  var detectedCountry='';
+
+  try{
+    var parsed=
+      phoneLib.parsePhoneNumberFromString(value);
+
+    if(parsed && parsed.country){
+      detectedCountry=parsed.country;
+    }
+  }catch(e){}
+
+  if(
+    detectedCountry &&
+    phoneCountries.indexOf(detectedCountry)!==-1
+  ){
+    phoneCountry.value=detectedCountry;
+  }
+
+  updatePhoneCode();
+
+  var digits=value.replace(/\D/g,'');
+  var code=phoneCountryCodes[phoneCountry.value] || '';
+
+  if(code && digits.indexOf(code)===0){
+    digits=digits.slice(code.length);
+  }
+
+  phoneInput.value=digits;
+}
 function openEditBusinessModal(business){
   document.getElementById('businessName').value=business.name || '';
   document.getElementById('businessDescription').value=business.description || '';
-  document.getElementById('businessPhone').value=business.phone || '';
+  setPhoneForEdit(business.phone);
   document.getElementById('businessAddress').value=business.address || '';
   document.getElementById('businessTimezone').value=business.timezone || 'Asia/Tashkent';
 
