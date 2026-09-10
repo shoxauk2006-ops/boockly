@@ -1214,7 +1214,14 @@ function loadBusinesses(){
           selectButton.textContent='Select';
         });
       };
+      var editButton=document.createElement('button');
+      editButton.type='button';
+      editButton.className='business-select';
+      editButton.textContent='Edit';
 
+      editButton.onclick=function(){
+        openEditBusinessModal(business);
+      };
       var deleteButton=document.createElement('button');
       deleteButton.type='button';
       deleteButton.className='business-delete';
@@ -1246,6 +1253,7 @@ function loadBusinesses(){
       };
 
       actions.appendChild(selectButton);
+      actions.appendChild(editButton);
       actions.appendChild(deleteButton);
 
       item.appendChild(main);
@@ -1280,8 +1288,28 @@ var businessForm=document.getElementById('businessForm');
 var closeBusinessModal=document.getElementById('closeBusinessModal');
 var cancelBusiness=document.getElementById('cancelBusiness');
 
+function openEditBusinessModal(business){
+  document.getElementById('businessName').value=business.name || '';
+  document.getElementById('businessDescription').value=business.description || '';
+  document.getElementById('businessPhone').value=business.phone || '';
+  document.getElementById('businessAddress').value=business.address || '';
+  document.getElementById('businessTimezone').value=business.timezone || 'Asia/Tashkent';
+
+  businessModal.dataset.editBusinessId=String(business.id);
+
+  businessModal.querySelector('.card-label').textContent='EDIT BUSINESS';
+  businessModal.querySelector('h3').textContent='Edit business';
+  document.getElementById('createBusiness').textContent='Save changes';
+
+  businessModal.hidden=false;
+  document.getElementById('businessName').focus();
+}
 function openBusinessModal(){
   businessForm.reset();
+  delete businessModal.dataset.editBusinessId;
+  businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
+  businessModal.querySelector('h3').textContent='Add business';
+  document.getElementById('createBusiness').textContent='Create business';
   document.getElementById('businessTimezone').value='Asia/Tashkent';
   businessModal.hidden=false;
   document.getElementById('businessName').focus();
@@ -1305,11 +1333,18 @@ businessForm.onsubmit=function(e){
 
   var createButton=document.getElementById('createBusiness');
 
+  var editBusinessId=businessModal.dataset.editBusinessId || '';
+  var requestUrl=editBusinessId
+    ? api+'/account/businesses/'+encodeURIComponent(editBusinessId)
+    : api+'/account/businesses';
+
+  var requestMethod=editBusinessId ? 'PUT' : 'POST';
+
   createButton.disabled=true;
   createButton.textContent='Creating...';
 
-  fetch(api+'/account/businesses',{
-    method:'POST',
+  fetch(requestUrl,{
+    method:requestMethod,
     headers:{
       'Content-Type':'application/json',
       'Authorization':'Bearer '+session
@@ -1332,6 +1367,10 @@ businessForm.onsubmit=function(e){
   })
   .then(function(){
     closeBusinessModalWindow();
+    delete businessModal.dataset.editBusinessId;
+    businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
+    businessModal.querySelector('h3').textContent='Add business';
+    document.getElementById('createBusiness').textContent='Create business';
     loadBusinesses();
   })
   .catch(function(e){
