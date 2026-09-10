@@ -1327,13 +1327,41 @@ body.logged-in .logout{
 <script src="https://unpkg.com/libphonenumber-js@1.12.31/bundle/libphonenumber-min.js"></script>
 <script>
 (function(){'use strict';
-var phoneLib=window.libphonenumber;
+var TIMEZONE_OPTIONS=[
+  ['Asia/Tashkent','Ташкент'],
+  ['Asia/Almaty','Алматы'],
+  ['Asia/Bishkek','Бишкек'],
+  ['Asia/Dhaka','Дакка'],
+  ['Asia/Karachi','Карачи'],
+  ['Asia/Kolkata','Калькутта'],
+  ['Asia/Dubai','Дубай'],
+  ['Asia/Riyadh','Эр-Рияд'],
+  ['Asia/Tehran','Тегеран'],
+  ['Asia/Baghdad','Багдад'],
+  ['Asia/Jerusalem','Иерусалим'],
+  ['Asia/Baku','Баку'],
+  ['Asia/Tbilisi','Тбилиси'],
+  ['Europe/Moscow','Москва'],
+  ['Europe/Istanbul','Стамбул'],
+  ['Europe/Kiev','Киев'],
+  ['Europe/Berlin','Берлин'],
+  ['Europe/Paris','Париж'],
+  ['Europe/London','Лондон'],
+  ['Europe/Rome','Рим'],
+  ['Europe/Madrid','Мадрид'],
+  ['Africa/Cairo','Каир'],
+  ['Africa/Johannesburg','Йоханнесбург'],
+  ['America/New_York','Нью-Йорк'],
+  ['America/Chicago','Чикаго'],
+  ['America/Denver','Денвер'],
+  ['America/Los_Angeles','Лос-Анджелес'],
+  ['America/Toronto','Торонто'],
+  ['America/Sao_Paulo','Сан-Паулу'],
+  ['Australia/Sydney','Сидней'],
+  ['Pacific/Auckland','Окленд']
+];
 
-var phoneCountries=phoneLib
-  ? phoneLib.getCountries()
-  : [];
-
-var phoneTimezoneCountry={
+var timezoneCountryMap={
   'Asia/Tashkent':'UZ',
   'Asia/Almaty':'KZ',
   'Asia/Bishkek':'KG',
@@ -1349,7 +1377,6 @@ var phoneTimezoneCountry={
   'Asia/Tbilisi':'GE',
   'Europe/Moscow':'RU',
   'Europe/Istanbul':'TR',
-  'Europe/Kyiv':'UA',
   'Europe/Kiev':'UA',
   'Europe/Berlin':'DE',
   'Europe/Paris':'FR',
@@ -1368,44 +1395,180 @@ var phoneTimezoneCountry={
   'Pacific/Auckland':'NZ'
 };
 
-function detectPhoneCountry(){
+function getTimezoneOffset(timezone){
   try{
-    var language=navigator.language || '';
+    var parts=new Intl.DateTimeFormat('en-US',{
+      timeZone:timezone,
+      timeZoneName:'shortOffset'
+    }).formatToParts(new Date());
 
-    var regionMatch=language.match(
-      /[-_]([A-Z]{2})$/i
-    );
+    var value='';
 
-    var region=regionMatch
-      ? regionMatch[1].toUpperCase()
-      : '';
+    parts.forEach(function(part){
+      if(part.type==='timeZoneName'){
+        value=part.value;
+      }
+    });
 
-    if(
-      region &&
-      phoneCountries.indexOf(region)!==-1
-    ){
-      return region;
+    if(value==='GMT')return 'GMT+0';
+
+    return value || '';
+  }catch(e){
+    return '';
+  }
+}
+
+function getTimezoneCity(timezone){
+  for(var i=0;i<TIMEZONE_OPTIONS.length;i++){
+    if(TIMEZONE_OPTIONS[i][0]===timezone){
+      return TIMEZONE_OPTIONS[i][1];
     }
+  }
 
+  return timezone;
+}
+
+function detectBusinessTimezone(){
+  try{
     var timezone=
       Intl.DateTimeFormat()
         .resolvedOptions()
         .timeZone;
 
-    var timezoneCountry=
-      phoneTimezoneCountry[timezone];
-
-    if(
-      timezoneCountry &&
-      phoneCountries.indexOf(timezoneCountry)!==-1
-    ){
-      return timezoneCountry;
+    for(var i=0;i<TIMEZONE_OPTIONS.length;i++){
+      if(TIMEZONE_OPTIONS[i][0]===timezone){
+        return timezone;
+      }
     }
   }catch(e){}
 
-  return 'US';
+  return 'Asia/Tashkent';
 }
 
+var businessTimezoneInputValue='Asia/Tashkent';
+var businessTimezonePickerOpen=false;
+var businessTimezoneIsEdit=false;
+
+var businessTimezoneLabel=
+  document.getElementById('businessTimezoneLabel');
+
+var businessTimezoneValue=
+  document.getElementById('businessTimezoneValue');
+
+var businessTimezoneChange=
+  document.getElementById('businessTimezoneChange');
+
+var businessTimezonePicker=
+  document.getElementById('businessTimezonePicker');
+
+var businessTimezoneSearch=
+  document.getElementById('businessTimezoneSearch');
+
+var businessTimezoneList=
+  document.getElementById('businessTimezoneList');
+
+function setBusinessTimezone(timezone){
+  businessTimezoneInputValue=
+    timezone || 'Asia/Tashkent';
+
+  businessTimezoneLabel.textContent=
+    getTimezoneCity(businessTimezoneInputValue);
+
+  businessTimezoneValue.textContent=
+    businessTimezoneInputValue+
+    ' · '+
+    getTimezoneOffset(businessTimezoneInputValue);
+}
+
+function renderBusinessTimezones(){
+  var search=
+    businessTimezoneSearch.value
+      .trim()
+      .toLowerCase();
+
+  businessTimezoneList.innerHTML='';
+
+  var found=0;
+
+  TIMEZONE_OPTIONS.forEach(function(item){
+    var timezone=item[0];
+    var city=item[1];
+
+    var haystack=
+      (timezone+' '+city)
+        .toLowerCase();
+
+    if(
+      search &&
+      haystack.indexOf(search)===-1
+    ){
+      return;
+    }
+
+    found++;
+
+    var button=
+      document.createElement('button');
+
+    button.type='button';
+    button.className='timezone-option';
+
+    if(
+      timezone===
+      businessTimezoneInputValue
+    ){
+      button.className+=' selected';
+    }
+
+    button.innerHTML=
+      '<strong>'+
+        city+
+      '</strong>'+
+      '<span>'+
+        timezone+
+        ' · '+
+        getTimezoneOffset(timezone)+
+      '</span>';
+
+    button.onclick=function(){
+      setBusinessTimezone(timezone);
+
+      businessTimezonePickerOpen=false;
+      businessTimezonePicker.hidden=true;
+      businessTimezoneSearch.value='';
+
+      renderBusinessTimezones();
+    };
+
+    businessTimezoneList.appendChild(button);
+  });
+
+  if(!found){
+    businessTimezoneList.innerHTML=
+      '<div class="timezone-empty">No timezones found</div>';
+  }
+}
+
+function openBusinessTimezonePicker(){
+  if(businessTimezoneIsEdit)return;
+
+  businessTimezonePickerOpen=true;
+  businessTimezonePicker.hidden=false;
+  businessTimezoneSearch.value='';
+  renderBusinessTimezones();
+
+  setTimeout(function(){
+    businessTimezoneSearch.focus();
+  },0);
+}
+
+businessTimezoneChange.onclick=
+  openBusinessTimezonePicker;
+
+businessTimezoneSearch.addEventListener(
+  'input',
+  renderBusinessTimezones
+);
 var phoneLib=window.libphonenumber;
 
 var phoneCountries=phoneLib
