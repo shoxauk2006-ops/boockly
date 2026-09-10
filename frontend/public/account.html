@@ -518,6 +518,114 @@ body.logged-in .logout{
     border-radius:18px;
   }
 }
+  .business-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:16px 17px;
+  border:1px solid #e1e5e9;
+  border-radius:15px;
+  background:#fafbfc;
+}
+
+.business-item-main{
+  min-width:0;
+  flex:1;
+}
+
+.business-item-name{
+  font-size:14px;
+  font-weight:800;
+  color:#17191d;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.business-item-meta{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+
+.business-status,
+.business-selected{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:5px 8px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.business-status{
+  color:#397044;
+  background:#f4faf5;
+  border:1px solid #dce9df;
+}
+
+.business-selected{
+  color:#5964e8;
+  background:#f1f2ff;
+  border:1px solid #dfe1ff;
+}
+
+.business-item-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:0 0 auto;
+}
+
+.business-select,
+.business-delete{
+  height:36px;
+  border-radius:10px;
+  padding:0 11px;
+  font:inherit;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.business-select{
+  border:1px solid #dfe3e8;
+  background:#111;
+  color:#fff;
+}
+
+.business-select:disabled{
+  opacity:.45;
+  cursor:default;
+}
+
+.business-delete{
+  border:1px solid #eadcdc;
+  background:#fff;
+  color:#9a5555;
+}
+
+.business-delete:hover{
+  background:#fff7f7;
+}
+
+@media(max-width:560px){
+  .business-item{
+    display:block;
+  }
+
+  .business-item-actions{
+    margin-top:13px;
+  }
+
+  .business-select,
+  .business-delete{
+    flex:1;
+  }
+}
 </style>
 </head>
 <body>
@@ -738,27 +846,130 @@ function showAccount(data){
 }
 function loadBusinesses(){
   call('/account/businesses',{
-    headers:{Authorization:'Bearer '+session}
+    headers:{
+      Authorization:'Bearer '+session
+    }
   }).then(function(d){
-    console.log('Bookly businesses:',d.businesses);
 
     var container=document.getElementById('businessesList');
+
     if(!container)return;
 
     container.innerHTML='';
 
+    if(!d.businesses || !d.businesses.length){
+      var empty=document.createElement('p');
+      empty.className='status';
+      empty.textContent='You do not have any businesses yet.';
+      container.appendChild(empty);
+      return;
+    }
+
     d.businesses.forEach(function(business){
+
       var item=document.createElement('div');
       item.className='business-item';
 
-item.innerHTML=
-  '<strong>'+business.name+'</strong>'+
-  '<span style="margin-left:auto;flex:0 0 auto;">'+
-  (business.subscription_active?'Active':'Inactive')+
-  '</span>';
+      var main=document.createElement('div');
+      main.className='business-item-main';
+
+      var name=document.createElement('div');
+      name.className='business-item-name';
+      name.textContent=business.name;
+
+      var meta=document.createElement('div');
+      meta.className='business-item-meta';
+
+      var status=document.createElement('span');
+      status.className='business-status';
+      status.textContent=
+        business.subscription_active
+          ? 'Active'
+          : 'Inactive';
+
+      meta.appendChild(status);
+
+      if(business.is_current){
+        var selected=document.createElement('span');
+        selected.className='business-selected';
+        selected.textContent='Selected';
+        meta.appendChild(selected);
+      }
+
+      main.appendChild(name);
+      main.appendChild(meta);
+
+      var actions=document.createElement('div');
+      actions.className='business-item-actions';
+
+      var selectButton=document.createElement('button');
+      selectButton.type='button';
+      selectButton.className='business-select';
+      selectButton.textContent=
+        business.is_current
+          ? 'Selected'
+          : 'Select';
+
+      selectButton.disabled=!!business.is_current;
+
+      selectButton.onclick=function(){
+
+        selectButton.disabled=true;
+        selectButton.textContent='Selecting...';
+
+        call('/account/businesses/'+business.id+'/select',{
+          method:'POST',
+          headers:{
+            Authorization:'Bearer '+session
+          }
+        }).then(function(){
+          loadBusinesses();
+        }).catch(function(e){
+          err(e.message);
+          selectButton.disabled=false;
+          selectButton.textContent='Select';
+        });
+      };
+
+      var deleteButton=document.createElement('button');
+      deleteButton.type='button';
+      deleteButton.className='business-delete';
+      deleteButton.textContent='Delete';
+
+      deleteButton.onclick=function(){
+
+        var confirmed=confirm(
+          'Delete "'+business.name+'"? This will permanently remove this business and its data.'
+        );
+
+        if(!confirmed)return;
+
+        deleteButton.disabled=true;
+        deleteButton.textContent='Deleting...';
+
+        call('/account/businesses/'+business.id,{
+          method:'DELETE',
+          headers:{
+            Authorization:'Bearer '+session
+          }
+        }).then(function(){
+          loadBusinesses();
+        }).catch(function(e){
+          err(e.message);
+          deleteButton.disabled=false;
+          deleteButton.textContent='Delete';
+        });
+      };
+
+      actions.appendChild(selectButton);
+      actions.appendChild(deleteButton);
+
+      item.appendChild(main);
+      item.appendChild(actions);
 
       container.appendChild(item);
     });
+
   }).catch(function(e){
     err(e.message);
   });
