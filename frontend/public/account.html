@@ -2254,6 +2254,83 @@ document.getElementById('billingCheckout').onclick=function(){
   this.disabled=true;
   goPricing();
 };
+document.getElementById('billingUpgrade').onclick=function(){
+  goPricing();
+};
+
+document.getElementById('billingDowngrade').onclick=function(){
+  goPricing();
+};
+
+document.getElementById('billingCancel').onclick=function(){
+  if(!confirm('Cancel your subscription at the end of the current billing period?')){
+    return;
+  }
+
+  var button=this;
+  button.disabled=true;
+
+  call('/account/subscription/cancel',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(){
+    loadBilling();
+  })
+  .catch(function(e){
+    document.getElementById('billingMessage').textContent=
+      e.message||'Unable to cancel subscription.';
+  })
+  .finally(function(){
+    button.disabled=false;
+  });
+};
+
+document.getElementById('billingRestore').onclick=function(){
+  var button=this;
+  button.disabled=true;
+
+  call('/account/subscription/resume',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(){
+    loadBilling();
+  })
+  .catch(function(e){
+    document.getElementById('billingMessage').textContent=
+      e.message||'Unable to restore subscription.';
+  })
+  .finally(function(){
+    button.disabled=false;
+  });
+};
+
+document.getElementById('billingRestorePackage').onclick=function(){
+  var button=this;
+  button.disabled=true;
+
+  call('/account/subscription/resume-package',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(){
+    loadBilling();
+  })
+  .catch(function(e){
+    document.getElementById('billingMessage').textContent=
+      e.message||'Unable to restore package.';
+  })
+  .finally(function(){
+    button.disabled=false;
+  });
+};
 document.getElementById('checkout').onclick=function(){clearErr();this.disabled=true;goPricing()};document.getElementById('logout').onclick=function(){
   localStorage.removeItem('bookly_session');
   document.body.classList.remove('logged-in');
@@ -2865,7 +2942,6 @@ businessForm.onsubmit=function(e){
   });
 };
 function loadBilling(){
-
   var businessEl=document.getElementById('billingBusiness');
   var statusEl=document.getElementById('billingStatus');
   var planEl=document.getElementById('billingPlan');
@@ -2873,70 +2949,88 @@ function loadBilling(){
   var priceEl=document.getElementById('billingPrice');
   var expiresEl=document.getElementById('billingExpires');
   var checkoutButton=document.getElementById('billingCheckout');
+  var actionsEl=document.getElementById('billingActions');
+  var upgradeButton=document.getElementById('billingUpgrade');
+  var downgradeButton=document.getElementById('billingDowngrade');
+  var cancelButton=document.getElementById('billingCancel');
+  var restoreButton=document.getElementById('billingRestore');
+  var restorePackageButton=document.getElementById('billingRestorePackage');
   var messageEl=document.getElementById('billingMessage');
 
   if(!businessEl)return;
 
-  businessEl.textContent='Loading business...';
-  statusEl.textContent='—';
-  statusEl.className='billing-status';
-  planEl.textContent='—';
-  servicesEl.textContent='—';
-  priceEl.textContent='—';
-  expiresEl.textContent='—';
   messageEl.textContent='';
+  actionsEl.hidden=true;
+  checkoutButton.hidden=false;
+  upgradeButton.hidden=false;
+  downgradeButton.hidden=false;
+  cancelButton.hidden=false;
+  restoreButton.hidden=true;
+  restorePackageButton.hidden=true;
 
   call('/account/billing',{
     headers:{
       Authorization:'Bearer '+session
     }
-  }).then(function(d){
-
+  })
+  .then(function(d){
     var business=d.business;
     var subscription=d.subscription;
 
-    businessEl.textContent=
-      'Subscription for '+business.name;
+    businessEl.textContent='Subscription for '+business.name;
 
     var active=!!subscription.active;
+    var cancelled=subscription.status==='cancelled';
+    var pendingLimit=subscription.pending_services_limit;
 
-    statusEl.textContent=
-      active ? 'Active' : 'Inactive';
+    statusEl.textContent=cancelled ? 'Cancelling' : (active ? 'Active' : 'Inactive');
+    statusEl.className='billing-status '+(active ? 'active' : 'inactive');
 
-    statusEl.className=
-      'billing-status '+(active ? 'active' : 'inactive');
+    planEl.textContent=active ? 'Bookly plan' : 'No active plan';
 
-    planEl.textContent=
-      active ? 'Active plan' : 'No active plan';
+    servicesEl.textContent=active
+      ? String(subscription.services_limit)
+      : '—';
 
-    servicesEl.textContent=
-      active
-        ? String(subscription.services_limit)
-        : '—';
-
-    priceEl.textContent=
-      subscription.current_price
-        ? '$'+Number(subscription.current_price).toFixed(2)
-        : '—';
+    priceEl.textContent=subscription.current_price
+      ? '$'+Number(subscription.current_price).toFixed(2)
+      : '—';
 
     if(subscription.expires_at){
-      var date=new Date(subscription.expires_at);
-      expiresEl.textContent=
-        isNaN(date.getTime())
-          ? '—'
-          : date.toLocaleDateString();
+      var expires=new Date(subscription.expires_at);
+      expiresEl.textContent=expires.toLocaleDateString(undefined,{
+        year:'numeric',
+        month:'short',
+        day:'numeric'
+      });
     }else{
       expiresEl.textContent='—';
     }
 
-    checkoutButton.textContent=
-      active ? 'Manage plan' : 'Continue to plans';
+    if(active){
+      actionsEl.hidden=false;
+      checkoutButton.hidden=true;
 
-  }).catch(function(e){
+      if(cancelled){
+        cancelButton.hidden=true;
+        restoreButton.hidden=false;
+      }
 
-    businessEl.textContent='';
-    messageEl.textContent=e.message;
-
+      if(pendingLimit){
+        downgradeButton.hidden=true;
+        restorePackageButton.hidden=false;
+        messageEl.textContent=
+          'Package will change to '+pendingLimit+
+          ' services at the next billing period.';
+      }
+    }else{
+      actionsEl.hidden=true;
+      checkoutButton.hidden=false;
+      checkoutButton.textContent='Continue to plans';
+    }
+  })
+  .catch(function(e){
+    messageEl.textContent=e.message||'Unable to load billing.';
   });
 }
 function showWorkspaceView(view){
