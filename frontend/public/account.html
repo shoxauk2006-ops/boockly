@@ -3237,4 +3237,121 @@ check();
 
   </div>
 </div>
+var billingPackageLimits=[10,20,30,50,100];
+
+function openPackageModal(mode){
+  var modal=document.getElementById('packageModal');
+  var title=document.getElementById('packageModalTitle');
+  var description=document.getElementById('packageModalDescription');
+  var options=document.getElementById('packageOptions');
+  var message=document.getElementById('packageModalMessage');
+
+  var servicesText=document.getElementById('billingServices').textContent;
+  var currentLimit=parseInt(servicesText,10);
+
+  if(!currentLimit){
+    return;
+  }
+
+  modal.dataset.mode=mode;
+  modal.dataset.currentLimit=String(currentLimit);
+
+  title.textContent=mode==='upgrade'
+    ? 'Upgrade package'
+    : 'Downgrade package';
+
+  description.textContent=mode==='upgrade'
+    ? 'Choose a package with more services.'
+    : 'Choose a package with fewer services.';
+
+  message.textContent='';
+  options.innerHTML='';
+
+  billingPackageLimits.forEach(function(limit){
+    var allowed=mode==='upgrade'
+      ? limit>currentLimit
+      : limit<currentLimit;
+
+    if(!allowed){
+      return;
+    }
+
+    var button=document.createElement('button');
+    button.type='button';
+    button.className='package-option';
+
+    button.innerHTML=
+      '<div>'+
+        '<strong>'+limit+' services</strong>'+
+        '<span>'+
+          (mode==='upgrade'
+            ? 'Upgrade now'
+            : 'Change next billing period')+
+        '</span>'+
+      '</div>'+
+      '<div class="package-option-price">Select</div>';
+
+    button.onclick=function(){
+      changeBillingPackage(limit,mode);
+    };
+
+    options.appendChild(button);
+  });
+
+  modal.hidden=false;
+}
+
+function closePackageModal(){
+  document.getElementById('packageModal').hidden=true;
+}
+
+function changeBillingPackage(limit,mode){
+  var message=document.getElementById('packageModalMessage');
+  var options=document.getElementById('packageOptions');
+
+  message.textContent='Updating package...';
+
+  options.querySelectorAll('button').forEach(function(button){
+    button.disabled=true;
+  });
+
+  call('/account/subscription/change-limit',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+session,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      services_limit:limit
+    })
+  })
+  .then(function(){
+    closePackageModal();
+    loadBilling();
+  })
+  .catch(function(e){
+    message.textContent=
+      e.message||'Unable to change package.';
+
+    options.querySelectorAll('button').forEach(function(button){
+      button.disabled=false;
+    });
+  });
+}
+
+document.getElementById('billingUpgrade').onclick=function(){
+  openPackageModal('upgrade');
+};
+
+document.getElementById('billingDowngrade').onclick=function(){
+  openPackageModal('downgrade');
+};
+
+document.getElementById('packageModalClose').onclick=function(){
+  closePackageModal();
+};
+
+document.querySelector('#packageModal .package-modal-backdrop').onclick=function(){
+  closePackageModal();
+};
 </body></html>
