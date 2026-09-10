@@ -222,6 +222,189 @@ def account_login(x: AccountLoginIn):
             "account": {"id": account.id, "email": account.email, "business_id": account.business_id},
         }
 
+@app.get("/account/businesses")
+def account_businesses(authorization: str = Header(default="")):
+    with SessionLocal() as db:
+        account = _account_from_header(db, authorization)
+
+        businesses = (
+            db.query(Business)
+            .filter(Business.account_id == account.id)
+            .order_by(Business.id.asc())
+            .all()
+        )
+
+        result = []
+
+        for business in businesses:
+            subscription = (
+                db.query(Subscription)
+                .filter(Subscription.business_id == business.id)
+                .first()
+            )
+
+            result.append({
+                "id": business.id,
+                "name": business.name,
+                "description": business.description,
+                "business_image": business.business_image,
+                "address": business.address,
+                "phone": business.phone,
+                "timezone": business.timezone,
+                "slug": business.slug,
+                "subscription_active": (
+                    bool(subscription.active)
+                    if subscription
+                    else False
+                ),
+                "subscription_status": (
+                    subscription.status
+                    if subscription
+                    else "inactive"
+                ),
+                "subscription_expires_at": (
+                    subscription.expires_at
+                    if subscription
+                    else None
+                ),
+                "services_limit": (
+                    subscription.current_services_limit
+                    if subscription and subscription.active
+                    else 0
+                ),
+                "current_price": (
+                    float(subscription.current_price)
+                    if subscription
+                    and subscription.current_price is not None
+                    else 0.0
+                ),
+                "is_current": (
+                    business.id == account.business_id
+                ),
+            })
+
+        return {
+            "ok": True,
+            "businesses": result,
+        }
+
+
+@app.post("/account/businesses/{business_id}/select")
+def account_select_business(
+    business_id: int,
+    authorization: str = Header(default=""),
+):
+    with SessionLocal() as db:
+        account = _account_from_header(db, authorization)
+
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == business_id,
+                Business.account_id == account.id,
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        account.business_id = business.id
+        db.commit()
+
+        return {
+            "ok": True,
+            "business_id": business.id,
+        }
+
+
+@app.delete("/account/businesses/{business_id}")
+def account_delete_business(
+    business_id: int,
+    authorization: str = Header(default=""),
+):
+    with SessionLocal() as db:
+        account = _account_from_header(db, authorization)
+
+        business = (
+            db.query(Business)
+            .filter(
+                Business.id == business_id,
+                Business.account_id == account.id,
+            )
+            .first()
+        )
+
+        if not business:
+            raise HTTPException(
+                404,
+                "Business not found"
+            )
+
+        if account.business_id == business.id:
+            other_business = (
+                db.query(Business)
+                .filter(
+                    Business.account_id == account.id,
+                    Business.id != business.id,
+                )
+                .order_by(Business.id.asc())
+                .first()
+            )
+
+            account.business_id = (
+                other_business.id
+                if other_business
+                else None
+            )
+
+        db.query(Subscription).filter(
+            Subscription.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(SavedBusiness).filter(
+            SavedBusiness.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(Booking).filter(
+            Booking.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(BlockedSlot).filter(
+            BlockedSlot.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(WorkingHour).filter(
+            WorkingHour.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.query(Service).filter(
+            Service.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
+        db.delete(business)
+        db.commit()
+
+        return {
+            "ok": True,
+            "business_id": business_id,
+        }
+
 
 @app.get("/account/me")
 def account_me(authorization: str = Header(default="")):
