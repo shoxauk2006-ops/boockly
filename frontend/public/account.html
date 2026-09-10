@@ -1344,10 +1344,18 @@ function updatePhoneCode(){
 }
 
 phoneCountry.addEventListener('change',function(){
-  updatePhoneCode();
+  var country=phoneCountry.value;
+  var code=phoneCountryCodes[country] || '';
 
   var digits=phoneInput.value.replace(/\D/g,'');
+
   phoneInput.value=digits;
+
+  var phoneCode=document.getElementById('phoneCountryCode');
+
+  if(phoneCode){
+    phoneCode.textContent=code ? '+'+code : '';
+  }
 });
 
 phoneInput.addEventListener('input',function(){
