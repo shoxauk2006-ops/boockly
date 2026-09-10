@@ -657,6 +657,99 @@ body.logged-in .logout{
     grid-column:auto;
   }
 }
+.business-item.is-current{
+  border-color:#d7dbe2;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(15,23,42,.05);
+}
+
+.business-item.is-current .business-item-name{
+  font-weight:800;
+}
+
+.business-item-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:0 0 auto;
+}
+
+.business-item-main{
+  min-width:0;
+  flex:1;
+}
+
+.business-item-name{
+  font-size:13px;
+  font-weight:700;
+  color:#15171b;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.business-item-meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:6px;
+}
+
+.business-status{
+  margin:0!important;
+}
+
+.business-select,
+.business-delete{
+  height:34px;
+  padding:0 11px;
+  border-radius:9px;
+  font:inherit;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.business-select{
+  border:1px solid #dfe3e8;
+  background:#fff;
+  color:#17191d;
+}
+
+.business-select:hover:not(:disabled){
+  background:#f7f8fa;
+}
+
+.business-select:disabled{
+  opacity:.55;
+  cursor:default;
+}
+
+.business-delete{
+  border:1px solid #eadede;
+  background:#fff;
+  color:#a05a5a;
+}
+
+.business-delete:hover:not(:disabled){
+  background:#fff7f7;
+}
+
+@media(max-width:560px){
+  .business-item{
+    align-items:flex-start;
+  }
+
+  .business-item-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .business-select,
+  .business-delete{
+    min-width:72px;
+  }
+}
 </style>
 </head>
 <body>
@@ -917,7 +1010,7 @@ function loadBusinesses(){
     d.businesses.forEach(function(business){
 
       var item=document.createElement('div');
-      item.className='business-item';
+      item.className='business-item' + (business.is_current ? ' is-current' : '');
 
       var main=document.createElement('div');
       main.className='business-item-main';
@@ -937,13 +1030,6 @@ function loadBusinesses(){
           : 'Inactive';
 
       meta.appendChild(status);
-
-      if(business.is_current){
-        var selected=document.createElement('span');
-        selected.className='business-selected';
-        selected.textContent='Selected';
-        meta.appendChild(selected);
-      }
 
       main.appendChild(name);
       main.appendChild(meta);
