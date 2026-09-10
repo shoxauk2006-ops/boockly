@@ -80,7 +80,9 @@ function loadBusinesses(){
 
 item.innerHTML=
   '<strong>'+business.name+'</strong>'+
-  '<span>'+(business.subscription_active?'Active':'Inactive')+'</span>';
+  '<span style="margin-left:auto;flex:0 0 auto;">'+
+  (business.subscription_active?'Active':'Inactive')+
+  '</span>';
 
       container.appendChild(item);
     });
