@@ -3368,7 +3368,7 @@ function changeBillingPackage(limit,mode){
     button.disabled=true;
   });
 
-  fetch(api+'/account/subscription/change-limit',{
+  fetch(window.location.origin+'/api/account/subscription/change-limit',{
     method:'POST',
     headers:{
       'Authorization':'Bearer '+session,
