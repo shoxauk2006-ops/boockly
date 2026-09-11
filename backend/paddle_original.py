@@ -724,39 +724,30 @@ def _apply_paddle_event(payload: dict) -> None:
             or billing_period.get("ends_at")
         )
 
-        if event_type == "transaction.completed":
+            if event_type == "transaction.completed":
             subscription.active = True
             subscription.status = "active"
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
             )
-            
-        elif event_type == "transaction.completed":
-    subscription.active = True
-    subscription.status = "active"
-    subscription.expires_at = (
-        _dt(next_billed_at)
-        or subscription.expires_at
-    )
 
-    if subscription.pending_services_limit is not None:
-        subscription.current_services_limit = (
-            subscription.pending_services_limit
-        )
+            if subscription.pending_services_limit is not None:
+                subscription.current_services_limit = (
+                    subscription.pending_services_limit
+                )
 
-        subscription.current_price = (
-            subscription.pending_price
-            if subscription.pending_price is not None
-            else calculate_subscription_price(
-                subscription.pending_services_limit
-            )
-        )
+                subscription.current_price = (
+                    subscription.pending_price
+                    if subscription.pending_price is not None
+                    else calculate_subscription_price(
+                        subscription.pending_services_limit
+                    )
+                )
 
-        subscription.pending_services_limit = None
-        subscription.pending_price = None
+                subscription.pending_services_limit = None
+                subscription.pending_price = None
 
-        
         elif event_type == "transaction.payment_failed":
             subscription.status = (
                 status
@@ -768,6 +759,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 and subscription.expires_at
                 > datetime.utcnow()
             )
+            
 
         elif event_type == "subscription.created":
             subscription.status = (
