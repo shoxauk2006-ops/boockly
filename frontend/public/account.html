@@ -3291,6 +3291,40 @@ check();
   </div>
 </div>
 
+<div id="packageConfirmModal" class="save-success-modal" hidden>
+  <div class="save-success-backdrop"></div>
+
+  <div class="save-success-card">
+
+    <div class="save-success-icon">?</div>
+
+    <h3 id="packageConfirmTitle">Confirm package change</h3>
+
+    <p id="packageConfirmText">
+      Are you sure you want to change your package?
+    </p>
+
+    <div class="business-modal-actions">
+      <button
+        id="packageConfirmCancel"
+        class="business-cancel"
+        type="button"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="packageConfirmOk"
+        class="primary"
+        type="button"
+      >
+        Confirm
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <script>
 var billingPackageLimits=[10,20,30,50,100];
 
@@ -3361,16 +3395,49 @@ function closePackageModal(){
 }
 
 function changeBillingPackage(limit,mode){
+  var confirmModal=document.getElementById('packageConfirmModal');
+  var confirmTitle=document.getElementById('packageConfirmTitle');
+  var confirmText=document.getElementById('packageConfirmText');
+  var confirmOk=document.getElementById('packageConfirmOk');
+
+  var currentLimit=document.getElementById('packageModal').dataset.currentLimit;
+
+  confirmTitle.textContent=
+    mode==='upgrade'
+      ? 'Upgrade package'
+      : 'Downgrade package';
+
+  confirmText.textContent=
+    mode==='upgrade'
+      ? 'Upgrade from '+currentLimit+' to '+limit+' services? The new package will be applied immediately.'
+      : 'Downgrade from '+currentLimit+' to '+limit+' services? The new package will start from the next billing period.';
+
+  confirmOk.textContent=
+    mode==='upgrade'
+      ? 'Upgrade'
+      : 'Downgrade';
+
+  confirmModal.dataset.limit=String(limit);
+  confirmModal.dataset.mode=mode;
+
+  confirmModal.hidden=false;
+}
+
+function confirmBillingPackageChange(){
+  var confirmModal=document.getElementById('packageConfirmModal');
+  var confirmOk=document.getElementById('packageConfirmOk');
+  var cancelButton=document.getElementById('packageConfirmCancel');
   var message=document.getElementById('packageModalMessage');
-  var options=document.getElementById('packageOptions');
+  var limit=Number(confirmModal.dataset.limit);
+  var mode=confirmModal.dataset.mode;
+
+  confirmOk.disabled=true;
+  cancelButton.disabled=true;
+  confirmOk.textContent='Updating...';
 
   message.textContent='Updating package...';
 
-  options.querySelectorAll('button').forEach(function(button){
-    button.disabled=true;
-  });
-
- booklyCall('/account/subscription/change-limit',{
+  booklyCall('/account/subscription/change-limit',{
     method:'POST',
     headers:{
       Authorization:'Bearer '+booklySession,
@@ -3394,19 +3461,34 @@ function changeBillingPackage(limit,mode){
     });
   })
   .then(function(){
+    confirmModal.hidden=true;
     closePackageModal();
     loadBilling();
   })
   .catch(function(e){
+    confirmOk.disabled=false;
+    cancelButton.disabled=false;
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? 'Upgrade'
+        : 'Downgrade';
+
     message.textContent=
       e.message ||
       'Unable to change package.';
-
-    options.querySelectorAll('button').forEach(function(button){
-      button.disabled=false;
-    });
   });
 }
+document.getElementById('packageConfirmOk').onclick=function(){
+  confirmBillingPackageChange();
+};
+
+document.getElementById('packageConfirmCancel').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.querySelector('#packageConfirmModal .save-success-backdrop').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
 
 document.getElementById('billingUpgrade').onclick=function(){
   openPackageModal('upgrade');
