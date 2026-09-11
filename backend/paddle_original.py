@@ -786,8 +786,82 @@ def _apply_paddle_event(payload: dict) -> None:
                 _dt(next_billed_at)
                 or subscription.expires_at
             )
+                elif event_type == "subscription.updated":
+            scheduled_change = (
+                data.get("scheduled_change")
+                or {}
+            )
 
-                        detected = _limit_from_items(
+            scheduled_action = (
+                scheduled_change.get("action")
+                or ""
+            )
+
+            scheduled_effective_at = _dt(
+                scheduled_change.get("effective_at")
+            )
+
+            if (
+                scheduled_action in {"cancel", "pause"}
+                and scheduled_effective_at
+            ):
+                if subscription.status == "trialing":
+                    subscription.status = "trialing"
+                    subscription.active = True
+                else:
+                    subscription.status = "active"
+                    subscription.active = True
+
+                subscription.cancel_at = (
+                    scheduled_effective_at
+                )
+
+                subscription.expires_at = (
+                    scheduled_effective_at
+                )
+
+            else:
+                subscription.status = (
+                    status
+                    or subscription.status
+                    or "active"
+                )
+
+                subscription.active = (
+                    subscription.status
+                    not in {
+                        "canceled",
+                        "cancelled",
+                        "paused",
+                    }
+                )
+
+                if subscription.status == "trialing":
+                    subscription.active = True
+
+                subscription.expires_at = (
+                    _dt(next_billed_at)
+                    or subscription.expires_at
+                )
+
+            detected = _limit_from_items(
+                data.get("items")
+                or []
+            )
+
+            if subscription.pending_services_limit is not None:
+                # Paddle may report the future package in
+                # subscription.updated before the new billing period.
+                # Keep the current package unchanged until renewal.
+                pass
+            else:
+                subscription.current_services_limit = detected
+                subscription.current_price = (
+                    calculate_subscription_price(
+                        detected
+                    )
+                )
+
 
         elif event_type == "subscription.activated":
             subscription.status = "active"
