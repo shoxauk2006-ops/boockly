@@ -3176,13 +3176,36 @@ function loadBilling(){
 
   /* Scheduled downgrade */
   if(pendingLimit){
-    downgradeButton.hidden=true;
-    restorePackageButton.hidden=false;
+  downgradeButton.hidden=true;
+  restorePackageButton.hidden=false;
 
-    messageEl.textContent=
-      'Package will change to '+pendingLimit+
-      ' services at the next billing period.';
+  var pendingPrice=subscription.pending_price;
+
+  var accessUntil='';
+
+  if(subscription.expires_at){
+    var pendingDate=new Date(subscription.expires_at);
+
+    accessUntil=pendingDate.toLocaleDateString(undefined,{
+      year:'numeric',
+      month:'short',
+      day:'numeric'
+    });
   }
+
+  messageEl.textContent=
+    'Your current package remains active until '+
+    accessUntil+
+    '. After that, it will change to '+
+    pendingLimit+
+    ' services'+
+    (
+      pendingPrice
+        ? ' at $'+Number(pendingPrice).toFixed(2)
+        : ''
+    )+
+    '.';
+}
 }
     else{
       actionsEl.hidden=true;
