@@ -3447,17 +3447,18 @@ function confirmBillingPackageChange(){
       services_limit:limit
     })
   })
-  .then(function(r){
-    return r.json().then(function(d){
-      if(!r.ok){
-        throw new Error(
-          d.detail ||
-          d.error ||
-          'Unable to change package.'
-        );
-      }
+  .then(function(d){
+    if(!d || d.ok!==true){
+      throw new Error(
+        (d && (d.detail || d.error)) ||
+        'Unable to change package.'
+      );
+    }
 
-      return d;
+    confirmOk.textContent='Updated';
+
+    return new Promise(function(resolve){
+      setTimeout(resolve,500);
     });
   })
   .then(function(){
@@ -3468,6 +3469,7 @@ function confirmBillingPackageChange(){
   .catch(function(e){
     confirmOk.disabled=false;
     cancelButton.disabled=false;
+
     confirmOk.textContent=
       mode==='upgrade'
         ? 'Upgrade'
