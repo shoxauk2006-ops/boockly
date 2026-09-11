@@ -3464,7 +3464,10 @@ function confirmBillingPackageChange(){
   .then(function(){
     confirmModal.hidden=true;
     closePackageModal();
-    loadBilling();
+
+    setTimeout(function(){
+    window.location.reload();
+    },500);
   })
   .catch(function(e){
     confirmOk.disabled=false;
