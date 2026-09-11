@@ -1207,10 +1207,48 @@ body.logged-in .logout{
 }
 
 .billing-actions{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
+  grid-template-columns:1fr 1fr;
   gap:10px;
-  margin-top:20px;
+  margin-top:22px;
+}
+
+.billing-actions button{
+  min-height:46px;
+  border-radius:12px;
+  font:inherit;
+  font-size:13px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.billing-actions #billingUpgrade{
+  grid-column:1 / -1;
+}
+
+.billing-actions #billingCancel{
+  color:#b42318;
+  border:1px solid #efc4c0;
+  background:#fff;
+}
+
+.billing-actions #billingCancel:hover{
+  background:#fff7f6;
+}
+
+.billing-actions button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+@media(max-width:700px){
+  .billing-actions{
+    grid-template-columns:1fr;
+  }
+
+  .billing-actions #billingUpgrade{
+    grid-column:auto;
+  }
 }
 
 .billing-actions button{
@@ -3117,22 +3155,34 @@ function loadBilling(){
     }
 
     if(active){
-      actionsEl.hidden=false;
-      checkoutButton.hidden=true;
+  actionsEl.hidden=false;
+  checkoutButton.hidden=true;
 
-      if(cancelled){
-        cancelButton.hidden=true;
-        restoreButton.hidden=false;
-      }
+  var currentLimit=Number(subscription.services_limit || 10);
 
-      if(pendingLimit){
-        downgradeButton.hidden=true;
-        restorePackageButton.hidden=false;
-        messageEl.textContent=
-          'Package will change to '+pendingLimit+
-          ' services at the next billing period.';
-      }
-    }else{
+  /* Upgrade is available only when a larger package exists */
+  upgradeButton.hidden=currentLimit>=100;
+
+  /* Downgrade is available only when a smaller package exists */
+  downgradeButton.hidden=currentLimit<=10;
+
+  /* Cancellation */
+  if(cancelled){
+    cancelButton.hidden=true;
+    restoreButton.hidden=false;
+  }
+
+  /* Scheduled downgrade */
+  if(pendingLimit){
+    downgradeButton.hidden=true;
+    restorePackageButton.hidden=false;
+
+    messageEl.textContent=
+      'Package will change to '+pendingLimit+
+      ' services at the next billing period.';
+  }
+}
+    else{
       actionsEl.hidden=true;
       checkoutButton.hidden=false;
       checkoutButton.textContent='Continue to plans';
