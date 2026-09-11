@@ -731,7 +731,32 @@ def _apply_paddle_event(payload: dict) -> None:
                 _dt(next_billed_at)
                 or subscription.expires_at
             )
+            
+        elif event_type == "transaction.completed":
+    subscription.active = True
+    subscription.status = "active"
+    subscription.expires_at = (
+        _dt(next_billed_at)
+        or subscription.expires_at
+    )
 
+    if subscription.pending_services_limit is not None:
+        subscription.current_services_limit = (
+            subscription.pending_services_limit
+        )
+
+        subscription.current_price = (
+            subscription.pending_price
+            if subscription.pending_price is not None
+            else calculate_subscription_price(
+                subscription.pending_services_limit
+            )
+        )
+
+        subscription.pending_services_limit = None
+        subscription.pending_price = None
+
+        
         elif event_type == "transaction.payment_failed":
             subscription.status = (
                 status
