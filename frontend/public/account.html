@@ -2936,9 +2936,7 @@ function showAccount(data){
   if(data.account.telegram_connected){
     connect.textContent='Open Bookly in Telegram';
     connectStatus.textContent='Telegram is already connected.';
-    connect.onclick=function(){
-      window.location.href='https://t.me/Boockly_bot';
-    };
+    connect.onclick=createLink;
   }else{
     connect.textContent='Connect Telegram';
     connectStatus.textContent='Telegram is not connected yet.';
