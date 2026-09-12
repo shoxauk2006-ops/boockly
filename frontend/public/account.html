@@ -1393,7 +1393,548 @@ html.has-session:not(.session-ready) body{
 html.has-session.session-ready body{
   visibility:visible;
 }
+/* ===== FINAL ACCOUNT WORKSPACE DESIGN ===== */
 
+body.logged-in{
+  background:#f6f7f9;
+}
+
+body.logged-in .shell{
+  width:min(1080px,calc(100% - 40px));
+  max-width:1080px;
+  margin:0 auto;
+  padding:34px 0 70px;
+}
+
+body.logged-in .card{
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+
+body.logged-in .account{
+  width:100%;
+}
+
+body.logged-in .workspace-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin:0 0 22px;
+  padding:0;
+}
+
+body.logged-in .workspace-head h2{
+  margin:0;
+  font-size:34px;
+  line-height:1;
+  letter-spacing:-.045em;
+  color:#111318;
+}
+
+body.logged-in .workspace-head p{
+  margin:8px 0 0;
+  color:#727984;
+  font-size:13px;
+  line-height:1.5;
+}
+
+body.logged-in .workspace-kicker{
+  margin-bottom:8px;
+  color:#8b919a;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.14em;
+}
+
+body.logged-in .ready{
+  flex:0 0 auto;
+  margin:0;
+  padding:8px 11px;
+  border:1px solid #dce9df;
+  border-radius:999px;
+  background:#f4faf5;
+  color:#397044;
+  font-size:11px;
+  font-weight:800;
+}
+
+/* Main navigation */
+
+body.logged-in .workspace-nav{
+  width:100%;
+  max-width:none;
+  display:flex;
+  gap:4px;
+  margin:0 0 18px;
+  padding:4px;
+  background:#ebedf0;
+  border:1px solid #e1e4e8;
+  border-radius:14px;
+}
+
+body.logged-in .workspace-nav-item{
+  flex:1;
+  min-height:42px;
+  padding:0 12px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#707680;
+  font-size:12px;
+  font-weight:800;
+  transition:background .15s ease,color .15s ease,box-shadow .15s ease;
+}
+
+body.logged-in .workspace-nav-item:hover{
+  color:#17191d;
+  background:#f4f5f7;
+}
+
+body.logged-in .workspace-nav-item.active{
+  background:#111;
+  color:#fff;
+  box-shadow:0 4px 12px rgba(0,0,0,.10);
+}
+
+/*
+  Important:
+  workspace-grid must NOT be a two-column grid.
+  Each view controls its own layout.
+*/
+
+body.logged-in .workspace-grid{
+  display:block;
+  width:100%;
+}
+
+body.logged-in .workspace-view{
+  width:100%;
+}
+
+body.logged-in .workspace-view.active{
+  display:block;
+}
+
+body.logged-in #overviewView.active{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  width:100%;
+}
+
+body.logged-in #businessesView.active{
+  display:block;
+}
+
+body.logged-in #billingView.active{
+  display:block;
+}
+
+/* Cards */
+
+body.logged-in .workspace-card{
+  min-width:0;
+  padding:22px;
+  border:1px solid #e1e4e8;
+  border-radius:18px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 10px 30px rgba(18,25,38,.045);
+}
+
+body.logged-in .workspace-card h3{
+  margin:5px 0 6px;
+  color:#15171b;
+  font-size:18px;
+  line-height:1.2;
+  letter-spacing:-.025em;
+}
+
+body.logged-in .workspace-card p{
+  color:#747b84;
+  font-size:12px;
+  line-height:1.55;
+}
+
+body.logged-in .card-label{
+  color:#969ca4;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.13em;
+}
+
+/* Overview */
+
+body.logged-in #overviewView .workspace-card{
+  min-height:0;
+}
+
+body.logged-in #overviewView .account-details{
+  grid-column:1 / -1;
+}
+
+body.logged-in #overviewView .account-details h3{
+  margin-bottom:12px;
+}
+
+body.logged-in .detail-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  min-height:48px;
+  margin:0;
+  padding:0;
+  border-top:1px solid #edf0f2;
+}
+
+body.logged-in .detail-row span{
+  color:#858b94;
+  font-size:12px;
+}
+
+body.logged-in .detail-row strong{
+  color:#17191d;
+  font-size:12px;
+  font-weight:750;
+  text-align:right;
+}
+
+/* Buttons */
+
+body.logged-in button.primary{
+  min-height:48px;
+  margin-top:18px;
+  border-radius:12px;
+  background:#111;
+  font-size:13px;
+}
+
+body.logged-in button.primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(17,17,17,.12);
+}
+
+/* Businesses */
+
+body.logged-in .businesses-card{
+  width:100%;
+}
+
+body.logged-in .businesses-list{
+  width:100%;
+  margin-top:18px;
+  display:grid;
+  gap:9px;
+}
+
+body.logged-in .business-item{
+  min-height:62px;
+  padding:14px 16px;
+  border:1px solid #e1e5e9;
+  border-radius:14px;
+  background:#fafbfc;
+}
+
+body.logged-in .business-item.is-current{
+  background:#fff;
+  border-color:#d7dce2;
+  box-shadow:0 7px 20px rgba(15,23,42,.045);
+}
+
+body.logged-in .business-item-main{
+  min-width:0;
+  flex:1;
+}
+
+body.logged-in .business-item-name{
+  color:#16181c;
+  font-size:13px;
+  font-weight:750;
+}
+
+body.logged-in .business-item-meta{
+  margin-top:5px;
+}
+
+body.logged-in .business-item-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+body.logged-in .business-select,
+body.logged-in .business-delete{
+  height:36px;
+  padding:0 12px;
+  border-radius:10px;
+  font-size:11px;
+  font-weight:750;
+}
+
+body.logged-in .business-select{
+  border:1px solid #111;
+  background:#111;
+  color:#fff;
+}
+
+body.logged-in .business-select:disabled{
+  border-color:#dfe3e8;
+  background:#fff;
+  color:#737a84;
+  opacity:1;
+}
+
+body.logged-in .business-delete{
+  border:1px solid #eadcdd;
+  background:#fff;
+  color:#9a5555;
+}
+
+/* Billing */
+
+body.logged-in .billing-card{
+  width:100%;
+}
+
+body.logged-in .billing-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+body.logged-in .billing-head h3{
+  margin:5px 0 5px;
+}
+
+body.logged-in .billing-status{
+  flex:0 0 auto;
+  padding:7px 11px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+}
+
+body.logged-in .billing-status.active{
+  background:#e8f7ed;
+  color:#1f7a3f;
+}
+
+body.logged-in .billing-status.inactive{
+  background:#f1f1f1;
+  color:#666;
+}
+
+body.logged-in .billing-details{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:22px;
+}
+
+body.logged-in .billing-detail{
+  min-width:0;
+  padding:15px;
+  border:1px solid #e3e6ea;
+  border-radius:13px;
+  background:#fafbfc;
+}
+
+body.logged-in .billing-detail span{
+  display:block;
+  margin-bottom:6px;
+  color:#858b94;
+  font-size:11px;
+}
+
+body.logged-in .billing-detail strong{
+  color:#17191d;
+  font-size:15px;
+  font-weight:800;
+}
+
+body.logged-in .billing-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:18px;
+}
+
+body.logged-in .billing-actions #billingUpgrade{
+  grid-column:1 / -1;
+}
+
+body.logged-in .billing-actions button{
+  width:100%;
+  min-height:46px;
+  margin:0;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:800;
+}
+
+body.logged-in .billing-actions #billingCancel{
+  border:1px solid #efc4c0;
+  background:#fff;
+  color:#b42318;
+}
+
+body.logged-in .billing-actions #billingCancel:hover{
+  background:#fff7f6;
+}
+
+/* Billing message */
+
+body.logged-in #billingMessage{
+  margin-top:12px;
+  color:#727984;
+  font-size:11px;
+  line-height:1.55;
+}
+
+/* Logout */
+
+body.logged-in .logout{
+  display:block;
+  margin:22px 0 0 auto;
+  padding:5px 0;
+  color:#8a9098;
+  font-size:11px;
+}
+
+body.logged-in .logout:hover{
+  color:#555b64;
+}
+
+/* Footer */
+
+body.logged-in .foot{
+  margin-top:28px;
+  color:#a1a6ae;
+}
+
+/* Tablet */
+
+@media(max-width:820px){
+  body.logged-in .shell{
+    width:min(100% - 28px,720px);
+    padding-top:28px;
+  }
+
+  body.logged-in .workspace-head h2{
+    font-size:31px;
+  }
+
+  body.logged-in #overviewView.active{
+    grid-template-columns:1fr;
+  }
+
+  body.logged-in #overviewView .account-details{
+    grid-column:auto;
+  }
+
+  body.logged-in .billing-details{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+/* Mobile */
+
+@media(max-width:560px){
+  body.logged-in .shell{
+    width:calc(100% - 24px);
+    padding-top:22px;
+    padding-bottom:50px;
+  }
+
+  body.logged-in .workspace-head{
+    display:block;
+    margin-bottom:16px;
+  }
+
+  body.logged-in .workspace-head h2{
+    font-size:28px;
+  }
+
+  body.logged-in .workspace-head p{
+    max-width:100%;
+    font-size:12px;
+  }
+
+  body.logged-in .ready{
+    display:inline-flex;
+    margin-top:12px;
+  }
+
+  body.logged-in .workspace-nav{
+    margin-bottom:14px;
+  }
+
+  body.logged-in .workspace-nav-item{
+    min-height:40px;
+    padding:0 6px;
+    font-size:10px;
+  }
+
+  body.logged-in .workspace-card{
+    padding:18px;
+    border-radius:16px;
+  }
+
+  body.logged-in .billing-head{
+    display:block;
+  }
+
+  body.logged-in .billing-status{
+    margin-top:12px;
+  }
+
+  body.logged-in .billing-details{
+    grid-template-columns:1fr 1fr;
+  }
+
+  body.logged-in .billing-actions{
+    grid-template-columns:1fr;
+  }
+
+  body.logged-in .billing-actions #billingUpgrade{
+    grid-column:auto;
+  }
+
+  body.logged-in .business-item{
+    display:block;
+  }
+
+  body.logged-in .business-item-actions{
+    margin-top:12px;
+  }
+
+  body.logged-in .business-select,
+  body.logged-in .business-delete{
+    flex:1;
+  }
+
+  body.logged-in .detail-row{
+    min-height:52px;
+    align-items:flex-start;
+    justify-content:center;
+    flex-direction:column;
+    gap:4px;
+    padding:10px 0;
+  }
+
+  body.logged-in .detail-row strong{
+    text-align:left;
+  }
+}
 </style>
 <script>
 (function(){
