@@ -984,6 +984,7 @@ def account_change_subscription_limit(
     authorization: str = Header(default=""),
 ):
     from . import paddle_original
+    from . import paddle_app
 
     limit = int(x.services_limit)
 
@@ -1054,7 +1055,7 @@ def account_change_subscription_limit(
             f"/subscriptions/{subscription_id}",
             {
                 "items":
-                    paddle_original._items_for_limit(
+                    paddle_app._items_for_limit(
                         limit
                     ),
                 "proration_billing_mode": mode,
