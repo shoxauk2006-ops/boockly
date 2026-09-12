@@ -988,7 +988,7 @@ def account_change_subscription_limit(
             )
         )
 
-                current = (
+        current = (
             subscription.current_services_limit
             or 10
         )
@@ -1050,8 +1050,6 @@ def account_change_subscription_limit(
         paddle_app._billing_interval.set(
             billing_interval
         )
-
-        if limit == current:
 
         if limit == current:
             return {
