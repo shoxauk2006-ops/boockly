@@ -1153,6 +1153,9 @@ def account_cancel_subscription(
         if expires:
             subscription.expires_at = expires
             subscription.cancel_at = expires
+            
+        subscription.pending_services_limit = None
+        subscription.pending_price = None
 
         paddle_original._sync_business_from_subscription(
             business,
