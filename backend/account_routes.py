@@ -1012,6 +1012,16 @@ def account_change_subscription_limit(
             or 10
         )
 
+        billing_interval = (
+            paddle_app._subscription_interval(
+                subscription_id
+            )
+        )
+
+        paddle_app._billing_interval.set(
+            billing_interval
+        )
+
         if limit == current:
             return {
                 "ok": True,
