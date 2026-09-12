@@ -2283,6 +2283,8 @@ window.booklyCall=call;
 window.booklySession=session;
 function goPricing(){call('/account/paddle/checkout-token',{headers:{Authorization:'Bearer '+session}}).then(function(d){location.href='pricing-v2.html?token='+encodeURIComponent(d.checkout_token)+'&api='+encodeURIComponent(api)}).catch(function(e){err(e.message);document.getElementById('checkout').disabled=false})}
 function showAccount(data){
+  document.documentElement.classList.add('session-ready');
+  
   document.body.classList.add('logged-in');
 
   showWorkspaceView('overview');
