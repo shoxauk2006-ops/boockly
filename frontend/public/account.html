@@ -3162,56 +3162,69 @@ function loadBilling(){
 
   var currentLimit=Number(subscription.services_limit || 10);
 
-  /* Upgrade is available only when a larger package exists */
-  upgradeButton.hidden=currentLimit>=100;
-
-  /* Downgrade is available only when a smaller package exists */
-  downgradeButton.hidden=currentLimit<=10;
-
-  /* Cancellation */
   if(cancelled){
+    upgradeButton.hidden=true;
+    downgradeButton.hidden=true;
     cancelButton.hidden=true;
     restoreButton.hidden=false;
-  }
+    restorePackageButton.hidden=true;
 
-  /* Scheduled downgrade */
-  if(pendingLimit){
-  downgradeButton.hidden=true;
-  restorePackageButton.hidden=false;
+    messageEl.textContent=
+      subscription.cancel_at
+        ? 'Your subscription remains active until '+
+          new Date(subscription.cancel_at).toLocaleDateString(
+            undefined,
+            {
+              year:'numeric',
+              month:'short',
+              day:'numeric'
+            }
+          )+
+          '. After that, it will end.'
+        : 'Your subscription is scheduled to end at the end of the current billing period.';
+  }else{
+    upgradeButton.hidden=currentLimit>=100;
+    downgradeButton.hidden=currentLimit<=10;
+    cancelButton.hidden=false;
+    restoreButton.hidden=true;
 
-  var pendingPrice=subscription.pending_price;
+    if(pendingLimit){
+      downgradeButton.hidden=true;
+      restorePackageButton.hidden=false;
 
-  var accessUntil='';
+      var pendingPrice=subscription.pending_price;
+      var accessUntil='';
 
-  if(subscription.expires_at){
-    var pendingDate=new Date(subscription.expires_at);
+      if(subscription.expires_at){
+        var pendingDate=new Date(subscription.expires_at);
+        accessUntil=pendingDate.toLocaleDateString(undefined,{
+          year:'numeric',
+          month:'short',
+          day:'numeric'
+        });
+      }
 
-    accessUntil=pendingDate.toLocaleDateString(undefined,{
-      year:'numeric',
-      month:'short',
-      day:'numeric'
-    });
-  }
-
-  messageEl.textContent=
-    'Your current package remains active until '+
-    accessUntil+
-    '. After that, it will change to '+
-    pendingLimit+
-    ' services'+
-    (
-      pendingPrice
-        ? ' at $'+Number(pendingPrice).toFixed(2)
-        : ''
-    )+
-    '.';
-}
-}
-    else{
-      actionsEl.hidden=true;
-      checkoutButton.hidden=false;
-      checkoutButton.textContent='Continue to plans';
+      messageEl.textContent=
+        'Your current package remains active until '+
+        accessUntil+
+        '. After that, it will change to '+
+        pendingLimit+
+        ' services'+
+        (
+          pendingPrice
+            ? ' at $'+Number(pendingPrice).toFixed(2)
+            : ''
+        )+
+        '.';
+    }else{
+      restorePackageButton.hidden=true;
     }
+  }
+}else{
+  actionsEl.hidden=true;
+  checkoutButton.hidden=false;
+  checkoutButton.textContent='Continue to plans';
+}
   })
   .catch(function(e){
     messageEl.textContent=e.message||'Unable to load billing.';
