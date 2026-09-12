@@ -1175,7 +1175,7 @@ def account_resume_subscription_package(
     authorization: str = Header(default=""),
 ):
     from . import paddle_original
-    
+    from . import paddle_app
 
     with SessionLocal() as db:
         account = _account_from_header(
@@ -1207,12 +1207,22 @@ def account_resume_subscription_package(
                 "pending_price": None,
             }
 
+        billing_interval = (
+            paddle_app._subscription_interval(
+                subscription_id
+            )
+        )
+
+        paddle_app._billing_interval.set(
+            billing_interval
+        )
+
     paddle_original._paddle_request(
         "PATCH",
         f"/subscriptions/{subscription_id}",
         {
             "items":
-                paddle_original._items_for_limit(
+                paddle_app._items_for_limit(
                     current
                 ),
             "proration_billing_mode":
@@ -1247,7 +1257,6 @@ def account_resume_subscription_package(
             "pending_services_limit": None,
             "pending_price": None,
         }
-
 
 @app.post("/account/subscription/cancel")
 def account_cancel_subscription(
