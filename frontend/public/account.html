@@ -1949,16 +1949,31 @@ body.logged-in .foot{
   background:#f5f6f8;
   color:#111;
 }
-.business-select:hover{
-  border-color:#111;
-  background:#111;
-  color:#fff;
+body.logged-in .business-item-actions .business-select:not(:disabled):hover{
+  border-color:#111 !important;
+  background:#111 !important;
+  color:#fff !important;
 }
 
 .business-select:disabled:hover{
   border-color:#dfe3e8;
   background:#fff;
   color:#737a84;
+}
+.business-modal-backdrop{
+  z-index:1;
+}
+
+.business-modal-card{
+  position:relative;
+  z-index:2;
+}
+
+.business-modal-close{
+  position:relative;
+  z-index:10 !important;
+  pointer-events:auto !important;
+  cursor:pointer;
 }
 </style>
 <script>
