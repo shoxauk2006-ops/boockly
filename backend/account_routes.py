@@ -711,6 +711,7 @@ def account_connect_telegram_from_web(
 @app.get("/account/billing")
 def account_billing(authorization: str = Header(default="")):
     from . import paddle_original
+    from . import paddle_app
 
     with SessionLocal() as db:
         account = _account_from_header(
@@ -779,31 +780,11 @@ def account_billing(authorization: str = Header(default="")):
                         )
                     )
 
-                    billing_interval = "month"
-
-                    for item in (
-                        paddle_subscription.get("items")
-                        or []
-                    ):
-                        price = (
-                            item.get("price")
-                            or {}
-                        )
-
-                        billing_cycle = (
-                            price.get("billing_cycle")
-                            or item.get("billing_cycle")
-                            or {}
-                        )
-
-                        interval = str(
-                            billing_cycle.get("interval")
-                            or ""
-                        ).lower()
-
-                        if interval == "year":
-                            billing_interval = "year"
-                            break
+                    billing_interval = (
+                        paddle_app._subscription_interval(
+                            subscription_id
+                        ) 
+                    )
 
                     if billing_interval == "year":
                         annual_total = 0.0
@@ -1146,6 +1127,7 @@ def account_resume_subscription_package(
     authorization: str = Header(default=""),
 ):
     from . import paddle_original
+    
 
     with SessionLocal() as db:
         account = _account_from_header(
