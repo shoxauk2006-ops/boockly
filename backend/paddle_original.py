@@ -725,6 +725,10 @@ def _apply_paddle_event(payload: dict) -> None:
         )
 
         if event_type == "transaction.completed":
+            previous_expires_at = (
+                subscription.expires_at
+            )
+
             subscription.active = True
             subscription.status = "active"
             subscription.expires_at = (
@@ -736,9 +740,21 @@ def _apply_paddle_event(payload: dict) -> None:
                 data.get("origin") or ""
             )
 
+            transaction_period_start = _dt(
+                billing_period.get("starts_at")
+            )
+
+            is_new_billing_period = bool(
+                transaction_period_start
+                and previous_expires_at
+                and transaction_period_start
+                >= previous_expires_at
+            )
+
             if (
                 transaction_origin
                 == "subscription_recurring"
+                and is_new_billing_period
                 and subscription.pending_services_limit is not None
             ):
                 subscription.current_services_limit = (
