@@ -637,7 +637,7 @@ def account_telegram_link(authorization: str = Header(default="")):
         ))
         db.commit()
 
-        bot_username = os.getenv("BOT_USERNAME", "BooklyBot").lstrip("@").strip()
+        bot_username = os.getenv("BOT_USERNAME", "Boockly_bot").lstrip("@").strip()
         start_parameter = "bookly-connect-" + raw
         if len(start_parameter) > 64:
             raise HTTPException(500, "Telegram connection parameter is too long")
