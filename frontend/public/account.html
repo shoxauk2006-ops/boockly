@@ -1386,7 +1386,23 @@ body.logged-in .logout{
     padding:18px;
   }
 }
+html.has-session #auth{
+  display:none !important;
+}
+
+html.has-session #account{
+  display:block !important;
+}
 </style>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem('bookly_session')){
+      document.documentElement.classList.add('has-session');
+    }
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 <div class="page"><div class="orb a"></div><div class="orb b"></div>
