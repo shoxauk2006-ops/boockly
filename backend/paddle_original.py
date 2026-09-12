@@ -883,22 +883,14 @@ def _apply_paddle_event(payload: dict) -> None:
                     or subscription.expires_at
                 )
 
-            detected = _limit_from_items(
-                data.get("items")
-                or []
-            )
-
-            if subscription.pending_services_limit is not None:
-                # Keep the current package until the paid period ends.
-                # Paddle may report the future package in this event.
-                pass
-            else:
-                subscription.current_services_limit = detected
-                subscription.current_price = (
-                    calculate_subscription_price(
-                        detected
-                    )
-                )
+            # Do not change Bookly's current package from
+            # subscription.updated.
+            #
+            # Paddle can update its subscription items immediately
+            # even when the billing change is scheduled for the next
+            # billing period. Bookly keeps its own current package
+            # until the paid period actually ends.
+            pass
 
         elif event_type == "subscription.activated":
             subscription.status = "active"
