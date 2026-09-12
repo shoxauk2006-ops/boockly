@@ -724,7 +724,7 @@ def _apply_paddle_event(payload: dict) -> None:
             or billing_period.get("ends_at")
         )
 
-        if event_type == "transaction.completed":
+                 if event_type == "transaction.completed":
             subscription.active = True
             subscription.status = "active"
             subscription.expires_at = (
@@ -732,7 +732,15 @@ def _apply_paddle_event(payload: dict) -> None:
                 or subscription.expires_at
             )
 
-            if subscription.pending_services_limit is not None:
+            transaction_origin = str(
+                data.get("origin") or ""
+            )
+
+            if (
+                transaction_origin
+                == "subscription_recurring"
+                and subscription.pending_services_limit is not None
+            ):
                 subscription.current_services_limit = (
                     subscription.pending_services_limit
                 )
@@ -785,6 +793,20 @@ def _apply_paddle_event(payload: dict) -> None:
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
+            )
+                        detected = _limit_from_items(
+                data.get("items")
+                or []
+            )
+
+            subscription.current_services_limit = (
+                detected
+            )
+
+            subscription.current_price = (
+                calculate_subscription_price(
+                    detected
+                )
             )
 
         elif event_type == "subscription.updated":
