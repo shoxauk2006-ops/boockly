@@ -1799,7 +1799,40 @@ body.logged-in .logout{
     </button>
   </div>
 </div>
+    
+<div id="cancelConfirmModal" class="save-success-modal" hidden>
+  <div class="save-success-backdrop"></div>
 
+  <div class="save-success-card">
+    <div class="save-success-icon">!</div>
+
+    <h3>Cancel subscription?</h3>
+
+    <p>
+      Your current package will remain active until the end of the current
+      billing period. After that, the subscription will end.
+    </p>
+
+    <div class="business-modal-actions">
+      <button
+        id="cancelConfirmCancel"
+        class="business-cancel"
+        type="button"
+      >
+        Keep subscription
+      </button>
+
+      <button
+        id="cancelConfirmOk"
+        class="primary"
+        type="button"
+      >
+        Cancel subscription
+      </button>
+    </div>
+  </div>
+</div>
+    
 </div>
 
 </section><div class="foot">Bookly · Simple online booking · <a href="landing.html">Learn more</a></div>
@@ -2435,6 +2468,32 @@ cancelConfirmModal
   .querySelector('.save-success-backdrop')
   .onclick=
   closeCancelConfirm;
+var cancelConfirmModal=
+  document.getElementById('cancelConfirmModal');
+
+var cancelConfirmOk=
+  document.getElementById('cancelConfirmOk');
+
+var cancelConfirmCancel=
+  document.getElementById('cancelConfirmCancel');
+
+function openCancelConfirm(){
+  cancelConfirmModal.hidden=false;
+  cancelConfirmOk.focus();
+}
+
+function closeCancelConfirm(){
+  cancelConfirmModal.hidden=true;
+}
+
+cancelConfirmCancel.onclick=
+  closeCancelConfirm;
+
+cancelConfirmModal
+  .querySelector('.save-success-backdrop')
+  .onclick=
+  closeCancelConfirm;
+
 document.getElementById('billingCancel').onclick=function(){
   openCancelConfirm();
 };
