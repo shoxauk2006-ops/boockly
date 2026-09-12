@@ -1975,6 +1975,32 @@ body.logged-in .business-item-actions .business-select:not(:disabled):hover{
   pointer-events:auto !important;
   cursor:pointer;
 }
+.business-modal{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:99999 !important;
+  pointer-events:auto !important;
+}
+
+.business-modal-backdrop{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:1 !important;
+  pointer-events:auto !important;
+}
+
+.business-modal-card{
+  position:relative !important;
+  z-index:2 !important;
+  pointer-events:auto !important;
+}
+
+.business-modal-close{
+  position:relative !important;
+  z-index:999999 !important;
+  pointer-events:auto !important;
+  cursor:pointer !important;
+}
 </style>
 <script>
 (function(){
@@ -3617,6 +3643,12 @@ setTimeout(function(){
 function closeBusinessModalWindow(){
   businessModal.hidden=true;
 }
+
+closeBusinessModal.onclick=function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  businessModal.hidden=true;
+};
 
 document.getElementById('addBusiness').onclick=openBusinessModal;
 
