@@ -848,7 +848,7 @@ def _apply_paddle_event(payload: dict) -> None:
                     subscription.status = "trialing"
                     subscription.active = True
                 else:
-                    subscription.status = "active"
+                    subscription.status = "cancelled"
                     subscription.active = True
 
                 subscription.cancel_at = (
