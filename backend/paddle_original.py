@@ -746,8 +746,9 @@ def _apply_paddle_event(payload: dict) -> None:
 
             is_new_billing_period = bool(
                 transaction_period_start
+                and previous_expires_at
                 and transaction_period_start
-                <= datetime.utcnow()
+                >= previous_expires_at
             )
 
             if (
