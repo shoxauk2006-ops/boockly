@@ -710,8 +710,13 @@ def account_connect_telegram_from_web(
 
 @app.get("/account/billing")
 def account_billing(authorization: str = Header(default="")):
+    from . import paddle_original
+
     with SessionLocal() as db:
-        account = _account_from_header(db, authorization)
+        account = _account_from_header(
+            db,
+            authorization
+        )
 
         business = (
             db.query(Business)
@@ -735,6 +740,73 @@ def account_billing(authorization: str = Header(default="")):
             )
             .first()
         )
+
+        # Synchronize the current package from Paddle only when
+        # there is no pending package change.
+        #
+        # During a scheduled downgrade Paddle may already report the
+        # future package in its items, while Bookly must keep the
+        # current package active until the billing period ends.
+        if (
+            subscription
+            and subscription.active
+            and subscription.pending_services_limit is None
+            and subscription.external_subscription_id
+        ):
+            subscription_id = (
+                subscription.external_subscription_id
+                .strip()
+            )
+
+            if subscription_id.startswith("sub_"):
+                try:
+                    paddle_response = (
+                        paddle_original._paddle_request(
+                            "GET",
+                            f"/subscriptions/{subscription_id}",
+                        )
+                    )
+
+                    paddle_subscription = (
+                        paddle_response.get("data")
+                        or {}
+                    )
+
+                    detected_limit = (
+                        paddle_original._limit_from_items(
+                            paddle_subscription.get("items")
+                            or []
+                        )
+                    )
+
+                    detected_price = (
+                        paddle_original.calculate_subscription_price(
+                            detected_limit
+                        )
+                    )
+
+                    if (
+                        subscription.current_services_limit
+                        != detected_limit
+                        or
+                        float(
+                            subscription.current_price or 0
+                        )
+                        != float(detected_price)
+                    ):
+                        subscription.current_services_limit = (
+                            detected_limit
+                        )
+                        subscription.current_price = (
+                            detected_price
+                        )
+                        db.commit()
+
+                except Exception as exc:
+                    print(
+                        "BOOKLY BILLING PADDLE SYNC SKIPPED:",
+                        repr(exc),
+                    )
 
         return {
             "ok": True,
@@ -769,23 +841,26 @@ def account_billing(authorization: str = Header(default="")):
                     and subscription.current_price is not None
                     else 0.0
                 ),
-                 "pending_services_limit": (
-    subscription.pending_services_limit
-    if subscription
-    else None
-),
-"pending_price": (
-    float(subscription.pending_price)
-    if subscription and subscription.pending_price is not None
-    else None
-),
-"cancel_at": (
-    subscription.cancel_at.isoformat()
-    if subscription and subscription.cancel_at
-    else None
+                "pending_services_limit": (
+                    subscription.pending_services_limit
+                    if subscription
+                    else None
+                ),
+                "pending_price": (
+                    float(subscription.pending_price)
+                    if subscription
+                    and subscription.pending_price is not None
+                    else None
+                ),
+                "cancel_at": (
+                    subscription.cancel_at.isoformat()
+                    if subscription
+                    and subscription.cancel_at
+                    else None
                 ),
             },
         }
+
 class AccountSubscriptionLimitIn(BaseModel):
     services_limit: int = Field(ge=10, le=100)
 
