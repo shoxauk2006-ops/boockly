@@ -779,11 +779,55 @@ def account_billing(authorization: str = Header(default="")):
                         )
                     )
 
-                    detected_price = (
-                        paddle_original.calculate_subscription_price(
-                            detected_limit
+                                        billing_interval = (
+                        paddle_original._subscription_interval(
+                            subscription_id
                         )
                     )
+
+                    if billing_interval == "year":
+                        annual_total = 0.0
+
+                        for item in (
+                            paddle_subscription.get("items")
+                            or []
+                        ):
+                            price = (
+                                item.get("price")
+                                or {}
+                            )
+
+                            unit_price = (
+                                price.get("unit_price")
+                                or {}
+                            )
+
+                            amount = unit_price.get(
+                                "amount"
+                            )
+
+                            quantity = item.get(
+                                "quantity",
+                                1
+                            )
+
+                            if amount is not None:
+                                annual_total += (
+                                    float(amount)
+                                    / 100.0
+                                ) * float(quantity)
+
+                        detected_price = round(
+                            annual_total,
+                            2
+                        )
+
+                    else:
+                        detected_price = (
+                            paddle_original.calculate_subscription_price(
+                                detected_limit
+                            )
+                        )
 
                     if (
                         subscription.current_services_limit
