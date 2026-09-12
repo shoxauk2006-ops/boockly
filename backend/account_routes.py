@@ -779,7 +779,7 @@ def account_billing(authorization: str = Header(default="")):
                         )
                     )
 
-                                        billing_interval = (
+                    billing_interval = (
                         paddle_original._subscription_interval(
                             subscription_id
                         )
