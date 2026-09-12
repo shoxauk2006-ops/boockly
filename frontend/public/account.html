@@ -1935,6 +1935,31 @@ body.logged-in .foot{
     text-align:left;
   }
 }
+/* Business modal close button */
+.business-modal-close{
+  position:relative;
+  z-index:3;
+  pointer-events:auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.business-modal-close:hover{
+  background:#f5f6f8;
+  color:#111;
+}
+.business-select:hover{
+  border-color:#111;
+  background:#111;
+  color:#fff;
+}
+
+.business-select:disabled:hover{
+  border-color:#dfe3e8;
+  background:#fff;
+  color:#737a84;
+}
 </style>
 <script>
 (function(){
@@ -3580,7 +3605,14 @@ function closeBusinessModalWindow(){
 
 document.getElementById('addBusiness').onclick=openBusinessModal;
 
-closeBusinessModal.onclick=closeBusinessModalWindow;
+closeBusinessModal.addEventListener(
+  'click',
+  function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    closeBusinessModalWindow();
+  }
+);
 cancelBusiness.onclick=closeBusinessModalWindow;
 
 businessModal.querySelector('.business-modal-backdrop').onclick=
