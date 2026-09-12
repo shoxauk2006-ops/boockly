@@ -1386,13 +1386,14 @@ body.logged-in .logout{
     padding:18px;
   }
 }
-html.has-session #auth{
-  display:none !important;
+html.has-session .card{
+  visibility:hidden;
 }
 
-html.has-session #account{
-  display:block !important;
+html.has-session.session-ready .card{
+  visibility:visible;
 }
+
 </style>
 <script>
 (function(){
