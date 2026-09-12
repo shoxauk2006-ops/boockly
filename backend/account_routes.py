@@ -889,31 +889,62 @@ def account_change_subscription_limit(
                     ),
             }
 
-    mode = (
-        "prorated_immediately"
-        if limit > current
-        else "prorated_next_billing_period"
-    )
-
-    paddle_original._paddle_request(
-        "PATCH",
-        f"/subscriptions/{subscription_id}",
-        {
-            "items":
-                paddle_original._items_for_limit(
-                    limit
-                ),
-            "proration_billing_mode": mode,
-            "on_payment_failure":
-                "prevent_change",
-        },
-    )
-
-    new_price = (
-        paddle_original.calculate_subscription_price(
-            limit
+        new_price = (
+            paddle_original.calculate_subscription_price(
+                limit
+            )
         )
-    )
+
+        # For a downgrade, save the pending package BEFORE
+        # calling Paddle. This prevents a fast Paddle webhook
+        # from replacing the current package prematurely.
+        if limit < current:
+            subscription.pending_services_limit = limit
+            subscription.pending_price = new_price
+            db.commit()
+
+        mode = (
+            "prorated_immediately"
+            if limit > current
+            else "prorated_next_billing_period"
+        )
+
+    try:
+        paddle_original._paddle_request(
+            "PATCH",
+            f"/subscriptions/{subscription_id}",
+            {
+                "items":
+                    paddle_original._items_for_limit(
+                        limit
+                    ),
+                "proration_billing_mode": mode,
+                "on_payment_failure":
+                    "prevent_change",
+            },
+        )
+    except Exception:
+        # If Paddle rejected the change, remove the
+        # pending downgrade that was saved above.
+        if limit < current:
+            with SessionLocal() as db:
+                account = _account_from_header(
+                    db,
+                    authorization
+                )
+
+                _, subscription, _ = (
+                    _account_subscription(
+                        db,
+                        account
+                    )
+                )
+
+                subscription.pending_services_limit = None
+                subscription.pending_price = None
+                db.commit()
+
+        raise
 
     with SessionLocal() as db:
         account = _account_from_header(
@@ -933,16 +964,13 @@ def account_change_subscription_limit(
             subscription.current_price = new_price
             subscription.pending_services_limit = None
             subscription.pending_price = None
-        else:
-            subscription.pending_services_limit = limit
-            subscription.pending_price = new_price
 
-        paddle_original._sync_business_from_subscription(
-            business,
-            subscription
-        )
+            paddle_original._sync_business_from_subscription(
+                business,
+                subscription
+            )
 
-        db.commit()
+            db.commit()
 
         return {
             "ok": True,
