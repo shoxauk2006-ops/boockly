@@ -794,7 +794,7 @@ def _apply_paddle_event(payload: dict) -> None:
                 _dt(next_billed_at)
                 or subscription.expires_at
             )
-                detected = _limit_from_items(
+            detected = _limit_from_items(
                 data.get("items")
                 or []
             )
