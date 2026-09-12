@@ -1386,11 +1386,11 @@ body.logged-in .logout{
     padding:18px;
   }
 }
-html.has-session .card{
+html.has-session:not(.session-ready) body{
   visibility:hidden;
 }
 
-html.has-session.session-ready .card{
+html.has-session.session-ready body{
   visibility:visible;
 }
 
