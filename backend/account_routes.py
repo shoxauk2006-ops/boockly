@@ -779,11 +779,31 @@ def account_billing(authorization: str = Header(default="")):
                         )
                     )
 
-                    billing_interval = (
-                        paddle_original._subscription_interval(
-                            subscription_id
-                        )
-                    )
+                    billing_interval = "month"
+
+for item in (
+    paddle_subscription.get("items")
+    or []
+):
+    price = (
+        item.get("price")
+        or {}
+    )
+
+    billing_cycle = (
+        price.get("billing_cycle")
+        or item.get("billing_cycle")
+        or {}
+    )
+
+    interval = str(
+        billing_cycle.get("interval")
+        or ""
+    ).lower()
+
+    if interval == "year":
+        billing_interval = "year"
+        break
 
                     if billing_interval == "year":
                         annual_total = 0.0
