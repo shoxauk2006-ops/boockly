@@ -988,20 +988,70 @@ def account_change_subscription_limit(
             )
         )
 
-        current = (
+                current = (
             subscription.current_services_limit
             or 10
         )
 
-        billing_interval = (
-            paddle_app._subscription_interval(
-                subscription_id
+        paddle_response = (
+            paddle_original._paddle_request(
+                "GET",
+                f"/subscriptions/{subscription_id}",
             )
         )
+
+        paddle_subscription = (
+            paddle_response.get("data")
+            or {}
+        )
+
+        paddle_items = (
+            paddle_subscription.get("items")
+            or []
+        )
+
+        billing_interval = "month"
+
+        for item in paddle_items:
+            price = (
+                item.get("price")
+                or {}
+            )
+
+            cycle = (
+                price.get("billing_cycle")
+                or item.get("billing_cycle")
+                or {}
+            )
+
+            interval = str(
+                cycle.get("interval")
+                or ""
+            ).lower()
+
+            if interval == "year":
+                billing_interval = "year"
+                break
+
+            price_id = str(
+                item.get("price_id")
+                or price.get("id")
+                or ""
+            ).strip()
+
+            if (
+                price_id
+                and price_id in
+                paddle_app._all_annual_price_ids()
+            ):
+                billing_interval = "year"
+                break
 
         paddle_app._billing_interval.set(
             billing_interval
         )
+
+        if limit == current:
 
         if limit == current:
             return {
