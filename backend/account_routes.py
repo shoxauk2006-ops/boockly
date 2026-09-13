@@ -1152,9 +1152,6 @@ def account_preview_subscription_limit(
         "debug_paddle_result_amount":
             result.get("amount"),
 
-        "debug_current_items":
-            debug_items,
-
         "debug_paddle_credit_amount":
             credit.get("amount"),
 
