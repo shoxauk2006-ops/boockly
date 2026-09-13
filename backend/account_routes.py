@@ -1244,7 +1244,7 @@ def account_change_subscription_limit(
                     ),
             }
 
-                if billing_interval == "year":
+        if billing_interval == "year":
             annual_price_ids = (
                 paddle_app.ANNUAL_PRICE_IDS
             )
