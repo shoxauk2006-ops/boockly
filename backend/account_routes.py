@@ -942,25 +942,6 @@ def account_preview_subscription_limit(
             or 10
         )
 
-        if limit == current:
-            return {
-                "ok": True,
-                "current_services_limit": current,
-                "new_services_limit": limit,
-                "due_today": 0.0,
-                "current_price": float(
-                    subscription.current_price or 0
-                ),
-                "new_price": float(
-                    subscription.current_price or 0
-                ),
-                "billing_interval":
-                    paddle_app._subscription_interval(
-                        subscription_id
-                    ),
-                "effective": "current_period",
-            }
-
         billing_interval = (
             paddle_app._subscription_interval(
                 subscription_id
@@ -1011,37 +992,16 @@ def account_preview_subscription_limit(
 
     due_today = 0.0
 
-    if mode == "prorated_immediately":
-        immediate_transaction = (
-            data.get("immediate_transaction")
-            or {}
-        )
+    if (
+        mode == "prorated_immediately"
+        and result.get("action") == "charge"
+    ):
+        amount = result.get("amount")
 
-        immediate_details = (
-            immediate_transaction.get("details")
-            or {}
-        )
-
-        immediate_totals = (
-            immediate_details.get("totals")
-            or {}
-        )
-
-        immediate_total = (
-            immediate_totals.get("total")
-        )
-
-        if immediate_total is not None:
+        if amount is not None:
             due_today = (
-                float(immediate_total) / 100.0
+                float(amount) / 100.0
             )
-        else:
-            amount = result.get("amount")
-
-            if amount is not None:
-                due_today = (
-                    float(amount) / 100.0
-                )
 
     recurring_details = (
         data.get("recurring_transaction_details")
@@ -1054,12 +1014,12 @@ def account_preview_subscription_limit(
     )
 
     new_price_amount = (
-        recurring_totals.get("subtotal")
+        recurring_totals.get("total")
     )
 
     if new_price_amount is None:
         new_price_amount = (
-            recurring_totals.get("total")
+            recurring_totals.get("subtotal")
         )
 
     new_price = (
@@ -1068,14 +1028,14 @@ def account_preview_subscription_limit(
         else 0.0
     )
 
-        annual_price_ids = (
+    price_ids = (
         paddle_app.ANNUAL_PRICE_IDS
         if billing_interval == "year"
         else paddle_original.PRICE_IDS
     )
 
     base_price_id = (
-        annual_price_ids.get(10)
+        price_ids.get(10)
     )
 
     if not base_price_id:
@@ -1095,27 +1055,37 @@ def account_preview_subscription_limit(
 
     if current != 10:
         current_addon_id = (
-            annual_price_ids.get(current)
+            price_ids.get(current)
         )
 
-        if current_addon_id:
-            current_addon_price, _ = (
-                paddle_app._price_amount(
-                    current_addon_id
-                )
+        if not current_addon_id:
+            raise HTTPException(
+                500,
+                f"Price ID for {current} services is not configured"
             )
+
+        current_addon_price, _ = (
+            paddle_app._price_amount(
+                current_addon_id
+            )
+        )
 
     if limit != 10:
         new_addon_id = (
-            annual_price_ids.get(limit)
+            price_ids.get(limit)
         )
 
-        if new_addon_id:
-            new_addon_price, _ = (
-                paddle_app._price_amount(
-                    new_addon_id
-                )
+        if not new_addon_id:
+            raise HTTPException(
+                500,
+                f"Price ID for {limit} services is not configured"
             )
+
+        new_addon_price, _ = (
+            paddle_app._price_amount(
+                new_addon_id
+            )
+        )
 
     current_total = round(
         base_price + current_addon_price,
@@ -1134,20 +1104,25 @@ def account_preview_subscription_limit(
 
     effective_at = (
         billing_period.get("starts_at")
-        if mode == "prorated_next_billing_period"
+        if mode ==
+        "prorated_next_billing_period"
         else None
     )
 
     return {
         "ok": True,
-        "current_services_limit": current,
-        "new_services_limit": limit,
-        "due_today": round(
-            due_today,
-            2
-        ),
-                "current_price": current_total,
-        "new_price": new_total,
+
+        "current_services_limit":
+            current,
+
+        "new_services_limit":
+            limit,
+
+        "current_price":
+            current_total,
+
+        "new_price":
+            new_total,
 
         "current_base_price":
             round(base_price, 2),
@@ -1160,24 +1135,34 @@ def account_preview_subscription_limit(
 
         "new_addon_price":
             round(new_addon_price, 2),
-        
+
+        "due_today":
+            round(due_today, 2),
+
         "billing_interval":
             billing_interval,
+
         "effective": (
             "next_billing_period"
             if mode ==
             "prorated_next_billing_period"
             else "immediately"
         ),
-        "effective_at": effective_at,
-        "currency_code": (
-            result.get("currency_code")
-            or recurring_totals.get(
-                "currency_code"
-            )
-            or "USD"
-        ),
+
+        "effective_at":
+            effective_at,
+
+        "currency_code":
+            (
+                result.get("currency_code")
+                or recurring_totals.get(
+                    "currency_code"
+                )
+                or "USD"
+            ),
     }
+
+
 
 def _account_subscription(db, account):
     business = (
