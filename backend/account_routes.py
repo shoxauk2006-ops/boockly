@@ -1068,6 +1068,65 @@ def account_preview_subscription_limit(
         else 0.0
     )
 
+        annual_price_ids = (
+        paddle_app.ANNUAL_PRICE_IDS
+        if billing_interval == "year"
+        else paddle_original.PRICE_IDS
+    )
+
+    base_price_id = (
+        annual_price_ids.get(10)
+    )
+
+    if not base_price_id:
+        raise HTTPException(
+            500,
+            "Base Price ID is not configured"
+        )
+
+    base_price, _ = (
+        paddle_app._price_amount(
+            base_price_id
+        )
+    )
+
+    current_addon_price = 0.0
+    new_addon_price = 0.0
+
+    if current != 10:
+        current_addon_id = (
+            annual_price_ids.get(current)
+        )
+
+        if current_addon_id:
+            current_addon_price, _ = (
+                paddle_app._price_amount(
+                    current_addon_id
+                )
+            )
+
+    if limit != 10:
+        new_addon_id = (
+            annual_price_ids.get(limit)
+        )
+
+        if new_addon_id:
+            new_addon_price, _ = (
+                paddle_app._price_amount(
+                    new_addon_id
+                )
+            )
+
+    current_total = round(
+        base_price + current_addon_price,
+        2
+    )
+
+    new_total = round(
+        base_price + new_addon_price,
+        2
+    )
+
     billing_period = (
         data.get("next_transaction")
         or {}
@@ -1087,13 +1146,21 @@ def account_preview_subscription_limit(
             due_today,
             2
         ),
-        "current_price": float(
-            subscription.current_price or 0
-        ),
-        "new_price": round(
-            new_price,
-            2
-        ),
+                "current_price": current_total,
+        "new_price": new_total,
+
+        "current_base_price":
+            round(base_price, 2),
+
+        "current_addon_price":
+            round(current_addon_price, 2),
+
+        "new_base_price":
+            round(base_price, 2),
+
+        "new_addon_price":
+            round(new_addon_price, 2),
+        
         "billing_interval":
             billing_interval,
         "effective": (
