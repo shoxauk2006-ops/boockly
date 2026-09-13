@@ -1799,7 +1799,11 @@ body.logged-in #billingMessage{
   font-size:11px;
   line-height:1.55;
 }
-
+  
+#packageConfirmText{
+  white-space:pre-line;
+}
+  
 /* Logout */
 
 body.logged-in .logout{
@@ -4170,32 +4174,144 @@ function closePackageModal(){
 }
 
 function changeBillingPackage(limit,mode){
-  var confirmModal=document.getElementById('packageConfirmModal');
-  var confirmTitle=document.getElementById('packageConfirmTitle');
-  var confirmText=document.getElementById('packageConfirmText');
-  var confirmOk=document.getElementById('packageConfirmOk');
+  var confirmModal=
+    document.getElementById(
+      'packageConfirmModal'
+    );
 
-  var currentLimit=document.getElementById('packageModal').dataset.currentLimit;
+  var confirmTitle=
+    document.getElementById(
+      'packageConfirmTitle'
+    );
+
+  var confirmText=
+    document.getElementById(
+      'packageConfirmText'
+    );
+
+  var confirmOk=
+    document.getElementById(
+      'packageConfirmOk'
+    );
+
+  var message=
+    document.getElementById(
+      'packageModalMessage'
+    );
+
+  var currentLimit=
+    document.getElementById(
+      'packageModal'
+    ).dataset.currentLimit;
 
   confirmTitle.textContent=
     mode==='upgrade'
       ? 'Upgrade package'
       : 'Downgrade package';
 
-  confirmText.textContent=
-    mode==='upgrade'
-      ? 'Upgrade from '+currentLimit+' to '+limit+' services? The new package will be applied immediately.'
-      : 'Downgrade from '+currentLimit+' to '+limit+' services? The new package will start from the next billing period.';
-
-  confirmOk.textContent=
-    mode==='upgrade'
-      ? 'Upgrade'
-      : 'Downgrade';
-
-  confirmModal.dataset.limit=String(limit);
-  confirmModal.dataset.mode=mode;
+  confirmOk.disabled=true;
+  confirmOk.textContent='Calculating...';
 
   confirmModal.hidden=false;
+
+  confirmText.textContent=
+    'Calculating the billing impact...';
+
+  booklyCall(
+    '/account/subscription/preview-limit',
+    {
+      method:'POST',
+      headers:{
+        Authorization:
+          'Bearer '+booklySession,
+        'Content-Type':
+          'application/json'
+      },
+      body:JSON.stringify({
+        services_limit:limit
+      })
+    }
+  )
+  .then(function(d){
+    if(!d || d.ok!==true){
+      throw new Error(
+        (d && (d.detail || d.error)) ||
+        'Unable to preview package change.'
+      );
+    }
+
+    var interval=
+      d.billing_interval==='year'
+        ? 'year'
+        : 'month';
+
+    var intervalLabel=
+      interval==='year'
+        ? 'year'
+        : 'month';
+
+    var currentPrice=
+      Number(d.current_price || 0)
+        .toFixed(2);
+
+    var newPrice=
+      Number(d.new_price || 0)
+        .toFixed(2);
+
+    var dueToday=
+      Number(d.due_today || 0)
+        .toFixed(2);
+
+    var text=
+      'Current package: '+
+      currentLimit+
+      ' services · $'+
+      currentPrice+
+      '/'+
+      intervalLabel+
+      '\n\n'+
+      'New package: '+
+      limit+
+      ' services · $'+
+      newPrice+
+      '/'+
+      intervalLabel+
+      '\n\n';
+
+    if(mode==='upgrade'){
+      text+=
+        'Due today: $'+
+        dueToday+
+        '\n\n'+
+        'The new package will be applied immediately.';
+    }else{
+      text+=
+        'Due today: $0.00\n\n'+
+        'The new package will start from the next billing period.';
+    }
+
+    confirmText.textContent=text;
+
+    confirmModal.dataset.limit=
+      String(limit);
+
+    confirmModal.dataset.mode=
+      mode;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? 'Upgrade'
+        : 'Downgrade';
+
+    confirmOk.disabled=false;
+  })
+  .catch(function(e){
+    confirmModal.hidden=true;
+
+    message.textContent=
+      e.message ||
+      'Unable to preview package change.';
+  });
 }
 
 function confirmBillingPackageChange(){
