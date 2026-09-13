@@ -990,6 +990,16 @@ def account_preview_subscription_limit(
         or {}
     )
 
+    credit = (
+        update_summary.get("credit")
+        or {}
+    )
+
+    charge = (
+        update_summary.get("charge")
+        or {}
+    )
+
     due_today = 0.0
 
     if (
@@ -1135,6 +1145,18 @@ def account_preview_subscription_limit(
 
         "new_addon_price":
             round(new_addon_price, 2),
+
+        "debug_paddle_action":
+            result.get("action"),
+
+        "debug_paddle_result_amount":
+            result.get("amount"),
+
+        "debug_paddle_credit_amount":
+            credit.get("amount"),
+
+        "debug_paddle_charge_amount":
+            charge.get("amount"),
 
         "due_today":
             round(due_today, 2),
