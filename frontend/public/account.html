@@ -4262,17 +4262,55 @@ function changeBillingPackage(limit,mode){
       Number(d.due_today || 0)
         .toFixed(2);
 
+        var currentBasePrice=
+      Number(d.current_base_price || 0)
+        .toFixed(2);
+
+    var currentAddonPrice=
+      Number(d.current_addon_price || 0)
+        .toFixed(2);
+
+    var newBasePrice=
+      Number(d.new_base_price || 0)
+        .toFixed(2);
+
+    var newAddonPrice=
+      Number(d.new_addon_price || 0)
+        .toFixed(2);
+
     var text=
       'Current package: '+
       currentLimit+
-      ' services · $'+
+      ' services\n\n'+
+      'Bookly Pro: $'+
+      currentBasePrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'Services package: $'+
+      currentAddonPrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'Current total: $'+
       currentPrice+
       '/'+
       intervalLabel+
       '\n\n'+
       'New package: '+
       limit+
-      ' services · $'+
+      ' services\n\n'+
+      'Bookly Pro: $'+
+      newBasePrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'Services package: $'+
+      newAddonPrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'New total: $'+
       newPrice+
       '/'+
       intervalLabel+
