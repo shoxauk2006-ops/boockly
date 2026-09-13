@@ -948,6 +948,23 @@ def account_preview_subscription_limit(
             )
         )
 
+        paddle_current_response = (
+            paddle_original._paddle_request(
+                "GET",
+                f"/subscriptions/{subscription_id}",
+            )
+        )
+
+        paddle_current_data = (
+            paddle_current_response.get("data")
+            or {}
+        )
+
+        paddle_current_items = (
+            paddle_current_data.get("items")
+            or []
+        )
+
         paddle_app._billing_interval.set(
             billing_interval
         )
@@ -1160,6 +1177,28 @@ def account_preview_subscription_limit(
 
         "due_today":
             round(due_today, 2),
+
+        "debug_current_items":
+            [
+                {
+                    "price_id": (
+                        item.get("price_id")
+                        or (
+                            item.get("price") or {}
+                        ).get("id")
+                    ),
+                    "quantity":
+                        item.get("quantity"),
+                    "billing_cycle":
+                        (
+                            (
+                                item.get("price")
+                                or {}
+                            ).get("billing_cycle")
+                        ),
+                }
+                for item in paddle_current_items
+            ],
 
         "billing_interval":
             billing_interval,
