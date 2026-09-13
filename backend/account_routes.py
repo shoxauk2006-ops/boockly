@@ -1152,6 +1152,9 @@ def account_preview_subscription_limit(
         "debug_paddle_result_amount":
             result.get("amount"),
 
+        "debug_current_items":
+            debug_items,
+
         "debug_paddle_credit_amount":
             credit.get("amount"),
 
@@ -1285,6 +1288,35 @@ def account_change_subscription_limit(
             paddle_subscription.get("items")
             or []
         )
+
+    debug_items = []
+
+    for item in paddle_items:
+        price = (
+            item.get("price")
+            or {}
+        )
+
+        cycle = (
+            price.get("billing_cycle")
+            or {}
+        )
+
+        debug_items.append({
+            "price_id": (
+                item.get("price_id")
+                or price.get("id")
+            ),
+            "quantity":
+                item.get("quantity"),
+            "billing_interval":
+                cycle.get("interval"),
+            "price_amount":
+                (
+                    (price.get("unit_price") or {})
+                    .get("amount")
+                ),
+        })
 
         billing_interval = "month"
 
