@@ -1009,13 +1009,39 @@ def account_preview_subscription_limit(
         or {}
     )
 
-    due_today = 0.0
+        due_today = 0.0
 
     if mode == "prorated_immediately":
-        amount = result.get("amount")
+        immediate_transaction = (
+            data.get("immediate_transaction")
+            or {}
+        )
 
-        if amount is not None:
-            due_today = float(amount) / 100.0
+        immediate_details = (
+            immediate_transaction.get("details")
+            or {}
+        )
+
+        immediate_totals = (
+            immediate_details.get("totals")
+            or {}
+        )
+
+        immediate_total = (
+            immediate_totals.get("total")
+        )
+
+        if immediate_total is not None:
+            due_today = (
+                float(immediate_total) / 100.0
+            )
+        else:
+            amount = result.get("amount")
+
+            if amount is not None:
+                due_today = (
+                    float(amount) / 100.0
+                )
 
     recurring_details = (
         data.get("recurring_transaction_details")
