@@ -1009,7 +1009,7 @@ def account_preview_subscription_limit(
         or {}
     )
 
-        due_today = 0.0
+    due_today = 0.0
 
     if mode == "prorated_immediately":
         immediate_transaction = (
