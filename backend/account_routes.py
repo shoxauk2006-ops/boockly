@@ -908,7 +908,183 @@ def account_billing(authorization: str = Header(default="")):
 
 class AccountSubscriptionLimitIn(BaseModel):
     services_limit: int = Field(ge=10, le=100)
+@app.post("/account/subscription/preview-limit")
+def account_preview_subscription_limit(
+    x: AccountSubscriptionLimitIn,
+    authorization: str = Header(default=""),
+):
+    from . import paddle_original
+    from . import paddle_app
 
+    limit = int(x.services_limit)
+
+    if limit not in paddle_original.LIMITS:
+        raise HTTPException(
+            400,
+            "Invalid services limit"
+        )
+
+    with SessionLocal() as db:
+        account = _account_from_header(
+            db,
+            authorization
+        )
+
+        business, subscription, subscription_id = (
+            _account_subscription(
+                db,
+                account
+            )
+        )
+
+        current = (
+            subscription.current_services_limit
+            or 10
+        )
+
+        if limit == current:
+            return {
+                "ok": True,
+                "current_services_limit": current,
+                "new_services_limit": limit,
+                "due_today": 0.0,
+                "current_price": float(
+                    subscription.current_price or 0
+                ),
+                "new_price": float(
+                    subscription.current_price or 0
+                ),
+                "billing_interval":
+                    paddle_app._subscription_interval(
+                        subscription_id
+                    ),
+                "effective": "current_period",
+            }
+
+        billing_interval = (
+            paddle_app._subscription_interval(
+                subscription_id
+            )
+        )
+
+        paddle_app._billing_interval.set(
+            billing_interval
+        )
+
+        items = paddle_app._items_for_limit(
+            limit
+        )
+
+        mode = (
+            "prorated_immediately"
+            if limit > current
+            else "prorated_next_billing_period"
+        )
+
+    preview_response = (
+        paddle_original._paddle_request(
+            "PATCH",
+            f"/subscriptions/{subscription_id}/preview",
+            {
+                "items": items,
+                "proration_billing_mode": mode,
+                "on_payment_failure":
+                    "prevent_change",
+            },
+        )
+    )
+
+    data = (
+        preview_response.get("data")
+        or {}
+    )
+
+    update_summary = (
+        data.get("update_summary")
+        or {}
+    )
+
+    result = (
+        update_summary.get("result")
+        or {}
+    )
+
+    due_today = 0.0
+
+    if mode == "prorated_immediately":
+        amount = result.get("amount")
+
+        if amount is not None:
+            due_today = float(amount) / 100.0
+
+    recurring_details = (
+        data.get("recurring_transaction_details")
+        or {}
+    )
+
+    recurring_totals = (
+        recurring_details.get("totals")
+        or {}
+    )
+
+    new_price_amount = (
+        recurring_totals.get("subtotal")
+    )
+
+    if new_price_amount is None:
+        new_price_amount = (
+            recurring_totals.get("total")
+        )
+
+    new_price = (
+        float(new_price_amount) / 100.0
+        if new_price_amount is not None
+        else 0.0
+    )
+
+    billing_period = (
+        data.get("next_transaction")
+        or {}
+    ).get("billing_period") or {}
+
+    effective_at = (
+        billing_period.get("starts_at")
+        if mode == "prorated_next_billing_period"
+        else None
+    )
+
+    return {
+        "ok": True,
+        "current_services_limit": current,
+        "new_services_limit": limit,
+        "due_today": round(
+            due_today,
+            2
+        ),
+        "current_price": float(
+            subscription.current_price or 0
+        ),
+        "new_price": round(
+            new_price,
+            2
+        ),
+        "billing_interval":
+            billing_interval,
+        "effective": (
+            "next_billing_period"
+            if mode ==
+            "prorated_next_billing_period"
+            else "immediately"
+        ),
+        "effective_at": effective_at,
+        "currency_code": (
+            result.get("currency_code")
+            or recurring_totals.get(
+                "currency_code"
+            )
+            or "USD"
+        ),
+    }
 
 def _account_subscription(db, account):
     business = (
@@ -1068,11 +1244,61 @@ def account_change_subscription_limit(
                     ),
             }
 
-        new_price = (
-            paddle_original.calculate_subscription_price(
-                limit
+                if billing_interval == "year":
+            annual_price_ids = (
+                paddle_app.ANNUAL_PRICE_IDS
             )
-        )
+
+            base_price_id = (
+                annual_price_ids.get(10)
+            )
+
+            if not base_price_id:
+                raise HTTPException(
+                    500,
+                    "Annual base Price ID is not configured"
+                )
+
+            base_price, _ = (
+                paddle_app._price_amount(
+                    base_price_id
+                )
+            )
+
+            if limit == 10:
+                new_price = base_price
+            else:
+                addon_price_id = (
+                    annual_price_ids.get(limit)
+                )
+
+                if not addon_price_id:
+                    raise HTTPException(
+                        500,
+                        f"Annual Price ID for {limit} services is not configured"
+                    )
+
+                addon_price, _ = (
+                    paddle_app._price_amount(
+                        addon_price_id
+                    )
+                )
+
+                new_price = (
+                    base_price +
+                    addon_price
+                )
+
+            new_price = round(
+                new_price,
+                2
+            )
+        else:
+            new_price = (
+                paddle_original.calculate_subscription_price(
+                    limit
+                )
+            )
 
         # For a downgrade, save the pending package BEFORE
         # calling Paddle. This prevents a fast Paddle webhook
