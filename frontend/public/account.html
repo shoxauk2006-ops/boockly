@@ -4262,6 +4262,10 @@ function changeBillingPackage(limit,mode){
       Number(d.due_today || 0)
         .toFixed(2);
 
+    var dueTodayTax=
+      Number(d.due_today_tax || 0)
+        .toFixed(2);
+ 
         var currentBasePrice=
       Number(d.current_base_price || 0)
         .toFixed(2);
@@ -4318,7 +4322,17 @@ function changeBillingPackage(limit,mode){
 
     if(mode==='upgrade'){
       text+=
-        'Due today: $'+
+        'Due today\n'+
+        'Package difference: $'+
+        (
+          Number(dueToday) -
+          Number(dueTodayTax)
+        ).toFixed(2)+
+        '\n'+
+        'VAT: $'+
+        dueTodayTax+
+        '\n'+
+        'Total due today: $'+
         dueToday+
         '\n\n'+
         'The new package will be applied immediately.';
