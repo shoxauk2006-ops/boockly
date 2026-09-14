@@ -44,7 +44,7 @@ class BooklyAccount(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-        free_trial_used: Mapped[bool] = mapped_column(
+    free_trial_used: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
         nullable=False,
