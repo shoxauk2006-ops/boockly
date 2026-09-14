@@ -564,6 +564,39 @@ def _trial_available_for_profile(db, owner_telegram_id: int) -> bool:
 
     return not _profile_trial_used(db, owner_telegram_id)
 
+def _account_trial_available(db, account_id: int) -> bool:
+    if not account_id:
+        return False
+
+    row = db.execute(
+        text(
+            """
+            SELECT free_trial_used
+            FROM bookly_accounts
+            WHERE id = :account_id
+            """
+        ),
+        {"account_id": account_id},
+    ).mappings().first()
+
+    return not bool(row and row.get("free_trial_used"))
+
+
+def _mark_account_trial_used(db, account_id: int) -> None:
+    if not account_id:
+        return
+
+    db.execute(
+        text(
+            """
+            UPDATE bookly_accounts
+            SET free_trial_used = TRUE
+            WHERE id = :account_id
+            """
+        ),
+        {"account_id": account_id},
+    )
+
 
 def _event_already_processed(db, event_id: str) -> bool:
     if not event_id:
