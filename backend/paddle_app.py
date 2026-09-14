@@ -395,10 +395,17 @@ def external_checkout_config(token: str):
         if not business or int(business.owner_telegram_id) != owner_id:
             raise HTTPException(403, "Checkout token does not match business")
 
-        trial_available = _original._trial_available_for_profile(
-            db,
-            owner_id,
-        )
+account_id = int(
+    token_data.get("account_id")
+    or 0
+)
+
+trial_available = (
+    _original._account_trial_available(
+        db,
+        account_id,
+    )
+)
         db.commit()
 
     return {
@@ -451,10 +458,17 @@ def external_price(
         if not business or int(business.owner_telegram_id) != owner_id:
             raise HTTPException(403, "Checkout token does not match business")
 
-        trial_available = _original._trial_available_for_profile(
-            db,
-            owner_id,
-        )
+account_id = int(
+    token_data.get("account_id")
+    or 0
+)
+
+trial_available = (
+    _original._account_trial_available(
+        db,
+        account_id,
+    )
+)
         db.commit()
 
     base_id = _price_id_for_selection(
