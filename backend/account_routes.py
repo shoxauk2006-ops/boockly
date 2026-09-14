@@ -948,23 +948,6 @@ def account_preview_subscription_limit(
             )
         )
 
-        paddle_current_response = (
-            paddle_original._paddle_request(
-                "GET",
-                f"/subscriptions/{subscription_id}",
-            )
-        )
-
-        paddle_current_data = (
-            paddle_current_response.get("data")
-            or {}
-        )
-
-        paddle_current_items = (
-            paddle_current_data.get("items")
-            or []
-        )
-
         paddle_app._billing_interval.set(
             billing_interval
         )
@@ -1007,18 +990,8 @@ def account_preview_subscription_limit(
         or {}
     )
 
-    credit = (
-        update_summary.get("credit")
-        or {}
-    )
-
-    charge = (
-        update_summary.get("charge")
-        or {}
-    )
-
-    due_today_tax = 0.0
     due_today = 0.0
+    due_today_tax = 0.0
 
     if (
         mode == "prorated_immediately"
@@ -1031,7 +1004,7 @@ def account_preview_subscription_limit(
                 float(amount) / 100.0
             )
 
-            immediate_transaction = (
+        immediate_transaction = (
             data.get("immediate_transaction")
             or {}
         )
@@ -1054,31 +1027,6 @@ def account_preview_subscription_limit(
             due_today_tax = (
                 float(tax_amount) / 100.0
             )
-
-    recurring_details = (
-        data.get("recurring_transaction_details")
-        or {}
-    )
-
-    recurring_totals = (
-        recurring_details.get("totals")
-        or {}
-    )
-
-    new_price_amount = (
-        recurring_totals.get("total")
-    )
-
-    if new_price_amount is None:
-        new_price_amount = (
-            recurring_totals.get("subtotal")
-        )
-
-    new_price = (
-        float(new_price_amount) / 100.0
-        if new_price_amount is not None
-        else 0.0
-    )
 
     price_ids = (
         paddle_app.ANNUAL_PRICE_IDS
@@ -1188,45 +1136,11 @@ def account_preview_subscription_limit(
         "new_addon_price":
             round(new_addon_price, 2),
 
-        "debug_paddle_action":
-            result.get("action"),
-
-        "debug_paddle_result_amount":
-            result.get("amount"),
-
-        "debug_paddle_credit_amount":
-            credit.get("amount"),
-
-        "debug_paddle_charge_amount":
-            charge.get("amount"),
-
         "due_today":
             round(due_today, 2),
 
         "due_today_tax":
             round(due_today_tax, 2),
-
-        "debug_current_items":
-            [
-                {
-                    "price_id": (
-                        item.get("price_id")
-                        or (
-                            item.get("price") or {}
-                        ).get("id")
-                    ),
-                    "quantity":
-                        item.get("quantity"),
-                    "billing_cycle":
-                        (
-                            (
-                                item.get("price")
-                                or {}
-                            ).get("billing_cycle")
-                        ),
-                }
-                for item in paddle_current_items
-            ],
 
         "billing_interval":
             billing_interval,
@@ -1244,9 +1158,6 @@ def account_preview_subscription_limit(
         "currency_code":
             (
                 result.get("currency_code")
-                or recurring_totals.get(
-                    "currency_code"
-                )
                 or "USD"
             ),
     }
