@@ -12,7 +12,15 @@ from typing import Optional
 
 from fastapi import Header, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import BigInteger, DateTime, Integer, String, inspect, text
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    Integer,
+    String,
+    inspect,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .app import (
@@ -36,6 +44,11 @@ class BooklyAccount(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+        free_trial_used: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
     password_hash: Mapped[str] = mapped_column(String(255))
     telegram_user_id: Mapped[int | None] = mapped_column(BigInteger, unique=True, nullable=True, index=True)
     business_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
@@ -79,6 +92,26 @@ with engine.begin() as conn:
               AND table_name = 'bookly_telegram_links'
               AND column_name = 'id'
         """)).mappings().first()
+        
+    if "bookly_accounts" in tables:
+        columns = {
+            c["name"]
+            for c in inspector.get_columns(
+                "bookly_accounts"
+            )
+        }
+
+        if "free_trial_used" not in columns:
+            conn.execute(
+                text(
+                    """
+                    ALTER TABLE bookly_accounts
+                    ADD COLUMN free_trial_used BOOLEAN
+                    DEFAULT FALSE
+                    NOT NULL
+                    """
+                )
+            )
         if id_info and not id_info["column_default"] and id_info["is_identity"] != "YES":
             conn.execute(text("CREATE SEQUENCE IF NOT EXISTS bookly_telegram_links_id_seq"))
             next_id = conn.execute(text(
@@ -614,7 +647,37 @@ def account_connect_telegram(
             "business_id": business.id,
             "next": "open_bookly_in_telegram",
         }
+def _account_trial_available(
+    db,
+    account_id: int,
+) -> bool:
+    account = db.get(
+        BooklyAccount,
+        int(account_id),
+    )
 
+    if not account:
+        return False
+
+    return not bool(
+        account.free_trial_used
+    )
+
+
+def _mark_account_trial_used(
+    db,
+    account_id: int,
+) -> None:
+    account = db.get(
+        BooklyAccount,
+        int(account_id),
+    )
+
+    if not account:
+        return
+
+    account.free_trial_used = True
+    db.commit()
 
 class TelegramLinkIn(BaseModel):
     token: str = Field(min_length=20, max_length=80)
