@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Bookly — simple online booking managed from Telegram." />
+  <title>Bookly — Your clients book. You manage everything in Telegram.</title>
+  <style>
+    :root{--ink:#111318;--muted:#69707d;--line:#e7e9ee;--soft:#f5f6f8;--paper:#fff;--accent:#5b5cf0;--accent2:#8b7cff;--shadow:0 24px 70px rgba(17,19,24,.12)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:#fff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}a{text-decoration:none;color:inherit}.wrap{width:min(1160px,calc(100% - 40px));margin:auto}
+    header{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font-weight:850;letter-spacing:-.06em;font-size:25px}.nav{display:flex;gap:30px;align-items:center;font-size:14px;color:#626976}.nav a:hover{color:var(--ink)}.nav-actions{display:flex;gap:10px;align-items:center}.btn{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:12px 17px;font-size:14px;font-weight:700;transition:.2s ease}.btn:hover{transform:translateY(-1px)}.btn-ghost{color:#4e5561}.btn-dark{background:var(--ink);color:#fff;box-shadow:0 8px 24px rgba(17,19,24,.14)}.btn-purple{background:var(--accent);color:#fff;box-shadow:0 12px 30px rgba(91,92,240,.25)}
+    .hero{padding:72px 0 92px;overflow:hidden}.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:70px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;color:#5b5cf0;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}h1{font-size:clamp(50px,6vw,78px);line-height:.98;letter-spacing:-.065em;margin:18px 0 24px;max-width:700px}h1 span{background:linear-gradient(100deg,#111318 15%,#5b5cf0 70%,#8b7cff);-webkit-background-clip:text;background-clip:text;color:transparent}.hero-copy{font-size:19px;line-height:1.55;color:var(--muted);max-width:580px}.hero-actions{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}.mini-note{font-size:12px;color:#8a909a;margin-top:15px}
+    .product-frame{position:relative}.glow{position:absolute;inset:-70px -80px;background:radial-gradient(circle at 50% 50%,rgba(111,103,255,.20),transparent 62%);z-index:-1}.dashboard{background:#111318;border-radius:26px;padding:10px;box-shadow:var(--shadow);transform:rotate(1.5deg)}.dash-inner{background:#f7f7f9;border-radius:18px;overflow:hidden}.dash-top{height:52px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 18px}.dash-brand{font-weight:800;letter-spacing:-.04em}.avatar{width:28px;height:28px;border-radius:9px;background:#eceeff}.dash-body{display:grid;grid-template-columns:170px 1fr;min-height:385px}.side{background:#fff;border-right:1px solid var(--line);padding:18px 12px}.side-item{padding:10px 11px;border-radius:9px;font-size:11px;color:#777d88;margin-bottom:4px}.side-item.active{background:#eef0ff;color:#4e4fdb;font-weight:800}.main{padding:20px}.main-title{font-size:20px;font-weight:800;letter-spacing:-.04em}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px}.stat small{display:block;color:#858b95;font-size:9px;margin-bottom:7px}.stat b{font-size:19px}.calendar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.cal-head{display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:13px}.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.cal-grid i{font-style:normal;text-align:center;padding:7px 2px;border-radius:7px;font-size:9px;color:#7e848e}.cal-grid i.sel{background:#5b5cf0;color:#fff;font-weight:800}.booking{margin-top:11px;display:flex;justify-content:space-between;align-items:center;padding:10px 11px;border-radius:9px;background:#f7f8fb;font-size:10px}.booking b{display:block;font-size:10px}.booking span{color:#7b818c}
+    section{padding:100px 0}.section-head{max-width:700px;margin-bottom:48px}.kicker{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#777e8b}.section-head h2{font-size:clamp(36px,4vw,52px);line-height:1.02;letter-spacing:-.055em;margin:12px 0 14px}.section-head p{font-size:17px;line-height:1.55;color:var(--muted);margin:0}
+    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.step{border-top:1px solid var(--line);padding-top:18px}.step-num{font-size:12px;color:#8b919b}.step h3{font-size:20px;margin:28px 0 8px;letter-spacing:-.03em}.step p{font-size:14px;line-height:1.55;color:var(--muted);margin:0}
+    .telegram{background:#111318;color:#fff;border-radius:32px;padding:60px;display:grid;grid-template-columns:1fr .8fr;gap:40px;align-items:center}.telegram h2{font-size:clamp(35px,4vw,54px);line-height:1;letter-spacing:-.055em;margin:12px 0 16px}.telegram p{color:#aeb3bd;line-height:1.6;max-width:520px}.tg-benefits{display:grid;gap:10px;margin:28px 0}.tg-benefit{background:#1a1d23;border:1px solid #2b2f37;border-radius:16px;padding:15px 16px}.tg-benefit strong{display:block;font-size:14px;margin-bottom:5px}.tg-benefit span{display:block;color:#aeb3bd;font-size:13px;line-height:1.5}.tg-card{background:#1d2027;border:1px solid #30343d;border-radius:22px;padding:18px}.tg-window{background:#f3f4f7;color:#111;border-radius:16px;padding:16px}.tg-header{display:flex;justify-content:space-between;font-size:11px;font-weight:800;margin-bottom:16px}.tg-row{background:#fff;border-radius:11px;padding:12px;margin-top:8px;font-size:10px}.tg-row b{display:block;font-size:11px;margin-bottom:3px}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.feature{border:1px solid var(--line);border-radius:22px;padding:25px;min-height:190px}.feature-icon{width:38px;height:38px;border-radius:11px;background:#eef0ff;display:grid;place-items:center;color:#5657df;font-weight:900}.feature h3{margin:25px 0 8px;font-size:20px;letter-spacing:-.035em}.feature p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+    .audience{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.audience-card{background:var(--soft);border-radius:22px;padding:24px;min-height:190px}.audience-card h3{margin:0 0 10px;font-size:19px;letter-spacing:-.03em}.audience-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+    .multi{background:#f7f7fb;border:1px solid #e8e9f0;border-radius:32px;padding:52px;display:grid;grid-template-columns:1fr .85fr;gap:40px;align-items:center}.multi h2{font-size:clamp(35px,4vw,52px);line-height:1.02;letter-spacing:-.055em;margin:12px 0 16px}.multi p{color:var(--muted);line-height:1.6;max-width:520px}.multi-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}.multi-item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:13px;color:#4f5663}.multi-item strong{display:block;color:var(--ink);margin-bottom:4px}.account-card{background:#111318;color:#fff;border-radius:22px;padding:20px;box-shadow:0 24px 55px rgba(17,19,24,.14)}.account-card-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;margin-bottom:14px}.business{background:#1d2027;border:1px solid #30343d;border-radius:14px;padding:14px;margin-top:9px}.business b{display:block;font-size:13px}.business span{display:block;color:#aeb3bd;font-size:11px;margin-top:4px}
+    .pricing{display:grid;grid-template-columns:1fr 1fr;gap:18px}.price-card{border:1px solid var(--line);border-radius:24px;padding:30px}.price-card.pro{background:#111318;color:#fff;border-color:#111318}.price-top{display:flex;justify-content:space-between;align-items:center}.badge{font-size:10px;font-weight:800;background:#e8e9ff;color:#5657df;border-radius:99px;padding:6px 9px}.pro .badge{background:#30334a;color:#cdd0ff}.price{font-size:48px;letter-spacing:-.06em;font-weight:850;margin:25px 0 4px}.price small{font-size:13px;letter-spacing:0;color:#8d939d;font-weight:600}.price-card p{color:var(--muted);font-size:14px}.pro p{color:#aeb3bd}.price-list{padding:0;margin:25px 0;list-style:none}.price-list li{padding:9px 0;border-top:1px solid var(--line);font-size:13px}.pro .price-list li{border-color:#2c3038}.price-note{font-size:12px;color:#8a909a;line-height:1.5;margin-top:-8px;margin-bottom:18px}
+    .faq{display:grid;grid-template-columns:1fr 1fr;gap:12px}.faq details{border-top:1px solid var(--line);padding:18px 0}.faq summary{cursor:pointer;font-weight:750;font-size:15px}.faq p{color:var(--muted);font-size:14px;line-height:1.55;margin:12px 0 0}
+    .cta{background:linear-gradient(135deg,#eef0ff,#f7f7fb);border-radius:32px;padding:70px 30px;text-align:center}.cta h2{font-size:clamp(38px,5vw,60px);line-height:1;letter-spacing:-.06em;margin:0 auto 15px;max-width:700px}.cta p{color:var(--muted);margin:0 auto 28px;max-width:520px;line-height:1.55}footer{border-top:1px solid var(--line);padding:30px 0 42px;margin-top:20px;color:#858b96;font-size:12px;display:flex;justify-content:space-between}.footer-links{display:flex;gap:20px}
+    @media(max-width:900px){.nav{display:none}.hero{padding-top:45px}.hero-grid,.telegram,.multi{grid-template-columns:1fr}.product-frame{margin:20px 10px}.steps{grid-template-columns:1fr 1fr}.pricing,.faq,.features,.audience{grid-template-columns:1fr 1fr}.telegram{padding:38px 25px}.multi{padding:38px 25px}}
+    @media(max-width:560px){.wrap{width:min(100% - 28px,1160px)}header{height:68px}.nav-actions .btn-ghost{display:none}h1{font-size:49px}.hero-copy{font-size:17px}.dashboard{transform:none}.dash-body{grid-template-columns:105px 1fr}.side{padding:12px 7px}.side-item{font-size:9px;padding:9px 7px}.main{padding:13px}.stats{gap:6px}.stat{padding:9px}.stat b{font-size:15px}.section-head{margin-bottom:32px}section{padding:72px 0}.steps,.features,.audience,.pricing,.faq{grid-template-columns:1fr}.telegram,.multi{border-radius:24px}.multi-list{grid-template-columns:1fr}.price{font-size:42px}footer{flex-direction:column;gap:16px}}
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <a class="logo" href="/landing.html">BOOKLY</a>
+    <nav class="nav"><a href="#product">Product</a><a href="#how">How it works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
+    <div class="nav-actions"><a class="btn btn-ghost" href="/account.html">Sign in</a><a class="btn btn-dark" href="/account.html">Get started</a></div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> Booking, managed in Telegram</div>
+          <h1>Your clients book.<br><span>You manage everything in Telegram.</span></h1>
+          <p class="hero-copy">Bookly lets your customers choose a service, specialist, date and available time — while you manage bookings, services and schedules from Telegram.</p>
+          <div class="hero-actions"><a class="btn btn-purple" href="/account.html">Get started</a><a class="btn btn-ghost" href="#how">See how it works</a></div>
+          <div class="mini-note">No complicated setup. Start with your business and services.</div>
+        </div>
+        <div class="product-frame">
+          <div class="glow"></div>
+          <div class="dashboard">
+            <div class="dash-inner">
+              <div class="dash-top"><div class="dash-brand">BOOKLY</div><div class="avatar"></div></div>
+              <div class="dash-body">
+                <aside class="side"><div class="side-item active">Overview</div><div class="side-item">Bookings</div><div class="side-item">Services</div><div class="side-item">Schedule</div><div class="side-item">Business</div></aside>
+                <div class="main"><div class="main-title">Good morning</div><div class="stats"><div class="stat"><small>Today</small><b>12</b></div><div class="stat"><small>Upcoming</small><b>28</b></div><div class="stat"><small>Services</small><b>8</b></div></div><div class="calendar"><div class="cal-head"><span>September 2026</span><span>Week</span></div><div class="cal-grid"><i>M</i><i>T</i><i>W</i><i>T</i><i>F</i><i>S</i><i>S</i><i>7</i><i>8</i><i>9</i><i class="sel">10</i><i>11</i><i>12</i><i>13</i></div><div class="booking"><div><b>10:30 · Appointment</b><span>Today</span></div><span>Confirmed</span></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="wrap">
+      <div class="section-head"><div class="kicker">How it works</div><h2>How Bookly works</h2><p>Set up your business once, share your booking link and let customers choose a time themselves.</p></div>
+      <div class="steps">
+        <div class="step"><div class="step-num">01</div><h3>Set up your business</h3><p>Add your services, specialists and working hours.</p></div>
+        <div class="step"><div class="step-num">02</div><h3>Share your booking link</h3><p>Your customers open your Bookly booking page directly in Telegram.</p></div>
+        <div class="step"><div class="step-num">03</div><h3>Customers choose a time</h3><p>They select a service, specialist, date and available time slot.</p></div>
+        <div class="step"><div class="step-num">04</div><h3>You manage everything</h3><p>Bookings, services and schedule stay in one simple Telegram workspace.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="telegram">
+        <div>
+          <div class="kicker" style="color:#9ea4ff">Telegram advantage</div>
+          <h2>Everything happens in Telegram.</h2>
+          <p>Bookly is built around a Telegram-first booking experience, so your customers and your business stay close to the place you already use every day.</p>
+          <div class="tg-benefits">
+            <div class="tg-benefit"><strong>Customer booking</strong><span>Customers can book without calling or waiting for a reply.</span></div>
+            <div class="tg-benefit"><strong>Instant booking notifications</strong><span>You receive new booking notifications directly in Telegram.</span></div>
+            <div class="tg-benefit"><strong>Easy management</strong><span>Manage your business, services, schedule and bookings from your Telegram Mini App.</span></div>
+          </div>
+        </div>
+        <div class="tg-card"><div class="tg-window"><div class="tg-header"><span>BOOKLY</span><span>Admin</span></div><div class="tg-row"><b>New booking</b>Haircut · 10:30</div><div class="tg-row"><b>Today</b>12 appointments</div><div class="tg-row"><b>Schedule</b>Open until 18:00</div></div></div>
+      </div>
+    </section>
+
+    <section id="product" class="wrap">
+      <div class="section-head"><div class="kicker">Product</div><h2>Built for simple online booking</h2><p>Everything you need to accept and manage appointments without adding unnecessary complexity.</p></div>
+      <div class="features">
+        <div class="feature"><div class="feature-icon">◷</div><h3>Online booking</h3><p>Let customers choose an available date and time themselves.</p></div>
+        <div class="feature"><div class="feature-icon">＋</div><h3>Services</h3><p>Create and manage your services with their own duration and settings.</p></div>
+        <div class="feature"><div class="feature-icon">◎</div><h3>Specialists</h3><p>Manage specialists and assign services to your team.</p></div>
+        <div class="feature"><div class="feature-icon">▦</div><h3>Schedule</h3><p>Set working hours and control when customers can book.</p></div>
+        <div class="feature"><div class="feature-icon">✓</div><h3>Telegram notifications</h3><p>Get notified about new bookings directly in Telegram.</p></div>
+        <div class="feature"><div class="feature-icon">⌂</div><h3>Business management</h3><p>Manage your business profile, bookings and booking settings from one workspace.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head"><div class="kicker">For businesses</div><h2>Made for service businesses</h2><p>Bookly fits businesses where customers need to choose a service, a person and a convenient time.</p></div>
+      <div class="audience">
+        <div class="audience-card"><h3>Barbershops</h3><p>Let clients book a haircut without calling or sending messages.</p></div>
+        <div class="audience-card"><h3>Beauty &amp; salons</h3><p>Manage multiple services and specialists in one place.</p></div>
+        <div class="audience-card"><h3>Private specialists</h3><p>Keep your schedule organized and let clients book themselves.</p></div>
+        <div class="audience-card"><h3>Small service businesses</h3><p>Replace appointment messages with a simple booking flow.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="multi">
+        <div>
+          <div class="kicker">Multiple businesses</div>
+          <h2>Manage multiple businesses from one account.</h2>
+          <p>One Bookly account can manage multiple businesses, with each business keeping its own booking setup and Telegram connection.</p>
+          <div class="multi-list">
+            <div class="multi-item"><strong>Services</strong>Independent service lists</div>
+            <div class="multi-item"><strong>Specialists</strong>Separate teams</div>
+            <div class="multi-item"><strong>Schedule</strong>Independent working hours</div>
+            <div class="multi-item"><strong>Bookings</strong>Separate appointment flow</div>
+            <div class="multi-item"><strong>Telegram</strong>Own connection per business</div>
+            <div class="multi-item"><strong>Subscription</strong>Managed per business</div>
+          </div>
+        </div>
+        <div class="account-card"><div class="account-card-head"><span>BOOKLY</span><span>2 businesses</span></div><div class="business"><b>Downtown Barber</b><span>8 services · 3 specialists</span></div><div class="business"><b>Private Studio</b><span>5 services · 1 specialist</span></div></div>
+      </div>
+    </section>
+
+    <section id="pricing" class="wrap">
+      <div class="section-head"><div class="kicker">Pricing</div><h2>Simple pricing. Based on your business.</h2><p>Start with the base Bookly Pro package and choose a higher service limit as your business grows.</p></div>
+      <div class="pricing">
+        <div class="price-card"><div class="price-top"><strong>Bookly Pro</strong><span class="badge">10 SERVICES</span></div><div class="price">$7.99 <small>/ month</small></div><p>Everything you need to run online booking for up to 10 services.</p><div class="price-note">Or $79.99 / year. Monthly plans include a one-time 7-day free trial. Annual plans do not include a trial.</div><ul class="price-list"><li>Up to 10 services</li><li>Booking management</li><li>Services, specialists &amp; schedule</li><li>Telegram connection and notifications</li></ul><a class="btn btn-dark" href="/account.html" style="width:100%">Get started</a></div>
+        <div class="price-card pro"><div class="price-top"><strong>More capacity</strong><span class="badge">FLEXIBLE LIMITS</span></div><div class="price">More services</div><p>Need more than 10 services? Choose a higher service limit on the pricing page.</p><ul class="price-list"><li>Higher service limits</li><li>Same core Bookly workspace</li><li>Scale as your catalog grows</li><li>Monthly or yearly billing</li></ul><a class="btn btn-purple" href="/pricing.html" style="width:100%">View pricing</a></div>
+      </div>
+    </section>
+
+    <section id="faq" class="wrap">
+      <div class="section-head"><div class="kicker">FAQ</div><h2>Questions, answered.</h2></div>
+      <div class="faq">
+        <details><summary>How do customers book?</summary><p>Customers open your Bookly booking page in Telegram, choose a service, specialist, date and available time.</p></details>
+        <details><summary>Do I need a separate website?</summary><p>No. Your booking flow can work through Telegram.</p></details>
+        <details><summary>Do I receive booking notifications?</summary><p>Yes. New bookings can be sent to you directly in Telegram.</p></details>
+        <details><summary>Can I manage multiple businesses?</summary><p>Yes. One Bookly account can contain multiple businesses.</p></details>
+        <details><summary>Can I change my service limit later?</summary><p>Yes. You can upgrade or downgrade your service package from Billing.</p></details>
+        <details><summary>Is there a free trial?</summary><p>Monthly plans include a one-time 7-day trial per Bookly account. Annual plans do not include a trial.</p></details>
+        <details><summary>Can I cancel?</summary><p>Yes. Subscription cancellation is handled from your account billing settings.</p></details>
+      </div>
+    </section>
+
+    <section class="wrap"><div class="cta"><h2>Start accepting bookings online.</h2><p>Set up your business, add your services and let customers book their own time.</p><a class="btn btn-purple" href="/account.html">Get started</a></div></section>
+  </main>
+
+  <footer class="wrap"><div>© 2026 Bookly</div><div class="footer-links"><a href="/account.html">Sign in</a><a href="/pricing.html">Pricing</a></div></footer>
+</body>
+</html>
