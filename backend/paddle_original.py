@@ -832,25 +832,25 @@ def _apply_paddle_event(payload: dict) -> None:
                 }
             )
 
- if subscription.status == "trialing":
-    subscription.active = True
+            if subscription.status == "trialing":
+                subscription.active = True
 
-    account_id = getattr(
-        business,
-        "account_id",
-        None,
-    )
+                account_id = getattr(
+                    business,
+                    "account_id",
+                    None,
+                )
 
-    if account_id:
-        _mark_account_trial_used(
-            db,
-            int(account_id),
-        )
-    else:
-        _mark_profile_trial_used(
-            db,
-            int(business.owner_telegram_id),
-        )
+                if account_id:
+                    _mark_account_trial_used(
+                        db,
+                        int(account_id),
+                    )
+                else:
+                    _mark_profile_trial_used(
+                        db,
+                        int(business.owner_telegram_id),
+                    )
 
             subscription.expires_at = (
                 _dt(next_billed_at)
