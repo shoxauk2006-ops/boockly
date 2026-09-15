@@ -582,30 +582,56 @@ def _account_trial_available(db, account_id: int) -> bool:
     if row and row.get("free_trial_used"):
         return False
 
-    existing_trial = (
-        db.query(Subscription)
-        .join(
-            Business,
-            Business.id == Subscription.business_id,
-        )
+    businesses = (
+        db.query(Business)
         .filter(
-            Subscription.status == "trialing",
             (
                 Business.account_id == account_id
             )
             | (
                 Business.owner_telegram_id == -int(account_id)
-            ),
+            )
         )
-        .first()
+        .all()
     )
 
-    if existing_trial:
-        _mark_account_trial_used(
-            db,
-            int(account_id),
+    for business in businesses:
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id == business.id,
+                Subscription.external_subscription_id != "",
+            )
+            .first()
         )
-        return False
+
+        if not subscription:
+            continue
+
+        if subscription.status == "trialing":
+            _mark_account_trial_used(
+                db,
+                int(account_id),
+            )
+            return False
+
+        try:
+            paddle_response = _paddle_request(
+                "GET",
+                f"/subscriptions/{subscription.external_subscription_id}",
+            )
+
+            paddle_data = paddle_response.get("data") or {}
+
+            if paddle_data.get("status") == "trialing":
+                _mark_account_trial_used(
+                    db,
+                    int(account_id),
+                )
+                return False
+
+        except Exception:
+            pass
 
     return True
 
