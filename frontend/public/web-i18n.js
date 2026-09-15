@@ -9,46 +9,67 @@
     {code:'ar',label:'العربية',dir:'rtl'}
   ];
   var T={
-    en:{'back':'Back to Bookly','language':'Language','rules':'Rules of use','privacy':'Privacy','contact':'Contact support','account':'Account','overview':'Overview','businesses':'Businesses','billing':'Billing','booklyProfile':'Bookly profile','profileDesc':'Manage your account and access important information.','supportEmail':'Support email','learnMore':'Learn more'},
-    ru:{'back':'Назад в Bookly','language':'Язык','rules':'Правила использования','privacy':'Конфиденциальность','contact':'Поддержка','account':'Аккаунт','overview':'Обзор','businesses':'Бизнесы','billing':'Оплата','booklyProfile':'Профиль Bookly','profileDesc':'Управляйте аккаунтом и открывайте важную информацию.','supportEmail':'Почта поддержки','learnMore':'Подробнее'},
-    uz:{'back':'Bookly’ga qaytish','language':'Til','rules':'Foydalanish qoidalari','privacy':'Maxfiylik','contact':'Qo‘llab-quvvatlash','account':'Hisob','overview':'Umumiy ko‘rinish','businesses':'Bizneslar','billing':'To‘lovlar','booklyProfile':'Bookly profili','profileDesc':'Hisobingizni boshqaring va muhim ma’lumotlarni ko‘ring.','supportEmail':'Qo‘llab-quvvatlash emaili','learnMore':'Batafsil'},
-    tr:{'back':'Bookly’ye dön','language':'Dil','rules':'Kullanım kuralları','privacy':'Gizlilik','contact':'Destek','account':'Hesap','overview':'Genel bakış','businesses':'İşletmeler','billing':'Faturalandırma','booklyProfile':'Bookly profili','profileDesc':'Hesabınızı yönetin ve önemli bilgilere erişin.','supportEmail':'Destek e-postası','learnMore':'Daha fazla'},
-    ar:{'back':'العودة إلى Bookly','language':'اللغة','rules':'قواعد الاستخدام','privacy':'الخصوصية','contact':'الدعم','account':'الحساب','overview':'نظرة عامة','businesses':'الأنشطة','billing':'الفوترة','booklyProfile':'ملف Bookly','profileDesc':'أدر حسابك واطلع على المعلومات المهمة.','supportEmail':'بريد الدعم','learnMore':'معرفة المزيد'}
+    en:{back:'Back to Bookly',language:'Language',rules:'Rules of use',privacy:'Privacy',contact:'Contact support',account:'Account',overview:'Overview',businesses:'Businesses',billing:'Billing',profileLabel:'BOOKLY PROFILE',booklyProfile:'Bookly profile',profileDesc:'Manage your Bookly account and access important information.',supportEmail:'Support email',learnMore:'Learn more',signOut:'Sign out',accountReady:'Account ready',choosePlan:'Choose your plan',continuePlans:'Continue to plans',connectTelegram:'Connect Telegram',openTelegram:'Open Bookly in Telegram',accountDetails:'Account details',email:'Email',telegram:'Telegram',connected:'Connected',notConnected:'Not connected',myBusinesses:'My businesses',manageBusinesses:'Manage your Bookly businesses from one place.',addBusiness:'Add business'},
+    ru:{back:'Назад в Bookly',language:'Язык',rules:'Правила использования',privacy:'Конфиденциальность',contact:'Поддержка',account:'Аккаунт',overview:'Обзор',businesses:'Бизнесы',billing:'Оплата',profileLabel:'ПРОФИЛЬ BOOKLY',booklyProfile:'Профиль Bookly',profileDesc:'Управляйте аккаунтом Bookly и открывайте важную информацию.',supportEmail:'Почта поддержки',learnMore:'Подробнее',signOut:'Выйти',accountReady:'Аккаунт готов',choosePlan:'Выберите план',continuePlans:'Перейти к планам',connectTelegram:'Подключить Telegram',openTelegram:'Открыть Bookly в Telegram',accountDetails:'Данные аккаунта',email:'Email',telegram:'Telegram',connected:'Подключён',notConnected:'Не подключён',myBusinesses:'Мои бизнесы',manageBusinesses:'Управляйте бизнесами Bookly в одном месте.',addBusiness:'Добавить бизнес'},
+    uz:{back:'Bookly’ga qaytish',language:'Til',rules:'Foydalanish qoidalari',privacy:'Maxfiylik',contact:'Qo‘llab-quvvatlash',account:'Hisob',overview:'Umumiy ko‘rinish',businesses:'Bizneslar',billing:'To‘lovlar',profileLabel:'BOOKLY PROFILI',booklyProfile:'Bookly profili',profileDesc:'Bookly hisobingizni boshqaring va muhim ma’lumotlarni ko‘ring.',supportEmail:'Qo‘llab-quvvatlash emaili',learnMore:'Batafsil',signOut:'Chiqish',accountReady:'Hisob tayyor',choosePlan:'Rejangizni tanlang',continuePlans:'Rejalarga o‘tish',connectTelegram:'Telegramni ulash',openTelegram:'Bookly’ni Telegram’da ochish',accountDetails:'Hisob ma’lumotlari',email:'Email',telegram:'Telegram',connected:'Ulangan',notConnected:'Ulanmagan',myBusinesses:'Mening bizneslarim',manageBusinesses:'Bookly bizneslaringizni bir joydan boshqaring.',addBusiness:'Biznes qo‘shish'},
+    tr:{back:'Bookly’ye dön',language:'Dil',rules:'Kullanım kuralları',privacy:'Gizlilik',contact:'Destek',account:'Hesap',overview:'Genel bakış',businesses:'İşletmeler',billing:'Faturalandırma',profileLabel:'BOOKLY PROFİLİ',booklyProfile:'Bookly profili',profileDesc:'Bookly hesabınızı yönetin ve önemli bilgilere erişin.',supportEmail:'Destek e-postası',learnMore:'Daha fazla',signOut:'Çıkış yap',accountReady:'Hesap hazır',choosePlan:'Planınızı seçin',continuePlans:'Planlara devam et',connectTelegram:'Telegram’ı bağla',openTelegram:'Bookly’yi Telegram’da aç',accountDetails:'Hesap ayrıntıları',email:'E-posta',telegram:'Telegram',connected:'Bağlı',notConnected:'Bağlı değil',myBusinesses:'İşletmelerim',manageBusinesses:'Bookly işletmelerinizi tek bir yerden yönetin.',addBusiness:'İşletme ekle'},
+    ar:{back:'العودة إلى Bookly',language:'اللغة',rules:'قواعد الاستخدام',privacy:'الخصوصية',contact:'الدعم',account:'الحساب',overview:'نظرة عامة',businesses:'الأنشطة',billing:'الفوترة',profileLabel:'ملف BOOKLY',booklyProfile:'ملف Bookly',profileDesc:'أدر حساب Bookly واطلع على المعلومات المهمة.',supportEmail:'بريد الدعم',learnMore:'معرفة المزيد',signOut:'تسجيل الخروج',accountReady:'الحساب جاهز',choosePlan:'اختر خطتك',continuePlans:'المتابعة إلى الخطط',connectTelegram:'ربط Telegram',openTelegram:'فتح Bookly في Telegram',accountDetails:'تفاصيل الحساب',email:'البريد الإلكتروني',telegram:'Telegram',connected:'متصل',notConnected:'غير متصل',myBusinesses:'أنشطتي',manageBusinesses:'أدر أنشطة Bookly الخاصة بك من مكان واحد.',addBusiness:'إضافة نشاط'}
   };
   function valid(c){return LANGS.some(function(x){return x.code===c;});}
-  function getLang(){try{var s=localStorage.getItem(KEY);if(valid(s))return s;}catch(e){} var b=(navigator.language||'').toLowerCase();if(b.indexOf('ru')===0)return'ru';if(b.indexOf('uz')===0)return'uz';if(b.indexOf('tr')===0)return'tr';if(b.indexOf('ar')===0)return'ar';return'en';}
-  function setLang(c){if(!valid(c))return;try{localStorage.setItem(KEY,c);}catch(e){} document.documentElement.lang=c;document.documentElement.dir=(c==='ar'?'rtl':'ltr');apply(c);}
-  function tr(k){return (T[getLang()]&&T[getLang()][k])||T.en[k]||k;}
-  function selector(){
-    if(document.getElementById('bookly-web-language'))return;
-    var host=document.querySelector('header .nav')||document.querySelector('.nav')||document.querySelector('header');
-    if(!host)return;
-    var wrap=document.createElement('div');wrap.id='bookly-web-language';wrap.style.cssText='display:inline-flex;align-items:center;margin-left:10px;position:relative;z-index:20;';
-    var select=document.createElement('select');select.setAttribute('aria-label',tr('language'));select.style.cssText='height:40px;border:1px solid #e3e6eb;border-radius:11px;background:#fff;color:#202329;padding:0 30px 0 11px;font:inherit;font-size:12px;font-weight:750;cursor:pointer;outline:none;';
-    LANGS.forEach(function(x){var o=document.createElement('option');o.value=x.code;o.textContent=x.label;select.appendChild(o);});
-    select.value=getLang();select.onchange=function(){setLang(this.value);};wrap.appendChild(select);host.appendChild(wrap);
+  function getLang(){
+    try{var s=localStorage.getItem(KEY);if(valid(s))return s;}catch(e){}
+    var b=(navigator.language||'').toLowerCase();
+    if(b.indexOf('ru')===0)return'ru';
+    if(b.indexOf('uz')===0)return'uz';
+    if(b.indexOf('tr')===0)return'tr';
+    if(b.indexOf('ar')===0)return'ar';
+    return'en';
   }
-  function replaceText(oldText,newText){
+  function setLang(c){if(!valid(c))return;try{localStorage.setItem(KEY,c);}catch(e){}apply(c);}
+  function tr(k){var l=getLang();return (T[l]&&T[l][k])||T.en[k]||k;}
+  function replaceExactText(oldText,newText){
+    if(!document.body||oldText===newText)return;
     var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
     var nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
-    nodes.forEach(function(n){if(n.nodeValue&&n.nodeValue.trim()===oldText)n.nodeValue=n.nodeValue.replace(oldText,newText);});
+    nodes.forEach(function(n){if((n.nodeValue||'').trim()===oldText){n.nodeValue=n.nodeValue.replace(oldText,newText);}});
+  }
+  function replaceAny(map){Object.keys(map).forEach(function(k){replaceExactText(k,map[k]);});}
+  function addSelector(){
+    var existing=document.getElementById('bookly-web-language');
+    var host=document.querySelector('header .nav')||document.querySelector('.nav')||document.querySelector('header');
+    if(existing||!host)return;
+    var wrap=document.createElement('div');wrap.id='bookly-web-language';wrap.style.cssText='display:inline-flex;align-items:center;margin-left:10px;position:relative;z-index:20;';
+    var select=document.createElement('select');select.id='bookly-language-select';select.setAttribute('aria-label',tr('language'));select.style.cssText='height:40px;border:1px solid #e3e6eb;border-radius:11px;background:#fff;color:#202329;padding:0 28px 0 11px;font:inherit;font-size:12px;font-weight:750;cursor:pointer;outline:none;';
+    LANGS.forEach(function(x){var o=document.createElement('option');o.value=x.code;o.textContent=x.label;select.appendChild(o);});
+    select.value=getLang();select.onchange=function(){setLang(this.value);location.reload();};
+    wrap.appendChild(select);host.appendChild(wrap);
+  }
+  function ensureProfileCard(){
+    var view=document.getElementById('overviewView');
+    if(!view||document.getElementById('profileSupportCard'))return;
+    var card=document.createElement('section');
+    card.id='profileSupportCard';
+    card.className='workspace-card profile-support-card';
+    card.innerHTML='<div class="profile-support-head"><div class="profile-support-avatar">B</div><div><span class="card-label">'+tr('profileLabel')+'</span><h3>'+tr('booklyProfile')+'</h3><p>'+tr('profileDesc')+'</p></div></div><div class="profile-support-email">'+tr('supportEmail')+': <a href="mailto:booklyminiapp@gmail.com">booklyminiapp@gmail.com</a></div><div class="profile-support-links"><a href="rules.html">'+tr('rules')+'</a><a href="privacy.html">'+tr('privacy')+'</a><a href="mailto:booklyminiapp@gmail.com">'+tr('contact')+'</a></div>';
+    view.appendChild(card);
+  }
+  function translateAccount(){
+    replaceAny({
+      'Back to Bookly':tr('back'),'Account':tr('account'),'Overview':tr('overview'),'Businesses':tr('businesses'),'Billing':tr('billing'),'Sign out':tr('signOut'),'Account ready':tr('accountReady'),'Choose your plan':tr('choosePlan'),'Continue to plans':tr('continuePlans'),'Connect Telegram':tr('connectTelegram'),'Open Bookly in Telegram':tr('openTelegram'),'Account details':tr('accountDetails'),'Email':tr('email'),'Telegram':tr('telegram'),'Connected':tr('connected'),'Not connected':tr('notConnected'),'My businesses':tr('myBusinesses'),'Manage your Bookly businesses from one place.':tr('manageBusinesses'),'+ Add business':'+ '+tr('addBusiness')
+    });
+    var select=document.getElementById('bookly-language-select');if(select)select.value=getLang();
+  }
+  function translateRules(){
+    var map={"Rules of Use":tr('rules'),"Back to Bookly":tr('back')};
+    replaceAny(map);
   }
   function apply(c){
-    if(!document.body)return;
-    document.documentElement.lang=c;document.documentElement.dir=(c==='ar'?'rtl':'ltr');
-    selector();
-    if(location.pathname.endsWith('/account.html')||location.pathname.endsWith('account.html')){
-      var map={
-        'Back to Bookly':'back','Account':'account','Overview':'overview','Businesses':'businesses','Billing':'billing','Profile & Support':'profileLabel','Bookly profile':'booklyProfile','Your account, legal information and support.':'profileDesc','Support email:':'supportEmail','Rules of use':'rules','Privacy':'privacy','Contact support':'contact','Learn more':'learnMore'
-      };
-      Object.keys(map).forEach(function(k){if(T[c]&&T[c][map[k]])replaceText(k,T[c][map[k]]);});
-    }
-    if(location.pathname.endsWith('/rules.html')||location.pathname.endsWith('rules.html')){
-      replaceText('Rules of Use',c==='ru'?'Правила использования':c==='uz'?'Foydalanish qoidalari':c==='tr'?'Kullanım kuralları':c==='ar'?'قواعد الاستخدام':'Rules of Use');
-      replaceText('Back to Bookly',tr('back'));
-    }
+    document.documentElement.lang=c;document.documentElement.dir=c==='ar'?'rtl':'ltr';
+    addSelector();
+    if(/account\.html$/i.test(location.pathname)){ensureProfileCard();translateAccount();}
+    if(/rules\.html$/i.test(location.pathname))translateRules();
   }
-  window.BooklyWebI18n={LANGS:LANGS,getLang:getLang,setLang:setLang,apply:apply,tr:tr};
-  function start(){selector();apply(getLang());}
+  window.BooklyWebI18n={LANGS:LANGS,T:T,getLang:getLang,setLang:setLang,apply:apply,tr:tr};
+  function start(){apply(getLang());setTimeout(function(){apply(getLang());},700);setInterval(function(){ensureProfileCard();},1200);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
