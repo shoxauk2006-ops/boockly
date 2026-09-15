@@ -83,7 +83,7 @@ with engine.begin() as conn:
     inspector = inspect(conn)
     tables = set(inspector.get_table_names())
 
-    # Repair the legacy PostgreSQL link table if its id column has no default.
+        # Repair the legacy PostgreSQL link table if its id column has no default.
     if "bookly_telegram_links" in tables and engine.dialect.name == "postgresql":
         id_info = conn.execute(text("""
             SELECT column_default, is_identity
@@ -92,7 +92,28 @@ with engine.begin() as conn:
               AND table_name = 'bookly_telegram_links'
               AND column_name = 'id'
         """)).mappings().first()
-        
+
+        if id_info and not id_info["column_default"] and id_info["is_identity"] != "YES":
+            conn.execute(text("CREATE SEQUENCE IF NOT EXISTS bookly_telegram_links_id_seq"))
+
+            next_id = conn.execute(text(
+                "SELECT COALESCE(MAX(id), 0) + 1 FROM bookly_telegram_links"
+            )).scalar_one()
+
+            conn.execute(text(
+                "SELECT setval('bookly_telegram_links_id_seq', :next_id, false)"
+            ), {"next_id": int(next_id)})
+
+            conn.execute(text(
+                "ALTER SEQUENCE bookly_telegram_links_id_seq "
+                "OWNED BY bookly_telegram_links.id"
+            ))
+
+            conn.execute(text(
+                "ALTER TABLE bookly_telegram_links "
+                "ALTER COLUMN id SET DEFAULT nextval('bookly_telegram_links_id_seq')"
+            ))
+
     if "bookly_accounts" in tables:
         columns = {
             c["name"]
@@ -113,37 +134,43 @@ with engine.begin() as conn:
                 )
             )
 
-    conn.execute(
-        text(
-            """
-            UPDATE bookly_accounts
-            SET free_trial_used = TRUE
-            WHERE free_trial_used = FALSE
-              AND EXISTS (
-                  SELECT 1
-                  FROM telegram_user_languages
-                  WHERE telegram_user_languages.telegram_user_id = -bookly_accounts.id
-                    AND telegram_user_languages.free_trial_used = TRUE
-              )
-            """
+        conn.execute(
+            text(
+                """
+                UPDATE bookly_accounts
+                SET free_trial_used = TRUE
+                WHERE free_trial_used = FALSE
+                  AND EXISTS (
+                      SELECT 1
+                      FROM telegram_user_languages
+                      WHERE telegram_user_languages.telegram_user_id = -bookly_accounts.id
+                        AND telegram_user_languages.free_trial_used = TRUE
+                  )
+                """
+            )
         )
-    )
-        if id_info and not id_info["column_default"] and id_info["is_identity"] != "YES":
-            conn.execute(text("CREATE SEQUENCE IF NOT EXISTS bookly_telegram_links_id_seq"))
-            next_id = conn.execute(text(
-                "SELECT COALESCE(MAX(id), 0) + 1 FROM bookly_telegram_links"
-            )).scalar_one()
-            conn.execute(text(
-                "SELECT setval('bookly_telegram_links_id_seq', :next_id, false)"
-            ), {"next_id": int(next_id)})
-            conn.execute(text(
-                "ALTER SEQUENCE bookly_telegram_links_id_seq "
-                "OWNED BY bookly_telegram_links.id"
-            ))
-            conn.execute(text(
-                "ALTER TABLE bookly_telegram_links "
-                "ALTER COLUMN id SET DEFAULT nextval('bookly_telegram_links_id_seq')"
-            ))
+
+    if "businesses" in tables:
+        columns = {
+            c["name"]
+            for c in inspector.get_columns(
+                "businesses"
+            )
+        }
+
+        if "account_id" not in columns:
+            conn.execute(
+                text(
+                    "ALTER TABLE businesses ADD COLUMN account_id INTEGER"
+                )
+            )
+
+        conn.execute(
+            text(
+                "CREATE INDEX IF NOT EXISTS ix_businesses_account_id "
+                "ON businesses (account_id)"
+            )
+        )
 
     if "businesses" in tables:
         columns = {c["name"] for c in inspector.get_columns("businesses")}
