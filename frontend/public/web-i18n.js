@@ -41,8 +41,18 @@
     var wrap=document.createElement('div');wrap.id='bookly-web-language';wrap.style.cssText='display:inline-flex;align-items:center;margin-left:10px;position:relative;z-index:20;';
     var select=document.createElement('select');select.id='bookly-language-select';select.setAttribute('aria-label',tr('language'));select.style.cssText='height:40px;border:1px solid #e3e6eb;border-radius:11px;background:#fff;color:#202329;padding:0 28px 0 11px;font:inherit;font-size:12px;font-weight:750;cursor:pointer;outline:none;';
     LANGS.forEach(function(x){var o=document.createElement('option');o.value=x.code;o.textContent=x.label;select.appendChild(o);});
-    select.value=getLang();select.onchange=function(){setLang(this.value);location.reload();};
+    select.value=getLang();
+    select.onchange=function(){setLang(this.value);location.reload();};
     wrap.appendChild(select);host.appendChild(wrap);
+  }
+  function loadAccountCompletion(){
+    if(!/account\.html$/i.test(location.pathname))return;
+    if(document.getElementById('bookly-account-i18n-loader'))return;
+    var s=document.createElement('script');
+    s.id='bookly-account-i18n-loader';
+    s.src='account-i18n-completion.js';
+    s.defer=false;
+    (document.head||document.documentElement).appendChild(s);
   }
   function ensureProfileCard(){
     var view=document.getElementById('overviewView');
@@ -54,22 +64,17 @@
     view.appendChild(card);
   }
   function translateAccount(){
-    replaceAny({
-      'Back to Bookly':tr('back'),'Account':tr('account'),'Overview':tr('overview'),'Businesses':tr('businesses'),'Billing':tr('billing'),'Sign out':tr('signOut'),'Account ready':tr('accountReady'),'Choose your plan':tr('choosePlan'),'Continue to plans':tr('continuePlans'),'Connect Telegram':tr('connectTelegram'),'Open Bookly in Telegram':tr('openTelegram'),'Account details':tr('accountDetails'),'Email':tr('email'),'Telegram':tr('telegram'),'Connected':tr('connected'),'Not connected':tr('notConnected'),'My businesses':tr('myBusinesses'),'Manage your Bookly businesses from one place.':tr('manageBusinesses'),'+ Add business':'+ '+tr('addBusiness')
-    });
+    replaceAny({'Back to Bookly':tr('back'),'Account':tr('account'),'Overview':tr('overview'),'Businesses':tr('businesses'),'Billing':tr('billing'),'Sign out':tr('signOut'),'Account ready':tr('accountReady'),'Choose your plan':tr('choosePlan'),'Continue to plans':tr('continuePlans'),'Connect Telegram':tr('connectTelegram'),'Open Bookly in Telegram':tr('openTelegram'),'Account details':tr('accountDetails'),'Email':tr('email'),'Telegram':tr('telegram'),'Connected':tr('connected'),'Not connected':tr('notConnected'),'My businesses':tr('myBusinesses'),'Manage your Bookly businesses from one place.':tr('manageBusinesses'),'+ Add business':'+ '+tr('addBusiness')});
     var select=document.getElementById('bookly-language-select');if(select)select.value=getLang();
   }
-  function translateRules(){
-    var map={"Rules of Use":tr('rules'),"Back to Bookly":tr('back')};
-    replaceAny(map);
-  }
+  function translateRules(){replaceAny({'Rules of Use':tr('rules'),'Back to Bookly':tr('back')});}
   function apply(c){
     document.documentElement.lang=c;document.documentElement.dir=c==='ar'?'rtl':'ltr';
-    addSelector();
+    addSelector();loadAccountCompletion();
     if(/account\.html$/i.test(location.pathname)){ensureProfileCard();translateAccount();}
     if(/rules\.html$/i.test(location.pathname))translateRules();
   }
   window.BooklyWebI18n={LANGS:LANGS,T:T,getLang:getLang,setLang:setLang,apply:apply,tr:tr};
-  function start(){apply(getLang());setTimeout(function(){apply(getLang());},700);setInterval(function(){ensureProfileCard();},1200);}
+  function start(){apply(getLang());setTimeout(function(){apply(getLang());},700);setInterval(function(){ensureProfileCard();loadAccountCompletion();},1200);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
