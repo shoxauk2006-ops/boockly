@@ -15,7 +15,6 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
           p = Path('frontend/public/landing.html')
           s = p.read_text()
 
@@ -25,12 +24,12 @@ jobs:
               raise SystemExit('Expected pricing note code not found')
           s = s.replace(old_note, new_note, 1)
 
-          old_up_to = "set('pUpTo',d.upTo);"
-          new_up_to = "set('pUpTo',d.limit||d.upTo);"
-          if old_up_to in s:
-              s = s.replace(old_up_to, new_up_to, 1)
-          elif "set('pUpTo',d.limit||d.upTo);" not in s:
-              raise SystemExit('Expected pUpTo code not found')
+          old_desc = "set('pDesc',d.upTo||'');"
+          new_desc = "set('pDesc',d.limit||d.upTo||'');"
+          if old_desc in s:
+              s = s.replace(old_desc, new_desc, 1)
+          elif new_desc not in s:
+              raise SystemExit('Expected pDesc code not found')
 
           old_limit = "set('pLimit',d.limit||d.upTo);"
           new_limit = "set('pLimit','');"
