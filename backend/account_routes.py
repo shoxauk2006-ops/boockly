@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import hmac
+import hmac 
 import json
 import os
 import secrets
@@ -83,7 +83,7 @@ with engine.begin() as conn:
     inspector = inspect(conn)
     tables = set(inspector.get_table_names())
 
-        # Repair the legacy PostgreSQL link table if its id column has no default.
+    # Repair the legacy PostgreSQL link table if its id column has no default.
     if "bookly_telegram_links" in tables and engine.dialect.name == "postgresql":
         id_info = conn.execute(text("""
             SELECT column_default, is_identity
