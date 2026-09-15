@@ -579,7 +579,35 @@ def _account_trial_available(db, account_id: int) -> bool:
         {"account_id": account_id},
     ).mappings().first()
 
-    return not bool(row and row.get("free_trial_used"))
+    if row and row.get("free_trial_used"):
+        return False
+
+    existing_trial = (
+        db.query(Subscription)
+        .join(
+            Business,
+            Business.id == Subscription.business_id,
+        )
+        .filter(
+            Subscription.status == "trialing",
+            (
+                Business.account_id == account_id
+            )
+            | (
+                Business.owner_telegram_id == -int(account_id)
+            ),
+        )
+        .first()
+    )
+
+    if existing_trial:
+        _mark_account_trial_used(
+            db,
+            int(account_id),
+        )
+        return False
+
+    return True
 
 
 def _mark_account_trial_used(db, account_id: int) -> None:
