@@ -1,0 +1,4457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f7f8fa">
+<title>Bookly — Account</title>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<style>
+  .workspace-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  margin-bottom:22px;
+}
+
+.workspace-kicker{
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.14em;
+  color:#8b919a;
+  margin-bottom:7px;
+}
+
+.workspace-head h2{
+  margin:0;
+  font-size:30px;
+  letter-spacing:-.04em;
+}
+
+.workspace-head p{
+  margin:6px 0 0;
+  color:#737a84;
+  font-size:13px;
+}
+
+.workspace-nav{
+  display:flex;
+  gap:5px;
+  padding:5px;
+  background:#f0f2f5;
+  border-radius:14px;
+  margin-bottom:14px;
+}
+
+.workspace-nav-item{
+  flex:1;
+  border:0;
+  background:transparent;
+  color:#777d86;
+  border-radius:10px;
+  padding:10px 8px;
+  font:inherit;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.workspace-nav-item.active{
+  background:#111;
+  color:#fff;
+}
+
+.workspace-grid{
+  display:grid;
+  gap:12px;
+}
+
+.workspace-card{
+  border:1px solid #e2e5e9;
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+}
+
+.workspace-card h3{
+  margin:4px 0 5px;
+  font-size:17px;
+  letter-spacing:-.025em;
+}
+
+.workspace-card p{
+  margin:0;
+  color:#777e87;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.card-label{
+  display:block;
+  color:#949aa3;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.12em;
+}
+
+.card-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.small-button{
+  border:1px solid #dfe3e8;
+  background:#fff;
+  border-radius:10px;
+  padding:8px 10px;
+  font:inherit;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.businesses-list{
+  display:grid;
+  gap:8px;
+  margin-top:16px;
+}
+
+.business-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  border:1px solid #e5e8ec;
+  border-radius:13px;
+  background:#fafbfc;
+}
+
+.business-item strong{
+  font-size:13px;
+}
+
+.business-item span{
+  flex:0 0 auto;
+  margin-left:auto;
+  font-size:10px;
+  font-weight:800;
+  color:#397044;
+  background:#f4faf5;
+  border:1px solid #dce9df;
+  border-radius:999px;
+  padding:5px 8px;
+}
+
+.detail-row{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:12px 0;
+  border-top:1px solid #edf0f2;
+  margin-top:12px;
+  font-size:12px;
+}
+
+.detail-row span{
+  color:#858b94;
+}
+
+.detail-row strong{
+  font-size:12px;
+}
+
+  body.logged-in .intro{
+  display:none;
+}
+
+body.logged-in .shell{
+  padding-top:34px;
+}
+
+body.logged-in .card{
+  width:min(760px,100%);
+}
+
+@media(max-width:560px){
+  .workspace-head{
+    display:block;
+  }
+
+  .workspace-head .ready{
+    display:inline-flex;
+    margin-top:12px;
+  }
+
+  .workspace-nav-item{
+    font-size:10px;
+    padding:9px 4px;
+  }
+
+  .card-heading{
+    display:block;
+  }
+
+  .small-button{
+    margin-top:13px;
+  }
+}
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#101114;background:#f7f8fa}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;overflow-x:hidden}.page{min-height:100vh;position:relative}.orb{position:fixed;pointer-events:none;border-radius:999px;filter:blur(70px);opacity:.55}.orb.a{width:360px;height:360px;right:-130px;top:-120px;background:#dfe8ff}.orb.b{width:300px;height:300px;left:-160px;bottom:-120px;background:#e9ddff}.nav{height:76px;max-width:1180px;margin:auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2}.brand{font-size:15px;font-weight:900;letter-spacing:.16em}.nav-link{color:#656b75;text-decoration:none;font-size:14px;font-weight:650}.shell{width:min(1060px,calc(100% - 36px));margin:0 auto;padding:54px 0 90px;position:relative;z-index:1}.intro{text-align:center;max-width:650px;margin:0 auto 34px}.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid #e4e7ec;background:rgba(255,255,255,.72);backdrop-filter:blur(14px);padding:8px 12px;border-radius:999px;color:#626974;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.dot{width:7px;height:7px;border-radius:50%;background:#111}.intro h1{font-size:clamp(38px,6vw,62px);line-height:.98;letter-spacing:-.055em;margin:18px 0 14px}.intro p{font-size:17px;line-height:1.65;color:#6d737d;margin:0}.card{width:min(500px,100%);margin:0 auto;background:rgba(255,255,255,.9);border:1px solid #e5e8ed;border-radius:28px;padding:26px;box-shadow:0 30px 80px rgba(18,25,38,.10);backdrop-filter:blur(20px)}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#f0f2f5;padding:5px;border-radius:15px;margin-bottom:22px}.tabs button{border:0;background:transparent;color:#707680;border-radius:11px;padding:12px;font:inherit;font-weight:750;cursor:pointer}.tabs button.active{background:#111;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.12)}.socials{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:19px}.social{height:48px;border:1px solid #dfe3e8;background:#fff;border-radius:13px;font:inherit;font-weight:750;color:#17191d;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer}.social:hover{background:#fafbfc}.social span{font-size:16px}.divider{display:flex;align-items:center;gap:12px;color:#a0a6ae;font-size:12px;margin:18px 0}.divider:before,.divider:after{content:"";height:1px;background:#e8ebef;flex:1}label{display:block;font-size:12px;font-weight:800;color:#454b55;margin:15px 0 7px}input{width:100%;height:50px;border:1px solid #dfe3e8;border-radius:13px;padding:0 14px;background:#fff;color:#111;font:inherit;outline:none;transition:.18s}input:focus{border-color:#111;box-shadow:0 0 0 4px rgba(17,17,17,.07)}button.primary{width:100%;height:50px;border:0;border-radius:13px;background:#111;color:#fff;padding:0 16px;font:inherit;font-weight:800;cursor:pointer;margin-top:19px;transition:transform .15s,box-shadow .15s,opacity .15s}button.primary:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(17,17,17,.14)}button.primary:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}.terms{font-size:11px;color:#9298a1;line-height:1.55;text-align:center;margin:15px 4px 0}.error{background:#fff3f3;border:1px solid #ffd8d8;color:#a00000;padding:12px 13px;border-radius:13px;margin-top:14px;line-height:1.45;font-size:13px}.account{display:none}.account-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}.account-head h2{margin:0;font-size:25px;letter-spacing:-.03em}.account-head p{margin:6px 0 0;color:#737a84;font-size:13px}.ready{display:inline-flex;align-items:center;gap:6px;border:1px solid #dce9df;background:#f4faf5;color:#397044;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;white-space:nowrap}.ready i{width:6px;height:6px;background:#4d9a5d;border-radius:50%}.actions{display:grid;gap:10px}.action{border:1px solid #e2e5e9;background:#fff;border-radius:16px;padding:16px;text-align:left}.action h3{margin:0 0 5px;font-size:15px}.action p{margin:0;color:#777e87;font-size:12px;line-height:1.5}.action button{margin-top:13px}.connect-box{border-top:1px solid #eceff2;padding-top:20px;margin-top:4px}.link{border:1px solid #dfe3e7;background:#fff;border-radius:13px;height:46px;padding:0 13px;width:100%;font:inherit;font-weight:750;cursor:pointer;margin-top:10px}.status{font-size:12px;color:#737a84;margin-top:9px;line-height:1.45}.logout{border:0;background:transparent;color:#8a9098;font:inherit;font-size:12px;cursor:pointer;display:block;margin:20px auto 0}.foot{text-align:center;color:#a1a6ae;font-size:11px;margin-top:25px}.foot a{color:#7b818a;text-decoration:none}@media(max-width:560px){.nav{padding:0 18px}.shell{width:min(100% - 24px,500px);padding-top:34px}.card{padding:20px;border-radius:23px}.intro h1{font-size:43px}.intro p{font-size:15px}.socials{grid-template-columns:1fr}.account-head{display:block}.ready{margin-top:13px}.orb{opacity:.35}}
+.business-modal{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.business-modal[hidden]{
+  display:none;
+}
+
+.business-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(15,18,24,.48);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+
+.business-modal-card{
+  position:relative;
+  width:min(520px,100%);
+  max-height:calc(100vh - 40px);
+  overflow:auto;
+  background:#fff;
+  border:1px solid #e2e5e9;
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 30px 80px rgba(15,23,42,.22);
+}
+
+.business-modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.business-modal-head h3{
+  margin:4px 0 5px;
+  font-size:20px;
+  letter-spacing:-.03em;
+}
+
+.business-modal-head p{
+  margin:0;
+  color:#777e87;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.business-modal-close{
+  flex:0 0 auto;
+  width:34px;
+  height:34px;
+  border:1px solid #e0e4e8;
+  border-radius:10px;
+  background:#fff;
+  color:#555b64;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.business-modal-close:hover{
+  background:#f7f8fa;
+}
+
+.business-modal-card label{
+  margin:14px 0 7px;
+}
+
+.business-modal-card input,
+.business-modal-card textarea{
+  width:100%;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+  color:#111;
+  font:inherit;
+  outline:none;
+}
+
+.business-modal-card input{
+  height:48px;
+  padding:0 13px;
+}
+
+.business-modal-card textarea{
+  min-height:88px;
+  padding:12px 13px;
+  resize:vertical;
+}
+
+.business-modal-card input:focus,
+.business-modal-card textarea:focus{
+  border-color:#111;
+  box-shadow:0 0 0 4px rgba(17,17,17,.06);
+}
+
+.business-modal-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:20px;
+}
+
+.business-modal-actions .primary{
+  margin-top:0;
+}
+
+.business-cancel{
+  height:50px;
+  border:1px solid #dfe3e8;
+  border-radius:13px;
+  background:#fff;
+  color:#555b64;
+  font:inherit;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.business-cancel:hover{
+  background:#f7f8fa;
+}
+
+@media(max-width:560px){
+  .business-modal{
+    padding:12px;
+  }
+
+  .business-modal-card{
+    max-height:calc(100vh - 24px);
+    border-radius:19px;
+    padding:18px;
+  }
+
+  .business-modal-actions{
+    grid-template-columns:1fr;
+  }
+
+  .business-modal-actions .primary{
+    order:-1;
+  }
+}
+  /* ===== Account workspace redesign ===== */
+
+body.logged-in{
+  background:#f7f8fa;
+}
+
+body.logged-in .shell{
+  width:min(1180px,calc(100% - 48px));
+  max-width:none;
+  padding:38px 0 80px;
+}
+
+body.logged-in .card{
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+
+body.logged-in .account{
+  width:100%;
+}
+
+body.logged-in .workspace-head{
+  margin-bottom:24px;
+  padding:0 4px;
+}
+
+body.logged-in .workspace-head h2{
+  font-size:36px;
+  letter-spacing:-.045em;
+}
+
+body.logged-in .workspace-head p{
+  font-size:14px;
+}
+
+body.logged-in .workspace-kicker{
+  color:#5964e8;
+  font-size:10px;
+}
+
+body.logged-in .workspace-nav{
+  width:100%;
+  max-width:620px;
+  margin:0 0 18px;
+  padding:4px;
+  background:#e9ebef;
+  border-radius:13px;
+}
+
+body.logged-in .workspace-nav-item{
+  min-height:42px;
+  font-size:12px;
+}
+
+body.logged-in .workspace-nav-item.active{
+  box-shadow:0 4px 12px rgba(0,0,0,.10);
+}
+
+body.logged-in .workspace-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+body.logged-in .workspace-card{
+  min-width:0;
+  padding:22px;
+  background:rgba(255,255,255,.92);
+  border:1px solid #e1e5ea;
+  border-radius:20px;
+  box-shadow:0 12px 35px rgba(18,25,38,.045);
+}
+
+body.logged-in .businesses-card{
+  grid-column:1 / -1;
+}
+
+body.logged-in .workspace-card h3{
+  font-size:18px;
+}
+
+body.logged-in .workspace-card p{
+  font-size:12px;
+}
+
+body.logged-in .card-label{
+  color:#8b919a;
+}
+
+body.logged-in .businesses-list{
+  margin-top:18px;
+  gap:9px;
+}
+
+body.logged-in .business-item{
+  min-height:58px;
+  padding:14px 15px;
+  background:#fafbfc;
+  border:1px solid #e1e5e9;
+  border-radius:14px;
+}
+
+body.logged-in .business-item strong{
+  font-size:13px;
+}
+
+body.logged-in .small-button{
+  height:40px;
+  padding:0 13px;
+  border-radius:11px;
+}
+
+body.logged-in .detail-row{
+  padding:13px 0;
+}
+
+body.logged-in .logout{
+  margin-top:22px;
+}
+
+@media(max-width:760px){
+  body.logged-in .shell{
+    width:min(100% - 28px,680px);
+    padding-top:28px;
+  }
+
+  body.logged-in .workspace-head h2{
+    font-size:31px;
+  }
+
+  body.logged-in .workspace-grid{
+    grid-template-columns:1fr;
+  }
+
+  body.logged-in .businesses-card{
+    grid-column:auto;
+  }
+}
+
+@media(max-width:560px){
+  body.logged-in .shell{
+    width:calc(100% - 24px);
+  }
+
+  body.logged-in .workspace-head{
+    padding:0;
+  }
+
+  body.logged-in .workspace-nav{
+    max-width:none;
+  }
+
+  body.logged-in .workspace-nav-item{
+    min-height:40px;
+    font-size:10px;
+  }
+
+  body.logged-in .workspace-card{
+    padding:18px;
+    border-radius:18px;
+  }
+}
+  .business-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:16px 17px;
+  border:1px solid #e1e5e9;
+  border-radius:15px;
+  background:#fafbfc;
+}
+
+.business-item-main{
+  min-width:0;
+  flex:1;
+}
+
+.business-item-name{
+  font-size:14px;
+  font-weight:800;
+  color:#17191d;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.business-item-meta{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+
+.business-status,
+.business-selected{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:5px 8px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.business-status{
+  color:#397044;
+  background:#f4faf5;
+  border:1px solid #dce9df;
+}
+
+.business-selected{
+  color:#5964e8;
+  background:#f1f2ff;
+  border:1px solid #dfe1ff;
+}
+
+.business-item-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:0 0 auto;
+}
+
+.business-select,
+.business-delete{
+  height:36px;
+  border-radius:10px;
+  padding:0 11px;
+  font:inherit;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.business-select{
+  border:1px solid #dfe3e8;
+  background:#111;
+  color:#fff;
+}
+
+.business-select:disabled{
+  opacity:.45;
+  cursor:default;
+}
+
+.business-delete{
+  border:1px solid #eadcdc;
+  background:#fff;
+  color:#9a5555;
+}
+
+.business-delete:hover{
+  background:#fff7f7;
+}
+
+@media(max-width:560px){
+  .business-item{
+    display:block;
+  }
+
+  .business-item-actions{
+    margin-top:13px;
+  }
+
+  .business-select,
+  .business-delete{
+    flex:1;
+  }
+}
+  .workspace-view{
+  display:none;
+}
+
+.workspace-view.active{
+  display:contents;
+}
+
+#businessesView.active{
+  display:block;
+}
+
+#overviewView.active{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+#overviewView .account-details{
+  grid-column:1 / -1;
+}
+
+@media(max-width:760px){
+  #overviewView.active{
+    grid-template-columns:1fr;
+  }
+
+  #overviewView .account-details{
+    grid-column:auto;
+  }
+}
+.business-item.is-current{
+  border-color:#d7dbe2;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(15,23,42,.05);
+}
+
+.business-item.is-current .business-item-name{
+  font-weight:800;
+}
+
+.business-item-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:0 0 auto;
+}
+
+.business-item-main{
+  min-width:0;
+  flex:1;
+}
+
+.business-item-name{
+  font-size:13px;
+  font-weight:700;
+  color:#15171b;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.business-item-meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:6px;
+}
+
+.business-status{
+  margin:0!important;
+}
+
+.business-select,
+.business-delete{
+  height:34px;
+  padding:0 11px;
+  border-radius:9px;
+  font:inherit;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.business-select{
+  border:1px solid #dfe3e8;
+  background:#fff;
+  color:#17191d;
+}
+
+.business-select:hover:not(:disabled){
+  background:#f7f8fa;
+}
+
+.business-select:disabled{
+  opacity:.55;
+  cursor:default;
+}
+
+.business-delete{
+  border:1px solid #eadede;
+  background:#fff;
+  color:#a05a5a;
+}
+
+.business-delete:hover:not(:disabled){
+  background:#fff7f7;
+}
+
+@media(max-width:560px){
+  .business-item{
+    align-items:flex-start;
+  }
+
+  .business-item-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .business-select,
+  .business-delete{
+    min-width:72px;
+  }
+}
+.billing-card{
+  grid-column:1 / -1;
+}
+
+.billing-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.billing-head h3{
+  margin:4px 0 5px;
+}
+
+.billing-status{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:10px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.billing-status.active{
+  color:#397044;
+  background:#f4faf5;
+  border:1px solid #dce9df;
+}
+
+.billing-status.inactive{
+  color:#737983;
+  background:#f5f6f7;
+  border:1px solid #e1e4e8;
+}
+
+.billing-details{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:9px;
+  margin-top:20px;
+}
+
+.billing-detail{
+  padding:13px;
+  border:1px solid #e5e8ec;
+  border-radius:13px;
+  background:#fafbfc;
+}
+
+.billing-detail span{
+  display:block;
+  color:#858b94;
+  font-size:10px;
+  margin-bottom:5px;
+}
+
+.billing-detail strong{
+  font-size:12px;
+  color:#17191d;
+}
+
+#billingCheckout{
+  max-width:300px;
+  margin-top:20px;
+}
+
+@media(max-width:760px){
+  .billing-details{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:560px){
+  .billing-head{
+    display:block;
+  }
+
+  .billing-status{
+    margin-top:12px;
+  }
+
+  .billing-details{
+    grid-template-columns:1fr;
+  }
+
+  #billingCheckout{
+    max-width:none;
+  }
+}
+.phone-input{
+  display:flex;
+  gap:8px;
+  width:100%;
+}
+
+.phone-input select{
+  width:150px;
+  flex:0 0 150px;
+  height:48px;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+  padding:0 10px;
+  font:inherit;
+  color:#111;
+}
+
+.phone-number-wrap{
+  display:flex;
+  align-items:center;
+  flex:1;
+  min-width:0;
+  height:48px;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+}
+
+.phone-number-wrap:focus-within{
+  border-color:#111;
+  box-shadow:0 0 0 4px rgba(17,17,17,.06);
+}
+
+.phone-number-wrap span{
+  padding-left:12px;
+  color:#666;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.phone-number-wrap input{
+  height:46px;
+  border:0;
+  outline:0;
+  box-shadow:none;
+  background:transparent;
+  padding-left:6px;
+}
+
+@media(max-width:560px){
+  .phone-input{
+    gap:6px;
+  }
+
+  .phone-input select{
+    width:125px;
+    flex-basis:125px;
+    padding:0 7px;
+    font-size:12px;
+  }
+}
+.timezone-picker{
+  position:relative;
+}
+
+.timezone-current{
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 11px 9px 13px;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+}
+
+.timezone-current strong{
+  display:block;
+  font-size:13px;
+  line-height:1.3;
+}
+
+.timezone-current span{
+  display:block;
+  margin-top:2px;
+  color:#858b94;
+  font-size:10px;
+  line-height:1.3;
+}
+
+.timezone-change{
+  flex:0 0 auto;
+  border:1px solid #dfe3e8;
+  background:#fff;
+  border-radius:9px;
+  padding:7px 10px;
+  color:#555b64;
+  font:inherit;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.timezone-change:hover{
+  background:#f7f8fa;
+}
+
+.timezone-picker-panel{
+  margin-top:8px;
+  border:1px solid #e1e5e9;
+  border-radius:13px;
+  background:#fff;
+  padding:9px;
+  box-shadow:0 14px 35px rgba(15,23,42,.10);
+}
+
+.timezone-picker-panel[hidden]{
+  display:none;
+}
+
+.timezone-picker-panel input{
+  height:42px;
+  margin:0;
+}
+
+.timezone-list{
+  max-height:240px;
+  overflow-y:auto;
+  margin-top:8px;
+  display:grid;
+  gap:3px;
+}
+
+.timezone-option{
+  width:100%;
+  border:0;
+  background:#fff;
+  border-radius:9px;
+  padding:9px 10px;
+  text-align:left;
+  font:inherit;
+  cursor:pointer;
+}
+
+.timezone-option:hover{
+  background:#f5f6f8;
+}
+
+.timezone-option.selected{
+  background:#f1f2f4;
+}
+
+.timezone-option strong{
+  display:block;
+  font-size:12px;
+  font-weight:750;
+  color:#17191d;
+}
+
+.timezone-option span{
+  display:block;
+  margin-top:2px;
+  color:#858b94;
+  font-size:10px;
+}
+
+.timezone-empty{
+  padding:15px 10px;
+  text-align:center;
+  color:#858b94;
+  font-size:11px;
+}
+  .business-address-wrap{
+  display:grid;
+  gap:9px;
+}
+
+.business-address-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+}
+
+.business-address-row input{
+  min-width:0;
+}
+
+.business-locate{
+  height:48px;
+  border:1px solid #dfe3e8;
+  border-radius:12px;
+  background:#fff;
+  color:#555b64;
+  padding:0 13px;
+  font:inherit;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.business-locate:hover{
+  background:#f7f8fa;
+}
+
+.business-locate:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.business-map{
+  width:100%;
+  height:280px;
+  border:1px solid #dfe3e8;
+  border-radius:14px;
+  overflow:hidden;
+  background:#eef1f4;
+}
+
+.business-map-status{
+  min-height:16px;
+  color:#858b94;
+  font-size:11px;
+  line-height:1.4;
+}
+
+@media(max-width:560px){
+  .business-address-row{
+    grid-template-columns:1fr;
+  }
+
+  .business-locate{
+    width:100%;
+  }
+
+  .business-map{
+    height:240px;
+  }
+}
+.save-success-modal{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  padding:20px;
+}
+
+.save-success-modal[hidden]{
+  display:none;
+}
+
+.save-success-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(15,18,22,.45);
+  backdrop-filter:blur(4px);
+}
+
+.save-success-card{
+  position:relative;
+  width:min(420px,100%);
+  padding:30px;
+  border:1px solid #e3e6ea;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 24px 70px rgba(0,0,0,.18);
+  text-align:center;
+}
+
+.save-success-icon{
+  width:52px;
+  height:52px;
+  margin:0 auto 16px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#111;
+  color:#fff;
+  font-size:24px;
+  font-weight:800;
+}
+
+.save-success-card h3{
+  margin:0 0 8px;
+  font-size:22px;
+  font-weight:800;
+}
+
+.save-success-card p{
+  margin:0 0 22px;
+  color:#777e87;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.save-success-card .primary{
+  width:100%;
+}
+.billing-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.billing-head h3{
+  margin:6px 0 4px;
+}
+
+.billing-head p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.billing-status{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:600;
+}
+
+.billing-status.active{
+  background:#e8f7ed;
+  color:#1f7a3f;
+}
+
+.billing-status.inactive{
+  background:#f1f1f1;
+  color:#666;
+}
+
+.billing-details{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  margin-top:24px;
+}
+
+.billing-detail{
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+
+.billing-detail span{
+  display:block;
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+
+.billing-detail strong{
+  font-size:15px;
+}
+
+.billing-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:22px;
+}
+
+.billing-actions button{
+  min-height:46px;
+  border-radius:12px;
+  font:inherit;
+  font-size:13px;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.billing-actions #billingUpgrade{
+  grid-column:1 / -1;
+}
+
+.billing-actions #billingCancel{
+  color:#b42318;
+  border:1px solid #efc4c0;
+  background:#fff;
+}
+
+.billing-actions #billingCancel:hover{
+  background:#fff7f6;
+}
+
+.billing-actions button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+@media(max-width:700px){
+  .billing-actions{
+    grid-template-columns:1fr;
+  }
+
+  .billing-actions #billingUpgrade{
+    grid-column:auto;
+  }
+}
+
+.billing-actions button{
+  min-width:150px;
+}
+
+.billing-danger{
+  color:#b42318;
+  border-color:#f0b8b3;
+}
+
+.billing-actions[hidden]{
+  display:none;
+}
+
+@media (max-width:700px){
+  .billing-details{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .billing-actions{
+    flex-direction:column;
+  }
+
+  .billing-actions button{
+    width:100%;
+  }
+}
+.package-modal{
+  position:fixed;
+  inset:0;
+  z-index:1100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.package-modal[hidden]{
+  display:none;
+}
+
+.package-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(15,18,24,.48);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+
+.package-modal-card{
+  position:relative;
+  width:min(520px,100%);
+  max-height:calc(100vh - 40px);
+  overflow:auto;
+  background:#fff;
+  border:1px solid #e2e5e9;
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 30px 80px rgba(15,23,42,.22);
+}
+
+.package-modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.package-modal-head h3{
+  margin:4px 0 5px;
+  font-size:20px;
+  letter-spacing:-.03em;
+}
+
+.package-modal-head p{
+  margin:0;
+  color:#777e87;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.package-options{
+  display:grid;
+  gap:9px;
+}
+
+.package-option{
+  width:100%;
+  border:1px solid #e1e5e9;
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  text-align:left;
+  cursor:pointer;
+  font:inherit;
+}
+
+.package-option:hover{
+  background:#fafbfc;
+  border-color:#cfd4da;
+}
+
+.package-option strong{
+  display:block;
+  font-size:14px;
+}
+
+.package-option span{
+  display:block;
+  margin-top:3px;
+  color:#7b818a;
+  font-size:11px;
+}
+
+.package-option-price{
+  flex:0 0 auto;
+  font-weight:800;
+  font-size:14px;
+}
+
+@media(max-width:560px){
+  .package-modal{
+    padding:12px;
+  }
+
+  .package-modal-card{
+    max-height:calc(100vh - 24px);
+    border-radius:19px;
+    padding:18px;
+  }
+}
+html.has-session:not(.session-ready) body{
+  visibility:hidden;
+}
+
+html.has-session.session-ready body{
+  visibility:visible;
+}
+/* ===== FINAL ACCOUNT WORKSPACE DESIGN ===== */
+
+body.logged-in{
+  background:#f6f7f9;
+}
+
+body.logged-in .shell{
+  width:min(1080px,calc(100% - 40px));
+  max-width:1080px;
+  margin:0 auto;
+  padding:34px 0 70px;
+}
+
+body.logged-in .card{
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+
+body.logged-in .account{
+  width:100%;
+}
+
+body.logged-in .workspace-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin:0 0 22px;
+  padding:0;
+}
+
+body.logged-in .workspace-head h2{
+  margin:0;
+  font-size:34px;
+  line-height:1;
+  letter-spacing:-.045em;
+  color:#111318;
+}
+
+body.logged-in .workspace-head p{
+  margin:8px 0 0;
+  color:#727984;
+  font-size:13px;
+  line-height:1.5;
+}
+
+body.logged-in .workspace-kicker{
+  margin-bottom:8px;
+  color:#8b919a;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.14em;
+}
+
+body.logged-in .ready{
+  flex:0 0 auto;
+  margin:0;
+  padding:8px 11px;
+  border:1px solid #dce9df;
+  border-radius:999px;
+  background:#f4faf5;
+  color:#397044;
+  font-size:11px;
+  font-weight:800;
+}
+
+/* Main navigation */
+
+body.logged-in .workspace-nav{
+  width:100%;
+  max-width:none;
+  display:flex;
+  gap:4px;
+  margin:0 0 18px;
+  padding:4px;
+  background:#ebedf0;
+  border:1px solid #e1e4e8;
+  border-radius:14px;
+}
+
+body.logged-in .workspace-nav-item{
+  flex:1;
+  min-height:42px;
+  padding:0 12px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#707680;
+  font-size:12px;
+  font-weight:800;
+  transition:background .15s ease,color .15s ease,box-shadow .15s ease;
+}
+
+body.logged-in .workspace-nav-item:hover{
+  color:#17191d;
+  background:#f4f5f7;
+}
+
+body.logged-in .workspace-nav-item.active{
+  background:#111;
+  color:#fff;
+  box-shadow:0 4px 12px rgba(0,0,0,.10);
+}
+
+/*
+  Important:
+  workspace-grid must NOT be a two-column grid.
+  Each view controls its own layout.
+*/
+
+body.logged-in .workspace-grid{
+  display:block;
+  width:100%;
+}
+
+body.logged-in .workspace-view{
+  width:100%;
+}
+
+body.logged-in .workspace-view.active{
+  display:block;
+}
+
+body.logged-in #overviewView.active{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  width:100%;
+}
+
+body.logged-in #businessesView.active{
+  display:block;
+}
+
+body.logged-in #billingView.active{
+  display:block;
+}
+
+/* Cards */
+
+body.logged-in .workspace-card{
+  min-width:0;
+  padding:22px;
+  border:1px solid #e1e4e8;
+  border-radius:18px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 10px 30px rgba(18,25,38,.045);
+}
+
+body.logged-in .workspace-card h3{
+  margin:5px 0 6px;
+  color:#15171b;
+  font-size:18px;
+  line-height:1.2;
+  letter-spacing:-.025em;
+}
+
+body.logged-in .workspace-card p{
+  color:#747b84;
+  font-size:12px;
+  line-height:1.55;
+}
+
+body.logged-in .card-label{
+  color:#969ca4;
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.13em;
+}
+
+/* Overview */
+
+body.logged-in #overviewView .workspace-card{
+  min-height:0;
+}
+
+body.logged-in #overviewView .account-details{
+  grid-column:1 / -1;
+}
+
+body.logged-in #overviewView .account-details h3{
+  margin-bottom:12px;
+}
+
+body.logged-in .detail-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  min-height:48px;
+  margin:0;
+  padding:0;
+  border-top:1px solid #edf0f2;
+}
+
+body.logged-in .detail-row span{
+  color:#858b94;
+  font-size:12px;
+}
+
+body.logged-in .detail-row strong{
+  color:#17191d;
+  font-size:12px;
+  font-weight:750;
+  text-align:right;
+}
+
+/* Buttons */
+
+body.logged-in button.primary{
+  min-height:48px;
+  margin-top:18px;
+  border-radius:12px;
+  background:#111;
+  font-size:13px;
+}
+
+body.logged-in button.primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(17,17,17,.12);
+}
+
+/* Businesses */
+
+body.logged-in .businesses-card{
+  width:100%;
+}
+
+body.logged-in .businesses-list{
+  width:100%;
+  margin-top:18px;
+  display:grid;
+  gap:9px;
+}
+
+body.logged-in .business-item{
+  min-height:62px;
+  padding:14px 16px;
+  border:1px solid #e1e5e9;
+  border-radius:14px;
+  background:#fafbfc;
+}
+
+body.logged-in .business-item.is-current{
+  background:#fff;
+  border-color:#d7dce2;
+  box-shadow:0 7px 20px rgba(15,23,42,.045);
+}
+
+body.logged-in .business-item-main{
+  min-width:0;
+  flex:1;
+}
+
+body.logged-in .business-item-name{
+  color:#16181c;
+  font-size:13px;
+  font-weight:750;
+}
+
+body.logged-in .business-item-meta{
+  margin-top:5px;
+}
+
+body.logged-in .business-item-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+body.logged-in .business-select,
+body.logged-in .business-delete{
+  height:36px;
+  padding:0 12px;
+  border-radius:10px;
+  font-size:11px;
+  font-weight:750;
+}
+
+body.logged-in .business-select{
+  border:1px solid #111;
+  background:#111;
+  color:#fff;
+}
+
+body.logged-in .business-select:disabled{
+  border-color:#dfe3e8;
+  background:#fff;
+  color:#737a84;
+  opacity:1;
+}
+
+body.logged-in .business-delete{
+  border:1px solid #eadcdd;
+  background:#fff;
+  color:#9a5555;
+}
+
+/* Billing */
+
+body.logged-in .billing-card{
+  width:100%;
+}
+
+body.logged-in .billing-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+
+body.logged-in .billing-head h3{
+  margin:5px 0 5px;
+}
+
+body.logged-in .billing-status{
+  flex:0 0 auto;
+  padding:7px 11px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+}
+
+body.logged-in .billing-status.active{
+  background:#e8f7ed;
+  color:#1f7a3f;
+}
+
+body.logged-in .billing-status.inactive{
+  background:#f1f1f1;
+  color:#666;
+}
+
+body.logged-in .billing-details{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:22px;
+}
+
+body.logged-in .billing-detail{
+  min-width:0;
+  padding:15px;
+  border:1px solid #e3e6ea;
+  border-radius:13px;
+  background:#fafbfc;
+}
+
+body.logged-in .billing-detail span{
+  display:block;
+  margin-bottom:6px;
+  color:#858b94;
+  font-size:11px;
+}
+
+body.logged-in .billing-detail strong{
+  color:#17191d;
+  font-size:15px;
+  font-weight:800;
+}
+
+body.logged-in .billing-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:18px;
+}
+
+body.logged-in .billing-actions #billingUpgrade{
+  grid-column:1 / -1;
+}
+
+body.logged-in .billing-actions button{
+  width:100%;
+  min-height:46px;
+  margin:0;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:800;
+}
+
+body.logged-in .billing-actions #billingCancel{
+  border:1px solid #efc4c0;
+  background:#fff;
+  color:#b42318;
+}
+
+body.logged-in .billing-actions #billingCancel:hover{
+  background:#fff7f6;
+}
+
+/* Billing message */
+
+body.logged-in #billingMessage{
+  margin-top:12px;
+  color:#727984;
+  font-size:11px;
+  line-height:1.55;
+}
+  
+#packageConfirmText{
+  white-space:pre-line;
+}
+  
+/* Logout */
+
+body.logged-in .logout{
+  display:block;
+  margin:22px 0 0 auto;
+  padding:5px 0;
+  color:#8a9098;
+  font-size:11px;
+}
+
+body.logged-in .logout:hover{
+  color:#555b64;
+}
+
+/* Footer */
+
+body.logged-in .foot{
+  margin-top:28px;
+  color:#a1a6ae;
+}
+
+/* Tablet */
+
+@media(max-width:820px){
+  body.logged-in .shell{
+    width:min(100% - 28px,720px);
+    padding-top:28px;
+  }
+
+  body.logged-in .workspace-head h2{
+    font-size:31px;
+  }
+
+  body.logged-in #overviewView.active{
+    grid-template-columns:1fr;
+  }
+
+  body.logged-in #overviewView .account-details{
+    grid-column:auto;
+  }
+
+  body.logged-in .billing-details{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+/* Mobile */
+
+@media(max-width:560px){
+  body.logged-in .shell{
+    width:calc(100% - 24px);
+    padding-top:22px;
+    padding-bottom:50px;
+  }
+
+  body.logged-in .workspace-head{
+    display:block;
+    margin-bottom:16px;
+  }
+
+  body.logged-in .workspace-head h2{
+    font-size:28px;
+  }
+
+  body.logged-in .workspace-head p{
+    max-width:100%;
+    font-size:12px;
+  }
+
+  body.logged-in .ready{
+    display:inline-flex;
+    margin-top:12px;
+  }
+
+  body.logged-in .workspace-nav{
+    margin-bottom:14px;
+  }
+
+  body.logged-in .workspace-nav-item{
+    min-height:40px;
+    padding:0 6px;
+    font-size:10px;
+  }
+
+  body.logged-in .workspace-card{
+    padding:18px;
+    border-radius:16px;
+  }
+
+  body.logged-in .billing-head{
+    display:block;
+  }
+
+  body.logged-in .billing-status{
+    margin-top:12px;
+  }
+
+  body.logged-in .billing-details{
+    grid-template-columns:1fr 1fr;
+  }
+
+  body.logged-in .billing-actions{
+    grid-template-columns:1fr;
+  }
+
+  body.logged-in .billing-actions #billingUpgrade{
+    grid-column:auto;
+  }
+
+  body.logged-in .business-item{
+    display:block;
+  }
+
+  body.logged-in .business-item-actions{
+    margin-top:12px;
+  }
+
+  body.logged-in .business-select,
+  body.logged-in .business-delete{
+    flex:1;
+  }
+
+  body.logged-in .detail-row{
+    min-height:52px;
+    align-items:flex-start;
+    justify-content:center;
+    flex-direction:column;
+    gap:4px;
+    padding:10px 0;
+  }
+
+  body.logged-in .detail-row strong{
+    text-align:left;
+  }
+}
+/* Business modal close button */
+.business-modal-close{
+  position:relative;
+  z-index:3;
+  pointer-events:auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.business-modal-close:hover{
+  background:#f5f6f8;
+  color:#111;
+}
+body.logged-in .business-item-actions .business-select:not(:disabled):hover{
+  border-color:#111 !important;
+  background:#111 !important;
+  color:#fff !important;
+}
+
+.business-select:disabled:hover{
+  border-color:#dfe3e8;
+  background:#fff;
+  color:#737a84;
+}
+.business-modal-backdrop{
+  z-index:1;
+}
+
+.business-modal-card{
+  position:relative;
+  z-index:2;
+}
+
+.business-modal-close{
+  position:relative;
+  z-index:10 !important;
+  pointer-events:auto !important;
+  cursor:pointer;
+}
+.business-modal{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:99999 !important;
+  pointer-events:auto !important;
+}
+
+.business-modal-backdrop{
+  position:absolute !important;
+  inset:0 !important;
+  z-index:1 !important;
+  pointer-events:auto !important;
+}
+
+.business-modal-card{
+  position:relative !important;
+  z-index:2 !important;
+  pointer-events:auto !important;
+}
+
+.business-modal-close{
+  position:relative !important;
+  z-index:999999 !important;
+  pointer-events:auto !important;
+  cursor:pointer !important;
+}
+.business-modal-card{
+  position:relative !important;
+  isolation:isolate !important;
+}
+
+.business-modal-head{
+  position:relative !important;
+  z-index:20 !important;
+}
+
+.business-modal-close{
+  position:absolute !important;
+  top:0 !important;
+  right:0 !important;
+  z-index:999999 !important;
+  width:42px !important;
+  height:42px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  pointer-events:auto !important;
+  cursor:pointer !important;
+}
+body.logged-in .shell{
+  position:relative !important;
+  z-index:1001 !important;
+}
+.business-modal-actions{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+  width:100% !important;
+}
+
+.business-modal-actions button{
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+}
+</style>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem('bookly_session')){
+      document.documentElement.classList.add('has-session');
+    }
+  }catch(e){}
+})();
+</script>
+</head>
+<body>
+<div class="page"><div class="orb a"></div><div class="orb b"></div>
+<header class="nav"><div class="brand">BOOKLY</div><a class="nav-link" href="landing.html">Back to Bookly</a></header>
+<main class="shell">
+<section class="intro"><div class="eyebrow"><span class="dot"></span> Bookly workspace</div><h1>Run your bookings<br>from one place.</h1><p>Create your account, choose a plan, and set up your business in a few simple steps.</p></section>
+<section class="card">
+<div id="auth">
+<div class="tabs"><button id="loginTab" class="active">Sign in</button><button id="registerTab">Create account</button></div>
+<div class="socials"><button class="social" id="googleBtn" type="button"><span>G</span> Continue with Google</button><button class="social" id="appleBtn" type="button"><span>●</span> Continue with Apple</button></div>
+<div class="divider">or continue with email</div>
+<form id="form"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required><label for="password">Password</label><input id="password" type="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters" required><button id="submit" class="primary" type="submit">Sign in</button></form>
+<p class="terms">By continuing, you agree to use Bookly for legitimate business activity and accept our terms.</p><div id="error" class="error" hidden></div>
+</div>
+<div id="account" class="account">
+
+  <div class="workspace-head">
+    <div>
+      <div class="workspace-kicker">BOOKLY WORKSPACE</div>
+      <h2>Account</h2>
+      <p id="accountText"></p>
+    </div>
+
+    <div class="ready">
+      <i></i> Account ready
+    </div>
+  </div>
+
+  <nav class="workspace-nav">
+    <button
+  class="workspace-nav-item active"
+  type="button"
+  data-view="overview"
+>
+  Overview
+</button>
+    <button
+  class="workspace-nav-item"
+  type="button"
+  data-view="businesses"
+>
+  Businesses
+</button>
+    <button
+  class="workspace-nav-item"
+  type="button"
+  data-view="billing"
+>
+  Billing
+</button>
+  </nav>
+
+  <div class="workspace-grid">
+    <div id="businessesView" class="workspace-view">
+    <section class="workspace-card businesses-card">
+      <div class="card-heading">
+        <div>
+          <span class="card-label">BUSINESSES</span>
+          <h3>My businesses</h3>
+          <p>Manage your Bookly businesses from one place.</p>
+        </div>
+
+        <button id="addBusiness" class="small-button" type="button">
+          + Add business
+        </button>
+      </div>
+
+      <div id="businessesList" class="businesses-list"></div>
+    </section>
+
+  </div>
+
+  <div id="overviewView" class="workspace-view">
+
+    <section class="workspace-card">
+      <span class="card-label">SUBSCRIPTION</span>
+      <h3>Choose your plan</h3>
+      <p>Select the plan for your current business. Payment is handled securely on the Bookly website.</p>
+
+      <button id="checkout" class="primary" type="button">
+        Continue to plans
+      </button>
+    </section>
+
+    <section class="workspace-card">
+      <span class="card-label">TELEGRAM</span>
+      <h3>Connect Telegram</h3>
+      <p>Connect your account to open your selected Bookly business directly in the Mini App.</p>
+
+      <button id="connect" class="primary" type="button">
+        Connect Telegram
+      </button>
+
+      <div id="connectStatus" class="status"></div>
+    </section>
+
+    <section class="workspace-card account-details">
+      <span class="card-label">ACCOUNT</span>
+      <h3>Account details</h3>
+
+      <div class="detail-row">
+        <span>Email</span>
+        <strong id="accountEmail">—</strong>
+      </div>
+
+      <div class="detail-row">
+        <span>Telegram</span>
+        <strong id="accountTelegram">—</strong>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="billingView" class="workspace-view">
+
+  <section class="workspace-card billing-card">
+
+  <div class="billing-head">
+    <div>
+      <span class="card-label">BILLING</span>
+      <h3>Subscription</h3>
+      <p id="billingBusiness">
+        Loading business...
+      </p>
+    </div>
+
+    <span id="billingStatus" class="billing-status">
+      —
+    </span>
+  </div>
+
+  <div class="billing-details">
+
+    <div class="billing-detail">
+      <span>Plan</span>
+      <strong id="billingPlan">—</strong>
+    </div>
+
+    <div class="billing-detail">
+      <span>Services</span>
+      <strong id="billingServices">—</strong>
+    </div>
+
+    <div class="billing-detail">
+      <span>Price</span>
+      <strong id="billingPrice">—</strong>
+    </div>
+
+    <div class="billing-detail">
+      <span>Expires</span>
+      <strong id="billingExpires">—</strong>
+    </div>
+
+  </div>
+
+  <div id="billingActions" class="billing-actions" hidden>
+
+    <button
+      id="billingUpgrade"
+      class="primary"
+      type="button"
+    >
+      Upgrade
+    </button>
+
+    <button
+      id="billingDowngrade"
+      class="secondary"
+      type="button"
+    >
+      Downgrade
+    </button>
+
+    <button
+      id="billingCancel"
+      class="secondary billing-danger"
+      type="button"
+    >
+      Cancel subscription
+    </button>
+
+    <button
+      id="billingRestore"
+      class="primary"
+      type="button"
+      hidden
+    >
+      Restore subscription
+    </button>
+
+    <button
+      id="billingRestorePackage"
+      class="secondary"
+      type="button"
+      hidden
+    >
+      Restore package
+    </button>
+
+  </div>
+
+  <button
+    id="billingCheckout"
+    class="primary"
+    type="button"
+  >
+    Continue to plans
+  </button>
+
+  <div id="billingMessage" class="status"></div>
+
+</section>
+
+</div>
+
+  <button id="logout" class="logout">Sign out</button>
+
+  <div id="businessModal" class="business-modal" hidden>
+  <div class="business-modal-backdrop"></div>
+
+  <div class="business-modal-card">
+    <div class="business-modal-head">
+      <div>
+        <span class="card-label">NEW BUSINESS</span>
+        <h3>Add business</h3>
+        <p>Create another Bookly business for your account.</p>
+      </div>
+
+      <button
+        id="closeBusinessModal"
+        class="business-modal-close"
+        type="button"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
+
+    <form id="businessForm">
+
+      <label for="businessName">Business name</label>
+      <input
+        id="businessName"
+        type="text"
+        maxlength="120"
+        placeholder="e.g. My Beauty Studio"
+        required
+      >
+
+      <label for="businessDescription">Description</label>
+      <textarea
+        id="businessDescription"
+        maxlength="500"
+        placeholder="Short description of your business"
+      ></textarea>
+
+<label for="businessPhone">Phone</label>
+
+<div class="phone-input">
+  <select id="businessPhoneCountry" aria-label="Country">
+    <option value="UZ">🇺🇿 Uzbekistan</option>
+    <option value="RU">🇷🇺 Russia</option>
+    <option value="KZ">🇰🇿 Kazakhstan</option>
+    <option value="KG">🇰🇬 Kyrgyzstan</option>
+    <option value="TJ">🇹🇯 Tajikistan</option>
+    <option value="TR">🇹🇷 Türkiye</option>
+    <option value="US">🇺🇸 United States</option>
+    <option value="GB">🇬🇧 United Kingdom</option>
+    <option value="DE">🇩🇪 Germany</option>
+    <option value="FR">🇫🇷 France</option>
+    <option value="AE">🇦🇪 United Arab Emirates</option>
+    <option value="IN">🇮🇳 India</option>
+    <option value="CN">🇨🇳 China</option>
+  </select>
+
+  <div class="phone-number-wrap">
+    <span id="businessPhoneCode">+998</span>
+
+    <input
+      id="businessPhone"
+      type="tel"
+      inputmode="tel"
+      maxlength="20"
+      placeholder="Business phone"
+      autocomplete="tel"
+    >
+  </div>
+</div>
+
+      <label for="businessAddress">Address</label>
+
+<div class="business-address-wrap">
+  <div class="business-address-row">
+    <input
+      id="businessAddress"
+      type="text"
+      placeholder="Business address"
+      autocomplete="street-address"
+    >
+
+    <button
+      id="businessLocate"
+      class="business-locate"
+      type="button"
+    >
+      Locate me
+    </button>
+  </div>
+
+  <div
+    id="businessMap"
+    class="business-map"
+  ></div>
+
+  <div
+    id="businessMapStatus"
+    class="business-map-status"
+  ></div>
+</div>
+
+<input
+  id="businessLatitude"
+  type="hidden"
+>
+
+<input
+  id="businessLongitude"
+  type="hidden"
+>
+
+      <label>Timezone</label>
+
+<div class="timezone-picker">
+  <input
+  id="businessTimezone"
+  type="hidden"
+  value="Asia/Tashkent"
+>
+  <div class="timezone-current">
+    <div>
+      <strong id="businessTimezoneLabel">Ташкент</strong>
+      <span id="businessTimezoneValue">Asia/Tashkent</span>
+    </div>
+
+    <button
+      id="businessTimezoneChange"
+      type="button"
+      class="timezone-change"
+    >
+      Change
+    </button>
+  </div>
+
+  <div
+    id="businessTimezonePicker"
+    class="timezone-picker-panel"
+    hidden
+  >
+    <input
+      id="businessTimezoneSearch"
+      type="text"
+      placeholder="Search timezone"
+      autocomplete="off"
+    >
+
+    <div id="businessTimezoneList" class="timezone-list"></div>
+  </div>
+</div>
+
+      <div class="business-modal-actions">
+        <button
+          id="cancelBusiness"
+          class="business-cancel"
+          type="button"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="createBusiness"
+          class="primary"
+          type="submit"
+        >
+          Create business
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<div id="saveSuccessModal" class="save-success-modal" hidden>
+  <div class="save-success-backdrop"></div>
+
+  <div class="save-success-card">
+    <div class="save-success-icon">✓</div>
+
+    <h3>Changes saved</h3>
+
+    <p>
+      Business details have been updated successfully.
+    </p>
+
+    <button
+      id="saveSuccessOk"
+      class="primary"
+      type="button"
+    >
+      OK
+    </button>
+  </div>
+</div>
+    
+<div id="cancelConfirmModal" class="save-success-modal" hidden>
+  <div class="save-success-backdrop"></div>
+
+  <div class="save-success-card">
+    <div class="save-success-icon">!</div>
+
+    <h3>Cancel subscription?</h3>
+
+    <p>
+      Your current package will remain active until the end of the current
+      billing period. After that, the subscription will end.
+    </p>
+
+    <div class="business-modal-actions">
+      <button
+        id="cancelConfirmCancel"
+        class="business-cancel"
+        type="button"
+      >
+        Keep subscription
+      </button>
+
+      <button
+        id="cancelConfirmOk"
+        class="primary"
+        type="button"
+      >
+        Cancel subscription
+      </button>
+    </div>
+  </div>
+</div>
+    
+</div>
+
+</section><div class="foot">Bookly · Simple online booking · <a href="landing.html">Learn more</a></div>
+</main></div>
+<script src="https://unpkg.com/libphonenumber-js@1.12.31/bundle/libphonenumber-min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){'use strict';
+var TIMEZONE_OPTIONS=[
+  ['Asia/Tashkent','Ташкент'],
+  ['Asia/Almaty','Алматы'],
+  ['Asia/Bishkek','Бишкек'],
+  ['Asia/Dhaka','Дакка'],
+  ['Asia/Karachi','Карачи'],
+  ['Asia/Kolkata','Калькутта'],
+  ['Asia/Dubai','Дубай'],
+  ['Asia/Riyadh','Эр-Рияд'],
+  ['Asia/Tehran','Тегеран'],
+  ['Asia/Baghdad','Багдад'],
+  ['Asia/Jerusalem','Иерусалим'],
+  ['Asia/Baku','Баку'],
+  ['Asia/Tbilisi','Тбилиси'],
+  ['Europe/Moscow','Москва'],
+  ['Europe/Istanbul','Стамбул'],
+  ['Europe/Kiev','Киев'],
+  ['Europe/Berlin','Берлин'],
+  ['Europe/Paris','Париж'],
+  ['Europe/London','Лондон'],
+  ['Europe/Rome','Рим'],
+  ['Europe/Madrid','Мадрид'],
+  ['Africa/Cairo','Каир'],
+  ['Africa/Johannesburg','Йоханнесбург'],
+  ['America/New_York','Нью-Йорк'],
+  ['America/Chicago','Чикаго'],
+  ['America/Denver','Денвер'],
+  ['America/Los_Angeles','Лос-Анджелес'],
+  ['America/Toronto','Торонто'],
+  ['America/Sao_Paulo','Сан-Паулу'],
+  ['Australia/Sydney','Сидней'],
+  ['Pacific/Auckland','Окленд']
+];
+
+var timezoneCountryMap={
+  'Asia/Tashkent':'UZ',
+  'Asia/Almaty':'KZ',
+  'Asia/Bishkek':'KG',
+  'Asia/Dhaka':'BD',
+  'Asia/Karachi':'PK',
+  'Asia/Kolkata':'IN',
+  'Asia/Dubai':'AE',
+  'Asia/Riyadh':'SA',
+  'Asia/Tehran':'IR',
+  'Asia/Baghdad':'IQ',
+  'Asia/Jerusalem':'IL',
+  'Asia/Baku':'AZ',
+  'Asia/Tbilisi':'GE',
+  'Europe/Moscow':'RU',
+  'Europe/Istanbul':'TR',
+  'Europe/Kiev':'UA',
+  'Europe/Berlin':'DE',
+  'Europe/Paris':'FR',
+  'Europe/London':'GB',
+  'Europe/Rome':'IT',
+  'Europe/Madrid':'ES',
+  'Africa/Cairo':'EG',
+  'Africa/Johannesburg':'ZA',
+  'America/New_York':'US',
+  'America/Chicago':'US',
+  'America/Denver':'US',
+  'America/Los_Angeles':'US',
+  'America/Toronto':'CA',
+  'America/Sao_Paulo':'BR',
+  'Australia/Sydney':'AU',
+  'Pacific/Auckland':'NZ'
+};
+
+function getTimezoneOffset(timezone){
+  try{
+    var parts=new Intl.DateTimeFormat('en-US',{
+      timeZone:timezone,
+      timeZoneName:'shortOffset'
+    }).formatToParts(new Date());
+
+    var value='';
+
+    parts.forEach(function(part){
+      if(part.type==='timeZoneName'){
+        value=part.value;
+      }
+    });
+
+    if(value==='GMT')return 'GMT+0';
+
+    return value || '';
+  }catch(e){
+    return '';
+  }
+}
+
+function getTimezoneCity(timezone){
+  for(var i=0;i<TIMEZONE_OPTIONS.length;i++){
+    if(TIMEZONE_OPTIONS[i][0]===timezone){
+      return TIMEZONE_OPTIONS[i][1];
+    }
+  }
+
+  return timezone;
+}
+
+function detectBusinessTimezone(){
+  try{
+    var timezone=
+      Intl.DateTimeFormat()
+        .resolvedOptions()
+        .timeZone;
+
+    for(var i=0;i<TIMEZONE_OPTIONS.length;i++){
+      if(TIMEZONE_OPTIONS[i][0]===timezone){
+        return timezone;
+      }
+    }
+  }catch(e){}
+
+  return 'Asia/Tashkent';
+}
+
+var businessTimezoneInputValue='Asia/Tashkent';
+var businessTimezonePickerOpen=false;
+var businessTimezoneIsEdit=false;
+
+var businessTimezoneLabel=
+  document.getElementById('businessTimezoneLabel');
+
+var businessTimezoneValue=
+  document.getElementById('businessTimezoneValue');
+
+var businessTimezoneChange=
+  document.getElementById('businessTimezoneChange');
+
+var businessTimezonePicker=
+  document.getElementById('businessTimezonePicker');
+
+var businessTimezoneSearch=
+  document.getElementById('businessTimezoneSearch');
+
+var businessTimezoneList=
+  document.getElementById('businessTimezoneList');
+
+function setBusinessTimezone(timezone){
+  businessTimezoneInputValue=
+    timezone || 'Asia/Tashkent';
+
+  businessTimezoneLabel.textContent=
+    getTimezoneCity(businessTimezoneInputValue);
+
+  businessTimezoneValue.textContent=
+    businessTimezoneInputValue+
+    ' · '+
+    getTimezoneOffset(businessTimezoneInputValue);
+}
+
+function renderBusinessTimezones(){
+  var search=
+    businessTimezoneSearch.value
+      .trim()
+      .toLowerCase();
+
+  businessTimezoneList.innerHTML='';
+
+  var found=0;
+
+  TIMEZONE_OPTIONS.forEach(function(item){
+    var timezone=item[0];
+    var city=item[1];
+
+    var haystack=
+      (timezone+' '+city)
+        .toLowerCase();
+
+    if(
+      search &&
+      haystack.indexOf(search)===-1
+    ){
+      return;
+    }
+
+    found++;
+
+    var button=
+      document.createElement('button');
+
+    button.type='button';
+    button.className='timezone-option';
+
+    if(
+      timezone===
+      businessTimezoneInputValue
+    ){
+      button.className+=' selected';
+    }
+
+    button.innerHTML=
+      '<strong>'+
+        city+
+      '</strong>'+
+      '<span>'+
+        timezone+
+        ' · '+
+        getTimezoneOffset(timezone)+
+      '</span>';
+
+    button.onclick=function(){
+      setBusinessTimezone(timezone);
+
+      businessTimezonePickerOpen=false;
+      businessTimezonePicker.hidden=true;
+      businessTimezoneSearch.value='';
+
+      renderBusinessTimezones();
+    };
+
+    businessTimezoneList.appendChild(button);
+  });
+
+  if(!found){
+    businessTimezoneList.innerHTML=
+      '<div class="timezone-empty">No timezones found</div>';
+  }
+}
+
+function openBusinessTimezonePicker(){
+  if(businessTimezoneIsEdit)return;
+
+  businessTimezonePickerOpen=true;
+  businessTimezonePicker.hidden=false;
+  businessTimezoneSearch.value='';
+  renderBusinessTimezones();
+
+  setTimeout(function(){
+    businessTimezoneSearch.focus();
+  },0);
+}
+
+businessTimezoneChange.onclick=
+  openBusinessTimezonePicker;
+
+businessTimezoneSearch.addEventListener(
+  'input',
+  renderBusinessTimezones
+);
+var phoneLib=window.libphonenumber;
+
+var phoneCountries=phoneLib
+  ? phoneLib.getCountries()
+  : [];
+
+var phoneCountryCodes={};
+
+phoneCountries.forEach(function(country){
+  phoneCountryCodes[country]=
+    phoneLib.getCountryCallingCode(country);
+});
+
+var phoneRegionNames=null;
+
+try{
+  phoneRegionNames=new Intl.DisplayNames(
+    [navigator.language || 'en'],
+    {type:'region'}
+  );
+}catch(e){
+  phoneRegionNames=null;
+}
+
+function getPhoneCountryName(country){
+  try{
+    return phoneRegionNames &&
+      phoneRegionNames.of(country)
+      ? phoneRegionNames.of(country)
+      : country;
+  }catch(e){
+    return country;
+  }
+}
+
+function getPhoneCountryFlag(country){
+  return String(country || '').replace(
+    /./g,
+    function(letter){
+      return String.fromCodePoint(
+        letter.charCodeAt(0)+127397
+      );
+    }
+  );
+}
+
+var phoneTimezoneCountry={
+  'Asia/Tashkent':'UZ',
+  'Asia/Almaty':'KZ',
+  'Asia/Bishkek':'KG',
+  'Asia/Dhaka':'BD',
+  'Asia/Karachi':'PK',
+  'Asia/Kolkata':'IN',
+  'Asia/Dubai':'AE',
+  'Asia/Riyadh':'SA',
+  'Asia/Tehran':'IR',
+  'Asia/Baghdad':'IQ',
+  'Asia/Jerusalem':'IL',
+  'Asia/Baku':'AZ',
+  'Asia/Tbilisi':'GE',
+  'Europe/Moscow':'RU',
+  'Europe/Istanbul':'TR',
+  'Europe/Kyiv':'UA',
+  'Europe/Kiev':'UA',
+  'Europe/Berlin':'DE',
+  'Europe/Paris':'FR',
+  'Europe/London':'GB',
+  'Europe/Rome':'IT',
+  'Europe/Madrid':'ES',
+  'Africa/Cairo':'EG',
+  'Africa/Johannesburg':'ZA',
+  'America/New_York':'US',
+  'America/Chicago':'US',
+  'America/Denver':'US',
+  'America/Los_Angeles':'US',
+  'America/Toronto':'CA',
+  'America/Sao_Paulo':'BR',
+  'Australia/Sydney':'AU',
+  'Pacific/Auckland':'NZ'
+};
+
+function detectPhoneCountry(){
+  try{
+    var language=navigator.language || '';
+
+    var regionMatch=language.match(
+      /[-_]([A-Z]{2})$/i
+    );
+
+    var region=regionMatch
+      ? regionMatch[1].toUpperCase()
+      : '';
+
+    if(
+      region &&
+      phoneCountries.indexOf(region)!==-1
+    ){
+      return region;
+    }
+
+    var timezone=
+      Intl.DateTimeFormat()
+        .resolvedOptions()
+        .timeZone;
+
+    var timezoneCountry=
+      phoneTimezoneCountry[timezone];
+
+    if(
+      timezoneCountry &&
+      phoneCountries.indexOf(timezoneCountry)!==-1
+    ){
+      return timezoneCountry;
+    }
+  }catch(e){}
+
+  return 'US';
+}
+
+var phoneCountry=
+  document.getElementById('businessPhoneCountry');
+
+var phoneCode=
+  document.getElementById('businessPhoneCode');
+
+var phoneInput=
+  document.getElementById('businessPhone');
+
+function populatePhoneCountries(){
+  phoneCountry.innerHTML='';
+
+  phoneCountries.forEach(function(country){
+    var option=document.createElement('option');
+
+    option.value=country;
+
+    option.textContent=
+      getPhoneCountryFlag(country)+' '+
+      getPhoneCountryName(country)+
+      ' +'+phoneCountryCodes[country];
+
+    phoneCountry.appendChild(option);
+  });
+}
+
+populatePhoneCountries();
+
+var initialPhoneCountry=
+  detectPhoneCountry();
+
+if(
+  phoneCountries.indexOf(initialPhoneCountry)!==-1
+){
+  phoneCountry.value=initialPhoneCountry;
+}
+
+function updatePhoneCode(){
+  var code=
+    phoneCountryCodes[phoneCountry.value] || '998';
+
+  phoneCode.textContent='+'+code;
+}
+
+phoneCountry.addEventListener('change',function(){
+  updatePhoneCode();
+
+  phoneInput.value=
+    phoneInput.value.replace(/\D/g,'');
+});
+
+phoneInput.addEventListener('input',function(){
+  phoneInput.value=
+    phoneInput.value.replace(/\D/g,'');
+});
+
+updatePhoneCode();
+var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var auth=document.getElementById('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
+function err(msg){error.textContent=msg;error.hidden=false}function clearErr(){error.hidden=true;error.textContent=''}
+function call(path,options){return fetch(api+path,options||{}).then(function(r){return r.json().catch(function(){return null}).then(function(d){if(!r.ok)throw new Error((d&&d.detail)||('Request failed ('+r.status+')'));return d})}).catch(function(e){if(e instanceof TypeError)throw new Error('Cannot connect to Bookly API: '+api);throw e})}
+window.booklyCall=call;
+window.booklySession=session;
+function goPricing(){call('/account/paddle/checkout-token',{headers:{Authorization:'Bearer '+session}}).then(function(d){location.href='pricing-v2.html?token='+encodeURIComponent(d.checkout_token)+'&api='+encodeURIComponent(api)}).catch(function(e){err(e.message);document.getElementById('checkout').disabled=false})}
+function showAccount(data){
+  document.documentElement.classList.add('session-ready');
+  
+  document.body.classList.add('logged-in');
+
+  showWorkspaceView('overview');
+  
+  auth.style.display='none';
+  account.style.display='block';
+
+  document.getElementById('accountText').textContent=
+    'Signed in as '+data.account.email+'. Your Bookly account is ready.';
+
+  document.getElementById('accountEmail').textContent=data.account.email;
+  document.getElementById('accountTelegram').textContent=
+    data.account.telegram_connected ? 'Connected' : 'Not connected';
+
+  if(data.account.telegram_connected){
+    connect.textContent='Open Bookly in Telegram';
+    connectStatus.textContent='Telegram is already connected.';
+    connect.onclick=createLink;
+  }else{
+    connect.textContent='Connect Telegram';
+    connectStatus.textContent='Telegram is not connected yet.';
+    connect.onclick=createLink;
+  }
+
+  loadBusinesses();
+}
+function loadBusinesses(){
+  call('/account/businesses',{
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  }).then(function(d){
+
+    var container=document.getElementById('businessesList');
+
+    if(!container)return;
+
+    container.innerHTML='';
+
+    if(!d.businesses || !d.businesses.length){
+      var empty=document.createElement('p');
+      empty.className='status';
+      empty.textContent='You do not have any businesses yet.';
+      container.appendChild(empty);
+      return;
+    }
+
+    d.businesses.forEach(function(business){
+
+      var item=document.createElement('div');
+      item.className='business-item' + (business.is_current ? ' is-current' : '');
+
+      var main=document.createElement('div');
+      main.className='business-item-main';
+
+      var name=document.createElement('div');
+      name.className='business-item-name';
+      name.textContent=business.name;
+
+      var meta=document.createElement('div');
+      meta.className='business-item-meta';
+
+      var status=document.createElement('span');
+      status.className='business-status';
+      status.textContent=
+        business.subscription_active
+          ? 'Active'
+          : 'Inactive';
+
+      meta.appendChild(status);
+
+      main.appendChild(name);
+      main.appendChild(meta);
+
+      var actions=document.createElement('div');
+      actions.className='business-item-actions';
+
+      var selectButton=document.createElement('button');
+      selectButton.type='button';
+      selectButton.className='business-select';
+      selectButton.textContent=
+        business.is_current
+          ? 'Selected'
+          : 'Select';
+
+      selectButton.disabled=!!business.is_current;
+
+      selectButton.onclick=function(){
+
+        selectButton.disabled=true;
+        selectButton.textContent='Selecting...';
+
+        call('/account/businesses/'+business.id+'/select',{
+          method:'POST',
+          headers:{
+            Authorization:'Bearer '+session
+          }
+        }).then(function(){
+          loadBusinesses();
+        }).catch(function(e){
+          err(e.message);
+          selectButton.disabled=false;
+          selectButton.textContent='Select';
+        });
+      };
+      var editButton=document.createElement('button');
+      editButton.type='button';
+      editButton.className='business-select';
+      editButton.textContent='Edit';
+
+      editButton.onclick=function(){
+        openEditBusinessModal(business);
+      };
+      var deleteButton=document.createElement('button');
+      deleteButton.type='button';
+      deleteButton.className='business-delete';
+      deleteButton.textContent='Delete';
+
+      deleteButton.onclick=function(){
+
+        var confirmed=confirm(
+          'Delete "'+business.name+'"? This will permanently remove this business and its data.'
+        );
+
+        if(!confirmed)return;
+
+        deleteButton.disabled=true;
+        deleteButton.textContent='Deleting...';
+
+        call('/account/businesses/'+business.id,{
+          method:'DELETE',
+          headers:{
+            Authorization:'Bearer '+session
+          }
+        }).then(function(){
+          loadBusinesses();
+        }).catch(function(e){
+          err(e.message);
+          deleteButton.disabled=false;
+          deleteButton.textContent='Delete';
+        });
+      };
+
+      actions.appendChild(selectButton);
+      actions.appendChild(editButton);
+      actions.appendChild(deleteButton);
+
+      item.appendChild(main);
+      item.appendChild(actions);
+
+      container.appendChild(item);
+    });
+
+  }).catch(function(e){
+    err(e.message);
+  });
+}
+function createLink(){clearErr();connect.disabled=true;connectStatus.textContent='Preparing secure Telegram connection…';call('/account/telegram-link',{headers:{Authorization:'Bearer '+session}}).then(function(d){window.location.href=d.telegram_url}).catch(function(e){connectStatus.textContent='';err(e.message)}).finally(function(){connect.disabled=false})}
+function check(){if(!session)return;call('/account/me',{headers:{Authorization:'Bearer '+session}}).then(showAccount).catch(function(){localStorage.removeItem('bookly_session');session='';document.documentElement.classList.remove('has-session');document.documentElement.classList.remove('session-ready');})}
+document.getElementById('loginTab').onclick=function(){mode='login';this.classList.add('active');document.getElementById('registerTab').classList.remove('active');submit.textContent='Sign in';document.getElementById('password').autocomplete='current-password';clearErr()};
+document.getElementById('registerTab').onclick=function(){mode='register';this.classList.add('active');document.getElementById('loginTab').classList.remove('active');submit.textContent='Create account';document.getElementById('password').autocomplete='new-password';clearErr()};
+document.getElementById('googleBtn').onclick=function(){err('Google sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};document.getElementById('appleBtn').onclick=function(){err('Apple sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};
+form.onsubmit=function(e){e.preventDefault();clearErr();submit.disabled=true;var isRegister=mode==='register';var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);window.booklySession=session;if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
+document.getElementById('billingCheckout').onclick=function(){
+  clearErr();
+  this.disabled=true;
+  goPricing();
+};
+document.getElementById('billingUpgrade').onclick=function(){
+  goPricing();
+};
+
+document.getElementById('billingDowngrade').onclick=function(){
+  goPricing();
+};
+var cancelConfirmModal=
+  document.getElementById('cancelConfirmModal');
+
+var cancelConfirmOk=
+  document.getElementById('cancelConfirmOk');
+
+var cancelConfirmCancel=
+  document.getElementById('cancelConfirmCancel');
+
+function openCancelConfirm(){
+  cancelConfirmModal.hidden=false;
+  cancelConfirmOk.focus();
+}
+
+function closeCancelConfirm(){
+  cancelConfirmModal.hidden=true;
+}
+
+cancelConfirmCancel.onclick=
+  closeCancelConfirm;
+
+cancelConfirmModal
+  .querySelector('.save-success-backdrop')
+  .onclick=
+  closeCancelConfirm;
+
+document.getElementById('billingCancel').onclick=function(){
+  openCancelConfirm();
+};
+
+cancelConfirmOk.onclick=function(){
+  var button=document.getElementById('billingCancel');
+
+  cancelConfirmOk.disabled=true;
+  cancelConfirmCancel.disabled=true;
+  cancelConfirmOk.textContent='Cancelling...';
+
+  call('/account/subscription/cancel',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(){
+    closeCancelConfirm();
+    loadBilling();
+  })
+  .catch(function(e){
+    cancelConfirmOk.disabled=false;
+    cancelConfirmCancel.disabled=false;
+    cancelConfirmOk.textContent='Cancel subscription';
+
+    document.getElementById('billingMessage').textContent=
+      e.message||'Unable to cancel subscription.';
+  });
+};
+
+document.getElementById('billingRestore').onclick=function(){
+  var button=this;
+  button.disabled=true;
+
+  call('/account/subscription/resume',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(){
+    loadBilling();
+  })
+  .catch(function(e){
+    document.getElementById('billingMessage').textContent=
+      e.message||'Unable to restore subscription.';
+  })
+  .finally(function(){
+    button.disabled=false;
+  });
+};
+
+document.getElementById('billingRestorePackage').onclick=function(){
+  var button=this;
+  button.disabled=true;
+
+  call('/account/subscription/resume-package',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(){
+    loadBilling();
+  })
+  .catch(function(e){
+    document.getElementById('billingMessage').textContent=
+      e.message||'Unable to restore package.';
+  })
+  .finally(function(){
+    button.disabled=false;
+  });
+};
+document.getElementById('checkout').onclick=function(){clearErr();this.disabled=true;goPricing()};document.getElementById('logout').onclick=function(){
+  localStorage.removeItem('bookly_session');
+  document.body.classList.remove('logged-in');
+  location.reload();
+};
+
+var businessModal=document.getElementById('businessModal');
+var saveSuccessModal=
+  document.getElementById('saveSuccessModal');
+
+var saveSuccessOk=
+  document.getElementById('saveSuccessOk');
+
+function showSaveSuccess(){
+  saveSuccessModal.hidden=false;
+  saveSuccessOk.focus();
+}
+
+function closeSaveSuccess(){
+  saveSuccessModal.hidden=true;
+}
+
+saveSuccessOk.addEventListener(
+  'click',
+  closeSaveSuccess
+);
+
+saveSuccessModal
+  .querySelector('.save-success-backdrop')
+  .addEventListener(
+    'click',
+    closeSaveSuccess
+);var saveSuccessModal=
+  document.getElementById('saveSuccessModal');
+
+var saveSuccessOk=
+  document.getElementById('saveSuccessOk');
+
+function showSaveSuccess(){
+  saveSuccessModal.hidden=false;
+  saveSuccessOk.focus();
+}
+
+function closeSaveSuccess(){
+  saveSuccessModal.hidden=true;
+}
+
+saveSuccessOk.addEventListener(
+  'click',
+  closeSaveSuccess
+);
+
+saveSuccessModal
+  .querySelector('.save-success-backdrop')
+  .addEventListener(
+    'click',
+    closeSaveSuccess
+);
+var businessForm=document.getElementById('businessForm');
+var closeBusinessModal=document.getElementById('closeBusinessModal');
+var cancelBusiness=document.getElementById('cancelBusiness');
+function setPhoneForEdit(phone){
+  var value=String(phone || '').trim();
+
+  if(!value){
+    phoneInput.value='';
+    phoneCountry.value=detectPhoneCountry();
+    updatePhoneCode();
+    return;
+  }
+
+  var detectedCountry='';
+
+  try{
+    var parsed=
+      phoneLib.parsePhoneNumberFromString(value);
+
+    if(parsed && parsed.country){
+      detectedCountry=parsed.country;
+    }
+  }catch(e){}
+
+  if(
+    detectedCountry &&
+    phoneCountries.indexOf(detectedCountry)!==-1
+  ){
+    phoneCountry.value=detectedCountry;
+  }
+
+  updatePhoneCode();
+
+  var digits=value.replace(/\D/g,'');
+  var code=phoneCountryCodes[phoneCountry.value] || '';
+
+  if(code && digits.indexOf(code)===0){
+    digits=digits.slice(code.length);
+  }
+
+  phoneInput.value=digits;
+}
+function openEditBusinessModal(business){
+  document.getElementById('businessName').value=
+    business.name || '';
+
+  document.getElementById('businessDescription').value=
+    business.description || '';
+
+  setPhoneForEdit(business.phone);
+
+  document.getElementById('businessAddress').value=
+    business.address || '';
+
+  setBusinessCoordinates(
+    business.latitude,
+    business.longitude
+  );
+
+setBusinessMapStatus('');
+
+  businessTimezoneIsEdit=true;
+  businessTimezonePickerOpen=false;
+  businessTimezonePicker.hidden=true;
+  businessTimezoneChange.hidden=true;
+
+  setBusinessTimezone(
+    business.timezone || 'Asia/Tashkent'
+  );
+
+  businessModal.dataset.editBusinessId=
+    String(business.id);
+
+  businessModal.querySelector('.card-label').textContent=
+    'EDIT BUSINESS';
+
+  businessModal.querySelector('h3').textContent=
+    'Edit business';
+
+  document.getElementById('createBusiness').textContent=
+    'Save changes';
+
+  businessModal.hidden=false;
+
+  setTimeout(function(){
+  initializeBusinessMap();
+
+  if(businessMap){
+    businessMap.invalidateSize();
+
+    var lat=parseFloat(
+      businessLatitudeInput.value
+    );
+
+    var lng=parseFloat(
+      businessLongitudeInput.value
+    );
+
+    if(
+      Number.isFinite(lat) &&
+      Number.isFinite(lng)
+    ){
+      updateBusinessMarker(
+        lat,
+        lng,
+        true
+      );
+    }
+  }
+},100);
+
+  document.getElementById('businessName').focus();
+}
+var businessMap=null;
+var businessMapMarker=null;
+var businessMapInitialized=false;
+
+var businessLatitudeInput=
+  document.getElementById('businessLatitude');
+
+var businessLongitudeInput=
+  document.getElementById('businessLongitude');
+
+var businessAddressInput=
+  document.getElementById('businessAddress');
+
+var businessLocateButton=
+  document.getElementById('businessLocate');
+
+var businessMapStatus=
+  document.getElementById('businessMapStatus');
+
+function setBusinessMapStatus(message){
+  businessMapStatus.textContent=message || '';
+}
+
+function setBusinessCoordinates(lat,lng){
+  businessLatitudeInput.value=
+    lat == null ? '' : String(lat);
+
+  businessLongitudeInput.value=
+    lng == null ? '' : String(lng);
+}
+
+async function reverseBusinessGeocode(lat,lng){
+  try{
+    setBusinessMapStatus('Finding address...');
+
+    var response=await fetch(
+      'https://nominatim.openstreetmap.org/reverse' +
+      '?format=jsonv2' +
+      '&lat='+encodeURIComponent(lat) +
+      '&lon='+encodeURIComponent(lng) +
+      '&accept-language=en'
+    );
+
+    if(!response.ok){
+      throw new Error('Reverse geocoding failed');
+    }
+
+    var data=await response.json();
+
+    if(data && data.display_name){
+      businessAddressInput.value=
+        data.display_name;
+
+      setBusinessMapStatus(
+        'Location selected'
+      );
+    }else{
+      setBusinessMapStatus(
+        'Location selected'
+      );
+    }
+  }catch(error){
+    setBusinessMapStatus(
+      'Location selected. Enter the address manually if needed.'
+    );
+  }
+}
+
+function updateBusinessMarker(lat,lng,moveMap){
+  if(!businessMap){
+    return;
+  }
+
+  if(!businessMapMarker){
+    businessMapMarker=
+      L.marker(
+        [lat,lng],
+        {draggable:true}
+      ).addTo(businessMap);
+
+    businessMapMarker.on(
+      'dragend',
+      function(){
+        var position=
+          businessMapMarker.getLatLng();
+
+        var nextLat=position.lat;
+        var nextLng=position.lng;
+
+        setBusinessCoordinates(
+          nextLat,
+          nextLng
+        );
+
+        reverseBusinessGeocode(
+          nextLat,
+          nextLng
+        );
+      }
+    );
+  }else{
+    businessMapMarker.setLatLng(
+      [lat,lng]
+    );
+  }
+
+  if(moveMap){
+    businessMap.setView(
+      [lat,lng],
+      16
+    );
+  }
+}
+
+function initializeBusinessMap(){
+  if(businessMapInitialized){
+    if(businessMap){
+      setTimeout(function(){
+        businessMap.invalidateSize();
+      },100);
+    }
+
+    return;
+  }
+
+  if(!window.L){
+    setBusinessMapStatus(
+      'Map is unavailable.'
+    );
+    return;
+  }
+
+  var latitude=
+    parseFloat(
+      businessLatitudeInput.value
+    );
+
+  var longitude=
+    parseFloat(
+      businessLongitudeInput.value
+    );
+
+  var hasCoordinates=
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude);
+
+  if(!hasCoordinates){
+    latitude=41.2995;
+    longitude=69.2401;
+  }
+
+  businessMap=
+    L.map('businessMap')
+      .setView(
+        [latitude,longitude],
+        hasCoordinates ? 16 : 12
+      );
+
+  L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution:
+        '&copy; OpenStreetMap contributors'
+    }
+  ).addTo(businessMap);
+
+  businessMapInitialized=true;
+
+  if(hasCoordinates){
+    updateBusinessMarker(
+      latitude,
+      longitude,
+      false
+    );
+  }
+
+  setTimeout(function(){
+    businessMap.invalidateSize();
+  },100);
+}
+
+function locateBusiness(){
+  if(!navigator.geolocation){
+    setBusinessMapStatus(
+      'Geolocation is not supported by this browser.'
+    );
+    return;
+  }
+
+  businessLocateButton.disabled=true;
+  setBusinessMapStatus(
+    'Finding your location...'
+  );
+
+  navigator.geolocation.getCurrentPosition(
+    function(position){
+      var lat=
+        position.coords.latitude;
+
+      var lng=
+        position.coords.longitude;
+
+      setBusinessCoordinates(
+        lat,
+        lng
+      );
+
+      initializeBusinessMap();
+
+      updateBusinessMarker(
+        lat,
+        lng,
+        true
+      );
+
+      reverseBusinessGeocode(
+        lat,
+        lng
+      );
+
+      businessLocateButton.disabled=false;
+    },
+    function(error){
+      businessLocateButton.disabled=false;
+
+      var message=
+        'Unable to determine your location.';
+
+      if(error.code===1){
+        message=
+          'Location permission was denied.';
+      }else if(error.code===2){
+        message=
+          'Your location is unavailable.';
+      }else if(error.code===3){
+        message=
+          'Location request timed out.';
+      }
+
+      setBusinessMapStatus(message);
+    },
+    {
+      enableHighAccuracy:true,
+      timeout:15000,
+      maximumAge:0
+    }
+  );
+}
+
+businessLocateButton.addEventListener(
+  'click',
+  locateBusiness
+);
+function openBusinessModal(){
+  businessForm.reset();
+
+  delete businessModal.dataset.editBusinessId;
+
+  businessTimezoneIsEdit=false;
+  businessTimezonePickerOpen=false;
+  businessTimezonePicker.hidden=true;
+  businessTimezoneChange.hidden=false;
+
+  setBusinessTimezone(
+    detectBusinessTimezone()
+  );
+
+  businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
+  businessModal.querySelector('h3').textContent='Add business';
+
+  document.getElementById('createBusiness').textContent='Create business';
+
+  businessModal.hidden=false;
+
+  setBusinessCoordinates(null,null);
+businessAddressInput.value='';
+setBusinessMapStatus('');
+
+setTimeout(function(){
+  initializeBusinessMap();
+
+  if(businessMap){
+    businessMap.invalidateSize();
+    businessMap.setView(
+      [41.2995,69.2401],
+      12
+    );
+
+    if(businessMapMarker){
+      businessMap.removeLayer(
+        businessMapMarker
+      );
+      businessMapMarker=null;
+    }
+  }
+},100);
+
+  document.getElementById('businessName').focus();
+}
+
+function closeBusinessModalWindow(){
+  businessModal.hidden=true;
+}
+
+closeBusinessModal.onclick=function(e){
+  e.preventDefault();
+  e.stopPropagation();
+  businessModal.hidden=true;
+};
+
+document.getElementById('addBusiness').onclick=openBusinessModal;
+
+closeBusinessModal.addEventListener(
+  'click',
+  function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    closeBusinessModalWindow();
+  }
+);
+cancelBusiness.onclick=closeBusinessModalWindow;
+
+businessModal.querySelector('.business-modal-backdrop').onclick=
+  closeBusinessModalWindow;
+
+businessForm.onsubmit=function(e){
+  e.preventDefault();
+  clearErr();
+
+  var createButton=document.getElementById('createBusiness');
+
+  var editBusinessId=businessModal.dataset.editBusinessId || '';
+  var isEdit=!!editBusinessId;
+
+  var requestUrl=isEdit
+    ? api+'/account/businesses/'+encodeURIComponent(editBusinessId)
+    : api+'/account/businesses';
+
+  var requestMethod=isEdit ? 'PUT' : 'POST';
+
+  createButton.disabled=true;
+  createButton.textContent=isEdit
+    ? 'Saving...'
+    : 'Creating...';
+
+  fetch(requestUrl,{
+    method:requestMethod,
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+session
+    },
+    body:JSON.stringify({
+      name:document.getElementById('businessName').value.trim(),
+
+      description:
+        document.getElementById('businessDescription')
+          .value
+          .trim(),
+
+      phone:(function(){
+        var digits=
+          document.getElementById('businessPhone')
+            .value
+            .replace(/\D/g,'');
+
+        var country=
+          document.getElementById('businessPhoneCountry')
+            .value;
+
+        var code=
+          phoneCountryCodes[country] || '';
+
+        return digits
+          ? '+'+code+digits
+          : '';
+      })(),
+
+      address:
+        document.getElementById('businessAddress')
+          .value
+          .trim(),
+
+      latitude:(function(){
+        var value=
+          parseFloat(
+            document.getElementById('businessLatitude').value
+          );
+
+        return Number.isFinite(value)
+          ? value
+          : null;
+      })(),
+
+      longitude:(function(){
+        var value=
+          parseFloat(
+            document.getElementById('businessLongitude').value
+          );
+
+        return Number.isFinite(value)
+          ? value
+          : null;
+      })(),
+
+      timezone:
+        document.getElementById('businessTimezone')
+          .value
+          .trim() || 'Asia/Tashkent'
+    })
+  })
+  .then(function(r){
+    return r.json().then(function(d){
+      if(!r.ok){
+        throw new Error(
+          d.detail ||
+          d.error ||
+          (isEdit
+            ? 'Failed to update business'
+            : 'Failed to create business')
+        );
+      }
+
+      return d;
+    });
+  })
+  .then(function(){
+  closeBusinessModalWindow();
+
+  delete businessModal.dataset.editBusinessId;
+
+  businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
+  businessModal.querySelector('h3').textContent='Add business';
+
+  document.getElementById('createBusiness').textContent='Create business';
+
+  loadBusinesses();
+
+  if(isEdit){
+    showSaveSuccess();
+  }
+})
+  .catch(function(e){
+    err(e.message);
+  })
+  .finally(function(){
+    createButton.disabled=false;
+
+    createButton.textContent=isEdit
+      ? 'Save changes'
+      : 'Create business';
+  });
+};
+function loadBilling(){
+  var businessEl=document.getElementById('billingBusiness');
+  var statusEl=document.getElementById('billingStatus');
+  var planEl=document.getElementById('billingPlan');
+  var servicesEl=document.getElementById('billingServices');
+  var priceEl=document.getElementById('billingPrice');
+  var expiresEl=document.getElementById('billingExpires');
+  var checkoutButton=document.getElementById('billingCheckout');
+  var actionsEl=document.getElementById('billingActions');
+  var upgradeButton=document.getElementById('billingUpgrade');
+  var downgradeButton=document.getElementById('billingDowngrade');
+  var cancelButton=document.getElementById('billingCancel');
+  var restoreButton=document.getElementById('billingRestore');
+  var restorePackageButton=document.getElementById('billingRestorePackage');
+  var messageEl=document.getElementById('billingMessage');
+
+  if(!businessEl)return;
+
+  messageEl.textContent='';
+  actionsEl.hidden=true;
+  checkoutButton.hidden=true;
+  upgradeButton.hidden=true;
+  downgradeButton.hidden=true;
+  cancelButton.hidden=true;
+  restoreButton.hidden=true;
+  restorePackageButton.hidden=true;
+
+  call('/account/billing',{
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(d){
+    var business=d.business;
+    var subscription=d.subscription;
+
+    businessEl.textContent='Subscription for '+business.name;
+
+    var active=!!subscription.active;
+    var cancelled=subscription.status==='cancelled';
+    var pendingLimit=subscription.pending_services_limit;
+
+    statusEl.textContent=cancelled ? 'Cancelling' : (active ? 'Active' : 'Inactive');
+    statusEl.className='billing-status '+(active ? 'active' : 'inactive');
+
+    planEl.textContent=active ? 'Bookly plan' : 'No active plan';
+
+    servicesEl.textContent=active
+      ? String(subscription.services_limit)
+      : '—';
+
+    priceEl.textContent=subscription.current_price
+      ? '$'+Number(subscription.current_price).toFixed(2)
+      : '—';
+
+    if(subscription.expires_at){
+      var expires=new Date(subscription.expires_at);
+      expiresEl.textContent=expires.toLocaleDateString(undefined,{
+        year:'numeric',
+        month:'short',
+        day:'numeric'
+      });
+    }else{
+      expiresEl.textContent='—';
+    }
+
+    if(active){
+  actionsEl.hidden=false;
+  checkoutButton.hidden=true;
+
+  var currentLimit=Number(subscription.services_limit || 10);
+
+  if(cancelled){
+    upgradeButton.hidden=true;
+    downgradeButton.hidden=true;
+    cancelButton.hidden=true;
+    restoreButton.hidden=false;
+    restorePackageButton.hidden=true;
+
+    messageEl.textContent=
+      subscription.cancel_at
+        ? 'Your subscription remains active until '+
+          new Date(subscription.cancel_at).toLocaleDateString(
+            undefined,
+            {
+              year:'numeric',
+              month:'short',
+              day:'numeric'
+            }
+          )+
+          '. After that, it will end.'
+        : 'Your subscription is scheduled to end at the end of the current billing period.';
+  }else{
+    upgradeButton.hidden=currentLimit>=100;
+    downgradeButton.hidden=currentLimit<=10;
+    cancelButton.hidden=false;
+    restoreButton.hidden=true;
+
+    if(pendingLimit){
+      downgradeButton.hidden=true;
+      restorePackageButton.hidden=false;
+
+      var pendingPrice=subscription.pending_price;
+      var accessUntil='';
+
+      if(subscription.expires_at){
+        var pendingDate=new Date(subscription.expires_at);
+        accessUntil=pendingDate.toLocaleDateString(undefined,{
+          year:'numeric',
+          month:'short',
+          day:'numeric'
+        });
+      }
+
+      messageEl.textContent=
+        'Your current package remains active until '+
+        accessUntil+
+        '. After that, it will change to '+
+        pendingLimit+
+        ' services'+
+        (
+          pendingPrice
+            ? ' at $'+Number(pendingPrice).toFixed(2)
+            : ''
+        )+
+        '.';
+    }else{
+      restorePackageButton.hidden=true;
+    }
+  }
+}else{
+  actionsEl.hidden=true;
+  checkoutButton.hidden=false;
+  checkoutButton.textContent='Continue to plans';
+}
+  })
+  .catch(function(e){
+    messageEl.textContent=e.message||'Unable to load billing.';
+  });
+}
+function showWorkspaceView(view){
+
+var overview=document.getElementById('overviewView');
+var businesses=document.getElementById('businessesView');
+var billing=document.getElementById('billingView');
+
+  if(overview){
+    overview.classList.toggle(
+      'active',
+      view==='overview'
+    );
+  }
+
+  if(businesses){
+    businesses.classList.toggle(
+      'active',
+      view==='businesses'
+    );
+  }
+
+  if(billing){
+  billing.classList.toggle(
+    'active',
+    view==='billing'
+  );
+}
+
+  document.querySelectorAll('.workspace-nav-item').forEach(
+    function(button){
+
+      var target=button.dataset.view;
+
+      button.classList.toggle(
+        'active',
+        target===view
+      );
+    }
+  );
+}       
+document.querySelectorAll('.workspace-nav-item').forEach(
+  function(button){
+
+    button.onclick=function(){
+
+      var view=button.dataset.view;
+
+if(
+  view==='overview' ||
+  view==='businesses' ||
+  view==='billing'
+){
+  showWorkspaceView(view);
+
+  if(view==='billing'){
+    loadBilling();
+  }
+}
+
+    };
+
+  }
+);            
+check();
+})();
+</script>
+  
+<div id="packageModal" class="package-modal" hidden>
+  <div class="package-modal-backdrop"></div>
+
+  <div class="package-modal-card">
+
+    <div class="package-modal-head">
+      <div>
+        <span class="card-label">BILLING</span>
+        <h3 id="packageModalTitle">Choose package</h3>
+        <p id="packageModalDescription">
+          Select the package you want to use.
+        </p>
+      </div>
+
+      <button
+        id="packageModalClose"
+        class="business-modal-close"
+        type="button"
+        aria-label="Close"
+      >
+        ×
+      </button>
+    </div>
+
+    <div id="packageOptions" class="package-options"></div>
+
+    <div id="packageModalMessage" class="status"></div>
+
+  </div>
+</div>
+
+<div id="packageConfirmModal" class="save-success-modal" hidden>
+  <div class="save-success-backdrop"></div>
+
+  <div class="save-success-card">
+
+    <div class="save-success-icon">?</div>
+
+    <h3 id="packageConfirmTitle">Confirm package change</h3>
+
+    <p id="packageConfirmText">
+      Are you sure you want to change your package?
+    </p>
+
+    <div class="business-modal-actions">
+      <button
+        id="packageConfirmCancel"
+        class="business-cancel"
+        type="button"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="packageConfirmOk"
+        class="primary"
+        type="button"
+      >
+        Confirm
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var billingPackageLimits=[10,20,30,50,100];
+
+function openPackageModal(mode){
+  var modal=document.getElementById('packageModal');
+  var title=document.getElementById('packageModalTitle');
+  var description=document.getElementById('packageModalDescription');
+  var options=document.getElementById('packageOptions');
+  var message=document.getElementById('packageModalMessage');
+
+  var servicesText=document.getElementById('billingServices').textContent;
+  var currentLimit=parseInt(servicesText,10);
+
+  if(!currentLimit){
+    return;
+  }
+
+  modal.dataset.mode=mode;
+  modal.dataset.currentLimit=String(currentLimit);
+
+  title.textContent=mode==='upgrade'
+    ? 'Upgrade package'
+    : 'Downgrade package';
+
+  description.textContent=mode==='upgrade'
+    ? 'Choose a package with more services.'
+    : 'Choose a package with fewer services.';
+
+  message.textContent='';
+  options.innerHTML='';
+
+  billingPackageLimits.forEach(function(limit){
+    var allowed=mode==='upgrade'
+      ? limit>currentLimit
+      : limit<currentLimit;
+
+    if(!allowed){
+      return;
+    }
+
+    var button=document.createElement('button');
+    button.type='button';
+    button.className='package-option';
+
+    button.innerHTML=
+      '<div>'+
+        '<strong>'+limit+' services</strong>'+
+        '<span>'+
+          (mode==='upgrade'
+            ? 'Upgrade now'
+            : 'Change next billing period')+
+        '</span>'+
+      '</div>'+
+      '<div class="package-option-price">Select</div>';
+
+    button.onclick=function(){
+      changeBillingPackage(limit,mode);
+    };
+
+    options.appendChild(button);
+  });
+
+  modal.hidden=false;
+}
+
+function closePackageModal(){
+  document.getElementById('packageModal').hidden=true;
+}
+
+function changeBillingPackage(limit,mode){
+  var confirmModal=
+    document.getElementById(
+      'packageConfirmModal'
+    );
+
+  var confirmTitle=
+    document.getElementById(
+      'packageConfirmTitle'
+    );
+
+  var confirmText=
+    document.getElementById(
+      'packageConfirmText'
+    );
+
+  var confirmOk=
+    document.getElementById(
+      'packageConfirmOk'
+    );
+
+  var message=
+    document.getElementById(
+      'packageModalMessage'
+    );
+
+  var currentLimit=
+    document.getElementById(
+      'packageModal'
+    ).dataset.currentLimit;
+
+  confirmTitle.textContent=
+    mode==='upgrade'
+      ? 'Upgrade package'
+      : 'Downgrade package';
+
+  confirmOk.disabled=true;
+  confirmOk.textContent='Calculating...';
+
+  confirmModal.hidden=false;
+
+  confirmText.textContent=
+    'Calculating the billing impact...';
+
+  booklyCall(
+    '/account/subscription/preview-limit',
+    {
+      method:'POST',
+      headers:{
+        Authorization:
+          'Bearer '+booklySession,
+        'Content-Type':
+          'application/json'
+      },
+      body:JSON.stringify({
+        services_limit:limit
+      })
+    }
+  )
+  .then(function(d){
+    if(!d || d.ok!==true){
+      throw new Error(
+        (d && (d.detail || d.error)) ||
+        'Unable to preview package change.'
+      );
+    }
+
+    var interval=
+      d.billing_interval==='year'
+        ? 'year'
+        : 'month';
+
+    var intervalLabel=
+      interval==='year'
+        ? 'year'
+        : 'month';
+
+    var currentPrice=
+      Number(d.current_price || 0)
+        .toFixed(2);
+
+    var newPrice=
+      Number(d.new_price || 0)
+        .toFixed(2);
+
+    var dueToday=
+      Number(d.due_today || 0)
+        .toFixed(2);
+
+    var dueTodayTax=
+      Number(d.due_today_tax || 0)
+        .toFixed(2);
+ 
+        var currentBasePrice=
+      Number(d.current_base_price || 0)
+        .toFixed(2);
+
+    var currentAddonPrice=
+      Number(d.current_addon_price || 0)
+        .toFixed(2);
+
+    var newBasePrice=
+      Number(d.new_base_price || 0)
+        .toFixed(2);
+
+    var newAddonPrice=
+      Number(d.new_addon_price || 0)
+        .toFixed(2);
+
+    var text=
+      'Current package: '+
+      currentLimit+
+      ' services\n\n'+
+      'Bookly Pro: $'+
+      currentBasePrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'Services package: $'+
+      currentAddonPrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'Current total: $'+
+      currentPrice+
+      '/'+
+      intervalLabel+
+      '\n\n'+
+      'New package: '+
+      limit+
+      ' services\n\n'+
+      'Bookly Pro: $'+
+      newBasePrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'Services package: $'+
+      newAddonPrice+
+      '/'+
+      intervalLabel+
+      '\n'+
+      'New total: $'+
+      newPrice+
+      '/'+
+      intervalLabel+
+      '\n\n';
+
+    if(mode==='upgrade'){
+      text+=
+        'Due today\n'+
+        'Package difference: $'+
+        (
+          Number(dueToday) -
+          Number(dueTodayTax)
+        ).toFixed(2)+
+        '\n'+
+        'VAT: $'+
+        dueTodayTax+
+        '\n'+
+        'Total due today: $'+
+        dueToday+
+        '\n\n'+
+        'The new package will be applied immediately.';
+    }else{
+      text+=
+        'Due today: $0.00\n\n'+
+        'The new package will start from the next billing period.';
+    }
+
+    confirmText.textContent=text;
+
+    confirmModal.dataset.limit=
+      String(limit);
+
+    confirmModal.dataset.mode=
+      mode;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? 'Upgrade'
+        : 'Downgrade';
+
+    confirmOk.disabled=false;
+  })
+  .catch(function(e){
+    confirmModal.hidden=true;
+
+    message.textContent=
+      e.message ||
+      'Unable to preview package change.';
+  });
+}
+
+function confirmBillingPackageChange(){
+  var confirmModal=document.getElementById('packageConfirmModal');
+  var confirmOk=document.getElementById('packageConfirmOk');
+  var cancelButton=document.getElementById('packageConfirmCancel');
+  var message=document.getElementById('packageModalMessage');
+  var limit=Number(confirmModal.dataset.limit);
+  var mode=confirmModal.dataset.mode;
+
+  confirmOk.disabled=true;
+  cancelButton.disabled=true;
+  confirmOk.textContent='Updating...';
+
+  message.textContent='Updating package...';
+
+  booklyCall('/account/subscription/change-limit',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+booklySession,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      services_limit:limit
+    })
+  })
+  .then(function(d){
+    if(!d || d.ok!==true){
+      throw new Error(
+        (d && (d.detail || d.error)) ||
+        'Unable to change package.'
+      );
+    }
+
+    confirmOk.textContent='Updated';
+
+    return new Promise(function(resolve){
+      setTimeout(resolve,500);
+    });
+  })
+  .then(function(){
+    confirmModal.hidden=true;
+    closePackageModal();
+
+    setTimeout(function(){
+    window.location.reload();
+    },500);
+  })
+  .catch(function(e){
+    confirmOk.disabled=false;
+    cancelButton.disabled=false;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? 'Upgrade'
+        : 'Downgrade';
+
+    message.textContent=
+      e.message ||
+      'Unable to change package.';
+  });
+}
+document.getElementById('packageConfirmOk').onclick=function(){
+  confirmBillingPackageChange();
+};
+
+document.getElementById('packageConfirmCancel').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.querySelector('#packageConfirmModal .save-success-backdrop').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.getElementById('billingUpgrade').onclick=function(){
+  openPackageModal('upgrade');
+};
+
+document.getElementById('billingDowngrade').onclick=function(){
+  openPackageModal('downgrade');
+};
+
+document.getElementById('packageModalClose').onclick=function(){
+  closePackageModal();
+};
+
+document.querySelector('#packageModal .package-modal-backdrop').onclick=function(){
+  closePackageModal();
+};
+</script>
+</body></html>
