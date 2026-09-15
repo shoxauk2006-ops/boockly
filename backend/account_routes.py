@@ -112,6 +112,22 @@ with engine.begin() as conn:
                     """
                 )
             )
+
+    conn.execute(
+        text(
+            """
+            UPDATE bookly_accounts
+            SET free_trial_used = TRUE
+            WHERE free_trial_used = FALSE
+              AND EXISTS (
+                  SELECT 1
+                  FROM telegram_user_languages
+                  WHERE telegram_user_languages.telegram_user_id = -bookly_accounts.id
+                    AND telegram_user_languages.free_trial_used = TRUE
+              )
+            """
+        )
+    )
         if id_info and not id_info["column_default"] and id_info["is_identity"] != "YES":
             conn.execute(text("CREATE SEQUENCE IF NOT EXISTS bookly_telegram_links_id_seq"))
             next_id = conn.execute(text(
