@@ -1,0 +1,53 @@
+name: one-shot-pricing-layout
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-pricing-layout.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update landing pricing layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('frontend/public/landing.html')
+          s=p.read_text()
+          old='''<div class="pricing"><div class="price-card"><div class="price-top"><strong>Bookly Pro</strong><span class="badge" id="pBadge1">Monthly</span></div><div class="price">$7.99 <small id="pMonth">/ month</small></div><p id="pDesc1">Up to 10 services.</p><ul class="price-list"><li id="pLi1">10 services</li><li id="pLi2">Telegram booking</li><li id="pLi3">Booking management</li></ul><div class="price-note" id="pNote1">7-day free trial on monthly plans.</div><a class="btn btn-purple" href="/pricing.html" data-k="viewPricing">View pricing</a></div><div class="price-card pro"><div class="price-top"><strong>Bookly Pro</strong><span class="badge" id="pBadge2">Yearly</span></div><div class="price">$79.99 <small id="pYear">/ year</small></div><p id="pDesc2">Up to 10 services.</p><ul class="price-list"><li id="pLi4">10 services</li><li id="pLi5">Telegram booking</li><li id="pLi6">Booking management</li></ul><div class="price-note" id="pNote2">Annual plans do not include a trial.</div><a class="btn btn-dark" href="/pricing.html" data-k="viewPricing">View pricing</a></div></div>'''
+          new='''<div class="pricing"><div class="price-card pro"><div class="price-top"><strong>Bookly Pro</strong><span class="badge" id="pBadge">Pro</span></div><div class="price-options"><div class="price-option"><div class="price">$7.99 <small id="pMonth">/ month</small></div><strong id="pMonthlyLabel">Monthly</strong></div><div class="price-option"><div class="price">$79.99 <small id="pYear">/ year</small></div><strong id="pYearlyLabel">Yearly</strong></div></div><p id="pDesc">Up to 10 services included.</p><ul class="price-list"><li id="pLi1">10 services</li><li id="pLi2">Telegram booking</li><li id="pLi3">Booking management</li></ul><div class="price-note" id="pNote">7-day free trial on monthly plans. Cancel anytime.</div><div class="price-limit" id="pLimit">Up to 10 services included. You can increase the limit up to 100 services.</div></div></div>'''
+          if old not in s: raise SystemExit('Expected pricing HTML block not found')
+          s=s.replace(old,new,1)
+          css_old='.pricing{display:grid;grid-template-columns:1fr 1fr;gap:18px}.price-card{border:1px solid var(--line);border-radius:24px;padding:30px}.price-card.pro{background:#111318;color:#fff;border-color:#111318}.price-top{display:flex;justify-content:space-between;align-items:center}.badge{font-size:10px;font-weight:800;background:#e8e9ff;color:#5657df;border-radius:99px;padding:6px 9px}.pro .badge{background:#30334a;color:#cdd0ff}.price{font-size:48px;letter-spacing:-.06em;font-weight:850;margin:25px 0 4px}.price small{font-size:13px;letter-spacing:0;color:#8d939d;font-weight:600}.price-card p{color:var(--muted);font-size:14px}.pro p{color:#aeb3bd}.price-list{padding:0;margin:25px 0;list-style:none}.price-list li{padding:9px 0;border-top:1px solid var(--line);font-size:13px}.pro .price-list li{border-color:#2c3038}.price-note{font-size:12px;color:#8a909a;line-height:1.5;margin:-8px 0 18px}'
+          css_new='.pricing{display:block;max-width:900px;margin:auto}.price-card{border:1px solid var(--line);border-radius:24px;padding:30px}.price-card.pro{background:#111318;color:#fff;border-color:#111318}.price-top{display:flex;justify-content:space-between;align-items:center}.badge{font-size:10px;font-weight:800;background:#30334a;color:#cdd0ff;border-radius:99px;padding:6px 9px}.price-options{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:8px 0 22px}.price-option{padding:0 0 18px;border-bottom:1px solid #2c3038}.price-option strong{font-size:12px;color:#aeb3bd}.price{font-size:48px;letter-spacing:-.06em;font-weight:850;margin:25px 0 4px}.price small{font-size:13px;letter-spacing:0;color:#8d939d;font-weight:600}.price-card p{color:#aeb3bd;font-size:14px}.price-list{padding:0;margin:25px 0;list-style:none}.price-list li{padding:9px 0;border-top:1px solid #2c3038;font-size:13px}.price-note{font-size:13px;color:#cdd0ff;line-height:1.5;margin:20px 0 10px;font-weight:700}.price-limit{font-size:13px;color:#aeb3bd;line-height:1.5;margin-top:8px}'
+          if css_old not in s: raise SystemExit('Expected pricing CSS block not found')
+          s=s.replace(css_old,css_new,1)
+          s=s.replace('.pricing,.faq,.features,.audience{grid-template-columns:1fr 1fr}', '.faq,.features,.audience{grid-template-columns:1fr 1fr}',1)
+          s=s.replace('.steps,.features,.audience,.pricing,.faq{grid-template-columns:1fr}', '.steps,.features,.audience,.faq{grid-template-columns:1fr}',1)
+          old_apply="set('pKicker',d.pricingKicker);set('pTitle',d.pricing);set('pCopy',d.pricingCopy);set('pBadge1',d.monthly);set('pBadge2',d.yearly);set('pMonth',d.month);set('pYear',d.year);set('pDesc1',d.upTo);set('pDesc2',d.upTo);set('pLi1',d.p[0][0]);set('pLi2',d.p[0][1]);set('pLi3',d.p[0][2]);set('pLi4',d.p[0][0]);set('pLi5',d.p[0][1]);set('pLi6',d.p[0][2]);set('pNote1',d.trial);set('pNote2',d.annual);"
+          new_apply="set('pKicker',d.pricingKicker);set('pTitle',d.pricing);set('pCopy',d.pricingCopy);set('pBadge',d.monthly);set('pMonthlyLabel',d.monthly);set('pYearlyLabel',d.yearly);set('pMonth',d.month);set('pYear',d.year);set('pDesc',d.upTo);set('pLi1',d.p[0][0]);set('pLi2',d.p[0][1]);set('pLi3',d.p[0][2]);set('pNote',d.trial+' '+(d.cancel||'Cancel anytime.'));set('pLimit',d.limit||d.upTo);"
+          if old_apply not in s: raise SystemExit('Expected pricing apply block not found')
+          s=s.replace(old_apply,new_apply,1)
+          reps={
+            "trial:'7-day free trial on monthly plans.'":"trial:'7-day free trial on monthly plans.',cancel:'Cancel anytime.',limit:'Up to 10 services included. You can increase the limit up to 100 services.'",
+            "trial:'7 дней бесплатного пробного периода на месячных планах.'":"trial:'7 дней бесплатного пробного периода на месячных планах.',cancel:'Отменить можно в любой момент.',limit:'Включено до 10 услуг. Лимит можно увеличить до 100 услуг.'",
+            "trial:'Oylik rejalar uchun 7 kunlik bepul sinov muddati.'":"trial:'Oylik rejalar uchun 7 kunlik bepul sinov muddati.',cancel:'Istalgan vaqtda bekor qilish mumkin.',limit:'10 tagacha xizmat kiritilgan. Limitni 100 tagacha oshirish mumkin.'",
+            "trial:'Aylık planlarda 7 günlük ücretsiz deneme.'":"trial:'Aylık planlarda 7 günlük ücretsiz deneme.',cancel:'İstediğiniz zaman iptal edebilirsiniz.',limit:'10 hizmete kadar dahildir. Limiti 100 hizmete kadar artırabilirsiniz.'",
+            "trial:'تجربة مجانية لمدة 7 أيام على الخطط الشهرية.'":"trial:'تجربة مجانية لمدة 7 أيام على الخطط الشهرية.',cancel:'يمكنك الإلغاء في أي وقت.',limit:'يتضمن ما يصل إلى 10 خدمات. يمكنك زيادة الحد إلى 100 خدمة.'"
+          }
+          for a,b in reps.items():
+              if a not in s: raise SystemExit('Expected translation trial string not found: '+a)
+              s=s.replace(a,b,1)
+          p.write_text(s)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/public/landing.html
+          git rm .github/workflows/one-shot-pricing-layout.yml
+          git commit -m 'Redesign landing pricing into one plan card'
+          git push
