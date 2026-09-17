@@ -1,0 +1,49 @@
+name: Directly remove Apple sign-in source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/direct-remove-apple-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Remove Apple from account-core.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/public/account-core.html')
+          s = p.read_text(encoding='utf-8')
+          old = '<div class="socials"><button class="social" id="googleBtn" type="button"><span>G</span> Continue with Google</button></div>'
+          if old in s:
+              pass
+          elif '<button class="social" id="appleBtn"' in s:
+              import re
+              s = re.sub(r'<button class="social" id="appleBtn"[^>]*>.*?</button>', '', s, count=1)
+          old_handler = "document.getElementById('googleBtn').onclick=function(){location.href=api+'/account/oauth/google/start'};\n"
+          apple_handler = "document.getElementById('appleBtn').onclick=function(){err('Apple sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};"
+          if apple_handler in s:
+              s = s.replace(apple_handler, '', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify Apple button is gone from source
+        run: |
+          ! grep -q 'id="appleBtn"' frontend/public/account-core.html
+          ! grep -q 'Continue with Apple' frontend/public/account-core.html
+      - name: Commit source change and remove this workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/direct-remove-apple-source.yml
+          git add frontend/public/account-core.html
+          git commit -m 'fix: remove Apple sign-in directly from account source'
+          git push
