@@ -1,0 +1,11 @@
+@import url('/home-visual-fix.css');
+
+/* Bookly — top chrome position refinement */
+.personal-home-menu{
+  top:0!important;
+}
+@media(max-width:520px){
+  .personal-home-menu{
+    top:0!important;
+  }
+}

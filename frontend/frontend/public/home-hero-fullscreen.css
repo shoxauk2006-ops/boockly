@@ -1,0 +1,97 @@
+/* Bookly Home — full-width Hero canvas */
+body:has(.personal-home) .personal-home{
+  background:
+    radial-gradient(circle at 88% 7%, rgba(17,17,17,.06), transparent 18%),
+    radial-gradient(circle at 8% 33%, rgba(255,255,255,.9), transparent 30%),
+    linear-gradient(180deg,#f8f9fa 0%,#f3f4f6 58%,#f6f7f9 100%)!important;
+}
+
+/* The Hero is content on the page, not a card. */
+body:has(.personal-home) .personal-home-hero{
+  min-height:390px!important;
+  margin:0!important;
+  padding:46px 20px 42px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+
+body:has(.personal-home) .personal-home-hero::before{
+  right:-46px!important;
+  bottom:-72px!important;
+  width:210px!important;
+  height:210px!important;
+  border-radius:60px!important;
+  font-size:166px!important;
+  transform:rotate(8deg)!important;
+}
+
+body:has(.personal-home) .personal-home-hero::after{
+  right:120px!important;
+  top:-28px!important;
+  width:150px!important;
+  height:150px!important;
+  border-color:rgba(17,17,17,.055)!important;
+  box-shadow:0 0 0 28px rgba(17,17,17,.018),0 0 0 56px rgba(17,17,17,.012)!important;
+}
+
+body:has(.personal-home) .personal-home-hero > *{
+  position:relative;
+  z-index:2;
+}
+
+body:has(.personal-home) .personal-home-hero h1{
+  max-width:70%!important;
+  margin:12px 0 14px!important;
+  font-size:clamp(36px,9vw,54px)!important;
+  line-height:.98!important;
+  letter-spacing:-2.1px!important;
+}
+
+body:has(.personal-home) .personal-home-hero p{
+  max-width:54%!important;
+  margin:0!important;
+  font-size:15px!important;
+  line-height:1.6!important;
+}
+
+/* Keep the next action block visibly separate from the page canvas. */
+body:has(.personal-home) .personal-home-hero + .personal-card{
+  margin-top:0!important;
+  border-radius:24px!important;
+}
+
+@media(max-width:520px){
+  body:has(.personal-home) .personal-home-hero{
+    min-height:390px!important;
+    padding:48px 18px 44px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero::before{
+    right:-58px!important;
+    bottom:-58px!important;
+    width:205px!important;
+    height:205px!important;
+    font-size:160px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero::after{
+    right:96px!important;
+    top:-24px!important;
+    width:128px!important;
+    height:128px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero h1{
+    max-width:76%!important;
+    font-size:35px!important;
+    letter-spacing:-1.7px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero p{
+    max-width:66%!important;
+    font-size:14px!important;
+  }
+}

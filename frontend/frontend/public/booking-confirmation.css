@@ -1,0 +1,79 @@
+/* Bookly Client — successful booking confirmation */
+body:has(.client-hero) .subscription-modal-overlay{
+  background:rgba(15,23,42,.34);
+  backdrop-filter:blur(8px);
+}
+body:has(.client-hero) .subscription-modal{
+  width:min(100% - 32px, 430px);
+  padding:28px 22px 22px;
+  border:1px solid #e4e7eb;
+  border-radius:26px;
+  background:linear-gradient(145deg,#fff 0%,#f8f9fb 100%);
+  box-shadow:0 28px 70px rgba(15,23,42,.18);
+  text-align:center;
+}
+body:has(.client-hero) .subscription-modal::before{
+  content:"✓";
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:68px;
+  height:68px;
+  margin:0 auto 16px;
+  border:1px solid #cde8d9;
+  border-radius:50%;
+  background:#edf9f2;
+  color:#177245;
+  font-size:30px;
+  font-weight:800;
+  box-shadow:0 10px 24px rgba(23,114,69,.10);
+}
+body:has(.client-hero) .subscription-modal .personal-eyebrow{
+  display:block;
+  margin-bottom:8px;
+  color:#8a919b;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+body:has(.client-hero) .subscription-modal h2{
+  margin:0;
+  color:#111;
+  font-size:24px;
+  line-height:1.08;
+  letter-spacing:-.7px;
+}
+body:has(.client-hero) .subscription-modal p.muted{
+  margin:12px auto 0;
+  max-width:330px;
+  color:#6f7782;
+  line-height:1.55;
+}
+body:has(.client-hero) .subscription-modal .primary.full{
+  margin-top:20px;
+  min-height:50px;
+  border-radius:15px;
+}
+body:has(.client-hero) .subscription-modal-close{
+  top:12px;
+  right:12px;
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:50%;
+  background:#f1f3f5;
+  color:#666d76;
+}
+@media(max-width:420px){
+  body:has(.client-hero) .subscription-modal{
+    width:min(100% - 24px,430px);
+    padding:26px 18px 18px;
+    border-radius:23px;
+  }
+  body:has(.client-hero) .subscription-modal::before{
+    width:62px;
+    height:62px;
+    font-size:27px;
+  }
+  body:has(.client-hero) .subscription-modal h2{font-size:22px}
+}

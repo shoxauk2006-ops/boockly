@@ -1,0 +1,110 @@
+/* Bookly Home — continuous artwork layer, with all UI content sitting above it. */
+body:has(.personal-home) .personal-home{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(460px 360px at 88% 18%,rgba(255,255,255,.96) 0%,rgba(255,255,255,.58) 38%,transparent 72%),
+    radial-gradient(420px 520px at 4% 42%,rgba(255,255,255,.9) 0%,transparent 68%),
+    radial-gradient(520px 520px at 90% 72%,rgba(17,17,17,.035) 0%,transparent 70%),
+    linear-gradient(180deg,#f7f8fa 0%,#f4f5f7 52%,#f6f7f9 100%)!important;
+}
+
+/* One page-wide artwork layer: decorative rings continue through the whole Home. */
+body:has(.personal-home) .personal-home::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 88% 19%,transparent 0 108px,rgba(17,17,17,.045) 109px 110px,transparent 111px 132px,rgba(17,17,17,.022) 133px 134px,transparent 135px 156px,rgba(17,17,17,.014) 157px 158px,transparent 159px),
+    radial-gradient(circle at 18% 58%,transparent 0 160px,rgba(17,17,17,.03) 161px 162px,transparent 163px 188px,rgba(17,17,17,.015) 189px 190px,transparent 191px),
+    linear-gradient(112deg,transparent 0 74%,rgba(17,17,17,.018) 74.1%,transparent 74.35%),
+    linear-gradient(72deg,transparent 0 63%,rgba(17,17,17,.014) 63.1%,transparent 63.3%);
+}
+
+/* Large B belongs to the page canvas, so it can sit behind any Home content. */
+body:has(.personal-home) .personal-home::after{
+  content:"B"!important;
+  position:absolute!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  width:230px!important;
+  height:230px!important;
+  right:-62px!important;
+  top:245px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:64px!important;
+  background:linear-gradient(145deg,#111 0%,#262626 100%)!important;
+  color:#fff!important;
+  font-size:178px!important;
+  line-height:.7!important;
+  font-weight:850!important;
+  letter-spacing:-18px!important;
+  transform:rotate(8deg)!important;
+  box-shadow:0 26px 60px rgba(15,23,42,.13)!important;
+}
+
+/* Hero itself is transparent content — no box, no local decoration. */
+body:has(.personal-home) .personal-home-hero{
+  position:relative!important;
+  z-index:2!important;
+  min-height:250px!important;
+  margin:0!important;
+  padding:28px 24px 24px 4px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+body:has(.personal-home) .personal-home-hero::before,
+body:has(.personal-home) .personal-home-hero::after{content:none!important;display:none!important}
+
+/* All actual interface layers stay above the global artwork. */
+body:has(.personal-home) .personal-home > :not(.personal-home-hero)::before,
+body:has(.personal-home) .personal-home > :not(.personal-home-hero)::after{pointer-events:none}
+body:has(.personal-home) .personal-home-hero > *,
+body:has(.personal-home) .personal-card,
+body:has(.personal-home) .personal-business-card,
+body:has(.personal-home) .personal-business-skeleton,
+body:has(.personal-home) .personal-page,
+body:has(.personal-home) .personal-bottom-nav,
+body:has(.personal-home) .personal-home-menu{position:relative!important;z-index:3!important}
+
+/* Let the page artwork subtly show through the foreground cards instead of ending at each card edge. */
+body:has(.personal-home) .personal-card{
+  background:rgba(255,255,255,.90)!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+}
+body:has(.personal-home) .personal-business-card{
+  background:linear-gradient(145deg,rgba(19,19,19,.97),rgba(41,41,41,.92))!important;
+}
+
+/* The info control stays in the top chrome, never inside the Hero canvas. */
+body:has(.personal-home) .personal-home-menu{
+  position:absolute!important;
+  top:8px!important;
+  right:4px!important;
+}
+
+@media(max-width:520px){
+  body:has(.personal-home) .personal-home::after{
+    width:194px!important;
+    height:194px!important;
+    right:-66px!important;
+    top:248px!important;
+    border-radius:54px!important;
+    font-size:150px!important;
+    letter-spacing:-15px!important;
+  }
+  body:has(.personal-home) .personal-home-hero{
+    min-height:252px!important;
+    padding:26px 18px 20px 4px!important;
+  }
+  body:has(.personal-home) .personal-card{background:rgba(255,255,255,.92)!important}
+}

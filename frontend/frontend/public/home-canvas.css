@@ -1,0 +1,130 @@
+/* Bookly Home — one shared canvas for the entire home screen.
+   The decorative hero artwork lives on the page, not inside a hero card. */
+body:has(.personal-home){
+  --bookly-home-bg:#f5f6f8;
+  background:var(--bookly-home-bg)!important;
+}
+
+body:has(.personal-home) .personal-home{
+  position:relative!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 92% 8%,rgba(255,255,255,.98) 0 10%,transparent 27%),
+    radial-gradient(circle at 5% 45%,rgba(255,255,255,.72) 0 9%,transparent 29%),
+    linear-gradient(180deg,#f7f8f9 0%,#f3f4f6 52%,#f1f2f4 100%)!important;
+}
+
+/* Decorative artwork is attached to the whole page, so it can sit behind
+   the heading, search area, business card and everything below it. */
+body:has(.personal-home) .personal-home::before{
+  content:"";
+  position:absolute!important;
+  z-index:0!important;
+  width:190px!important;
+  height:190px!important;
+  top:225px!important;
+  right:-58px!important;
+  border-radius:54px!important;
+  background:linear-gradient(145deg,#171717 0%,#292929 100%)!important;
+  color:#fff!important;
+  box-shadow:0 28px 60px rgba(15,23,42,.15)!important;
+  transform:rotate(7deg)!important;
+  pointer-events:none!important;
+}
+
+body:has(.personal-home) .personal-home::after{
+  content:"B";
+  position:absolute!important;
+  z-index:0!important;
+  top:246px!important;
+  right:-38px!important;
+  width:145px!important;
+  height:145px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  color:#fff!important;
+  font-size:120px!important;
+  line-height:.72!important;
+  font-weight:850!important;
+  letter-spacing:-15px!important;
+  transform:rotate(7deg)!important;
+  pointer-events:none!important;
+}
+
+/* Soft rings become part of the page background rather than the hero box. */
+body:has(.personal-home) .personal-home-hero::before,
+body:has(.personal-home) .personal-home-hero::after{
+  display:none!important;
+}
+
+/* Hero is content only. No card/window treatment and no local artwork. */
+body:has(.personal-home) .personal-home-hero{
+  position:relative!important;
+  z-index:2!important;
+  min-height:248px!important;
+  margin:0 0 10px!important;
+  padding:30px 38% 26px 4px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+
+/* Keep every real content layer above the page artwork. */
+body:has(.personal-home) .personal-home-hero > *,
+body:has(.personal-home) .personal-card,
+body:has(.personal-home) .personal-business-card,
+body:has(.personal-home) .personal-business-skeleton,
+body:has(.personal-home) .personal-page,
+body:has(.personal-home) .personal-bottom-nav,
+body:has(.personal-home) .personal-home-menu{
+  position:relative!important;
+  z-index:2!important;
+}
+
+/* Extend a subtle field of rings down the page so the artwork reads as a
+   continuous visual system behind subsequent blocks. */
+body:has(.personal-home) .personal-card::before{
+  content:"";
+  position:absolute;
+  width:260px;
+  height:260px;
+  right:-138px;
+  top:-110px;
+  border-radius:50%;
+  border:1px solid rgba(17,17,17,.055);
+  box-shadow:0 0 0 22px rgba(17,17,17,.018),0 0 0 44px rgba(17,17,17,.012);
+  pointer-events:none;
+}
+
+body:has(.personal-home) .personal-card,
+body:has(.personal-home) .personal-business-card{
+  overflow:hidden!important;
+}
+
+@media(max-width:520px){
+  body:has(.personal-home) .personal-home::before{
+    width:154px!important;
+    height:154px!important;
+    top:255px!important;
+    right:-42px!important;
+    border-radius:46px!important;
+  }
+
+  body:has(.personal-home) .personal-home::after{
+    top:274px!important;
+    right:-25px!important;
+    width:118px!important;
+    height:118px!important;
+    font-size:97px!important;
+    letter-spacing:-12px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero{
+    min-height:252px!important;
+    padding:28px 34% 24px 4px!important;
+    margin:0 0 12px!important;
+  }
+}

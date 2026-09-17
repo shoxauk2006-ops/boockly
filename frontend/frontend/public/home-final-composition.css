@@ -1,0 +1,180 @@
+/* Bookly Home — final composition
+   One continuous background canvas, foreground UI cards, fixed bottom navigation. */
+
+body:has(.personal-home){
+  background:#f5f6f8!important;
+}
+
+/* Extend the Home canvas to the full Mini App width without changing the content grid. */
+body:has(.personal-home) .personal-home{
+  position:relative!important;
+  width:calc(100% + 28px)!important;
+  max-width:none!important;
+  margin-left:-14px!important;
+  margin-right:-14px!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+  isolation:isolate!important;
+  background:
+    radial-gradient(520px 420px at 88% 14%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.58) 35%,transparent 70%),
+    radial-gradient(430px 500px at 8% 40%,rgba(255,255,255,.88) 0%,transparent 68%),
+    radial-gradient(520px 460px at 92% 72%,rgba(17,17,17,.035) 0%,transparent 72%),
+    linear-gradient(180deg,#f7f8fa 0%,#f3f4f6 50%,#f6f7f9 100%)!important;
+}
+
+/* Shared page artwork: broad rings and subtle directional lines. */
+body:has(.personal-home) .personal-home::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 88% 18%,transparent 0 102px,rgba(17,17,17,.048) 103px 104px,transparent 105px 126px,rgba(17,17,17,.024) 127px 128px,transparent 129px 151px,rgba(17,17,17,.014) 152px 153px,transparent 154px),
+    radial-gradient(circle at 16% 56%,transparent 0 148px,rgba(17,17,17,.028) 149px 150px,transparent 151px 178px,rgba(17,17,17,.014) 179px 180px,transparent 181px 208px,rgba(17,17,17,.008) 209px 210px,transparent 211px),
+    linear-gradient(108deg,transparent 0 71%,rgba(17,17,17,.016) 71.1%,transparent 71.28%),
+    linear-gradient(72deg,transparent 0 61%,rgba(17,17,17,.012) 61.1%,transparent 61.28%);
+}
+
+/* Large Bookly B is part of the global canvas and is intentionally behind UI cards. */
+body:has(.personal-home) .personal-home::after{
+  content:"B"!important;
+  position:absolute!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  top:310px!important;
+  right:-70px!important;
+  width:220px!important;
+  height:220px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:58px!important;
+  background:linear-gradient(145deg,#111 0%,#242424 100%)!important;
+  color:#fff!important;
+  font-size:172px!important;
+  line-height:.7!important;
+  font-weight:850!important;
+  letter-spacing:-18px!important;
+  transform:rotate(8deg)!important;
+  box-shadow:0 26px 60px rgba(15,23,42,.13)!important;
+}
+
+/* Hero itself is transparent page content — never a window. */
+body:has(.personal-home) .personal-home-hero{
+  position:relative!important;
+  z-index:2!important;
+  min-height:250px!important;
+  margin:0!important;
+  padding:28px 24px 24px 4px!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+
+body:has(.personal-home) .personal-home-hero::before,
+body:has(.personal-home) .personal-home-hero::after{
+  content:none!important;
+  display:none!important;
+}
+
+body:has(.personal-home) .personal-home-hero > *{
+  position:relative!important;
+  z-index:3!important;
+}
+
+/* Foreground cards sit over the shared artwork. */
+body:has(.personal-home) .personal-card,
+body:has(.personal-home) .personal-business-card,
+body:has(.personal-home) .personal-business-skeleton{
+  position:relative!important;
+  z-index:3!important;
+}
+
+/* Keep the cards visually independent while allowing the global artwork to continue around them. */
+body:has(.personal-home) .personal-card{
+  background:rgba(255,255,255,.93)!important;
+  border:1px solid rgba(224,228,233,.95)!important;
+  box-shadow:0 12px 32px rgba(15,23,42,.06)!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+}
+
+body:has(.personal-home) .personal-business-card{
+  background:linear-gradient(145deg,rgba(19,19,19,.98),rgba(39,39,39,.94))!important;
+}
+
+/* Info control belongs to the Bookly top area, not the Hero. */
+body:has(.personal-home) .personal-home-menu{
+  position:absolute!important;
+  top:8px!important;
+  right:10px!important;
+  z-index:20!important;
+}
+
+/* Navigation must stay pinned to the viewport and never scroll with the Home content. */
+body:has(.personal-home) .personal-bottom-nav{
+  position:fixed!important;
+  left:50%!important;
+  bottom:10px!important;
+  top:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(calc(100% - 28px),400px)!important;
+  margin:0!important;
+  z-index:10000!important;
+}
+
+/* Prevent content from being hidden behind the fixed navigation. */
+body:has(.personal-home){
+  padding-bottom:0!important;
+}
+body:has(.personal-home) .personal-home{
+  padding-bottom:150px!important;
+}
+
+@media(max-width:520px){
+  body:has(.personal-home) .personal-home{
+    width:calc(100% + 24px)!important;
+    margin-left:-12px!important;
+    margin-right:-12px!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+    padding-bottom:150px!important;
+  }
+
+  body:has(.personal-home) .personal-home::after{
+    top:322px!important;
+    right:-66px!important;
+    width:188px!important;
+    height:188px!important;
+    border-radius:52px!important;
+    font-size:145px!important;
+    letter-spacing:-15px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero{
+    min-height:250px!important;
+    padding:26px 20px 20px 4px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero h1{
+    max-width:74%!important;
+    font-size:34px!important;
+    letter-spacing:-1.7px!important;
+  }
+
+  body:has(.personal-home) .personal-home-hero p{
+    max-width:61%!important;
+    font-size:13px!important;
+  }
+
+  body:has(.personal-home) .personal-home-menu{
+    top:8px!important;
+    right:8px!important;
+  }
+}
