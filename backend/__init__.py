@@ -1,6 +1,9 @@
 # Load the standalone Bookly account/auth routes alongside the API app.
 from . import account_routes  # noqa: F401
 
+# Load Google OAuth routes after account models/helpers exist.
+from . import oauth_routes  # noqa: F401,E402
+
 # Load the web business onboarding flow.
 from . import account_onboarding  # noqa: F401,E402
 
