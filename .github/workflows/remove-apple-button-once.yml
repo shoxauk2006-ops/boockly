@@ -1,0 +1,58 @@
+name: Remove Apple button once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remove-apple-button-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Remove Apple UI and handler
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('frontend/public/account-core.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_button = '<button class="social" id="appleBtn" type="button"><span>●</span> Continue with Apple</button>'
+          if old_button in s:
+              s = s.replace(old_button, '', 1)
+
+          old_handlers = "document.getElementById('googleBtn').onclick=function(){err('Google sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};document.getElementById('appleBtn').onclick=function(){err('Apple sign-in will be enabled after OAuth provider configuration. Email registration is available now.')};"
+          new_handlers = "document.getElementById('googleBtn').onclick=function(){location.href=api+'/account/oauth/google/start'};"
+          if old_handlers in s:
+              s = s.replace(old_handlers, new_handlers, 1)
+
+          # One remaining social button should use the full row.
+          marker = '.socials{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:19px}'
+          replacement = '.socials{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:19px}'
+          if marker in s:
+              s = s.replace(marker, replacement, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Verify Apple is gone
+        run: |
+          ! grep -q 'id="appleBtn"' frontend/public/account-core.html
+
+      - name: Commit patch and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/public/account-core.html
+          rm -f .github/workflows/remove-apple-button-once.yml
+          git add .github/workflows/remove-apple-button-once.yml
+          git commit -m 'fix: remove Apple sign-in button from account page [apple-removed]'
+          git push
