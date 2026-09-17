@@ -1,0 +1,40 @@
+name: Wire account guest i18n
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wire-account-guest-i18n.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Wire guest layer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('frontend/public/account.html')
+          s=p.read_text(encoding='utf-8')
+          old='var injected=\'<script src="account-page-i18n.js"><\\/script>'
+          new='var injected=\'<script src="account-page-i18n.js"><\\/script><script src="account-guest-i18n.js"><\\/script>'
+          if old not in s:
+              raise SystemExit('account.html injection anchor not found')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          req=Path('backend/requirements.txt')
+          r=req.read_text(encoding='utf-8')
+          for dep in ['PyJWT[crypto]==2.10.1','python-multipart==0.0.20']:
+              if dep not in r: r += ('\n' if not r.endswith('\n') else '')+dep+'\n'
+          req.write_text(r,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add frontend/public/account.html backend/requirements.txt
+          git commit -m 'fix: wire account guest i18n [account-guest-i18n]' || exit 0
+          git push
