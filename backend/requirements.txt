@@ -6,5 +6,3 @@ pydantic==2.11.7
 psycopg[binary]==3.2.9
 psycopg2-binary
 qrcode[pil]==8.2
-PyJWT[crypto]==2.10.1
-python-multipart==0.0.20
