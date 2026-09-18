@@ -3096,6 +3096,17 @@ function createLink(){clearErr();connect.disabled=true;connectStatus.textContent
 function check(){if(!session)return;call('/account/me',{headers:{Authorization:'Bearer '+session}}).then(showAccount).catch(function(){localStorage.removeItem('bookly_session');session='';document.documentElement.classList.remove('has-session');document.documentElement.classList.remove('session-ready');})}
 var legalConsent=document.getElementById('legalConsent');
 var legalAccept=document.getElementById('legalAccept');
+function legalConsentError(){
+  var l='en';
+  try{l=localStorage.getItem('bookly_language')||'en'}catch(e){}
+  return ({
+    en:'Please accept the Terms of Use and confirm that you have read the Privacy Policy.',
+    ru:'Примите Условия использования и подтвердите, что ознакомились с Политикой конфиденциальности.',
+    uz:'Foydalanish shartlarini qabul qiling va Maxfiylik siyosati bilan tanishganingizni tasdiqlang.',
+    tr:'Kullanım Şartlarını kabul edin ve Gizlilik Politikasını okuduğunuzu onaylayın.',
+    ar:'يرجى الموافقة على شروط الاستخدام وتأكيد قراءة سياسة الخصوصية.'
+  })[l]||'Please accept the Terms of Use and confirm that you have read the Privacy Policy.';
+}
 function setAuthMode(nextMode){
   mode=nextMode;
   var isRegister=mode==='register';
@@ -3110,10 +3121,10 @@ function setAuthMode(nextMode){
 document.getElementById('loginTab').onclick=function(){setAuthMode('login')};
 document.getElementById('registerTab').onclick=function(){setAuthMode('register')};
 document.getElementById('googleBtn').onclick=function(){
-  if(mode==='register'&&!legalAccept.checked){err('Please accept the Terms of Use and confirm that you have read the Privacy Policy.');return}
+  if(mode==='register'&&!legalAccept.checked){err(legalConsentError());return}
   location.href=api+'/account/oauth/google/start'+(mode==='register'?'?legal_accept=1':'');
 };
-form.onsubmit=function(e){e.preventDefault();clearErr();var isRegister=mode==='register';if(isRegister&&!legalAccept.checked){err('Please accept the Terms of Use and confirm that you have read the Privacy Policy.');return}submit.disabled=true;var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};if(isRegister)body.legal_accept=true;call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);window.booklySession=session;if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
+form.onsubmit=function(e){e.preventDefault();clearErr();var isRegister=mode==='register';if(isRegister&&!legalAccept.checked){err(legalConsentError());return}submit.disabled=true;var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};if(isRegister)body.legal_accept=true;call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);window.booklySession=session;if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
 document.getElementById('billingCheckout').onclick=function(){
   clearErr();
   this.disabled=true;
