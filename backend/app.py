@@ -1480,6 +1480,7 @@ class BookingIn(BaseModel):
     
 class AdminBookingIn(BaseModel):
     service_id: int
+    specialist_id: Optional[int] = None
     client_name: str = Field(min_length=1, max_length=120)
     client_phone: str = ""
     day: date
@@ -2556,6 +2557,25 @@ def admin_create_booking(
                 "Service not found"
             )
 
+        specialist = None
+        if x.specialist_id is not None:
+            specialist = db.get(Specialist, x.specialist_id)
+            assigned = db.query(SpecialistService).filter(
+                SpecialistService.specialist_id == x.specialist_id,
+                SpecialistService.service_id == x.service_id,
+            ).first()
+
+            if (
+                not specialist
+                or specialist.business_id != business.id
+                or not specialist.active
+                or not assigned
+            ):
+                raise HTTPException(
+                    404,
+                    "Specialist not found"
+                )
+
         business_zone = _bookly_zone(business.timezone)
         now_business = datetime.now(business_zone).replace(tzinfo=None)
 
@@ -2580,7 +2600,8 @@ def admin_create_booking(
             x.day,
             x.start,
             end_dt.time(),
-            business.timezone
+            business.timezone,
+            x.specialist_id
         ):
             raise HTTPException(
                 400,
@@ -2594,6 +2615,7 @@ def admin_create_booking(
         booking = Booking(
             business_id=business.id,
             service_id=service.id,
+            specialist_id=x.specialist_id,
             client_telegram_id=0,
             client_name=x.client_name.strip(),
             client_phone=x.client_phone.strip(),
@@ -2609,6 +2631,15 @@ def admin_create_booking(
         db.add(booking)
         db.commit()
         db.refresh(booking)
+
+        # Manual bookings created by the owner should follow the same
+        # notification routing as customer-created bookings.
+        if x.specialist_id is not None:
+            notify_owner_new_booking(
+                db,
+                booking,
+                service,
+            )
 
         return booking
 
