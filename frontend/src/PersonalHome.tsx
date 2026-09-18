@@ -37,6 +37,7 @@ import {
 } from './shared';
 import { MyBookings } from './MyBookings';
 import { SavedBusinessesPage } from './SavedBusinessesPage';
+import { StaffWorkspace } from './StaffWorkspace';
 
 export function PersonalHome({
   onAdmin,
@@ -56,7 +57,8 @@ export function PersonalHome({
   setInfoSection: (section: 'help' | 'rules') => void;
 }) {
   const [businesses, setBusinesses] = useState<any[]>([]);
-  const [page, setPage] = useState<'home' | 'bookings' | 'saved'>('home');
+  const [staffMemberships, setStaffMemberships] = useState<any[]>([]);
+  const [page, setPage] = useState<'home' | 'bookings' | 'saved' | 'staff'>('home');
   const [loading, setLoading] = useState(true);
   const [emailCopied, setEmailCopied] = useState(false);
 
@@ -65,23 +67,64 @@ export function PersonalHome({
 
     const load = async () => {
       try {
-        const response = await fetch(
-          API + '/admin/businesses',
-          { headers: headers() }
-        );
+        const [businessResponse, staffResponse] =
+          await Promise.all([
+            fetch(
+              API + '/admin/businesses',
+              { headers: headers() }
+            ),
+            fetch(
+              API + '/staff/me',
+              { headers: headers() }
+            )
+          ]);
 
-        const data = response.ok
-          ? await response.json()
-          : [];
+        const businessData =
+          businessResponse.ok
+            ? await businessResponse.json()
+            : [];
+
+        const staffData =
+          staffResponse.ok
+            ? await staffResponse.json()
+            : { memberships: [] };
 
         if (!cancelled) {
           setBusinesses(
-            Array.isArray(data) ? data : []
+            Array.isArray(businessData)
+              ? businessData
+              : []
           );
+
+          const memberships =
+            Array.isArray(
+              staffData?.memberships
+            )
+              ? staffData.memberships
+              : [];
+
+          setStaffMemberships(
+            memberships
+          );
+
+          try {
+            if (
+              memberships.length &&
+              sessionStorage.getItem(
+                'bookly_open_staff'
+              ) === '1'
+            ) {
+              sessionStorage.removeItem(
+                'bookly_open_staff'
+              );
+              setPage('staff');
+            }
+          } catch {}
         }
       } catch {
         if (!cancelled) {
           setBusinesses([]);
+          setStaffMemberships([]);
         }
       } finally {
         if (!cancelled) {
@@ -162,6 +205,34 @@ export function PersonalHome({
             </div>
           </div>
 
+          {!loading && staffMemberships.length > 0 && (
+            <div className="personal-card">
+              <span className="personal-eyebrow">
+                {t('staff.workspaceEyebrow', 'МОЯ РАБОТА')}
+              </span>
+
+              <h2>
+                {t('staff.workspaceTitle', 'Рабочий кабинет')}
+              </h2>
+
+              <p>
+                {staffMemberships.length === 1
+                  ? `${staffMemberships[0].business_name} · ${staffMemberships[0].specialist_name}`
+                  : t(
+                      'staff.multipleBusinesses',
+                      'Ваши записи и график в подключённых бизнесах'
+                    )}
+              </p>
+
+              <button
+                className="personal-black-button"
+                onClick={() => setPage('staff')}
+              >
+                {t('staff.openWorkspace', 'Открыть')}
+              </button>
+            </div>
+          )}
+
           {loading ? (
   <div className="personal-business-skeleton">
     <div className="skeleton-line skeleton-small" />
@@ -224,6 +295,14 @@ export function PersonalHome({
         <SavedBusinessesPage
           t={t}
           open={open}
+        />
+      )}
+
+      {page === 'staff' && (
+        <StaffWorkspace
+          memberships={staffMemberships}
+          t={t}
+          onBack={() => setPage('home')}
         />
       )}
 
