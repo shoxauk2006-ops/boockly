@@ -53,6 +53,9 @@ class BooklyAccount(Base):
     telegram_user_id: Mapped[int | None] = mapped_column(BigInteger, unique=True, nullable=True, index=True)
     business_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    terms_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    privacy_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
 
 class BooklyTelegramLink(Base):
@@ -134,6 +137,13 @@ with engine.begin() as conn:
                 )
             )
 
+        if "terms_accepted_at" not in columns:
+            conn.execute(text("ALTER TABLE bookly_accounts ADD COLUMN terms_accepted_at TIMESTAMP"))
+        if "terms_version" not in columns:
+            conn.execute(text("ALTER TABLE bookly_accounts ADD COLUMN terms_version VARCHAR(32)"))
+        if "privacy_version" not in columns:
+            conn.execute(text("ALTER TABLE bookly_accounts ADD COLUMN privacy_version VARCHAR(32)"))
+
         conn.execute(
             text(
                 """
@@ -181,6 +191,8 @@ with engine.begin() as conn:
 
 SESSION_DAYS = 30
 CHECKOUT_TOKEN_SECONDS = 600
+TERMS_VERSION = "2026-09-18"
+PRIVACY_VERSION = "2026-09-18"
 
 
 def _hash_password(password: str, salt: bytes | None = None) -> str:
@@ -264,6 +276,7 @@ def _account_checkout_token(
 class AccountRegisterIn(BaseModel):
     email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=8, max_length=128)
+    legal_accept: bool = False
 
 
 class AccountLoginIn(BaseModel):
@@ -291,12 +304,20 @@ def account_register(x: AccountRegisterIn):
     email = x.email.strip().lower()
     if "@" not in email:
         raise HTTPException(400, "Invalid email")
+    if not x.legal_accept:
+        raise HTTPException(400, "You must accept the Terms of Use and acknowledge the Privacy Policy")
 
     with SessionLocal() as db:
         if db.query(BooklyAccount).filter(BooklyAccount.email == email).first():
             raise HTTPException(409, "An account with this email already exists")
 
-        account = BooklyAccount(email=email, password_hash=_hash_password(x.password))
+        account = BooklyAccount(
+            email=email,
+            password_hash=_hash_password(x.password),
+            terms_accepted_at=datetime.utcnow(),
+            terms_version=TERMS_VERSION,
+            privacy_version=PRIVACY_VERSION,
+        )
         db.add(account)
         db.flush()
 
