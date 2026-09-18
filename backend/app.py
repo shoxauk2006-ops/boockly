@@ -1108,6 +1108,15 @@ def telegram_api(method: str, payload: dict):
         return None
 
 
+def telegram_api_for_recipient(method: str, payload: dict):
+    """Send using the recipient's stored Bookly language, not the current request language."""
+    token = BOOKLY_REQUEST_LANGUAGE.set(None)
+    try:
+        return telegram_api(method, payload)
+    finally:
+        BOOKLY_REQUEST_LANGUAGE.reset(token)
+
+
 def notify_owner_new_booking(db, booking, service):
     business = db.get(Business, booking.business_id)
     if not business:
@@ -1138,7 +1147,7 @@ def notify_owner_new_booking(db, booking, service):
 
     # The owner still receives the business-level notification.
     if business.owner_telegram_id:
-        telegram_api(
+        telegram_api_for_recipient(
             "sendMessage",
             {
                 "chat_id": business.owner_telegram_id,
@@ -1155,7 +1164,7 @@ def notify_owner_new_booking(db, booking, service):
         and specialist.notifications_enabled
         and int(specialist.telegram_user_id) != int(business.owner_telegram_id or 0)
     ):
-        telegram_api(
+        telegram_api_for_recipient(
             "sendMessage",
             {
                 "chat_id": specialist.telegram_user_id,
@@ -1196,7 +1205,7 @@ def notify_specialist_booking_cancelled(
         else "Клиент отменил запись"
     )
 
-    telegram_api(
+    telegram_api_for_recipient(
         "sendMessage",
         {
             "chat_id": specialist.telegram_user_id,
