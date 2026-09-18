@@ -7,6 +7,23 @@
     <meta name="bookly-api-url" content="%VITE_API_URL%" />
     <title>Bookly</title>
     <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
+    <script>
+      (function () {
+        try {
+          var webApp = window.Telegram && window.Telegram.WebApp;
+          var hash = String(window.location.hash || '');
+          var query = new URLSearchParams(window.location.search);
+          var isTelegram =
+            !!(webApp && webApp.initData) ||
+            hash.indexOf('tgWebAppData=') !== -1 ||
+            query.get('miniapp') === '1';
+
+          if (!isTelegram) {
+            window.location.replace('/landing.html');
+          }
+        } catch (_) {}
+      })();
+    </script>
     <link rel="stylesheet" href="/admin-dashboard.css" />
     <link rel="stylesheet" href="/admin-final-polish.css" />
     <link rel="stylesheet" href="/client-booking.css" />
