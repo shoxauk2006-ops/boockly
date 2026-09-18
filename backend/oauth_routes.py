@@ -16,7 +16,13 @@ from sqlalchemy import DateTime, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .app import Base, Business, SessionLocal, app, engine
-from .account_routes import BooklyAccount, _hash_password, _new_session
+from .account_routes import (
+    BooklyAccount,
+    PRIVACY_VERSION,
+    TERMS_VERSION,
+    _hash_password,
+    _new_session,
+)
 
 
 class BooklyOAuthIdentity(Base):
@@ -103,7 +109,7 @@ def _create_default_business(db, account: BooklyAccount) -> Business:
     return business
 
 
-def _finish_google(subject: str, email: str) -> str:
+def _finish_google(subject: str, email: str, legal_accept: bool = False) -> str:
     subject = subject.strip()
     email = email.strip().lower()
     if not subject or "@" not in email:
@@ -126,9 +132,17 @@ def _finish_google(subject: str, email: str) -> str:
         else:
             account = db.query(BooklyAccount).filter(BooklyAccount.email == email).first()
             if not account:
+                if not legal_accept:
+                    raise HTTPException(
+                        400,
+                        "Terms acceptance is required for a new Bookly account",
+                    )
                 account = BooklyAccount(
                     email=email,
                     password_hash=_hash_password(secrets.token_urlsafe(32)),
+                    terms_accepted_at=datetime.utcnow(),
+                    terms_version=TERMS_VERSION,
+                    privacy_version=PRIVACY_VERSION,
                 )
                 db.add(account)
                 db.flush()
@@ -157,7 +171,7 @@ def _finish_google(subject: str, email: str) -> str:
 
 
 @app.get("/account/oauth/google/start")
-def google_start():
+def google_start(request: Request):
     client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
     client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
     if not client_id or not client_secret:
@@ -184,6 +198,17 @@ def google_start():
         secure=True,
         samesite="lax",
     )
+    if request.query_params.get("legal_accept") == "1":
+        response.set_cookie(
+            "bookly_oauth_legal_accept",
+            "1",
+            max_age=STATE_SECONDS,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+        )
+    else:
+        response.delete_cookie("bookly_oauth_legal_accept")
     return response
 
 
@@ -231,12 +256,28 @@ def google_callback(request: Request):
     ):
         return _frontend_error()
 
-    handoff = _finish_google(str(profile["sub"]), str(profile["email"]))
+    try:
+        handoff = _finish_google(
+            str(profile["sub"]),
+            str(profile["email"]),
+            request.cookies.get("bookly_oauth_legal_accept", "") == "1",
+        )
+    except HTTPException as exc:
+        if exc.status_code == 400 and "Terms acceptance" in str(exc.detail):
+            response = RedirectResponse(
+                f"{FRONTEND_URL}/account.html?terms_required=1",
+                status_code=303,
+            )
+            response.delete_cookie("bookly_oauth_state_google")
+            response.delete_cookie("bookly_oauth_legal_accept")
+            return response
+        raise
     response = RedirectResponse(
         f"{FRONTEND_URL}/account.html?oauth_code={urllib.parse.quote(handoff)}",
         status_code=303,
     )
     response.delete_cookie("bookly_oauth_state_google")
+    response.delete_cookie("bookly_oauth_legal_accept")
     return response
 
 
