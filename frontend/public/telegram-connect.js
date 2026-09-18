@@ -61,7 +61,7 @@
             clearInterval(timer);
             return;
           }
-          var button = document.querySelector('.personal-business-card .personal-primary-button');
+          var button = document.querySelector('.personal-business-card .personal-white-button');
           if (button) {
             clicked = true;
             clearInterval(timer);
