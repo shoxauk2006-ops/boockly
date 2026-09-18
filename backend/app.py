@@ -1164,6 +1164,54 @@ def notify_owner_new_booking(db, booking, service):
             },
         )
 
+
+def notify_specialist_booking_cancelled(
+    db,
+    booking,
+    cancelled_by_business: bool = False,
+):
+    specialist_id = getattr(booking, "specialist_id", None)
+    if specialist_id is None:
+        return
+
+    specialist = db.get(Specialist, specialist_id)
+    if (
+        not specialist
+        or not specialist.telegram_user_id
+        or not specialist.notifications_enabled
+    ):
+        return
+
+    business = db.get(Business, booking.business_id)
+    if (
+        business
+        and business.owner_telegram_id
+        and int(specialist.telegram_user_id) == int(business.owner_telegram_id)
+    ):
+        return
+
+    title = (
+        "Ваша запись отменена бизнесом."
+        if cancelled_by_business
+        else "Клиент отменил запись"
+    )
+
+    telegram_api(
+        "sendMessage",
+        {
+            "chat_id": specialist.telegram_user_id,
+            "text": (
+                f"❌ <b>{title}</b>\n\n"
+                f"👤 {booking.client_name}\n"
+                f"📞 {booking.client_phone or 'номер не передан'}\n"
+                f"📅 {booking.day.isoformat()}\n"
+                f"🕐 {booking.start.strftime('%H:%M')}–{booking.end.strftime('%H:%M')}\n"
+                f"🆔 #{booking.id}"
+            ),
+            "parse_mode": "HTML",
+        },
+    )
+
 _BOOKLY_FINAL_NOTIFICATION_WRAPPER = True
 
 def _bookly_localize_outgoing_text(text: str, lang: str) -> str:
@@ -2465,6 +2513,12 @@ def admin_cancel_booking(
                 }
             )
 
+        notify_specialist_booking_cancelled(
+            db,
+            booking,
+            cancelled_by_business=True,
+        )
+
         return {
             "ok": True
         }
@@ -3016,6 +3070,7 @@ def cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default="")):
         x.status="cancelled";db.commit()
         b=db.get(Business,x.business_id)
         telegram_api("sendMessage", {"chat_id":b.owner_telegram_id,"text":f"❌ <b>Запись отменена</b>\n\n👤 {x.client_name}\n📅 {x.day.isoformat()}\n🕐 {x.start.strftime('%H:%M')}–{x.end.strftime('%H:%M')}\n🆔 #{x.id}","parse_mode":"HTML"}) if b else None
+        notify_specialist_booking_cancelled(db, x)
         return {"ok":True}
 
 @app.get("/my/saved-businesses")
@@ -3300,6 +3355,8 @@ def my_cancel_booking(
                     "parse_mode": "HTML"
                 }
             )
+
+        notify_specialist_booking_cancelled(db, booking)
 
         return {"ok": True}
 @app.post("/admin/bookings/{booking_id}/cancel")
