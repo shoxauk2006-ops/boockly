@@ -60,6 +60,12 @@ export function Bookings({
   const [serviceId, setServiceId] =
     useState('');
 
+  const [specialists, setSpecialists] =
+    useState<any[]>([]);
+
+  const [specialistId, setSpecialistId] =
+    useState('');
+
   const [day, setDay] =
     useState(getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'));
 
@@ -170,6 +176,82 @@ export function Bookings({
   loadBookingData();
 }, [showForm]);
 
+  useEffect(() => {
+    if (
+      !showForm ||
+      !businessId ||
+      !serviceId
+    ) {
+      setSpecialists([]);
+      setSpecialistId('');
+      return;
+    }
+
+    let cancelled = false;
+
+    fetch(
+      API +
+        `/businesses/${businessId}/specialists?service_id=${encodeURIComponent(serviceId)}`,
+      { headers: headers() }
+    )
+      .then(async response => {
+        const data =
+          await response
+            .json()
+            .catch(() => []);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.detail ||
+              t(
+                'specialists.loadError',
+                'Не удалось загрузить специалистов'
+              )
+          );
+        }
+
+        return Array.isArray(data)
+          ? data
+          : [];
+      })
+      .then(data => {
+        if (cancelled) return;
+
+        setSpecialists(data);
+
+        setSpecialistId(current => {
+          if (
+            current &&
+            data.some(
+              (item: any) =>
+                String(item.id) ===
+                String(current)
+            )
+          ) {
+            return current;
+          }
+
+          return data.length === 1
+            ? String(data[0].id)
+            : '';
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSpecialists([]);
+          setSpecialistId('');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    showForm,
+    businessId,
+    serviceId
+  ]);
+
   const loadSlots = async (
   selectedServiceId: string,
   selectedDay: string
@@ -191,7 +273,7 @@ if (!businessId) {
       const availabilityResponse =
         await fetch(
           API +
-            `/businesses/${businessId}/availability?service_id=${selectedServiceId}&day=${selectedDay}&time_zone=${encodeURIComponent(business?.timezone || getClientTimeZone())}`
+            `/businesses/${businessId}/availability?service_id=${selectedServiceId}&day=${selectedDay}&time_zone=${encodeURIComponent(business?.timezone || getClientTimeZone())}${specialistId ? `&specialist_id=${encodeURIComponent(specialistId)}` : ''}`
         );
 
       const data =
@@ -234,7 +316,11 @@ if (!businessId) {
     if (
       showForm &&
       serviceId &&
-      day
+      day &&
+      (
+        specialists.length === 0 ||
+        specialistId
+      )
     ) {
       loadSlots(
         serviceId,
@@ -245,7 +331,9 @@ if (!businessId) {
   serviceId,
   day,
   showForm,
-  businessId
+  businessId,
+  specialists.length,
+  specialistId
 ]);
 
   const createBooking =
@@ -308,6 +396,10 @@ if (!isPhoneValid(clientPhone)) {
                     Number(
                       serviceId
                     ),
+                  specialist_id:
+                    specialistId
+                      ? Number(specialistId)
+                      : null,
                   client_name:
                     clientName.trim(),
                   client_phone:
@@ -341,6 +433,7 @@ alert(
 setClientName('');
 setClientPhone('');
 setSelectedSlot('');
+setSpecialistId('');
 setShowForm(false);
 setSlots([]);
 
@@ -667,6 +760,38 @@ const todayBusiness =
             )}
           </select>
 
+          {specialists.length > 0 && (
+            <select
+              value={specialistId}
+              onChange={e =>
+                setSpecialistId(
+                  e.target.value
+                )
+              }
+            >
+              <option value="">
+                {t(
+                  'owner.chooseSpecialist',
+                  'Выберите специалиста'
+                )}
+              </option>
+
+              {specialists.map(
+                specialist => (
+                  <option
+                    key={specialist.id}
+                    value={specialist.id}
+                  >
+                    {specialist.name}
+                    {specialist.position
+                      ? ` · ${specialist.position}`
+                      : ''}
+                  </option>
+                )
+              )}
+            </select>
+          )}
+
           <input
             type="date"
             min={getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent')}
@@ -799,6 +924,7 @@ const todayBusiness =
     saving ||
     !selectedSlot ||
     !serviceId ||
+    (specialists.length > 0 && !specialistId) ||
     !clientName.trim()
   }
   onClick={() =>
