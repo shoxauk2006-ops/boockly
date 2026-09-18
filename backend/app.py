@@ -373,6 +373,23 @@ class Specialist(Base):
     photo: Mapped[str] = mapped_column(Text, default="")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
 
+    # Optional Telegram identity for a real team member. Once connected,
+    # the specialist receives booking notifications on their own account
+    # and can open the staff workspace without using the owner's access.
+    telegram_user_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger,
+        nullable=True,
+        index=True
+    )
+    telegram_connected_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    notifications_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True
+    )
+
 
 class SpecialistService(Base):
     __tablename__ = "specialist_services"
@@ -791,6 +808,26 @@ def ensure_specialist_schema():
                     )
                 )
 
+        if "specialists" in tables:
+            existing = {c["name"] for c in inspector.get_columns("specialists")}
+            if "telegram_user_id" not in existing:
+                conn.execute(
+                    text("ALTER TABLE specialists ADD COLUMN telegram_user_id BIGINT")
+                )
+                conn.execute(
+                    text("CREATE INDEX IF NOT EXISTS ix_specialists_telegram_user_id ON specialists (telegram_user_id)")
+                )
+            if "telegram_connected_at" not in existing:
+                conn.execute(
+                    text("ALTER TABLE specialists ADD COLUMN telegram_connected_at TIMESTAMP")
+                )
+            if "notifications_enabled" not in existing:
+                conn.execute(
+                    text(
+                        "ALTER TABLE specialists ADD COLUMN notifications_enabled BOOLEAN DEFAULT TRUE"
+                    )
+                )
+
 
 ensure_specialist_schema()
 
@@ -1097,14 +1134,35 @@ def notify_owner_new_booking(db, booking, service):
         f"🆔 #{booking.id}",
     ])
 
-    telegram_api(
-        "sendMessage",
-        {
-            "chat_id": business.owner_telegram_id,
-            "text": "\n".join(lines),
-            "parse_mode": "HTML",
-        },
-    )
+    message = "\n".join(lines)
+
+    # The owner still receives the business-level notification.
+    if business.owner_telegram_id:
+        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": business.owner_telegram_id,
+                "text": message,
+                "parse_mode": "HTML",
+            },
+        )
+
+    # If the customer selected a connected specialist, notify that person
+    # on their own Telegram account as well.
+    if (
+        specialist
+        and specialist.telegram_user_id
+        and specialist.notifications_enabled
+        and int(specialist.telegram_user_id) != int(business.owner_telegram_id or 0)
+    ):
+        telegram_api(
+            "sendMessage",
+            {
+                "chat_id": specialist.telegram_user_id,
+                "text": message,
+                "parse_mode": "HTML",
+            },
+        )
 
 _BOOKLY_FINAL_NOTIFICATION_WRAPPER = True
 
