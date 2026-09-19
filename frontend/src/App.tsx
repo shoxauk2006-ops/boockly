@@ -158,6 +158,58 @@ export function App(){
       return;
     }
 
+    if (startParam.startsWith('staff-connect-')) {
+      fetch(
+        API +
+          '/staff/connect?token=' +
+          encodeURIComponent(startParam),
+        {
+          method: 'POST',
+          headers: {
+            'X-Telegram-Init-Data': initData()
+          }
+        }
+      )
+        .then(async (response) => {
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(
+              data?.detail ||
+                'Staff Telegram connection failed'
+            );
+          }
+          return data;
+        })
+        .then((data) => {
+          if (data?.specialist_id) {
+            localStorage.setItem(
+              'bookly_staff_specialist_id',
+              String(data.specialist_id)
+            );
+          }
+
+          try {
+            sessionStorage.setItem(
+              'bookly_open_staff',
+              '1'
+            );
+          } catch {}
+
+          setMode('home');
+        })
+        .catch((error) => {
+          console.error(
+            'Bookly staff Telegram connection error:',
+            error
+          );
+          alert(
+            error?.message ||
+              'Staff Telegram connection failed'
+          );
+        });
+      return;
+    }
+
     if(startParam){
       setClientSlug(startParam);
       setMode('client');
