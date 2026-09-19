@@ -398,15 +398,45 @@ export function Client({
       if (!response.ok) {
         throw new Error(data?.detail || t('client.availabilityError'));
       }
-      const candidateSlots = Array.isArray(data?.slots) ? data.slots : [];
+      const candidateSlots =
+        Array.isArray(data?.slots)
+          ? data.slots
+          : [];
+
+      const candidateSlotItems =
+        Array.isArray(data?.slot_items)
+          ? data.slot_items
+          : candidateSlots.map(
+              (time: string) => ({
+                time,
+                available: true
+              })
+            );
+
       if (candidateSlots.length > 0) {
         setDay(candidateDay);
         setSlots(candidateSlots);
+        setSlotItems(candidateSlotItems);
         return true;
       }
     }
     setSlots([]);
+    setSlotItems([]);
     return false;
+  };
+
+  const scrollToStep = (
+    id: string,
+    delay = 100
+  ) => {
+    window.setTimeout(() => {
+      document
+        .getElementById(id)
+        ?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+    }, delay);
   };
 
   const chooseService = async (service: any) => {
@@ -414,6 +444,7 @@ export function Client({
     setSelected(service);
     setSelectedTime('');
     setSlots([]);
+    setSlotItems([]);
     setError('');
     setSlotsLoading(true);
     try {
@@ -424,6 +455,10 @@ export function Client({
       setError(t('client.availabilityError'));
     } finally {
       setSlotsLoading(false);
+      scrollToStep(
+        'client-schedule-step',
+        140
+      );
     }
   };
 
@@ -432,8 +467,13 @@ export function Client({
     setSelected(null);
     setSelectedTime('');
     setSlots([]);
+    setSlotItems([]);
     setDay(getClientLocalDateKey());
     setError('');
+    scrollToStep(
+      'client-services-step',
+      140
+    );
   };
 
   const chooseTime = (
