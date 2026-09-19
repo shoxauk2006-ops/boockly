@@ -321,12 +321,18 @@ class BlockedSlot(Base):
     __tablename__ = "blocked_slots"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     business_id: Mapped[int] = mapped_column(ForeignKey("businesses.id"), index=True)
+    specialist_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("specialists.id"),
+        nullable=True,
+        index=True
+    )
     day: Mapped[date] = mapped_column(Date)
     start: Mapped[time] = mapped_column(Time)
     end: Mapped[time] = mapped_column(Time)
     start_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
     end_at_utc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
     reason: Mapped[str] = mapped_column(String(255), default="")
+    created_by: Mapped[str] = mapped_column(String(16), default="owner")
 
 class Booking(Base):
     __tablename__ = "bookings"
@@ -820,6 +826,37 @@ def ensure_specialist_schema():
                 conn.execute(
                     text(
                         "ALTER TABLE bookings ADD COLUMN specialist_id INTEGER"
+                    )
+                )
+
+        if "blocked_slots" in tables:
+            existing_blocks = {
+                c["name"]
+                for c in inspector.get_columns("blocked_slots")
+            }
+            if "specialist_id" not in existing_blocks:
+                conn.execute(
+                    text(
+                        "ALTER TABLE blocked_slots ADD COLUMN specialist_id INTEGER"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS ix_blocked_slots_specialist_id "
+                        "ON blocked_slots (specialist_id)"
+                    )
+                )
+            if "created_by" not in existing_blocks:
+                conn.execute(
+                    text(
+                        "ALTER TABLE blocked_slots ADD COLUMN created_by "
+                        "VARCHAR(16) DEFAULT 'owner'"
+                    )
+                )
+                conn.execute(
+                    text(
+                        "UPDATE blocked_slots SET created_by = 'owner' "
+                        "WHERE created_by IS NULL OR created_by = ''"
                     )
                 )
 
@@ -1482,6 +1519,7 @@ class BlockIn(BaseModel):
     start: time
     end: time
     reason: str = ""
+    specialist_id: Optional[int] = None
 
 class BookingIn(BaseModel):
     business_id: int
@@ -2114,9 +2152,7 @@ def admin_blocks(
     day: Optional[date] = None,
     x_telegram_init_data: str = Header(default="")
 ):
-    user = telegram_user(
-        x_telegram_init_data
-    )
+    user = telegram_user(x_telegram_init_data)
 
     with SessionLocal() as db:
         b = owner_business(
@@ -2127,8 +2163,6 @@ def admin_blocks(
         if not b:
             return []
 
-        # Автоматически удаляем блокировки,
-        # которые относятся к предыдущим дням.
         today = datetime.now(_bookly_zone(b.timezone)).date()
 
         db.query(BlockedSlot).filter(
@@ -2137,56 +2171,257 @@ def admin_blocks(
         ).delete(
             synchronize_session=False
         )
-
         db.commit()
 
-        q = db.query(BlockedSlot).filter_by(
-            business_id=b.id
+        q = db.query(BlockedSlot).filter(
+            BlockedSlot.business_id == b.id
         )
 
         if day:
-            q = q.filter_by(day=day)
+            q = q.filter(BlockedSlot.day == day)
 
-        return q.order_by(
+        rows = q.order_by(
             BlockedSlot.day,
             BlockedSlot.start
         ).all()
 
+        specialist_ids = {
+            int(row.specialist_id)
+            for row in rows
+            if row.specialist_id is not None
+        }
+        specialist_names = {
+            item.id: item.name
+            for item in (
+                db.query(Specialist)
+                .filter(Specialist.id.in_(specialist_ids))
+                .all()
+                if specialist_ids
+                else []
+            )
+        }
+
+        return [
+            {
+                "id": row.id,
+                "business_id": row.business_id,
+                "specialist_id": row.specialist_id,
+                "specialist_name": (
+                    specialist_names.get(row.specialist_id)
+                    if row.specialist_id is not None
+                    else None
+                ),
+                "day": row.day.isoformat(),
+                "start": row.start.strftime("%H:%M"),
+                "end": row.end.strftime("%H:%M"),
+                "start_at_utc": (
+                    row.start_at_utc.isoformat()
+                    if row.start_at_utc
+                    else None
+                ),
+                "end_at_utc": (
+                    row.end_at_utc.isoformat()
+                    if row.end_at_utc
+                    else None
+                ),
+                "reason": row.reason or "",
+                "created_by": row.created_by or "owner",
+            }
+            for row in rows
+        ]
+
+
 @app.post("/admin/blocks")
-def admin_block(x:BlockIn,x_telegram_init_data:str=Header(default="")):
-    user=telegram_user(x_telegram_init_data)
-    if x.start>=x.end:raise HTTPException(400,"Invalid time range")
+def admin_block(
+    x: BlockIn,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+
+    if x.start >= x.end:
+        raise HTTPException(400, "Invalid time range")
+
     with SessionLocal() as db:
-        b=owner_business(db,int(user["id"]))
-        if not b:raise HTTPException(400,"Create business first")
+        b = owner_business(db, int(user["id"]))
+        if not b:
+            raise HTTPException(400, "Create business first")
+
+        if x.specialist_id is not None:
+            specialist = (
+                db.query(Specialist)
+                .filter(
+                    Specialist.id == x.specialist_id,
+                    Specialist.business_id == b.id,
+                )
+                .first()
+            )
+            if not specialist:
+                raise HTTPException(404, "Specialist not found")
+
         business_zone = _bookly_zone(b.timezone)
-        start_local = datetime.combine(x.day, x.start, tzinfo=business_zone)
-        end_local = datetime.combine(x.day, x.end, tzinfo=business_zone)
-        z=BlockedSlot(
+        start_local = datetime.combine(
+            x.day,
+            x.start,
+            tzinfo=business_zone,
+        )
+        end_local = datetime.combine(
+            x.day,
+            x.end,
+            tzinfo=business_zone,
+        )
+
+        z = BlockedSlot(
             business_id=b.id,
-            **x.model_dump(),
+            specialist_id=x.specialist_id,
+            day=x.day,
+            start=x.start,
+            end=x.end,
+            reason=x.reason,
+            created_by="owner",
             start_at_utc=_bookly_to_utc(start_local),
             end_at_utc=_bookly_to_utc(end_local),
         )
-        db.add(z);db.commit();db.refresh(z);return z
+
+        db.add(z)
+        db.commit()
+        db.refresh(z)
+        return {
+            "id": z.id,
+            "business_id": z.business_id,
+            "specialist_id": z.specialist_id,
+            "day": z.day.isoformat(),
+            "start": z.start.strftime("%H:%M"),
+            "end": z.end.strftime("%H:%M"),
+            "reason": z.reason or "",
+            "created_by": z.created_by or "owner",
+        }
+
 
 @app.delete("/admin/blocks/{block_id}")
-def admin_delete_block(block_id:int,x_telegram_init_data:str=Header(default="")):
-    user=telegram_user(x_telegram_init_data)
+def admin_delete_block(
+    block_id: int,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+
     with SessionLocal() as db:
-        b=owner_business(db,int(user["id"]));z=db.get(BlockedSlot,block_id)
-        if not b or not z or z.business_id!=b.id:raise HTTPException(404,"Block not found")
-        db.delete(z);db.commit();return {"ok":True}
+        b = owner_business(db, int(user["id"]))
+        z = db.get(BlockedSlot, block_id)
+
+        if (
+            not b
+            or not z
+            or z.business_id != b.id
+        ):
+            raise HTTPException(404, "Block not found")
+
+        db.delete(z)
+        db.commit()
+        return {"ok": True}
+
 
 @app.get("/admin/bookings")
-def admin_bookings(day:Optional[date]=None,x_telegram_init_data:str=Header(default="")):
-    user=telegram_user(x_telegram_init_data)
+def admin_bookings(
+    day: Optional[date] = None,
+    specialist_id: Optional[int] = None,
+    x_telegram_init_data: str = Header(default="")
+):
+    user = telegram_user(x_telegram_init_data)
+
     with SessionLocal() as db:
-        b=owner_business(db,int(user["id"]))
-        if not b:return []
-        q=db.query(Booking).filter_by(business_id=b.id)
-        if day:q=q.filter_by(day=day)
-        return q.order_by(Booking.day,Booking.start).all()
+        b = owner_business(db, int(user["id"]))
+        if not b:
+            return []
+
+        q = db.query(Booking).filter(
+            Booking.business_id == b.id
+        )
+
+        if day:
+            q = q.filter(Booking.day == day)
+
+        if specialist_id is not None:
+            q = q.filter(
+                Booking.specialist_id == specialist_id
+            )
+
+        rows = q.order_by(
+            Booking.day,
+            Booking.start
+        ).all()
+
+        service_ids = {
+            int(row.service_id)
+            for row in rows
+            if row.service_id is not None
+        }
+        specialist_ids = {
+            int(row.specialist_id)
+            for row in rows
+            if row.specialist_id is not None
+        }
+
+        service_names = {
+            item.id: item.name
+            for item in (
+                db.query(Service)
+                .filter(Service.id.in_(service_ids))
+                .all()
+                if service_ids
+                else []
+            )
+        }
+        specialist_names = {
+            item.id: item.name
+            for item in (
+                db.query(Specialist)
+                .filter(Specialist.id.in_(specialist_ids))
+                .all()
+                if specialist_ids
+                else []
+            )
+        }
+
+        return [
+            {
+                "id": row.id,
+                "business_id": row.business_id,
+                "service_id": row.service_id,
+                "service_name": service_names.get(row.service_id, ""),
+                "specialist_id": row.specialist_id,
+                "specialist_name": (
+                    specialist_names.get(row.specialist_id, "")
+                    if row.specialist_id is not None
+                    else ""
+                ),
+                "client_telegram_id": row.client_telegram_id,
+                "client_name": row.client_name,
+                "client_phone": row.client_phone or "",
+                "day": row.day.isoformat(),
+                "start": row.start.strftime("%H:%M"),
+                "end": row.end.strftime("%H:%M"),
+                "start_at_utc": (
+                    row.start_at_utc.isoformat()
+                    if row.start_at_utc
+                    else None
+                ),
+                "end_at_utc": (
+                    row.end_at_utc.isoformat()
+                    if row.end_at_utc
+                    else None
+                ),
+                "client_timezone": row.client_timezone or "UTC",
+                "status": row.status,
+                "created_at": (
+                    row.created_at.isoformat()
+                    if row.created_at
+                    else None
+                ),
+            }
+            for row in rows
+        ]
+
+
 @app.get("/admin/statistics")
 def admin_statistics(
     x_telegram_init_data: str = Header(default="")
@@ -2709,14 +2944,24 @@ def is_free(
     if booking_query.first():
         return False
 
-    blocked = db.query(BlockedSlot).filter(
+    blocked_query = db.query(BlockedSlot).filter(
         BlockedSlot.business_id == business_id,
         BlockedSlot.start_at_utc.is_not(None),
         BlockedSlot.end_at_utc.is_not(None),
         BlockedSlot.start_at_utc < end_at_utc,
         BlockedSlot.end_at_utc > start_at_utc,
-    ).first()
-    if blocked:
+    )
+    if specialist_id is not None:
+        blocked_query = blocked_query.filter(
+            (BlockedSlot.specialist_id == specialist_id)
+            | BlockedSlot.specialist_id.is_(None)
+        )
+    else:
+        blocked_query = blocked_query.filter(
+            BlockedSlot.specialist_id.is_(None)
+        )
+
+    if blocked_query.first():
         return False
 
     legacy_booking_query = db.query(Booking).filter(
@@ -2733,13 +2978,24 @@ def is_free(
         )
     legacy_booking = legacy_booking_query.first()
 
-    legacy_block = db.query(BlockedSlot).filter(
+    legacy_block_query = db.query(BlockedSlot).filter(
         BlockedSlot.business_id == business_id,
         BlockedSlot.day == day,
         BlockedSlot.start_at_utc.is_(None),
         BlockedSlot.start < en,
         BlockedSlot.end > st,
-    ).first()
+    )
+    if specialist_id is not None:
+        legacy_block_query = legacy_block_query.filter(
+            (BlockedSlot.specialist_id == specialist_id)
+            | BlockedSlot.specialist_id.is_(None)
+        )
+    else:
+        legacy_block_query = legacy_block_query.filter(
+            BlockedSlot.specialist_id.is_(None)
+        )
+
+    legacy_block = legacy_block_query.first()
     return not legacy_booking and not legacy_block
 
 @app.get("/businesses/{business_id}/specialists")
