@@ -148,7 +148,7 @@ export function PersonalHome({
       
 
       {page === 'home' && (
-        <>
+        <div className="personal-home-main">
           <div className="personal-home-hero">
             <span className="personal-eyebrow">
               BOOKLY
@@ -168,7 +168,22 @@ export function PersonalHome({
             </p>
           </div>
 
-<div className="personal-card personal-open-business-card">
+          <div
+            className={
+              staffMemberships.length > 0
+                ? 'personal-role-grid has-staff'
+                : 'personal-role-grid'
+            }
+          >
+            {loading ? (
+              <div className="personal-business-skeleton">
+                <div className="skeleton-line skeleton-small" />
+                <div className="skeleton-line skeleton-title" />
+                <div className="skeleton-line skeleton-text" />
+                <div className="skeleton-button" />
+              </div>
+
+          <div className="personal-card personal-open-business-card">
   <div className="personal-open-decor" aria-hidden="true">
     <span />
     <span />
@@ -203,106 +218,7 @@ export function PersonalHome({
                 {t('common.open', 'Открыть')}
               </button>
             </div>
-          </div>
-
-          <div
-            className={
-              staffMemberships.length > 0
-                ? 'personal-role-grid has-staff'
-                : 'personal-role-grid'
-            }
-          >
-            {loading ? (
-              <div className="personal-business-skeleton">
-                <div className="skeleton-line skeleton-small" />
-                <div className="skeleton-line skeleton-title" />
-                <div className="skeleton-line skeleton-text" />
-                <div className="skeleton-button" />
-              </div>
-            ) : (
-              <div className="personal-business-card personal-role-card">
-                <span className="personal-eyebrow light">
-                  {t(
-                    'nav.admin',
-                    'ДЛЯ БИЗНЕСА'
-                  )}
-                </span>
-
-                <h2>
-                  {t(
-                    'nav.businesses',
-                    'Мои бизнесы'
-                  )}
-                </h2>
-
-                <p>
-                  {businesses.length
-                    ? t(
-                        'home.manageBusiness',
-                        'Управляйте своими бизнесами в Bookly'
-                      )
-                    : t(
-                        'home.createBusinessHint',
-                        'Добавьте свой бизнес в Bookly'
-                      )}
-                </p>
-
-                <button
-                  className="personal-white-button"
-                  onClick={onAdmin}
-                >
-                  {t(
-                    'common.open',
-                    'Открыть'
-                  )}
-                </button>
-              </div>
-            )}
-
-            {!loading &&
-              staffMemberships.length > 0 && (
-                <div className="personal-business-card personal-role-card">
-                  <span className="personal-eyebrow light">
-                    {t(
-                      'staff.workspaceEyebrow',
-                      'МОЯ РАБОТА'
-                    )}
-                  </span>
-
-                  <h2>
-                    {t(
-                      'staff.workspaceTitle',
-                      'Рабочий кабинет'
-                    )}
-                  </h2>
-
-                  <p>
-                    {staffMemberships.length === 1
-                      ? `${staffMemberships[0].business_name} · ${staffMemberships[0].specialist_name}`
-                      : t(
-                          'staff.multipleBusinesses',
-                          'Ваши записи и график'
-                        )}
-                  </p>
-
-                  <button
-                    className="personal-white-button"
-                    onClick={() =>
-                      setPage('staff')
-                    }
-                  >
-                    {t(
-                      'staff.openWorkspace',
-                      'Открыть'
-                    )}
-                  </button>
-                </div>
-              )}
-          </div>
-
-
-          
-        </>
+        </div>
       )}
 
       {page === 'bookings' && (
