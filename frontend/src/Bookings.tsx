@@ -41,12 +41,14 @@ export function Bookings({
   bookings,
   reload,
   t,
-  business
+  business,
+  teamMembers
 }: {
   bookings: any[];
   reload: () => Promise<void>;
   t: (key: string, fallback?: string) => string;
   business: any;
+  teamMembers: any[];
 }) {
   const [showForm, setShowForm] =
     useState(false);
@@ -61,9 +63,6 @@ export function Bookings({
     useState('');
 
   const [specialists, setSpecialists] =
-    useState<any[]>([]);
-
-  const [teamMembers, setTeamMembers] =
     useState<any[]>([]);
 
   const [specialistId, setSpecialistId] =
@@ -109,42 +108,6 @@ export function Bookings({
 
   const [selectedDate, setSelectedDate] =
     useState(getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'));
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch(
-      API + '/admin/specialists',
-      { headers: headers() }
-    )
-      .then(async response => {
-        const data = await response
-          .json()
-          .catch(() => []);
-
-        if (!response.ok) {
-          return [];
-        }
-
-        return Array.isArray(data)
-          ? data
-          : [];
-      })
-      .then(data => {
-        if (!cancelled) {
-          setTeamMembers(data);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setTeamMembers([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [business?.id]);
 
   useEffect(() => {
   if (!showForm) {
