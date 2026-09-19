@@ -59,6 +59,7 @@ export function Admin({
   const [hours, setHours] = useState<any[]>([]);
   const [blocks, setBlocks] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [statistics, setStatistics] = useState<any>(null);
   const [statisticsLoading, setStatisticsLoading] = useState(false);
   const [statisticsPeriod, setStatisticsPeriod] =
@@ -272,6 +273,7 @@ const [newBusinessHours, setNewBusinessHours] =
       setHours([]);
       setBlocks([]);
       setBookings([]);
+      setTeamMembers([]);
       return;
     }
 
@@ -314,6 +316,15 @@ const [newBusinessHours, setNewBusinessHours] =
         ),
 
         fetch(
+          API + '/admin/specialists',
+          {
+            headers: headers()
+          }
+        ).then(r =>
+          r.ok ? r.json() : []
+        ),
+
+        fetch(
           API + '/admin/statistics',
           {
             headers: headers()
@@ -326,6 +337,7 @@ const [newBusinessHours, setNewBusinessHours] =
       hoursResult,
       blocksResult,
       bookingsResult,
+      specialistsResult,
       statisticsResult
     ] = results;
 
@@ -364,6 +376,18 @@ const [newBusinessHours, setNewBusinessHours] =
         bookingsResult.value || []
       );
     }
+
+    if (
+      specialistsResult.status ===
+      'fulfilled'
+    ) {
+      setTeamMembers(
+        Array.isArray(specialistsResult.value)
+          ? specialistsResult.value
+          : []
+      );
+    }
+
     if (
   statisticsResult.status ===
   'fulfilled'
@@ -2160,6 +2184,7 @@ borderTopColor: '#d32f2f',
   statisticsLoading={statisticsLoading}
   statisticsPeriod={statisticsPeriod}
   setStatisticsPeriod={setStatisticsPeriod}
+  teamMembers={teamMembers}
 />
       )}
 
@@ -2194,6 +2219,7 @@ borderTopColor: '#d32f2f',
           reload={load}
           t={t}
           business={business}
+          teamMembers={teamMembers}
         />
       )}
 
@@ -2203,6 +2229,7 @@ borderTopColor: '#d32f2f',
           reload={load}
           t={t}
           business={business}
+          teamMembers={teamMembers}
         />
       )}
 
