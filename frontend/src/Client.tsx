@@ -430,12 +430,23 @@ export function Client({
     delay = 100
   ) => {
     window.setTimeout(() => {
-      document
-        .getElementById(id)
-        ?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+      const element =
+        document.getElementById(id);
+
+      if (!element) {
+        return;
+      }
+
+      const headerOffset = 74;
+      const targetTop =
+        element.getBoundingClientRect().top +
+        window.scrollY -
+        headerOffset;
+
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth'
+      });
     }, delay);
   };
 
