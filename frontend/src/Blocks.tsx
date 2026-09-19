@@ -130,27 +130,60 @@ useEffect(() => {
   setSavingBlock(true);
 
   try {
-    await fetch(
+    const response = await fetch(
       API + '/admin/blocks',
       {
         method: 'POST',
         headers: headers(),
-       body: JSON.stringify({
-  day: f.day,
-  start: f.start,
-  end: f.end,
-  reason: f.reason,
-  specialist_id:
-    f.specialist_id
-      ? Number(f.specialist_id)
-      : null
-})
+        body: JSON.stringify({
+          day: f.day,
+          start: f.start,
+          end: f.end,
+          reason: f.reason,
+          specialist_id:
+            f.specialist_id
+              ? Number(f.specialist_id)
+              : null
+        })
       }
     );
 
+    const data =
+      await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        response.status === 409
+          ? t(
+              'owner.blockTimeUnavailable',
+              'Это время уже занято записью или другой блокировкой.'
+            )
+          : (
+              data?.detail ||
+              t(
+                'owner.createBlockError',
+                'Не удалось добавить блокировку'
+              )
+            )
+      );
+    }
+
     await reload();
-    
-    alert(t('owner.blockAdded', 'Блокировка добавлена'));
+
+    alert(
+      t(
+        'owner.blockAdded',
+        'Блокировка добавлена'
+      )
+    );
+  } catch (e: any) {
+    alert(
+      e?.message ||
+      t(
+        'owner.createBlockError',
+        'Не удалось добавить блокировку'
+      )
+    );
   } finally {
     setSavingBlock(false);
   }
