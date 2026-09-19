@@ -441,11 +441,13 @@ def staff_connect(
     token_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     with SessionLocal() as db:
+        # Look up the token first without filtering on used_at. Telegram Mini Apps
+        # can initialize the same start parameter more than once (for example
+        # after a WebView reload). Replaying a token from the *same* Telegram
+        # account should therefore be harmless instead of showing an error.
         link = (
             db.query(SpecialistTelegramLink)
             .filter(SpecialistTelegramLink.token_hash == token_hash)
-            .filter(SpecialistTelegramLink.used_at.is_(None))
-            .filter(SpecialistTelegramLink.expires_at > datetime.utcnow())
             .first()
         )
         if not link:
@@ -460,6 +462,22 @@ def staff_connect(
         ):
             raise HTTPException(404, "Staff member not found")
 
+        if link.used_at is not None:
+            if specialist.telegram_user_id != telegram_id:
+                raise HTTPException(400, "Staff connection link is invalid or expired")
+            return {
+                "ok": True,
+                "business_id": business.id,
+                "specialist_id": specialist.id,
+                "specialist_name": specialist.name,
+                "business_name": business.name,
+                "next": "staff_workspace",
+                "already_connected": True,
+            }
+
+        if link.expires_at <= datetime.utcnow():
+            raise HTTPException(400, "Staff connection link is invalid or expired")
+
         specialist.telegram_user_id = telegram_id
         specialist.telegram_connected_at = datetime.utcnow()
         specialist.notifications_enabled = True
@@ -473,6 +491,7 @@ def staff_connect(
             "specialist_name": specialist.name,
             "business_name": business.name,
             "next": "staff_workspace",
+            "already_connected": False,
         }
 
 
