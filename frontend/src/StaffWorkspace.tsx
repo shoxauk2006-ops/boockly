@@ -512,11 +512,18 @@ export function StaffWorkspace({
 
       if (!response.ok) {
         throw new Error(
-          data?.detail ||
-            t(
-              'staff.createBookingError',
-              'Не удалось добавить запись'
-            )
+          response.status === 409
+            ? t(
+                'staff.timeUnavailable',
+                'Это время уже занято.'
+              )
+            : (
+                data?.detail ||
+                t(
+                  'staff.createBookingError',
+                  'Не удалось добавить запись'
+                )
+              )
         );
       }
 
@@ -589,11 +596,18 @@ export function StaffWorkspace({
 
       if (!response.ok) {
         throw new Error(
-          data?.detail ||
-            t(
-              'staff.createBlockError',
-              'Не удалось добавить блокировку'
-            )
+          response.status === 409
+            ? t(
+                'staff.timeUnavailable',
+                'Это время уже занято.'
+              )
+            : (
+                data?.detail ||
+                t(
+                  'staff.createBlockError',
+                  'Не удалось добавить блокировку'
+                )
+              )
         );
       }
 
