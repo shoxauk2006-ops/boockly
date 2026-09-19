@@ -193,6 +193,22 @@ useEffect(() => {
   const [qrPrintOpen, setQrPrintOpen] =
   useState(false);
 
+  const [businessLinkCopied, setBusinessLinkCopied] =
+    useState(false);
+
+  const businessLinkCopiedTimer =
+    useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (businessLinkCopiedTimer.current !== null) {
+        window.clearTimeout(
+          businessLinkCopiedTimer.current
+        );
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const generateQR = async () => {
       try {
@@ -315,14 +331,26 @@ useEffect(() => {
         clientLink
       );
 
-      alert(
-       t(
-        'owner.businessLinkCopied',
-        'Ссылка скопирована'
-       )
-     );
-    } catch {
-      alert(clientLink);
+      setBusinessLinkCopied(true);
+
+      if (
+        businessLinkCopiedTimer.current !== null
+      ) {
+        window.clearTimeout(
+          businessLinkCopiedTimer.current
+        );
+      }
+
+      businessLinkCopiedTimer.current =
+        window.setTimeout(() => {
+          setBusinessLinkCopied(false);
+          businessLinkCopiedTimer.current = null;
+        }, 1800);
+    } catch (error) {
+      console.error(
+        'BUSINESS LINK COPY ERROR:',
+        error
+      );
     }
   };
 
@@ -1034,10 +1062,15 @@ return (
 >
   {subscriptionLocked
     ? '🔒'
-    : t(
-        'settings.copyLink',
-        'Копировать'
-      )}
+    : businessLinkCopied
+      ? `✓ ${t(
+          'common.copied',
+          'Скопировано'
+        )}`
+      : t(
+          'settings.copyLink',
+          'Копировать'
+        )}
 </button>
           </div>
 
