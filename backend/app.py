@@ -439,14 +439,29 @@ def _bookly_remember_language(user: dict, preferred_language: str | None = None)
         uid = int(user.get("id"))
     except (TypeError, ValueError):
         return
-    lang = _bookly_normalize_language(preferred_language or user.get("language_code"))
+
+    explicit_language = bool(
+        preferred_language and str(preferred_language).strip()
+    )
+    lang = _bookly_normalize_language(
+        preferred_language
+        if explicit_language
+        else user.get("language_code")
+    )
+
     try:
         with SessionLocal() as db:
             row = db.get(TelegramUserLanguage, uid)
             if row is None:
-                row = TelegramUserLanguage(telegram_user_id=uid, language=lang)
+                row = TelegramUserLanguage(
+                    telegram_user_id=uid,
+                    language=lang,
+                )
                 db.add(row)
-            else:
+            elif explicit_language:
+                # Requests without X-Bookly-Language (for example a Telegram
+                # deep-link connection) must not overwrite the language the
+                # user explicitly selected inside Bookly.
                 row.language = lang
             db.commit()
     except Exception:
@@ -1229,31 +1244,31 @@ def _bookly_localize_outgoing_text(text: str, lang: str) -> str:
             "new": "Новая запись в Bookly", "booked": "Вы успешно записаны!", "cancel_client": "Ваша запись отменена",
             "cancel_business": "Ваша запись отменена бизнесом.", "cancel_owner": "Клиент отменил запись",
             "hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "waiting": "Ждём вас!",
-            "phone": "номер не передан", "phone_label": "Ваш номер:", "contact_label": "Связаться:", "address": "Адрес не указан"
+            "phone": "номер не передан", "phone_label": "Ваш номер:", "contact_label": "Связаться:", "specialist_label": "Специалист:", "address": "Адрес не указан"
         },
         "en": {
             "new": "New booking in Bookly", "booked": "You are successfully booked!", "cancel_client": "Your booking has been cancelled",
             "cancel_business": "Your booking was cancelled by the business.", "cancel_owner": "Client cancelled the booking",
             "hint": "Please contact the business if you want to choose another time.", "waiting": "We look forward to seeing you!",
-            "phone": "phone not provided", "phone_label": "Your number:", "contact_label": "Contact:", "address": "Address not provided"
+            "phone": "phone not provided", "phone_label": "Your number:", "contact_label": "Contact:", "specialist_label": "Specialist:", "address": "Address not provided"
         },
         "uz": {
             "new": "Bookly’da yangi bron", "booked": "Siz muvaffaqiyatli bron qilindingiz!", "cancel_client": "Broningiz bekor qilindi",
             "cancel_business": "Bron biznes tomonidan bekor qilindi.", "cancel_owner": "Mijoz bronni bekor qildi",
             "hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.", "waiting": "Sizni kutamiz!",
-            "phone": "telefon berilmagan", "phone_label": "Raqamingiz:", "contact_label": "Bog‘lanish:", "address": "Manzil ko‘rsatilmagan"
+            "phone": "telefon berilmagan", "phone_label": "Raqamingiz:", "contact_label": "Bog‘lanish:", "specialist_label": "Mutaxassis:", "address": "Manzil ko‘rsatilmagan"
         },
         "tr": {
             "new": "Bookly’da yeni rezervasyon", "booked": "Rezervasyonunuz başarıyla oluşturuldu!", "cancel_client": "Rezervasyonunuz iptal edildi",
             "cancel_business": "Rezervasyon işletme tarafından iptal edildi.", "cancel_owner": "Müşteri rezervasyonu iptal etti",
             "hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.", "waiting": "Sizi bekliyoruz!",
-            "phone": "telefon verilmedi", "phone_label": "Numaranız:", "contact_label": "İletişim:", "address": "Adres belirtilmedi"
+            "phone": "telefon verilmedi", "phone_label": "Numaranız:", "contact_label": "İletişim:", "specialist_label": "Uzman:", "address": "Adres belirtilmedi"
         },
         "ar": {
             "new": "حجز جديد في Bookly", "booked": "تم حجز موعدك بنجاح!", "cancel_client": "تم إلغاء حجزك",
             "cancel_business": "تم إلغاء الحجز من قبل النشاط.", "cancel_owner": "ألغى العميل الحجز",
             "hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.", "waiting": "ننتظركم!",
-            "phone": "رقم الهاتف غير متوفر", "phone_label": "رقمك:", "contact_label": "للتواصل:", "address": "العنوان غير متوفر"
+            "phone": "رقم الهاتف غير متوفر", "phone_label": "رقمك:", "contact_label": "للتواصل:", "specialist_label": "المختص:", "address": "العنوان غير متوفر"
         },
     }[_bookly_normalize_language(lang)]
 
@@ -1269,6 +1284,7 @@ def _bookly_localize_outgoing_text(text: str, lang: str) -> str:
         ("номер не указан", d["phone"]),
         ("Ваш номер:", d["phone_label"]),
         ("Связаться:", d["contact_label"]),
+        ("Специалист:", d["specialist_label"]),
         ("Адрес не указан", d["address"]),
     ]
     for old, new in replacements:
