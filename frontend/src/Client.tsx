@@ -876,12 +876,12 @@ export function Client({
 
       {specialists.length > 0 ? (
         <>
-          <h2>{t('client.chooseSpecialist', 'Выберите специалиста')}</h2>
+          <h2 className="client-step-title">{t('client.chooseSpecialist', 'Выберите специалиста')}</h2>
           {!selectedSpecialist ? (
-            <div className="card">
-              <div style={{ display: 'grid', gap: 10 }}>
+            <div className="card client-specialist-list-card">
+              <div className="client-specialist-list">
                 {specialists.map((specialist) => (
-                  <button type="button" key={specialist.id} className="full" onClick={() => chooseSpecialist(specialist)} style={{ display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+                  <button type="button" key={specialist.id} className="client-specialist-row" onClick={() => chooseSpecialist(specialist)}>
                     {specialist.photo ? <img src={specialist.photo} alt={specialist.name} style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} /> : <span style={{ width: 52, height: 52, borderRadius: '50%', background: '#f0f1f3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>{String(specialist.name || '?').charAt(0).toUpperCase()}</span>}
                     <span style={{ display: 'grid', gap: 2 }}><strong>{specialist.name}</strong>{specialist.position && <small style={{ opacity: 0.7 }}>{specialist.position}</small>}</span>
                   </button>
@@ -890,9 +890,39 @@ export function Client({
             </div>
           ) : (
             <>
-              <div className="card">
-                <button type="button" className="ghost full" onClick={() => { setSelectedSpecialist(null); setSelected(null); setSelectedTime(''); setSlots([]); setDay(getClientLocalDateKey()); }}>← {t('client.chooseSpecialist', 'Выбрать специалиста')}</button>
-                <p style={{ margin: '12px 0 0', fontWeight: 600 }}>{selectedSpecialist.name}</p>
+              <div className="card client-selected-specialist-card">
+                <div>
+                  <span className="client-selected-specialist-label">
+                    {t(
+                      'client.selectedSpecialist',
+                      'Выбран специалист'
+                    )}
+                  </span>
+                  <strong>{selectedSpecialist.name}</strong>
+                  {selectedSpecialist.position && (
+                    <small>{selectedSpecialist.position}</small>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => {
+                    setSelectedSpecialist(null);
+                    setSelected(null);
+                    setSelectedTime('');
+                    setSlots([]);
+                    setSlotItems([]);
+                    setDay(
+                      getClientLocalDateKey()
+                    );
+                  }}
+                >
+                  {t(
+                    'client.change',
+                    'Изменить'
+                  )}
+                </button>
               </div>
               <h2 id="client-services-step" className="client-step-title">{t('client.services')}</h2>
               {(() => {
