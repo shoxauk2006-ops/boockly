@@ -707,7 +707,7 @@ export function Client({
         ← {t('common.back')}
       </button>
 
-      <div className="card">
+      <div className="card client-business-overview">
 
   <div className="client-business-header">
 
@@ -852,7 +852,7 @@ export function Client({
 
 </div>
 
-<details className="card">
+<details className="card client-my-bookings-card">
         <summary
           style={{
             cursor: 'pointer',
