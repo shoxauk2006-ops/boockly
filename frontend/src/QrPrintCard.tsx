@@ -6,6 +6,23 @@ type TemplateId =
   | 'counter'
   | 'poster';
 
+type ColorThemeId =
+  | 'black'
+  | 'white'
+  | 'navy'
+  | 'green'
+  | 'beige'
+  | 'burgundy';
+
+type ColorTheme = {
+  id: ColorThemeId;
+  label: string;
+  bg: string;
+  fg: string;
+  muted: string;
+  border: string;
+};
+
 export function QrPrintCard({
   business,
   qrDataUrl,
@@ -21,6 +38,9 @@ export function QrPrintCard({
 }) {
   const [template, setTemplate] =
     useState<TemplateId>('classic');
+
+  const [colorTheme, setColorTheme] =
+    useState<ColorThemeId>('white');
 
   if (!open || !qrDataUrl) {
     return null;
@@ -84,6 +104,87 @@ export function QrPrintCard({
       )
     }
   ];
+
+  const colorThemes: ColorTheme[] = [
+    {
+      id: 'black',
+      label: t(
+        'owner.qrColorBlack',
+        'Чёрный'
+      ),
+      bg: '#111111',
+      fg: '#ffffff',
+      muted: '#c7cbd0',
+      border: '#303030'
+    },
+    {
+      id: 'white',
+      label: t(
+        'owner.qrColorWhite',
+        'Белый'
+      ),
+      bg: '#ffffff',
+      fg: '#111111',
+      muted: '#707780',
+      border: '#e5e7eb'
+    },
+    {
+      id: 'navy',
+      label: t(
+        'owner.qrColorNavy',
+        'Тёмно-синий'
+      ),
+      bg: '#132238',
+      fg: '#ffffff',
+      muted: '#c8d2df',
+      border: '#31445f'
+    },
+    {
+      id: 'green',
+      label: t(
+        'owner.qrColorGreen',
+        'Зелёный'
+      ),
+      bg: '#18392f',
+      fg: '#ffffff',
+      muted: '#c9ddd6',
+      border: '#34594d'
+    },
+    {
+      id: 'beige',
+      label: t(
+        'owner.qrColorBeige',
+        'Бежевый'
+      ),
+      bg: '#efe4d5',
+      fg: '#2e251e',
+      muted: '#74685e',
+      border: '#d8c7b3'
+    },
+    {
+      id: 'burgundy',
+      label: t(
+        'owner.qrColorBurgundy',
+        'Бордовый'
+      ),
+      bg: '#5c2330',
+      fg: '#ffffff',
+      muted: '#ead4da',
+      border: '#7b3d49'
+    }
+  ];
+
+  const theme =
+    colorThemes.find(
+      item => item.id === colorTheme
+    ) || colorThemes[1];
+
+  const previewStyle = {
+    '--qr-theme-bg': theme.bg,
+    '--qr-theme-fg': theme.fg,
+    '--qr-theme-muted': theme.muted,
+    '--qr-theme-border': theme.border
+  } as React.CSSProperties;
 
   const loadQrImage = async () => {
     const image = new Image();
@@ -170,6 +271,36 @@ export function QrPrintCard({
     );
   };
 
+  const drawQrCard = (
+    ctx: CanvasRenderingContext2D,
+    qrImage: HTMLImageElement,
+    x: number,
+    y: number,
+    size: number,
+    padding: number,
+    radius: number
+  ) => {
+    ctx.fillStyle = '#ffffff';
+
+    roundedRect(
+      ctx,
+      x,
+      y,
+      size,
+      size,
+      radius
+    );
+    ctx.fill();
+
+    ctx.drawImage(
+      qrImage,
+      x + padding,
+      y + padding,
+      size - padding * 2,
+      size - padding * 2
+    );
+  };
+
   const drawClassic = (
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
@@ -178,7 +309,7 @@ export function QrPrintCard({
     canvas.width = 1600;
     canvas.height = 2200;
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(
       0,
       0,
@@ -198,7 +329,7 @@ export function QrPrintCard({
       72,
       54,
       900,
-      '#111111'
+      theme.fg
     );
 
     drawFittedText(
@@ -210,11 +341,11 @@ export function QrPrintCard({
       62,
       38,
       800,
-      '#111111'
+      theme.fg
     );
 
     setFont(ctx, 500, 34);
-    ctx.fillStyle = '#777777';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       t(
         'owner.onlineBooking',
@@ -230,7 +361,7 @@ export function QrPrintCard({
     const cardH = 1300;
 
     ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = theme.border;
     ctx.lineWidth = 4;
 
     roundedRect(
@@ -255,7 +386,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 800, 58);
-    ctx.fillStyle = '#111111';
+    ctx.fillStyle = theme.fg;
     ctx.fillText(
       t(
         'owner.bookOnline',
@@ -266,7 +397,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 500, 34);
-    ctx.fillStyle = '#707780';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       t(
         'owner.scanQr',
@@ -285,7 +416,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 700, 24);
-    ctx.fillStyle = '#a0a5ab';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       'POWERED BY BOOKLY',
       800,
@@ -301,7 +432,7 @@ export function QrPrintCard({
     canvas.width = 1600;
     canvas.height = 2000;
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(
       0,
       0,
@@ -309,7 +440,7 @@ export function QrPrintCard({
       canvas.height
     );
 
-    ctx.strokeStyle = '#111111';
+    ctx.strokeStyle = theme.fg;
     ctx.lineWidth = 12;
     ctx.strokeRect(
       55,
@@ -321,7 +452,7 @@ export function QrPrintCard({
     ctx.textAlign = 'center';
 
     setFont(ctx, 900, 42);
-    ctx.fillStyle = '#111111';
+    ctx.fillStyle = theme.fg;
     ctx.fillText(
       'BOOKLY',
       800,
@@ -337,21 +468,21 @@ export function QrPrintCard({
       68,
       40,
       800,
-      '#111111'
+      theme.fg
     );
 
-    const qrSize = 1160;
-
-    ctx.drawImage(
+    drawQrCard(
+      ctx,
       qrImage,
-      220,
-      400,
-      qrSize,
-      qrSize
+      190,
+      370,
+      1220,
+      30,
+      30
     );
 
     setFont(ctx, 800, 48);
-    ctx.fillStyle = '#111111';
+    ctx.fillStyle = theme.fg;
     ctx.fillText(
       t(
         'owner.scanToBook',
@@ -362,7 +493,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 500, 30);
-    ctx.fillStyle = '#777777';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       t(
         'owner.onlineBooking247',
@@ -373,7 +504,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 700, 22);
-    ctx.fillStyle = '#a0a5ab';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       'BOOKLY',
       800,
@@ -397,7 +528,7 @@ export function QrPrintCard({
       canvas.height
     );
 
-    ctx.fillStyle = '#111111';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(
       0,
       0,
@@ -408,7 +539,7 @@ export function QrPrintCard({
     ctx.textAlign = 'center';
 
     setFont(ctx, 900, 48);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = theme.fg;
     ctx.fillText(
       'BOOKLY',
       450,
@@ -424,11 +555,11 @@ export function QrPrintCard({
       72,
       42,
       800,
-      '#ffffff'
+      theme.fg
     );
 
     setFont(ctx, 600, 38);
-    ctx.fillStyle = '#d6d6d6';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       t(
         'owner.onlineBooking247',
@@ -439,7 +570,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 800, 48);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = theme.fg;
     ctx.fillText(
       t(
         'owner.scanToBook',
@@ -450,7 +581,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 500, 30);
-    ctx.fillStyle = '#bdbdbd';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       t(
         'owner.chooseServiceTime',
@@ -466,7 +597,7 @@ export function QrPrintCard({
     const qrCardH = 900;
 
     ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = theme.border;
     ctx.lineWidth = 4;
 
     roundedRect(
@@ -516,7 +647,7 @@ export function QrPrintCard({
     canvas.width = 1600;
     canvas.height = 2200;
 
-    ctx.fillStyle = '#111111';
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(
       0,
       0,
@@ -527,7 +658,7 @@ export function QrPrintCard({
     ctx.textAlign = 'center';
 
     setFont(ctx, 900, 42);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = theme.fg;
     ctx.fillText(
       'BOOKLY',
       800,
@@ -546,11 +677,11 @@ export function QrPrintCard({
       88,
       54,
       900,
-      '#ffffff'
+      theme.fg
     );
 
     setFont(ctx, 500, 34);
-    ctx.fillStyle = '#c7c7c7';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       t(
         'owner.chooseServiceTime',
@@ -560,29 +691,14 @@ export function QrPrintCard({
       395
     );
 
-    const cardX = 170;
-    const cardY = 520;
-    const cardW = 1260;
-    const cardH = 1260;
-
-    ctx.fillStyle = '#ffffff';
-
-    roundedRect(
+    drawQrCard(
       ctx,
-      cardX,
-      cardY,
-      cardW,
-      cardH,
-      55
-    );
-    ctx.fill();
-
-    ctx.drawImage(
       qrImage,
-      285,
-      635,
-      1030,
-      1030
+      170,
+      520,
+      1260,
+      115,
+      55
     );
 
     drawFittedText(
@@ -594,11 +710,11 @@ export function QrPrintCard({
       64,
       40,
       800,
-      '#ffffff'
+      theme.fg
     );
 
     setFont(ctx, 600, 30);
-    ctx.fillStyle = '#bcbcbc';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       t(
         'owner.scanToBook',
@@ -609,7 +725,7 @@ export function QrPrintCard({
     );
 
     setFont(ctx, 700, 22);
-    ctx.fillStyle = '#777777';
+    ctx.fillStyle = theme.muted;
     ctx.fillText(
       'POWERED BY BOOKLY',
       800,
@@ -685,7 +801,7 @@ export function QrPrintCard({
         );
 
       const fileName =
-        `${business?.slug || 'bookly'}-qr-${template}.png`;
+        `${business?.slug || 'bookly'}-qr-${template}-${colorTheme}.png`;
 
       const file =
         new File(
@@ -814,10 +930,48 @@ export function QrPrintCard({
           ))}
         </div>
 
+        <div className="qr-color-section">
+          <span className="qr-color-label">
+            {t(
+              'owner.chooseQrColor',
+              'Цвет макета'
+            )}
+          </span>
+
+          <div className="qr-color-picker">
+            {colorThemes.map(item => (
+              <button
+                type="button"
+                key={item.id}
+                className={
+                  colorTheme === item.id
+                    ? 'qr-color-option active'
+                    : 'qr-color-option'
+                }
+                onClick={() =>
+                  setColorTheme(item.id)
+                }
+                aria-label={item.label}
+                title={item.label}
+              >
+                <span
+                  className="qr-color-swatch"
+                  style={{
+                    background: item.bg,
+                    borderColor: item.border
+                  }}
+                />
+                <small>{item.label}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div
           className={
-            `qr-print-sheet qr-print-sheet-${template}`
+            `qr-print-sheet qr-print-sheet-${template} qr-color-preview`
           }
+          style={previewStyle}
         >
           {template === 'poster' ? (
             <>
