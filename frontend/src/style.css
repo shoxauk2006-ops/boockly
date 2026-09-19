@@ -1867,3 +1867,314 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
     margin-top:13px;
   }
 }
+
+
+/* 2026-09 client booking flow refresh */
+.personal-role-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  margin:14px 0;
+}
+.personal-role-grid.has-staff{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.personal-role-grid .personal-business-card,
+.personal-role-grid .personal-business-skeleton{
+  margin:0;
+}
+.personal-role-card{
+  min-height:176px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  padding:17px!important;
+}
+.personal-role-card h2{
+  font-size:17px!important;
+  line-height:1.12;
+  margin-top:7px!important;
+}
+.personal-role-card p{
+  margin:0 0 14px;
+  font-size:12px;
+  line-height:1.4;
+}
+.personal-role-card .personal-white-button{
+  width:100%;
+  margin-top:auto;
+  padding:11px 12px;
+}
+
+.client-booking-page{
+  padding-bottom:28px;
+}
+.client-booking-page > .card{
+  margin:10px 0;
+  border-radius:18px;
+  box-shadow:0 6px 18px rgba(15,23,42,.04);
+}
+.client-business-overview{
+  padding:16px!important;
+}
+.client-business-overview .client-business-header{
+  gap:11px;
+}
+.client-business-overview .bookly-business-avatar{
+  width:58px!important;
+  height:58px!important;
+  min-width:58px!important;
+  min-height:58px!important;
+}
+.client-business-overview .client-business-header-info h1{
+  font-size:22px;
+  line-height:1.08;
+}
+.client-business-overview .client-business-header-info p{
+  margin:5px 0 0;
+  font-size:12px;
+  line-height:1.35;
+  color:#777;
+}
+.client-business-overview .client-contact-actions{
+  gap:6px;
+  margin:11px 0 8px;
+}
+.client-business-overview .client-phone-row,
+.client-business-overview .client-contact-button{
+  min-height:44px;
+  border-radius:13px;
+  box-shadow:none;
+}
+.client-business-overview .client-save-button{
+  min-height:40px;
+  padding:8px 12px!important;
+}
+.client-business-overview .client-timezone-info{
+  margin-top:8px;
+  padding-top:7px;
+  border-top:1px solid #eceef1;
+}
+.client-business-overview .client-timezone-info p{
+  margin:3px 0!important;
+  font-size:11px!important;
+  line-height:1.35;
+}
+.client-business-overview > p.muted{
+  font-size:11px;
+  line-height:1.35;
+}
+.client-my-bookings-card{
+  padding:0!important;
+  overflow:hidden;
+}
+.client-my-bookings-card > summary{
+  padding:14px 16px!important;
+  font-size:15px!important;
+}
+.client-my-bookings-card > div{
+  margin-top:0!important;
+  padding:0 16px 14px;
+}
+
+.client-step-title{
+  margin:20px 3px 9px;
+  font-size:20px;
+  letter-spacing:-.35px;
+  scroll-margin-top:74px;
+}
+.client-specialist-list-card{
+  padding:8px!important;
+}
+.client-specialist-list{
+  display:grid;
+  gap:6px;
+}
+.client-specialist-row{
+  width:100%;
+  min-height:66px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:8px 10px!important;
+  border:1px solid transparent!important;
+  border-radius:14px!important;
+  background:#f7f8fa!important;
+  color:#111!important;
+  text-align:left!important;
+}
+.client-specialist-row:active{
+  background:#eef0f3!important;
+}
+.client-selected-specialist-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:13px 14px!important;
+  scroll-margin-top:74px;
+}
+.client-selected-specialist-card > div{
+  display:grid;
+  gap:2px;
+}
+.client-selected-specialist-card strong{
+  font-size:16px;
+}
+.client-selected-specialist-card small{
+  color:#848b94;
+}
+.client-selected-specialist-label{
+  color:#9aa0a8;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.client-selected-specialist-card button{
+  flex:0 0 auto;
+  padding:9px 11px!important;
+  font-size:12px!important;
+}
+
+.client-schedule-card{
+  padding:16px!important;
+  scroll-margin-top:74px;
+}
+.client-schedule-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.client-schedule-head h2{
+  margin:3px 0 0;
+  font-size:20px;
+}
+.client-step-kicker{
+  display:block;
+  color:#969ca5;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+.client-date-control{
+  min-width:128px;
+}
+.client-date-control > span{
+  display:block;
+  margin-bottom:4px;
+  color:#8b929b;
+  font-size:10px;
+  font-weight:700;
+}
+.client-date-control input{
+  margin:0!important;
+  min-height:40px;
+  padding:8px 10px!important;
+  border-radius:11px!important;
+  font-size:12px!important;
+}
+.client-slot-legend{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  margin:2px 0 11px;
+  color:#7d848d;
+  font-size:11px;
+  font-weight:650;
+}
+.client-slot-legend span{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.client-slot-legend i{
+  width:9px;
+  height:9px;
+  border-radius:3px;
+  display:block;
+}
+.client-slot-legend i.available{
+  background:#111;
+}
+.client-slot-legend i.unavailable{
+  background:#d8dce2;
+}
+.client-slot-calendar{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+}
+.client-slot-cell{
+  min-width:0;
+  min-height:42px;
+  padding:8px 4px!important;
+  border-radius:11px!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  font-variant-numeric:tabular-nums;
+  transition:
+    transform .14s ease,
+    background .14s ease,
+    border-color .14s ease;
+}
+.client-slot-cell.available{
+  border:1px solid #dfe3e8!important;
+  background:#fff!important;
+  color:#111!important;
+}
+.client-slot-cell.available:active{
+  transform:scale(.96);
+}
+.client-slot-cell.available.selected{
+  border-color:#111!important;
+  background:#111!important;
+  color:#fff!important;
+}
+.client-slot-cell.unavailable{
+  border:1px solid #eceef1!important;
+  background:#f2f3f5!important;
+  color:#9aa0a8!important;
+  text-decoration:line-through;
+  text-decoration-thickness:1.5px;
+  opacity:1!important;
+  cursor:not-allowed;
+}
+.client-booking-form-card{
+  scroll-margin-top:74px;
+  padding:16px!important;
+}
+
+@media(max-width:390px){
+  .personal-role-grid.has-staff{
+    gap:8px;
+  }
+  .personal-role-card{
+    min-height:166px;
+    padding:14px!important;
+  }
+  .personal-role-card h2{
+    font-size:15px!important;
+  }
+  .personal-role-card p{
+    font-size:11px;
+  }
+  .client-slot-calendar{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:6px;
+  }
+  .client-slot-cell{
+    min-height:40px;
+    font-size:11px!important;
+  }
+  .client-schedule-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .client-date-control{
+    width:100%;
+  }
+}
