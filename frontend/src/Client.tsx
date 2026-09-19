@@ -71,6 +71,12 @@ export function Client({
   const [slots, setSlots] =
     useState<string[]>([]);
 
+  const [slotItems, setSlotItems] =
+    useState<Array<{
+      time: string;
+      available: boolean;
+    }>>([]);
+
   const [selectedTime, setSelectedTime] =
     useState('');
 
@@ -322,6 +328,7 @@ export function Client({
     }
 
     setSlots([]);
+    setSlotItems([]);
     setSelectedTime('');
     setSlotsLoading(true);
 
@@ -342,8 +349,21 @@ export function Client({
         );
       }
 
-      setSlots(
-        data?.slots || []
+      const nextSlots =
+        Array.isArray(data?.slots)
+          ? data.slots
+          : [];
+
+      setSlots(nextSlots);
+      setSlotItems(
+        Array.isArray(data?.slot_items)
+          ? data.slot_items
+          : nextSlots.map(
+              (time: string) => ({
+                time,
+                available: true
+              })
+            )
       );
     } catch (e) {
       console.error(
@@ -352,6 +372,7 @@ export function Client({
       );
 
       setSlots([]);
+      setSlotItems([]);
     } finally {
       setSlotsLoading(false);
     }
