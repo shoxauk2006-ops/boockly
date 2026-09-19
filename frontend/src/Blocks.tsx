@@ -330,12 +330,16 @@ useEffect(() => {
         opacity: 0.8
       }}
     >
-      ✓ Прошедшее
+      ✓ {t(
+        'owner.pastBlock',
+        'Прошедшее'
+      )}
     </span>
   )}
 </p>
             </div>
 
+            {!isBlockPast(b) && (
             <button
   className="danger"
   disabled={deletingBlockId === b.id}
@@ -400,6 +404,7 @@ useEffect(() => {
     '×'
   )}
 </button>
+            )}
           </div>
         )
       )}
