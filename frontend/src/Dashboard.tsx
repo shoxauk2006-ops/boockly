@@ -47,7 +47,8 @@ export function Dashboard({
   statistics,
   statisticsLoading,
   statisticsPeriod,
-  setStatisticsPeriod
+  setStatisticsPeriod,
+  teamMembers
 }: {
   bookings: any[];
   business: any;
@@ -59,6 +60,7 @@ export function Dashboard({
   setStatisticsPeriod: React.Dispatch<
     React.SetStateAction<'7' | '30'>
   >;
+  teamMembers: any[];
 }) {
   // Legacy subscription UI was removed from the Mini App.
   // Keep these values only as compatibility guards for stale JSX while the website owns billing.
@@ -76,11 +78,8 @@ export function Dashboard({
   const [showStatistics, setShowStatistics] =
   useState(false);
 
-  const [statisticsStaffId, setStatisticsStaffId] =
+  const [teamMembersId, setStatisticsStaffId] =
     useState('all');
-
-  const [statisticsStaff, setStatisticsStaff] =
-    useState<any[]>([]);
 
   const [dashboardStatistics, setDashboardStatistics] =
   useState<any>(null);
@@ -90,44 +89,6 @@ const [dashboardStatisticsLoading, setDashboardStatisticsLoading] =
 
 useEffect(() => {
   setStatisticsStaffId('all');
-}, [business?.id]);
-
-useEffect(() => {
-  let cancelled = false;
-
-  if (!business?.id) {
-    setStatisticsStaff([]);
-    return;
-  }
-
-  fetch(
-    API + '/admin/specialists',
-    { headers: headers() }
-  )
-    .then(async response => {
-      const data = await response
-        .json()
-        .catch(() => []);
-
-      return response.ok &&
-        Array.isArray(data)
-        ? data
-        : [];
-    })
-    .then(data => {
-      if (!cancelled) {
-        setStatisticsStaff(data);
-      }
-    })
-    .catch(() => {
-      if (!cancelled) {
-        setStatisticsStaff([]);
-      }
-    });
-
-  return () => {
-    cancelled = true;
-  };
 }, [business?.id]);
 
 useEffect(() => {
@@ -145,10 +106,10 @@ useEffect(() => {
         API +
         '/admin/statistics' +
         (
-          statisticsStaffId !== 'all'
+          teamMembersId !== 'all'
             ? '?specialist_id=' +
               encodeURIComponent(
-                statisticsStaffId
+                teamMembersId
               )
             : ''
         );
@@ -188,7 +149,7 @@ useEffect(() => {
   return () => {
     cancelled = true;
   };
-}, [business?.id, statisticsStaffId]);
+}, [business?.id, teamMembersId]);
 
     const statisticsDaily =
   Array.isArray(dashboardStatistics?.daily)
@@ -456,9 +417,9 @@ return (
       </button>
     </div>
 
-            {statisticsStaff.length > 0 && (
+            {teamMembers.length > 0 && (
               <select
-                value={statisticsStaffId}
+                value={teamMembersId}
                 onChange={e =>
                   setStatisticsStaffId(
                     e.target.value
@@ -476,7 +437,7 @@ return (
                   )}
                 </option>
 
-                {statisticsStaff.map(
+                {teamMembers.map(
                   specialist => (
                     <option
                       key={specialist.id}
