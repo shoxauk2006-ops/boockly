@@ -698,7 +698,7 @@ export function Client({
   }
 
   return (
-    <section>
+    <section className="client-booking-page">
 
       <button
         className="back"
@@ -894,7 +894,7 @@ export function Client({
                 <button type="button" className="ghost full" onClick={() => { setSelectedSpecialist(null); setSelected(null); setSelectedTime(''); setSlots([]); setDay(getClientLocalDateKey()); }}>← {t('client.chooseSpecialist', 'Выбрать специалиста')}</button>
                 <p style={{ margin: '12px 0 0', fontWeight: 600 }}>{selectedSpecialist.name}</p>
               </div>
-              <h2>{t('client.services')}</h2>
+              <h2 id="client-services-step" className="client-step-title">{t('client.services')}</h2>
               {(() => {
                 const specialistServices = selectedSpecialist.service_ids?.length ? services.filter((service: any) => selectedSpecialist.service_ids.includes(service.id)) : services;
                 return specialistServices.length === 0 ? <div className="card"><p>{t('client.noServices')}</p></div> : specialistServices.map((service: any) => (
@@ -921,21 +921,159 @@ export function Client({
 
       {selected && (
         <>
-          <div className="card">
-            <h2>{t('client.chooseDate')}</h2>
-            <input type="date" min={getClientLocalDateKey()} value={day} onChange={async e => { const newDay = e.target.value; setDay(newDay); setSelectedTime(''); await loadSlots(selected, newDay, selectedSpecialist); }} />
+          <div
+            id="client-schedule-step"
+            className="card client-schedule-card"
+          >
+            <div className="client-schedule-head">
+              <div>
+                <span className="client-step-kicker">
+                  {t(
+                    'client.schedule',
+                    'Расписание'
+                  )}
+                </span>
+                <h2>
+                  {t(
+                    'client.chooseTime',
+                    'Выберите время'
+                  )}
+                </h2>
+              </div>
+
+              <label className="client-date-control">
+                <span>
+                  {t(
+                    'client.chooseDate',
+                    'Дата'
+                  )}
+                </span>
+                <input
+                  type="date"
+                  min={getClientLocalDateKey()}
+                  value={day}
+                  onChange={async e => {
+                    const newDay =
+                      e.target.value;
+                    setDay(newDay);
+                    setSelectedTime('');
+                    await loadSlots(
+                      selected,
+                      newDay,
+                      selectedSpecialist
+                    );
+                  }}
+                />
+              </label>
+            </div>
+
+            <div className="client-slot-legend">
+              <span>
+                <i className="available" />
+                {t(
+                  'client.available',
+                  'Свободно'
+                )}
+              </span>
+              <span>
+                <i className="unavailable" />
+                {t(
+                  'client.unavailable',
+                  'Занято'
+                )}
+              </span>
+            </div>
+
+            {slotsLoading ? (
+              <p className="muted">
+                {t(
+                  'owner.loadingSlots',
+                  'Загружаем свободное время...'
+                )}
+              </p>
+            ) : slotItems.length > 0 ? (
+              <div className="client-slot-calendar">
+                {slotItems.map(slot => (
+                  <button
+                    type="button"
+                    key={slot.time}
+                    disabled={!slot.available}
+                    className={
+                      [
+                        'client-slot-cell',
+                        slot.available
+                          ? 'available'
+                          : 'unavailable',
+                        selectedTime ===
+                        slot.time
+                          ? 'selected'
+                          : ''
+                      ]
+                        .filter(Boolean)
+                        .join(' ')
+                    }
+                    onClick={() => {
+                      if (slot.available) {
+                        chooseTime(slot.time);
+                      }
+                    }}
+                  >
+                    {slot.time}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="muted">
+                {t(
+                  'client.noSlots',
+                  'На эту дату свободного времени нет.'
+                )}
+              </p>
+            )}
           </div>
-          <div className="card">
-            <h2>{t('client.chooseTime')}</h2>
-            {slotsLoading ? <p className="muted">{t('owner.loadingSlots')}</p> : slots.length > 0 ? <div className="slots">{slots.map(time => <button key={time} className={selectedTime === time ? 'selected' : ''} onClick={() => chooseTime(time)}>{time}</button>)}</div> : <p>{t('client.noSlots')}</p>}
-          </div>
+
           {selectedTime && (
-            <div id="booking-form" className="card">
+            <div
+              id="booking-form"
+              className="card client-booking-form-card"
+            >
               <h2>{t('client.yourData')}</h2>
-              <div className="success"><b>{selected.name}</b><br />{selectedSpecialist?.name && <>{selectedSpecialist.name}<br /></>}{day} · {selectedTime}</div>
-              <input type="text" placeholder={t('client.name')} value={clientName} onChange={e => setClientName(e.target.value)} />
-              <PhoneInput value={phone} onChange={setPhone} placeholder={t('client.phone')} />
-              <button className="primary full" disabled={bookingLoading} onClick={submitBooking}>{bookingLoading ? t('client.bookingLoading') : t('client.confirmBooking')}</button>
+              <div className="success">
+                <b>{selected.name}</b>
+                <br />
+                {selectedSpecialist?.name && (
+                  <>
+                    {selectedSpecialist.name}
+                    <br />
+                  </>
+                )}
+                {day} · {selectedTime}
+              </div>
+
+              <input
+                type="text"
+                placeholder={t('client.name')}
+                value={clientName}
+                onChange={e =>
+                  setClientName(e.target.value)
+                }
+              />
+
+              <PhoneInput
+                value={phone}
+                onChange={setPhone}
+                placeholder={t('client.phone')}
+              />
+
+              <button
+                className="primary full"
+                disabled={bookingLoading}
+                onClick={submitBooking}
+              >
+                {bookingLoading
+                  ? t('client.bookingLoading')
+                  : t('client.confirmBooking')}
+              </button>
             </div>
           )}
         </>
