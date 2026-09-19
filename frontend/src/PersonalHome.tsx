@@ -306,37 +306,39 @@ export function PersonalHome({
         />
       )}
 
-      <nav className="personal-bottom-nav">
-        <button
-          className={page === 'home' ? 'active' : ''}
-          onClick={() => setPage('home')}
-        >
-          <span>⌂</span>
-          <small>
-            {t('nav.home', 'Главная')}
-          </small>
-        </button>
+      {page !== 'staff' && (
+        <nav className="personal-bottom-nav">
+          <button
+            className={page === 'home' ? 'active' : ''}
+            onClick={() => setPage('home')}
+          >
+            <span>⌂</span>
+            <small>
+              {t('nav.home', 'Главная')}
+            </small>
+          </button>
 
-        <button
-          className={page === 'bookings' ? 'active' : ''}
-          onClick={() => setPage('bookings')}
-        >
-          <span>◷</span>
-          <small>
-            {t('nav.bookings', 'Записи')}
-          </small>
-        </button>
+          <button
+            className={page === 'bookings' ? 'active' : ''}
+            onClick={() => setPage('bookings')}
+          >
+            <span>◷</span>
+            <small>
+              {t('nav.bookings', 'Записи')}
+            </small>
+          </button>
 
-        <button
-          className={page === 'saved' ? 'active' : ''}
-          onClick={() => setPage('saved')}
-        >
-          <span>♡</span>
-          <small>
-            {t('nav.saved', 'Сохранённые')}
-          </small>
-        </button>
-      </nav>
+          <button
+            className={page === 'saved' ? 'active' : ''}
+            onClick={() => setPage('saved')}
+          >
+            <span>♡</span>
+            <small>
+              {t('nav.saved', 'Сохранённые')}
+            </small>
+          </button>
+        </nav>
+      )}
 
     </section>
   );
