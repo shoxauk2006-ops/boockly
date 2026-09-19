@@ -2178,3 +2178,18 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
     width:100%;
   }
 }
+
+
+.personal-home-main{
+  display:flex;
+  flex-direction:column;
+}
+.personal-home-main > .personal-home-hero{
+  order:1;
+}
+.personal-home-main > .personal-role-grid{
+  order:2;
+}
+.personal-home-main > .personal-open-business-card{
+  order:3;
+}
