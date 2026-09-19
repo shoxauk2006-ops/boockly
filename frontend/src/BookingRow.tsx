@@ -229,6 +229,17 @@ const isCompleted =
             }
           </span>
         )}
+
+        {x.specialist_name && (
+          <span>
+            👤{' '}
+            {t(
+              'owner.specialist',
+              'Специалист'
+            )}
+            : {x.specialist_name}
+          </span>
+        )}
       </div>
 
       <div
