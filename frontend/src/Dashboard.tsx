@@ -76,11 +76,55 @@ export function Dashboard({
   const [showStatistics, setShowStatistics] =
   useState(false);
 
+  const [statisticsStaffId, setStatisticsStaffId] =
+    useState('all');
+
+  const [statisticsStaff, setStatisticsStaff] =
+    useState<any[]>([]);
+
   const [dashboardStatistics, setDashboardStatistics] =
   useState<any>(null);
 
 const [dashboardStatisticsLoading, setDashboardStatisticsLoading] =
   useState(false);
+
+useEffect(() => {
+  let cancelled = false;
+
+  if (!business?.id) {
+    setStatisticsStaff([]);
+    return;
+  }
+
+  fetch(
+    API + '/admin/specialists',
+    { headers: headers() }
+  )
+    .then(async response => {
+      const data = await response
+        .json()
+        .catch(() => []);
+
+      return response.ok &&
+        Array.isArray(data)
+        ? data
+        : [];
+    })
+    .then(data => {
+      if (!cancelled) {
+        setStatisticsStaff(data);
+      }
+    })
+    .catch(() => {
+      if (!cancelled) {
+        setStatisticsStaff([]);
+      }
+    });
+
+  return () => {
+    cancelled = true;
+  };
+}, [business?.id]);
 
 useEffect(() => {
   let cancelled = false;
@@ -93,8 +137,20 @@ useEffect(() => {
     setDashboardStatisticsLoading(true);
 
     try {
+      const statisticsUrl =
+        API +
+        '/admin/statistics' +
+        (
+          statisticsStaffId !== 'all'
+            ? '?specialist_id=' +
+              encodeURIComponent(
+                statisticsStaffId
+              )
+            : ''
+        );
+
       const response = await fetch(
-        API + '/admin/statistics',
+        statisticsUrl,
         {
           headers: headers()
         }
@@ -128,7 +184,7 @@ useEffect(() => {
   return () => {
     cancelled = true;
   };
-}, [business?.id]);
+}, [business?.id, statisticsStaffId]);
 
     const statisticsDaily =
   Array.isArray(dashboardStatistics?.daily)
@@ -395,6 +451,42 @@ return (
         ×
       </button>
     </div>
+
+            {statisticsStaff.length > 0 && (
+              <select
+                value={statisticsStaffId}
+                onChange={e =>
+                  setStatisticsStaffId(
+                    e.target.value
+                  )
+                }
+                style={{
+                  width: '100%',
+                  marginBottom: 10
+                }}
+              >
+                <option value="all">
+                  {t(
+                    'owner.allSpecialists',
+                    'Все сотрудники'
+                  )}
+                </option>
+
+                {statisticsStaff.map(
+                  specialist => (
+                    <option
+                      key={specialist.id}
+                      value={String(specialist.id)}
+                    >
+                      {specialist.name}
+                      {specialist.position
+                        ? ` · ${specialist.position}`
+                        : ''}
+                    </option>
+                  )
+                )}
+              </select>
+            )}
 
             <div
               style={{
