@@ -40,12 +40,14 @@ export function Blocks({
   blocks,
   reload,
   t,
-  business
+  business,
+  teamMembers
 }: {
   blocks: any[];
   reload: () => Promise<void>;
   t: (key: string, fallback?: string) => string;
   business: any;
+  teamMembers: any[];
 }) {
   const [f, setF] = useState({
     day: getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'),
@@ -55,47 +57,6 @@ export function Blocks({
     specialist_id: ''
   });
 
-  const [teamMembers, setTeamMembers] =
-    useState<any[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch(
-      API + '/admin/specialists',
-      { headers: headers() }
-    )
-      .then(async response => {
-        const data = await response
-          .json()
-          .catch(() => []);
-
-        return response.ok &&
-          Array.isArray(data)
-          ? data
-          : [];
-      })
-      .then(data => {
-        if (!cancelled) {
-          setTeamMembers(
-            data.filter(
-              (item: any) =>
-                item.active !== false
-            )
-          );
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setTeamMembers([]);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [business?.id]);
-  
 const [savingBlock, setSavingBlock] =
   useState(false);
 
@@ -217,7 +178,12 @@ useEffect(() => {
             )}
           </option>
 
-          {teamMembers.map(
+          {teamMembers
+            .filter(
+              specialist =>
+                specialist.active !== false
+            )
+            .map(
             specialist => (
               <option
                 key={specialist.id}
