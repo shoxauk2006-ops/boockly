@@ -3271,10 +3271,14 @@ def availability(
             BlockedSlot.end_at_utc,
             BlockedSlot.day,
             BlockedSlot.start,
-            BlockedSlot.end
-        ).filter(BlockedSlot.business_id == business_id).all()
+            BlockedSlot.end,
+            BlockedSlot.specialist_id,
+        ).filter(
+            BlockedSlot.business_id == business_id
+        ).all()
 
         slots = []
+        slot_items_by_time = {}
         seen = set()
         for business_day in (day - timedelta(days=1), day, day + timedelta(days=1)):
             for win_start, win_end in get_work_windows(db, business_id, business_day, specialist_id):
@@ -3289,38 +3293,112 @@ def availability(
                     start_utc = _bookly_to_utc(cursor)
                     end_utc = _bookly_to_utc(slot_end)
                     occupied = False
-                    for bs, be, legacy_day, legacy_start, legacy_end, booking_specialist_id in bookings:
-                        if specialist_id is not None and booking_specialist_id not in (None, specialist_id):
+
+                    for (
+                        bs,
+                        be,
+                        legacy_day,
+                        legacy_start,
+                        legacy_end,
+                        booking_specialist_id,
+                    ) in bookings:
+                        if (
+                            specialist_id is not None
+                            and booking_specialist_id not in (
+                                None,
+                                specialist_id,
+                            )
+                        ):
                             continue
+
                         if bs is not None and be is not None:
                             if bs < end_utc and be > start_utc:
                                 occupied = True
                                 break
-                        elif legacy_day == business_day and legacy_start < slot_end.time() and legacy_end > cursor.time():
+                        elif (
+                            legacy_day == business_day
+                            and legacy_start < slot_end.time()
+                            and legacy_end > cursor.time()
+                        ):
                             occupied = True
                             break
 
                     if not occupied:
-                        for bs, be, legacy_day, legacy_start, legacy_end in blocked_slots:
+                        for (
+                            bs,
+                            be,
+                            legacy_day,
+                            legacy_start,
+                            legacy_end,
+                            block_specialist_id,
+                        ) in blocked_slots:
+                            # A business-wide block (specialist_id NULL)
+                            # applies to everyone. A personal block applies
+                            # only to that specialist.
+                            if specialist_id is not None:
+                                if block_specialist_id not in (
+                                    None,
+                                    specialist_id,
+                                ):
+                                    continue
+                            elif block_specialist_id is not None:
+                                continue
+
                             if bs is not None and be is not None:
                                 if bs < end_utc and be > start_utc:
                                     occupied = True
                                     break
-                            elif legacy_day == business_day and legacy_start < slot_end.time() and legacy_end > cursor.time():
+                            elif (
+                                legacy_day == business_day
+                                and legacy_start < slot_end.time()
+                                and legacy_end > cursor.time()
+                            ):
                                 occupied = True
                                 break
 
-                    if not occupied:
-                        client_local = start_utc.replace(tzinfo=timezone.utc).astimezone(client_zone)
-                        if client_local.date() == day:
-                            value = client_local.strftime("%H:%M")
-                            if value not in seen:
-                                seen.add(value)
-                                slots.append(value)
+                    client_local = (
+                        start_utc
+                        .replace(tzinfo=timezone.utc)
+                        .astimezone(client_zone)
+                    )
+
+                    if client_local.date() == day:
+                        value = client_local.strftime("%H:%M")
+
+                        previous = slot_items_by_time.get(value)
+                        is_available = not occupied
+
+                        # If timezone conversion ever produces the same
+                        # displayed clock time twice, keep it available when
+                        # at least one real slot is available.
+                        if (
+                            previous is None
+                            or (
+                                is_available
+                                and not previous["available"]
+                            )
+                        ):
+                            slot_items_by_time[value] = {
+                                "time": value,
+                                "available": is_available,
+                            }
+
+                        if is_available and value not in seen:
+                            seen.add(value)
+                            slots.append(value)
+
                     cursor += timedelta(minutes=s.duration_min)
 
         slots.sort()
-        return {"slots": slots}
+        slot_items = sorted(
+            slot_items_by_time.values(),
+            key=lambda item: item["time"],
+        )
+
+        return {
+            "slots": slots,
+            "slot_items": slot_items,
+        }
 
 @app.post("/bookings")
 def create_booking(
