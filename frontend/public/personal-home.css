@@ -682,3 +682,7 @@ body:has(.personal-home) header .language-select{
     grid-template-columns:repeat(2,1fr)!important;
   }
 }
+
+.staff-block-card.past{
+  opacity:.58;
+}
