@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   API,
   getDateKeyForTimeZone,
+  getLocale,
   headers,
   localizedDays
 } from './shared';
@@ -21,6 +22,8 @@ type Props = {
   t: (key: string, fallback?: string) => string;
   onBack: () => void;
 };
+
+type StaffView = 'today' | 'bookings' | 'schedule';
 
 export function StaffWorkspace({
   memberships,
@@ -46,6 +49,7 @@ export function StaffWorkspace({
     return memberships[0]?.specialist_id || 0;
   });
 
+  const [view, setView] = useState<StaffView>('today');
   const [bookings, setBookings] = useState<any[]>([]);
   const [hours, setHours] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -190,6 +194,52 @@ export function StaffWorkspace({
 
   const days = localizedDays(t);
 
+  const formatDate = (value: string) => {
+    try {
+      return new Intl.DateTimeFormat(
+        getLocale(),
+        {
+          day: 'numeric',
+          month: 'short',
+          weekday: 'short'
+        }
+      ).format(
+        new Date(value + 'T12:00:00')
+      );
+    } catch {
+      return value;
+    }
+  };
+
+  const bookingCard = (
+    booking: any,
+    showDate = false
+  ) => (
+    <div
+      className="staff-booking-card"
+      key={booking.id}
+    >
+      {showDate && (
+        <span className="staff-booking-date">
+          {formatDate(booking.day)}
+        </span>
+      )}
+
+      <strong className="staff-booking-main">
+        {booking.start}–{booking.end}
+        {' · '}
+        {booking.service_name}
+      </strong>
+
+      <span className="staff-booking-client">
+        {booking.client_name}
+        {booking.client_phone
+          ? ' · ' + booking.client_phone
+          : ''}
+      </span>
+    </div>
+  );
+
   if (!membership) {
     return (
       <section>
@@ -220,15 +270,15 @@ export function StaffWorkspace({
   }
 
   return (
-    <section className="personal-page">
+    <section className="personal-page staff-workspace">
       <button
-        className="back"
+        className="back staff-back"
         onClick={onBack}
       >
         ← {t('common.back', 'Назад')}
       </button>
 
-      <div className="card">
+      <div className="card staff-profile-card">
         <span className="personal-eyebrow">
           {t(
             'staff.workspaceEyebrow',
@@ -236,14 +286,11 @@ export function StaffWorkspace({
           )}
         </span>
 
-        <h2 style={{ marginBottom: 4 }}>
+        <h2>
           {membership.business_name}
         </h2>
 
-        <p
-          className="muted"
-          style={{ marginTop: 0 }}
-        >
+        <p className="muted">
           {membership.specialist_name}
           {membership.position
             ? ' · ' + membership.position
@@ -252,15 +299,13 @@ export function StaffWorkspace({
 
         {memberships.length > 1 && (
           <select
+            className="staff-business-select"
             value={membership.specialist_id}
-            onChange={e =>
+            onChange={e => {
               setSelectedId(
                 Number(e.target.value)
-              )
-            }
-            style={{
-              width: '100%',
-              marginTop: 12
+              );
+              setView('today');
             }}
           >
             {memberships.map(item => (
@@ -277,16 +322,13 @@ export function StaffWorkspace({
       </div>
 
       {error && (
-        <div
-          className="error"
-          style={{ marginBottom: 12 }}
-        >
+        <div className="error staff-error">
           ❌ {error}
         </div>
       )}
 
       {loading ? (
-        <div className="card">
+        <div className="card staff-loading-card">
           <p className="muted">
             {t(
               'common.loading',
@@ -296,236 +338,214 @@ export function StaffWorkspace({
         </div>
       ) : (
         <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(2, minmax(0, 1fr))',
-              gap: 10,
-              marginBottom: 12
-            }}
-          >
-            <div className="card">
-              <span className="muted">
+          <div className="staff-summary-grid">
+            <button
+              type="button"
+              className={
+                'card staff-summary-card' +
+                (view === 'today' ? ' active' : '')
+              }
+              onClick={() => setView('today')}
+            >
+              <span>
                 {t(
                   'staff.today',
                   'Сегодня'
                 )}
               </span>
-
-              <h2 style={{ margin: '6px 0 0' }}>
+              <strong>
                 {todayBookings.length}
-              </h2>
-            </div>
+              </strong>
+            </button>
 
-            <div className="card">
-              <span className="muted">
+            <button
+              type="button"
+              className={
+                'card staff-summary-card' +
+                (view === 'bookings' ? ' active' : '')
+              }
+              onClick={() => setView('bookings')}
+            >
+              <span>
                 {t(
                   'staff.upcoming',
                   'Предстоящие'
                 )}
               </span>
-
-              <h2 style={{ margin: '6px 0 0' }}>
+              <strong>
                 {upcomingBookings.length}
-              </h2>
+              </strong>
+            </button>
+          </div>
+
+          <div
+            className="staff-tabs"
+            role="tablist"
+            aria-label={t(
+              'staff.workspaceTitle',
+              'Рабочий кабинет'
+            )}
+          >
+            <button
+              type="button"
+              className={
+                view === 'today'
+                  ? 'active'
+                  : ''
+              }
+              onClick={() => setView('today')}
+            >
+              {t('staff.today', 'Сегодня')}
+            </button>
+
+            <button
+              type="button"
+              className={
+                view === 'bookings'
+                  ? 'active'
+                  : ''
+              }
+              onClick={() => setView('bookings')}
+            >
+              {t('nav.bookings', 'Записи')}
+            </button>
+
+            <button
+              type="button"
+              className={
+                view === 'schedule'
+                  ? 'active'
+                  : ''
+              }
+              onClick={() => setView('schedule')}
+            >
+              {t('nav.schedule', 'График')}
+            </button>
+          </div>
+
+          {view === 'today' && (
+            <div className="card staff-panel">
+              <div className="staff-panel-head">
+                <h3>
+                  {t(
+                    'staff.todayBookings',
+                    'Записи на сегодня'
+                  )}
+                </h3>
+                <span>
+                  {todayBookings.length}
+                </span>
+              </div>
+
+              {todayBookings.length === 0 ? (
+                <p className="muted staff-empty">
+                  {t(
+                    'staff.noTodayBookings',
+                    'На сегодня записей нет.'
+                  )}
+                </p>
+              ) : (
+                <div className="staff-booking-list">
+                  {todayBookings.map(
+                    booking =>
+                      bookingCard(
+                        booking
+                      )
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
-          <div className="card">
-            <h3>
-              {t(
-                'staff.todayBookings',
-                'Записи на сегодня'
-              )}
-            </h3>
-
-            {todayBookings.length === 0 ? (
-              <p className="muted">
-                {t(
-                  'staff.noTodayBookings',
-                  'На сегодня записей нет.'
-                )}
-              </p>
-            ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 8
-                }}
-              >
-                {todayBookings.map(
-                  booking => (
-                    <div
-                      key={booking.id}
-                      style={{
-                        padding: 12,
-                        border:
-                          '1px solid #e7e9ed',
-                        borderRadius: 13,
-                        background: '#fafbfc'
-                      }}
-                    >
-                      <strong>
-                        {booking.start}–
-                        {booking.end} ·{' '}
-                        {booking.service_name}
-                      </strong>
-
-                      <p
-                        className="muted"
-                        style={{
-                          margin:
-                            '5px 0 0'
-                        }}
-                      >
-                        {booking.client_name}
-                        {booking.client_phone
-                          ? ' · ' +
-                            booking.client_phone
-                          : ''}
-                      </p>
-                    </div>
-                  )
-                )}
+          {view === 'bookings' && (
+            <div className="card staff-panel">
+              <div className="staff-panel-head">
+                <h3>
+                  {t(
+                    'staff.upcomingBookings',
+                    'Следующие записи'
+                  )}
+                </h3>
+                <span>
+                  {upcomingBookings.length}
+                </span>
               </div>
-            )}
-          </div>
 
-          <div className="card">
-            <h3>
-              {t(
-                'staff.upcomingBookings',
-                'Следующие записи'
+              {upcomingBookings.length === 0 ? (
+                <p className="muted staff-empty">
+                  {t(
+                    'staff.noUpcomingBookings',
+                    'Предстоящих записей нет.'
+                  )}
+                </p>
+              ) : (
+                <div className="staff-booking-list">
+                  {upcomingBookings
+                    .slice(0, 50)
+                    .map(
+                      booking =>
+                        bookingCard(
+                          booking,
+                          true
+                        )
+                    )}
+                </div>
               )}
-            </h3>
+            </div>
+          )}
 
-            {upcomingBookings.length === 0 ? (
-              <p className="muted">
-                {t(
-                  'staff.noUpcomingBookings',
-                  'Предстоящих записей нет.'
-                )}
-              </p>
-            ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 8
-                }}
-              >
-                {upcomingBookings
-                  .slice(0, 20)
-                  .map(booking => (
-                    <div
-                      key={booking.id}
-                      style={{
-                        padding: 12,
-                        border:
-                          '1px solid #e7e9ed',
-                        borderRadius: 13,
-                        background: '#fafbfc'
-                      }}
-                    >
-                      <strong>
-                        {booking.day} ·{' '}
-                        {booking.start}–
-                        {booking.end}
-                      </strong>
-
-                      <p
-                        style={{
-                          margin:
-                            '5px 0 0'
-                        }}
-                      >
-                        {booking.service_name}
-                      </p>
-
-                      <p
-                        className="muted"
-                        style={{
-                          margin:
-                            '3px 0 0'
-                        }}
-                      >
-                        {booking.client_name}
-                        {booking.client_phone
-                          ? ' · ' +
-                            booking.client_phone
-                          : ''}
-                      </p>
-                    </div>
-                  ))}
+          {view === 'schedule' && (
+            <div className="card staff-panel">
+              <div className="staff-panel-head">
+                <h3>
+                  {t(
+                    'staff.schedule',
+                    'Мой график'
+                  )}
+                </h3>
               </div>
-            )}
-          </div>
 
-          <div className="card">
-            <h3>
-              {t(
-                'staff.schedule',
-                'Мой график'
-              )}
-            </h3>
-
-            {hours.length === 0 ? (
-              <p className="muted">
-                {t(
-                  'staff.noSchedule',
-                  'График пока не настроен.'
-                )}
-              </p>
-            ) : (
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 8
-                }}
-              >
-                {hours.map(
-                  (row, index) => (
-                    <div
-                      key={
-                        String(
-                          row.weekday
-                        ) +
-                        '-' +
-                        index
-                      }
-                      style={{
-                        display: 'flex',
-                        justifyContent:
-                          'space-between',
-                        gap: 12,
-                        padding:
-                          '8px 0',
-                        borderBottom:
-                          index <
-                          hours.length - 1
-                            ? '1px solid #eee'
-                            : 'none'
-                      }}
-                    >
-                      <span>
-                        {days[
-                          row.weekday
-                        ] ||
+              {hours.length === 0 ? (
+                <p className="muted staff-empty">
+                  {t(
+                    'staff.noSchedule',
+                    'График пока не настроен.'
+                  )}
+                </p>
+              ) : (
+                <div className="staff-schedule-list">
+                  {hours.map(
+                    (row, index) => (
+                      <div
+                        className="staff-schedule-row"
+                        key={
                           String(
                             row.weekday
-                          )}
-                      </span>
+                          ) +
+                          '-' +
+                          index
+                        }
+                      >
+                        <span>
+                          {days[
+                            row.weekday
+                          ] ||
+                            String(
+                              row.weekday
+                            )}
+                        </span>
 
-                      <strong>
-                        {row.start}–
-                        {row.end}
-                      </strong>
-                    </div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
+                        <strong>
+                          {row.start}–
+                          {row.end}
+                        </strong>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </section>
