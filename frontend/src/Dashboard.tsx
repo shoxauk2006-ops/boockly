@@ -78,7 +78,7 @@ export function Dashboard({
   const [showStatistics, setShowStatistics] =
   useState(false);
 
-  const [teamMembersId, setStatisticsStaffId] =
+  const [statisticsStaffId, setStatisticsStaffId] =
     useState('all');
 
   const [dashboardStatistics, setDashboardStatistics] =
@@ -106,10 +106,10 @@ useEffect(() => {
         API +
         '/admin/statistics' +
         (
-          teamMembersId !== 'all'
+          statisticsStaffId !== 'all'
             ? '?specialist_id=' +
               encodeURIComponent(
-                teamMembersId
+                statisticsStaffId
               )
             : ''
         );
@@ -149,7 +149,7 @@ useEffect(() => {
   return () => {
     cancelled = true;
   };
-}, [business?.id, teamMembersId]);
+}, [business?.id, statisticsStaffId]);
 
     const statisticsDaily =
   Array.isArray(dashboardStatistics?.daily)
@@ -419,7 +419,7 @@ return (
 
             {teamMembers.length > 0 && (
               <select
-                value={teamMembersId}
+                value={statisticsStaffId}
                 onChange={e =>
                   setStatisticsStaffId(
                     e.target.value
