@@ -2445,6 +2445,7 @@ def admin_bookings(
 
 @app.get("/admin/statistics")
 def admin_statistics(
+    specialist_id: Optional[int] = None,
     x_telegram_init_data: str = Header(default="")
 ):
     user = telegram_user(x_telegram_init_data)
@@ -2478,11 +2479,35 @@ def admin_statistics(
                 "top_services": []
             }
 
-        bookings = (
+        bookings_query = (
             db.query(Booking)
             .filter(
                 Booking.business_id == business.id
             )
+        )
+
+        selected_specialist = None
+        if specialist_id is not None:
+            selected_specialist = (
+                db.query(Specialist)
+                .filter(
+                    Specialist.id == specialist_id,
+                    Specialist.business_id == business.id,
+                )
+                .first()
+            )
+            if not selected_specialist:
+                raise HTTPException(
+                    404,
+                    "Specialist not found",
+                )
+
+            bookings_query = bookings_query.filter(
+                Booking.specialist_id == specialist_id
+            )
+
+        bookings = (
+            bookings_query
             .order_by(
                 Booking.day,
                 Booking.start
@@ -2693,6 +2718,15 @@ def admin_statistics(
         )[:5]
 
         return {
+            "specialist": (
+                {
+                    "id": selected_specialist.id,
+                    "name": selected_specialist.name,
+                    "position": selected_specialist.position or "",
+                }
+                if selected_specialist
+                else None
+            ),
             "today": {
                 "bookings":
                     today_bookings,
