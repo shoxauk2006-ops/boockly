@@ -304,6 +304,9 @@ def admin_delete_specialist(
         db.query(SpecialistWorkingHour).filter(
             SpecialistWorkingHour.specialist_id == specialist.id
         ).delete(synchronize_session=False)
+        db.query(BlockedSlot).filter(
+            BlockedSlot.specialist_id == specialist.id
+        ).delete(synchronize_session=False)
         db.query(SpecialistTelegramLink).filter(
             SpecialistTelegramLink.specialist_id == specialist.id
         ).delete(synchronize_session=False)
