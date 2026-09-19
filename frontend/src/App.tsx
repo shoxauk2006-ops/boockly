@@ -133,7 +133,8 @@ export function App(){
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Telegram-Init-Data': initData()
+          'X-Telegram-Init-Data': initData(),
+          'X-Bookly-Language': getStoredLanguage()
         },
         body: JSON.stringify({ token: startParam })
       })
@@ -166,7 +167,8 @@ export function App(){
         {
           method: 'POST',
           headers: {
-            'X-Telegram-Init-Data': initData()
+            'X-Telegram-Init-Data': initData(),
+            'X-Bookly-Language': getStoredLanguage()
           }
         }
       )
