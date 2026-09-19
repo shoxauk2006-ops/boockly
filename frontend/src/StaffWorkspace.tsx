@@ -1330,11 +1330,21 @@ export function StaffWorkspace({
                 <div className="staff-booking-list">
                   {blocks.map(block => (
                     <div
-                      className="staff-booking-card staff-block-card"
+                      className={
+                        'staff-booking-card staff-block-card' +
+                        (block.is_past ? ' past' : '')
+                      }
                       key={block.id}
                     >
                       <span className="staff-booking-date">
                         {formatDate(block.day)}
+                        {block.is_past
+                          ? ' · ' +
+                            t(
+                              'owner.pastBlock',
+                              'Прошедшее'
+                            )
+                          : ''}
                       </span>
 
                       <strong className="staff-booking-main">
