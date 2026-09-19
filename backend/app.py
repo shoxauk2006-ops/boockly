@@ -3399,16 +3399,6 @@ def my_cancel_booking(
         notify_specialist_booking_cancelled(db, booking)
 
         return {"ok": True}
-@app.post("/admin/bookings/{booking_id}/cancel")
-def admin_cancel_booking(booking_id:int,x_telegram_init_data:str=Header(default="")):
-    user=telegram_user(x_telegram_init_data)
-    with SessionLocal() as db:
-        b=owner_business(db,int(user["id"])); x=db.get(Booking,booking_id)
-        if not b or not x or x.business_id!=b.id: raise HTTPException(404,"Booking not found")
-        x.status="cancelled"; db.commit()
-        if x.client_telegram_id:
-            telegram_api("sendMessage", {"chat_id":x.client_telegram_id,"text":f"❌ Ваша запись отменена бизнесом.\n\n📅 {x.day.isoformat()}\n🕐 {x.start.strftime('%H:%M')}–{x.end.strftime('%H:%M')}"})
-        return {"ok":True}
 # ---------- subscription management ----------
 
 PADDLE_API_KEY = os.getenv(
