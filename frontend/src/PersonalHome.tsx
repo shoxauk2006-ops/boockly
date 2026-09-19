@@ -205,71 +205,101 @@ export function PersonalHome({
             </div>
           </div>
 
-          {!loading && staffMemberships.length > 0 && (
-            <div className="personal-card">
-              <span className="personal-eyebrow">
-                {t('staff.workspaceEyebrow', 'МОЯ РАБОТА')}
-              </span>
+          <div
+            className={
+              staffMemberships.length > 0
+                ? 'personal-role-grid has-staff'
+                : 'personal-role-grid'
+            }
+          >
+            {loading ? (
+              <div className="personal-business-skeleton">
+                <div className="skeleton-line skeleton-small" />
+                <div className="skeleton-line skeleton-title" />
+                <div className="skeleton-line skeleton-text" />
+                <div className="skeleton-button" />
+              </div>
+            ) : (
+              <div className="personal-business-card personal-role-card">
+                <span className="personal-eyebrow light">
+                  {t(
+                    'nav.admin',
+                    'ДЛЯ БИЗНЕСА'
+                  )}
+                </span>
 
-              <h2>
-                {t('staff.workspaceTitle', 'Рабочий кабинет')}
-              </h2>
+                <h2>
+                  {t(
+                    'nav.businesses',
+                    'Мои бизнесы'
+                  )}
+                </h2>
 
-              <p>
-                {staffMemberships.length === 1
-                  ? `${staffMemberships[0].business_name} · ${staffMemberships[0].specialist_name}`
-                  : t(
-                      'staff.multipleBusinesses',
-                      'Ваши записи и график в подключённых бизнесах'
+                <p>
+                  {businesses.length
+                    ? t(
+                        'home.manageBusiness',
+                        'Управляйте своими бизнесами в Bookly'
+                      )
+                    : t(
+                        'home.createBusinessHint',
+                        'Добавьте свой бизнес в Bookly'
+                      )}
+                </p>
+
+                <button
+                  className="personal-white-button"
+                  onClick={onAdmin}
+                >
+                  {t(
+                    'common.open',
+                    'Открыть'
+                  )}
+                </button>
+              </div>
+            )}
+
+            {!loading &&
+              staffMemberships.length > 0 && (
+                <div className="personal-business-card personal-role-card">
+                  <span className="personal-eyebrow light">
+                    {t(
+                      'staff.workspaceEyebrow',
+                      'МОЯ РАБОТА'
                     )}
-              </p>
+                  </span>
 
-              <button
-                className="personal-black-button"
-                onClick={() => setPage('staff')}
-              >
-                {t('staff.openWorkspace', 'Открыть')}
-              </button>
-            </div>
-          )}
+                  <h2>
+                    {t(
+                      'staff.workspaceTitle',
+                      'Рабочий кабинет'
+                    )}
+                  </h2>
 
-          {loading ? (
-  <div className="personal-business-skeleton">
-    <div className="skeleton-line skeleton-small" />
-    <div className="skeleton-line skeleton-title" />
-    <div className="skeleton-line skeleton-text" />
-    <div className="skeleton-button" />
-  </div>
-) : (
-  <div className="personal-business-card">
-    <span className="personal-eyebrow light">
-      {t('nav.admin', 'ДЛЯ БИЗНЕСА')}
-    </span>
+                  <p>
+                    {staffMemberships.length === 1
+                      ? `${staffMemberships[0].business_name} · ${staffMemberships[0].specialist_name}`
+                      : t(
+                          'staff.multipleBusinesses',
+                          'Ваши записи и график'
+                        )}
+                  </p>
 
-    <h2>
-      {t('nav.businesses', 'Мои бизнесы')}
-    </h2>
+                  <button
+                    className="personal-white-button"
+                    onClick={() =>
+                      setPage('staff')
+                    }
+                  >
+                    {t(
+                      'staff.openWorkspace',
+                      'Открыть'
+                    )}
+                  </button>
+                </div>
+              )}
+          </div>
 
-    <p>
-      {businesses.length
-        ? t(
-            'home.manageBusiness',
-            'Управляйте своими бизнесами в Bookly'
-          )
-        : t(
-            'home.createBusinessHint',
-            'Добавьте свой бизнес в Bookly'
-          )}
-    </p>
-
-    <button
-      className="personal-white-button"
-      onClick={onAdmin}
-    >
-      {t('common.open', 'Открыть')}
-    </button>
-  </div>
-)}
 
           
         </>
