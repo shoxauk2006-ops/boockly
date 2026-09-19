@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Optional
 
 from fastapi import Header, HTTPException
@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .app import (
     Base,
+    BlockedSlot,
     Booking,
     Business,
     Service,
@@ -20,8 +21,13 @@ from .app import (
     Specialist,
     SpecialistService,
     SpecialistWorkingHour,
+    _bookly_to_utc,
+    _bookly_zone,
     app,
     engine,
+    get_work_windows,
+    is_free,
+    notify_owner_new_booking,
     owner_business,
     telegram_user,
 )
@@ -56,6 +62,23 @@ class SpecialistHourIn(BaseModel):
     start: str
     end: str
     active: bool = True
+
+
+class StaffBlockIn(BaseModel):
+    specialist_id: int
+    day: date
+    start: time
+    end: time
+    reason: str = Field(default="", max_length=255)
+
+
+class StaffBookingIn(BaseModel):
+    specialist_id: int
+    service_id: int
+    client_name: str = Field(min_length=1, max_length=120)
+    client_phone: str = Field(default="", max_length=40)
+    day: date
+    start: time
 
 
 def _selected_business(
@@ -551,6 +574,362 @@ def _require_staff(
     if not specialist:
         raise HTTPException(403, "Staff access required")
     return specialist
+
+
+@app.get("/staff/services")
+def staff_services(
+    specialist_id: int,
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(x_telegram_init_data)
+    telegram_id = int(user["id"])
+
+    with SessionLocal() as db:
+        specialist = _require_staff(
+            db,
+            telegram_id,
+            specialist_id,
+        )
+
+        rows = (
+            db.query(Service)
+            .join(
+                SpecialistService,
+                SpecialistService.service_id == Service.id,
+            )
+            .filter(
+                SpecialistService.specialist_id == specialist.id,
+                Service.business_id == specialist.business_id,
+                Service.active == True,
+            )
+            .order_by(Service.id.asc())
+            .all()
+        )
+
+        return [
+            {
+                "id": service.id,
+                "name": service.name,
+                "duration_min": service.duration_min,
+                "price": float(service.price or 0),
+                "currency": service.currency or "UZS",
+            }
+            for service in rows
+        ]
+
+
+@app.get("/staff/blocks")
+def staff_blocks(
+    specialist_id: int,
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(x_telegram_init_data)
+    telegram_id = int(user["id"])
+
+    with SessionLocal() as db:
+        specialist = _require_staff(
+            db,
+            telegram_id,
+            specialist_id,
+        )
+        business = db.get(
+            Business,
+            specialist.business_id,
+        )
+        if not business:
+            raise HTTPException(404, "Business not found")
+
+        today = datetime.now(
+            _bookly_zone(business.timezone)
+        ).date()
+
+        rows = (
+            db.query(BlockedSlot)
+            .filter(
+                BlockedSlot.business_id == business.id,
+                BlockedSlot.specialist_id == specialist.id,
+                BlockedSlot.day >= today,
+            )
+            .order_by(
+                BlockedSlot.day.asc(),
+                BlockedSlot.start.asc(),
+            )
+            .all()
+        )
+
+        return [
+            {
+                "id": row.id,
+                "specialist_id": row.specialist_id,
+                "day": row.day.isoformat(),
+                "start": row.start.strftime("%H:%M"),
+                "end": row.end.strftime("%H:%M"),
+                "reason": row.reason or "",
+                "created_by": row.created_by or "owner",
+                "can_delete": (
+                    (row.created_by or "owner") == "staff"
+                ),
+            }
+            for row in rows
+        ]
+
+
+@app.post("/staff/blocks")
+def staff_create_block(
+    x: StaffBlockIn,
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(x_telegram_init_data)
+    telegram_id = int(user["id"])
+
+    if x.start >= x.end:
+        raise HTTPException(
+            400,
+            "Block start must be before end",
+        )
+
+    with SessionLocal() as db:
+        specialist = _require_staff(
+            db,
+            telegram_id,
+            x.specialist_id,
+        )
+        business = db.get(
+            Business,
+            specialist.business_id,
+        )
+        if not business:
+            raise HTTPException(404, "Business not found")
+
+        zone = _bookly_zone(business.timezone)
+        now_local = datetime.now(zone)
+
+        start_local = datetime.combine(
+            x.day,
+            x.start,
+            tzinfo=zone,
+        )
+        end_local = datetime.combine(
+            x.day,
+            x.end,
+            tzinfo=zone,
+        )
+
+        if end_local <= now_local:
+            raise HTTPException(
+                400,
+                "Cannot block time in the past",
+            )
+
+        if not is_free(
+            db,
+            business.id,
+            x.day,
+            x.start,
+            x.end,
+            business.timezone,
+            specialist.id,
+        ):
+            raise HTTPException(
+                409,
+                "Time overlaps an existing booking or block",
+            )
+
+        block = BlockedSlot(
+            business_id=business.id,
+            specialist_id=specialist.id,
+            day=x.day,
+            start=x.start,
+            end=x.end,
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+            reason=x.reason.strip(),
+            created_by="staff",
+        )
+
+        db.add(block)
+        db.commit()
+        db.refresh(block)
+
+        return {
+            "ok": True,
+            "id": block.id,
+        }
+
+
+@app.delete("/staff/blocks/{block_id}")
+def staff_delete_block(
+    block_id: int,
+    specialist_id: int,
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(x_telegram_init_data)
+    telegram_id = int(user["id"])
+
+    with SessionLocal() as db:
+        specialist = _require_staff(
+            db,
+            telegram_id,
+            specialist_id,
+        )
+
+        block = (
+            db.query(BlockedSlot)
+            .filter(
+                BlockedSlot.id == block_id,
+                BlockedSlot.business_id == specialist.business_id,
+                BlockedSlot.specialist_id == specialist.id,
+            )
+            .first()
+        )
+
+        if not block:
+            raise HTTPException(404, "Block not found")
+
+        if (block.created_by or "owner") != "staff":
+            raise HTTPException(
+                403,
+                "Only blocks created by staff can be removed by staff",
+            )
+
+        db.delete(block)
+        db.commit()
+        return {"ok": True}
+
+
+@app.post("/staff/bookings")
+def staff_create_booking(
+    x: StaffBookingIn,
+    x_telegram_init_data: str = Header(default=""),
+):
+    user = telegram_user(x_telegram_init_data)
+    telegram_id = int(user["id"])
+
+    with SessionLocal() as db:
+        specialist = _require_staff(
+            db,
+            telegram_id,
+            x.specialist_id,
+        )
+        business = db.get(
+            Business,
+            specialist.business_id,
+        )
+        if not business:
+            raise HTTPException(404, "Business not found")
+
+        service = (
+            db.query(Service)
+            .join(
+                SpecialistService,
+                SpecialistService.service_id == Service.id,
+            )
+            .filter(
+                Service.id == x.service_id,
+                Service.business_id == business.id,
+                Service.active == True,
+                SpecialistService.specialist_id == specialist.id,
+            )
+            .first()
+        )
+        if not service:
+            raise HTTPException(
+                400,
+                "Service is not assigned to this staff member",
+            )
+
+        start_naive = datetime.combine(
+            x.day,
+            x.start,
+        )
+        end_naive = start_naive + timedelta(
+            minutes=int(service.duration_min),
+        )
+        end = end_naive.time()
+
+        windows = get_work_windows(
+            db,
+            business.id,
+            x.day,
+            specialist.id,
+        )
+        inside_working_hours = any(
+            x.start >= window_start
+            and end <= window_end
+            for window_start, window_end in windows
+        )
+        if not inside_working_hours:
+            raise HTTPException(
+                400,
+                "Time is outside staff working hours",
+            )
+
+        zone = _bookly_zone(business.timezone)
+        start_local = datetime.combine(
+            x.day,
+            x.start,
+            tzinfo=zone,
+        )
+        end_local = datetime.combine(
+            x.day,
+            end,
+            tzinfo=zone,
+        )
+
+        if start_local <= datetime.now(zone):
+            raise HTTPException(
+                400,
+                "Cannot create a booking in the past",
+            )
+
+        if not is_free(
+            db,
+            business.id,
+            x.day,
+            x.start,
+            end,
+            business.timezone,
+            specialist.id,
+        ):
+            raise HTTPException(
+                409,
+                "Selected time is no longer available",
+            )
+
+        booking = Booking(
+            business_id=business.id,
+            service_id=service.id,
+            specialist_id=specialist.id,
+            client_telegram_id=0,
+            client_name=x.client_name.strip(),
+            client_phone=x.client_phone.strip(),
+            day=x.day,
+            start=x.start,
+            end=end,
+            start_at_utc=_bookly_to_utc(start_local),
+            end_at_utc=_bookly_to_utc(end_local),
+            client_timezone=business.timezone or "UTC",
+            status="confirmed",
+        )
+
+        db.add(booking)
+        db.commit()
+        db.refresh(booking)
+
+        notify_owner_new_booking(
+            db,
+            booking,
+            service,
+            notify_specialist=False,
+        )
+
+        return {
+            "ok": True,
+            "id": booking.id,
+            "day": booking.day.isoformat(),
+            "start": booking.start.strftime("%H:%M"),
+            "end": booking.end.strftime("%H:%M"),
+        }
 
 
 @app.get("/staff/bookings")
