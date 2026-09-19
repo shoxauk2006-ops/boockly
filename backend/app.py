@@ -1169,7 +1169,12 @@ def telegram_api_for_recipient(method: str, payload: dict):
         BOOKLY_REQUEST_LANGUAGE.reset(token)
 
 
-def notify_owner_new_booking(db, booking, service):
+def notify_owner_new_booking(
+    db,
+    booking,
+    service,
+    notify_specialist: bool = True,
+):
     business = db.get(Business, booking.business_id)
     if not business:
         return
@@ -1211,7 +1216,8 @@ def notify_owner_new_booking(db, booking, service):
     # If the customer selected a connected specialist, notify that person
     # on their own Telegram account as well.
     if (
-        specialist
+        notify_specialist
+        and specialist
         and specialist.telegram_user_id
         and specialist.notifications_enabled
         and int(specialist.telegram_user_id) != int(business.owner_telegram_id or 0)
@@ -2259,6 +2265,21 @@ def admin_block(
                 raise HTTPException(404, "Specialist not found")
 
         business_zone = _bookly_zone(b.timezone)
+
+        if not is_free(
+            db,
+            b.id,
+            x.day,
+            x.start,
+            x.end,
+            b.timezone,
+            x.specialist_id,
+        ):
+            raise HTTPException(
+                409,
+                "Time overlaps an existing booking or block",
+            )
+
         start_local = datetime.combine(
             x.day,
             x.start,
