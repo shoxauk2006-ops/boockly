@@ -26,7 +26,21 @@ export function PersonalHome({
   setInfoSection: (section: 'help' | 'rules') => void;
 }) {
   const [businesses, setBusinesses] = useState<any[]>([]);
-  const [staffMemberships, setStaffMemberships] = useState<any[]>([]);
+  const [staffMemberships, setStaffMemberships] = useState<any[]>(() => {
+    try {
+      const cached = JSON.parse(
+        localStorage.getItem(
+          'bookly_staff_memberships'
+        ) || '[]'
+      );
+
+      return Array.isArray(cached)
+        ? cached
+        : [];
+    } catch {
+      return [];
+    }
+  });
   const [page, setPage] = useState<'home' | 'bookings' | 'saved' | 'staff'>('home');
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +69,7 @@ export function PersonalHome({
         const staffData =
           staffResponse.ok
             ? await staffResponse.json()
-            : { memberships: [] };
+            : null;
 
         if (!cancelled) {
           setBusinesses(
@@ -64,35 +78,46 @@ export function PersonalHome({
               : []
           );
 
-          const memberships =
-            Array.isArray(
-              staffData?.memberships
-            )
-              ? staffData.memberships
-              : [];
+          if (staffResponse.ok) {
+            const memberships =
+              Array.isArray(
+                staffData?.memberships
+              )
+                ? staffData.memberships
+                : [];
 
-          setStaffMemberships(
-            memberships
-          );
+            setStaffMemberships(
+              memberships
+            );
 
-          try {
-            if (
-              memberships.length &&
-              sessionStorage.getItem(
-                'bookly_open_staff'
-              ) === '1'
-            ) {
-              sessionStorage.removeItem(
-                'bookly_open_staff'
+            try {
+              localStorage.setItem(
+                'bookly_staff_memberships',
+                JSON.stringify(memberships)
               );
-              setPage('staff');
-            }
-          } catch {}
+            } catch {}
+
+            try {
+              if (
+                memberships.length &&
+                sessionStorage.getItem(
+                  'bookly_open_staff'
+                ) === '1'
+              ) {
+                sessionStorage.removeItem(
+                  'bookly_open_staff'
+                );
+                setPage('staff');
+              }
+            } catch {}
+          }
         }
       } catch {
         if (!cancelled) {
           setBusinesses([]);
-          setStaffMemberships([]);
+          // Keep the last verified staff membership cached locally.
+          // A temporary backend/network failure must not make the
+          // employee workspace disappear from the home screen.
         }
       } finally {
         if (!cancelled) {
@@ -110,6 +135,20 @@ export function PersonalHome({
 
   const firstName =
     tg()?.initDataUnsafe?.user?.first_name || '';
+
+  const hasStaffHint =
+    staffMemberships.length > 0 ||
+    (() => {
+      try {
+        return Boolean(
+          localStorage.getItem(
+            'bookly_staff_specialist_id'
+          )
+        );
+      } catch {
+        return false;
+      }
+    })();
 
   return (
     <section className="personal-home">
@@ -136,7 +175,7 @@ export function PersonalHome({
 
           <div
             className={
-              staffMemberships.length > 0
+              hasStaffHint
                 ? 'personal-role-grid has-staff'
                 : 'personal-role-grid'
             }
@@ -189,7 +228,7 @@ export function PersonalHome({
             )}
 
             {!loading &&
-              staffMemberships.length > 0 && (
+              hasStaffHint && (
                 <div className="personal-business-card personal-role-card">
                   <span className="personal-eyebrow light">
                     {t(
