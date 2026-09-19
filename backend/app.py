@@ -2210,16 +2210,6 @@ def admin_blocks(
         if not b:
             return []
 
-        today = datetime.now(_bookly_zone(b.timezone)).date()
-
-        db.query(BlockedSlot).filter(
-            BlockedSlot.business_id == b.id,
-            BlockedSlot.day < today
-        ).delete(
-            synchronize_session=False
-        )
-        db.commit()
-
         q = db.query(BlockedSlot).filter(
             BlockedSlot.business_id == b.id
         )
@@ -2376,6 +2366,19 @@ def admin_delete_block(
             or z.business_id != b.id
         ):
             raise HTTPException(404, "Block not found")
+
+        business_zone = _bookly_zone(b.timezone)
+        block_end = datetime.combine(
+            z.day,
+            z.end,
+            tzinfo=business_zone,
+        )
+
+        if block_end <= datetime.now(business_zone):
+            raise HTTPException(
+                409,
+                "Historical blocks cannot be deleted",
+            )
 
         db.delete(z)
         db.commit()
