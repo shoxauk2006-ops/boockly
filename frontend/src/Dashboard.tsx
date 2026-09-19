@@ -89,6 +89,10 @@ const [dashboardStatisticsLoading, setDashboardStatisticsLoading] =
   useState(false);
 
 useEffect(() => {
+  setStatisticsStaffId('all');
+}, [business?.id]);
+
+useEffect(() => {
   let cancelled = false;
 
   if (!business?.id) {
