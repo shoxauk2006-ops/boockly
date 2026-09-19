@@ -63,8 +63,14 @@ export function Bookings({
   const [specialists, setSpecialists] =
     useState<any[]>([]);
 
+  const [teamMembers, setTeamMembers] =
+    useState<any[]>([]);
+
   const [specialistId, setSpecialistId] =
     useState('');
+
+  const [staffFilter, setStaffFilter] =
+    useState('all');
 
   const [day, setDay] =
     useState(getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'));
@@ -103,6 +109,42 @@ export function Bookings({
 
   const [selectedDate, setSelectedDate] =
     useState(getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(
+      API + '/admin/specialists',
+      { headers: headers() }
+    )
+      .then(async response => {
+        const data = await response
+          .json()
+          .catch(() => []);
+
+        if (!response.ok) {
+          return [];
+        }
+
+        return Array.isArray(data)
+          ? data
+          : [];
+      })
+      .then(data => {
+        if (!cancelled) {
+          setTeamMembers(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTeamMembers([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [business?.id]);
 
   useEffect(() => {
   if (!showForm) {
@@ -491,6 +533,14 @@ const todayBusiness =
   const filteredBookings =
   bookings
     .filter(booking => {
+      if (
+        staffFilter !== 'all' &&
+        String(booking.specialist_id || '') !==
+          staffFilter
+      ) {
+        return false;
+      }
+
       const bookingDateTime =
         `${booking.day} ${booking.start}`;
 
@@ -711,6 +761,41 @@ const todayBusiness =
               marginTop: 12
             }}
           />
+        )}
+
+        {teamMembers.length > 0 && (
+          <select
+            value={staffFilter}
+            onChange={e =>
+              setStaffFilter(
+                e.target.value
+              )
+            }
+            style={{
+              marginTop: 12
+            }}
+          >
+            <option value="all">
+              {t(
+                'owner.allSpecialists',
+                'Все сотрудники'
+              )}
+            </option>
+
+            {teamMembers.map(
+              specialist => (
+                <option
+                  key={specialist.id}
+                  value={String(specialist.id)}
+                >
+                  {specialist.name}
+                  {specialist.position
+                    ? ` · ${specialist.position}`
+                    : ''}
+                </option>
+              )
+            )}
+          </select>
         )}
       </div>
 
