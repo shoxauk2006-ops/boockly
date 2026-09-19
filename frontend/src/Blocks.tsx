@@ -51,8 +51,50 @@ export function Blocks({
     day: getDateKeyForTimeZone(business?.timezone || 'Asia/Tashkent'),
     start: '13:00',
     end: '15:00',
-    reason: ''
+    reason: '',
+    specialist_id: ''
   });
+
+  const [teamMembers, setTeamMembers] =
+    useState<any[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(
+      API + '/admin/specialists',
+      { headers: headers() }
+    )
+      .then(async response => {
+        const data = await response
+          .json()
+          .catch(() => []);
+
+        return response.ok &&
+          Array.isArray(data)
+          ? data
+          : [];
+      })
+      .then(data => {
+        if (!cancelled) {
+          setTeamMembers(
+            data.filter(
+              (item: any) =>
+                item.active !== false
+            )
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTeamMembers([]);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [business?.id]);
   
 const [savingBlock, setSavingBlock] =
   useState(false);
@@ -97,7 +139,11 @@ useEffect(() => {
   day: f.day,
   start: f.start,
   end: f.end,
-  reason: f.reason
+  reason: f.reason,
+  specialist_id:
+    f.specialist_id
+      ? Number(f.specialist_id)
+      : null
 })
       }
     );
@@ -119,6 +165,40 @@ useEffect(() => {
       <p>
         {t('owner.blocksDescription')}
       </p>
+
+      {teamMembers.length > 0 && (
+        <select
+          value={f.specialist_id}
+          onChange={e =>
+            setF({
+              ...f,
+              specialist_id:
+                e.target.value
+            })
+          }
+        >
+          <option value="">
+            {t(
+              'owner.wholeBusiness',
+              'Весь бизнес'
+            )}
+          </option>
+
+          {teamMembers.map(
+            specialist => (
+              <option
+                key={specialist.id}
+                value={String(specialist.id)}
+              >
+                {specialist.name}
+                {specialist.position
+                  ? ` · ${specialist.position}`
+                  : ''}
+              </option>
+            )
+          )}
+        </select>
+      )}
 
       <input
         type="date"
@@ -214,7 +294,34 @@ useEffect(() => {
 
   {b.reason &&
     ` · ${b.reason}`}
+</p>
 
+<p
+  className="muted"
+  style={{
+    margin: '4px 0 0',
+    fontSize: 12
+  }}
+>
+  {b.specialist_name
+    ? `👤 ${b.specialist_name}`
+    : `🏢 ${t(
+        'owner.wholeBusiness',
+        'Весь бизнес'
+      )}`}
+  {' · '}
+  {b.created_by === 'staff'
+    ? t(
+        'owner.blockCreatedByStaff',
+        'Создано сотрудником'
+      )
+    : t(
+        'owner.blockCreatedByOwner',
+        'Создано владельцем'
+      )}
+</p>
+
+<p>
   {isBlockPast(b) && (
     <span
       style={{
