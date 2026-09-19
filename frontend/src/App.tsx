@@ -47,6 +47,17 @@ export function App(){
     setLanguage(nextLanguage);
     setStoredLanguage(nextLanguage);
     applyLanguageDirection(nextLanguage);
+
+    // Keep Telegram notifications in the same language the user selected
+    // inside Bookly. Do not wait for some unrelated API request to sync it.
+    if (initData()) {
+      fetch(API + '/me', {
+        headers: {
+          ...headers(),
+          'X-Bookly-Language': nextLanguage
+        }
+      }).catch(() => {});
+    }
   };
 
   useEffect(() => {
