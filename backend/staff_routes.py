@@ -642,16 +642,14 @@ def staff_blocks(
         if not business:
             raise HTTPException(404, "Business not found")
 
-        today = datetime.now(
-            _bookly_zone(business.timezone)
-        ).date()
+        zone = _bookly_zone(business.timezone)
+        now_local = datetime.now(zone)
 
         rows = (
             db.query(BlockedSlot)
             .filter(
                 BlockedSlot.business_id == business.id,
                 BlockedSlot.specialist_id == specialist.id,
-                BlockedSlot.day >= today,
             )
             .order_by(
                 BlockedSlot.day.asc(),
@@ -660,8 +658,17 @@ def staff_blocks(
             .all()
         )
 
-        return [
-            {
+        result = []
+
+        for row in rows:
+            block_end = datetime.combine(
+                row.day,
+                row.end,
+                tzinfo=zone,
+            )
+            is_past = block_end <= now_local
+
+            result.append({
                 "id": row.id,
                 "specialist_id": row.specialist_id,
                 "day": row.day.isoformat(),
@@ -669,12 +676,14 @@ def staff_blocks(
                 "end": row.end.strftime("%H:%M"),
                 "reason": row.reason or "",
                 "created_by": row.created_by or "owner",
+                "is_past": is_past,
                 "can_delete": (
-                    (row.created_by or "owner") == "staff"
+                    not is_past
+                    and (row.created_by or "owner") == "staff"
                 ),
-            }
-            for row in rows
-        ]
+            })
+
+        return result
 
 
 @app.post("/staff/blocks")
@@ -793,6 +802,26 @@ def staff_delete_block(
             raise HTTPException(
                 403,
                 "Only blocks created by staff can be removed by staff",
+            )
+
+        business = db.get(
+            Business,
+            specialist.business_id,
+        )
+        if not business:
+            raise HTTPException(404, "Business not found")
+
+        zone = _bookly_zone(business.timezone)
+        block_end = datetime.combine(
+            block.day,
+            block.end,
+            tzinfo=zone,
+        )
+
+        if block_end <= datetime.now(zone):
+            raise HTTPException(
+                409,
+                "Historical blocks cannot be deleted",
             )
 
         db.delete(block)
