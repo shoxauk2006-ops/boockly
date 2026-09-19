@@ -1834,6 +1834,47 @@ def admin_delete_business(
             synchronize_session=False
         )
 
+        specialist_ids = [
+            int(row[0])
+            for row in (
+                db.query(Specialist.id)
+                .filter(
+                    Specialist.business_id == business.id
+                )
+                .all()
+            )
+        ]
+
+        if specialist_ids:
+            db.query(SpecialistService).filter(
+                SpecialistService.specialist_id.in_(specialist_ids)
+            ).delete(
+                synchronize_session=False
+            )
+
+            db.query(SpecialistWorkingHour).filter(
+                SpecialistWorkingHour.specialist_id.in_(specialist_ids)
+            ).delete(
+                synchronize_session=False
+            )
+
+        # The invite-link model is registered in staff_routes after app.py
+        # finishes importing, so clean it by table name when it exists.
+        if "specialist_telegram_links" in inspect(engine).get_table_names():
+            db.execute(
+                text(
+                    "DELETE FROM specialist_telegram_links "
+                    "WHERE business_id = :business_id"
+                ),
+                {"business_id": business.id},
+            )
+
+        db.query(Specialist).filter(
+            Specialist.business_id == business.id
+        ).delete(
+            synchronize_session=False
+        )
+
         db.query(WorkingHour).filter(
             WorkingHour.business_id == business.id
         ).delete(
