@@ -669,141 +669,137 @@ setInfoSection={setInfoSection}
             BOOKLY
           </span>
 
+          <h2>
+            {t(
+              'info.legalDocuments',
+              'Документы и условия'
+            )}
+          </h2>
+
+          <p className="muted">
+            {t(
+              'info.legalIntro',
+              'Использование Bookly регулируется актуальными Условиями использования и Политикой конфиденциальности. Эти документы применяются к сайту, кабинету аккаунта и Telegram Mini App.'
+            )}
+          </p>
+
+          <p className="legal-effective-date">
+            {t(
+              'info.legalEffective',
+              'Актуальная версия: 18 сентября 2026'
+            )}
+          </p>
+
+          <div className="bookly-legal-links">
+            <a
+              href="/rules.html"
+              target="_blank"
+              rel="noreferrer"
+              className="bookly-legal-card"
+            >
+              <div>
+                <strong>
+                  {t(
+                    'info.termsOfUse',
+                    'Условия использования'
+                  )}
+                </strong>
+
+                <span>
+                  {t(
+                    'info.termsSummary',
+                    'Аккаунт, бизнес, записи, подписка, платежи, допустимое использование и ответственность.'
+                  )}
+                </span>
+              </div>
+
+              <b>↗</b>
+            </a>
+
+            <a
+              href="/privacy.html"
+              target="_blank"
+              rel="noreferrer"
+              className="bookly-legal-card"
+            >
+              <div>
+                <strong>
+                  {t(
+                    'info.privacyPolicy',
+                    'Политика конфиденциальности'
+                  )}
+                </strong>
+
+                <span>
+                  {t(
+                    'info.privacySummary',
+                    'Какие данные обрабатывает Bookly, зачем они нужны, кому передаются и как запросить удаление.'
+                  )}
+                </span>
+              </div>
+
+              <b>↗</b>
+            </a>
+          </div>
+
+          <p className="muted legal-current-note">
+            {t(
+              'info.legalCurrentNote',
+              'Полный актуальный текст хранится на этих страницах. Если документы будут обновлены, Mini App всегда будет открывать их последнюю опубликованную версию.'
+            )}
+          </p>
+
+          <hr />
+
           <h3>
-  {t(
-    'info.termsOfUse',
-    'Правила использования'
-  )}
-</h3>
+            {t(
+              'info.contacts',
+              'Контакты'
+            )}
+          </h3>
 
-          <div
-            className="muted"
-            style={{
-              lineHeight: '1.6'
-            }}
-          >
-            <p>
-  {t(
-    'info.rule1',
-    '1. Bookly предназначен для законного использования и предоставления обычных товаров и услуг.'
-  )}
-</p>
+          <p className="muted">
+            {t(
+              'info.contactDescription',
+              'По вопросам Bookly, аккаунта, конфиденциальности или для сообщений о нарушениях:'
+            )}
+          </p>
 
-            <p>
-  {t(
-    'info.rule2',
-    '2. Запрещено использовать Bookly для незаконных товаров или услуг, наркотиков, оружия, мошенничества, порнографии, азартных игр и другой запрещённой деятельности.'
-  )}
-</p>
+          <div className="contact-email-row">
+            <a
+              href="mailto:booklyminiapp@gmail.com"
+              className="contact-email"
+            >
+              booklyminiapp@gmail.com
+            </a>
 
-            <p>
-  {t(
-    'info.rule3',
-    '3. Пользователь самостоятельно отвечает за законность своего бизнеса, товаров, услуг, рекламы и контента.'
-  )}
-</p>
+            <button
+              type="button"
+              className="ghost"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(
+                    'booklyminiapp@gmail.com'
+                  );
 
-            <p>
-  {t(
-    'info.rule4',
-    '4. Запрещено использовать Bookly для обмана клиентов, спама, фиктивных записей и другого злоупотребления сервисом.'
-  )}
-</p>
+                  setEmailCopied(true);
 
-            <p>
-  {t(
-    'info.rule5',
-    '5. Пользователь обязан соблюдать применимое законодательство и требования по защите персональных данных.'
-  )}
-</p>
-
-            <p>
-  {t(
-    'info.rule6',
-    '6. Мы вправе временно ограничить или полностью заблокировать бизнес при нарушении настоящих правил.'
-  )}
-</p>
-
-            <p>
-  {t(
-    'info.rule7',
-    '7. Запрещено создавать новый бизнес или аккаунт для обхода ранее применённой блокировки.'
-  )}
-</p>
-
-            <p>
-  {t(
-    'info.rule8',
-    '8. Мы можем изменять функции Bookly, временно ограничивать работу сервиса или прекращать предоставление сервиса.'
-  )}
-</p>
-
-            <p>
-  {t(
-    'info.rule9',
-    '9. Мы не обещаем бесперебойную или безошибочную работу Bookly. Возможны технические сбои, обслуживание и недоступность сторонних сервисов.'
-  )}
-</p>
-
-            <p>
-  {t(
-    'info.rule10',
-    '10. Используя Bookly, пользователь подтверждает согласие соблюдать эти правила.'
-  )}
-</p>
-
-            <hr />
-
-            <h3>
-  {t(
-    'info.contacts',
-    'Контакты'
-  )}
-</h3>
-
-            <p>
-  {t(
-    'info.contactDescription',
-    'По вопросам работы Bookly и для сообщений о нарушениях:'
-  )}
-</p>
-
-            <div className="contact-email-row">
-              <a
-                href="mailto:boocklyapp@gmail.com"
-                className="contact-email"
-              >
-                boocklyapp@gmail.com
-              </a>
-
-              <button
-                type="button"
-                className="ghost"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(
-                      'boocklyapp@gmail.com'
-                    );
-
-                    setEmailCopied(true);
-
-                    setTimeout(() => {
-                      setEmailCopied(false);
-                    }, 1500);
-                  } catch {}
-                }}
-              >
-                {emailCopied
-  ? `✓ ${t(
-      'common.copied',
-      'Скопировано'
-    )}`
-  : t(
-      'common.copy',
-      'Скопировать'
-    )}
-              </button>
-            </div>
+                  setTimeout(() => {
+                    setEmailCopied(false);
+                  }, 1500);
+                } catch {}
+              }}
+            >
+              {emailCopied
+                ? `✓ ${t(
+                    'common.copied',
+                    'Скопировано'
+                  )}`
+                : t(
+                    'common.copy',
+                    'Скопировать'
+                  )}
+            </button>
           </div>
         </>
       )}
