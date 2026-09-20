@@ -9,6 +9,7 @@ import secrets
 import time as time_module
 from datetime import datetime, timedelta, time
 from typing import Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import Header, HTTPException
 from pydantic import BaseModel, Field
@@ -246,6 +247,99 @@ def _account_from_header(db, authorization: str) -> BooklyAccount:
     return account
 
 
+def _sync_account_telegram_businesses(
+    db,
+    account: BooklyAccount,
+) -> int:
+    """Attach every website business to the account's connected Telegram user."""
+    if account.telegram_user_id is None:
+        return 0
+
+    telegram_id = int(account.telegram_user_id)
+
+    businesses = (
+        db.query(Business)
+        .filter(Business.account_id == account.id)
+        .all()
+    )
+
+    changed = 0
+    business_ids = []
+
+    for business in businesses:
+        business_ids.append(int(business.id))
+
+        if int(business.owner_telegram_id) != telegram_id:
+            business.owner_telegram_id = telegram_id
+            changed += 1
+
+    if business_ids:
+        subscriptions = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id.in_(business_ids)
+            )
+            .all()
+        )
+
+        for subscription in subscriptions:
+            if int(subscription.owner_telegram_id) != telegram_id:
+                subscription.owner_telegram_id = telegram_id
+                changed += 1
+
+    return changed
+
+
+def _validated_business_timezone(value: str) -> str:
+    timezone_name = (
+        str(value or "").strip()
+        or "Asia/Tashkent"
+    )
+
+    try:
+        ZoneInfo(timezone_name)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise HTTPException(400, "Invalid timezone")
+
+    return timezone_name
+
+
+def _active_service_count(
+    db,
+    business_id: int,
+) -> int:
+    return int(
+        db.query(Service)
+        .filter(
+            Service.business_id == int(business_id),
+            Service.active == True,
+        )
+        .count()
+    )
+
+
+def _ensure_service_limit_can_shrink(
+    db,
+    business_id: int,
+    requested_limit: int,
+) -> None:
+    active_services = _active_service_count(
+        db,
+        business_id,
+    )
+
+    if active_services > int(requested_limit):
+        extra = active_services - int(requested_limit)
+        raise HTTPException(
+            409,
+            (
+                f"This business has {active_services} active services. "
+                f"Remove {extra} service(s) before changing the limit "
+                f"to {int(requested_limit)}."
+            ),
+        )
+
+
 def _account_checkout_token(
     account_id: int,
     business_id: int,
@@ -370,14 +464,24 @@ def account_create_business(
 
         slug = f"account-{account.id}-{secrets.token_hex(6)}"
 
+        business_timezone = _validated_business_timezone(
+            x.timezone
+        )
+
+        owner_telegram_id = (
+            int(account.telegram_user_id)
+            if account.telegram_user_id is not None
+            else -int(account.id)
+        )
+
         business = Business(
             account_id=account.id,
-            owner_telegram_id=-int(account.id),
+            owner_telegram_id=owner_telegram_id,
             name=name,
             description=x.description.strip(),
             phone=x.phone.strip(),
             address=x.address.strip(),
-            timezone=x.timezone.strip() or "Asia/Tashkent",
+            timezone=business_timezone,
             slug=slug,
             subscription_active=False,
             subscription_status="inactive",
@@ -475,6 +579,9 @@ def account_update_business(
 def account_businesses(authorization: str = Header(default="")):
     with SessionLocal() as db:
         account = _account_from_header(db, authorization)
+
+        if _sync_account_telegram_businesses(db, account):
+            db.commit()
 
         businesses = (
             db.query(Business)
@@ -693,6 +800,10 @@ def account_delete_business(
 def account_me(authorization: str = Header(default="")):
     with SessionLocal() as db:
         account = _account_from_header(db, authorization)
+
+        if _sync_account_telegram_businesses(db, account):
+            db.commit()
+
         business = db.get(Business, account.business_id) if account.business_id else None
         return {
             "ok": True,
@@ -735,8 +846,13 @@ def account_connect_telegram(
         if paddle_original._profile_trial_used(db, web_owner_id):
             paddle_original._mark_profile_trial_used(db, telegram_id)
 
-        business.owner_telegram_id = telegram_id
         account.telegram_user_id = telegram_id
+
+        _sync_account_telegram_businesses(
+            db,
+            account,
+        )
+
         db.commit()
 
         return {
@@ -857,8 +973,13 @@ def account_connect_telegram_from_web(
         if paddle_original._profile_trial_used(db, web_owner_id):
             paddle_original._mark_profile_trial_used(db, telegram_id)
 
-        business.owner_telegram_id = telegram_id
         account.telegram_user_id = telegram_id
+
+        _sync_account_telegram_businesses(
+            db,
+            account,
+        )
+
         link.used_at = datetime.utcnow()
         db.commit()
 
@@ -1102,6 +1223,13 @@ def account_preview_subscription_limit(
             subscription.current_services_limit
             or 10
         )
+
+        if limit < current:
+            _ensure_service_limit_can_shrink(
+                db,
+                business.id,
+                limit,
+            )
 
         billing_interval = (
             paddle_app._subscription_interval(
@@ -1407,6 +1535,13 @@ def account_change_subscription_limit(
             subscription.current_services_limit
             or 10
         )
+
+        if limit < current:
+            _ensure_service_limit_can_shrink(
+                db,
+                business.id,
+                limit,
+            )
 
         paddle_response = (
             paddle_original._paddle_request(
