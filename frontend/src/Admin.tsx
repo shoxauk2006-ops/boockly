@@ -440,6 +440,24 @@ const [newBusinessHours, setNewBusinessHours] =
     };
   }, []);
 
+  const openBooklyWebsite = () => {
+    const url =
+      'https://boockly.vercel.app/account.html';
+
+    const telegram = tg();
+
+    if (telegram?.openLink) {
+      telegram.openLink(url);
+      return;
+    }
+
+    window.open(
+      url,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  };
+
   const selectBusiness = async (
     selected: any
   ) => {
@@ -502,7 +520,7 @@ const [newBusinessHours, setNewBusinessHours] =
     );
   }
 
-   if (!business && businessPanel !== 'create') {
+   if (!business) {
     return (
       <section>
         <button
@@ -513,23 +531,36 @@ const [newBusinessHours, setNewBusinessHours] =
         </button>
 
         <div className="card">
-          <h2>{t('nav.businesses', 'Мои бизнесы')}</h2>
+          <h2>
+            {t(
+              'nav.businesses',
+              'Мои бизнесы'
+            )}
+          </h2>
+
           <p className="muted">
-            {t('home.createBusinessHint', 'Добавьте бизнес, чтобы начать работу в Bookly.')}
+            {t(
+              'home.createBusinessWebsiteHint',
+              'Создайте аккаунт и бизнес на сайте Bookly. После подключения Telegram бизнес появится здесь автоматически.'
+            )}
           </p>
+
           <button
             className="primary full"
             style={{ marginTop: 12 }}
-            onClick={() => setBusinessPanel('create')}
+            onClick={openBooklyWebsite}
           >
-            + {t('owner.addBusiness', 'Добавить бизнес')}
+            {t(
+              'home.goToWebsite',
+              'Перейти на сайт'
+            )}
           </button>
         </div>
       </section>
     );
   }
 
-  if (!business) {
+  if (!business && businessPanel === 'create') {
     return (
       <section>
         <button
@@ -1306,13 +1337,12 @@ borderTopColor: '#d32f2f',
             style={{
               marginTop: 12
             }}
-            onClick={() =>
-              setBusinessPanel(
-                'create'
-              )
-            }
+            onClick={openBooklyWebsite}
           >
-            + {t('owner.addBusiness')}
+            {t(
+              'owner.addBusinessOnWebsite',
+              'Добавить бизнес на сайте'
+            )}
           </button>
         </div>
       )}
