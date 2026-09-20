@@ -1185,6 +1185,12 @@ def account_billing(authorization: str = Header(default="")):
                     and subscription.cancel_at
                     else None
                 ),
+                "active_services_count": (
+                    _active_service_count(
+                        db,
+                        business.id,
+                    )
+                ),
             },
         }
 
@@ -1224,13 +1230,6 @@ def account_preview_subscription_limit(
             or 10
         )
 
-        if limit < current:
-            _ensure_service_limit_can_shrink(
-                db,
-                business.id,
-                limit,
-            )
-
         billing_interval = (
             paddle_app._subscription_interval(
                 subscription_id
@@ -1249,6 +1248,13 @@ def account_preview_subscription_limit(
             "prorated_immediately"
             if limit > current
             else "prorated_next_billing_period"
+        )
+
+        active_services_count = (
+            _active_service_count(
+                db,
+                business.id,
+            )
         )
 
     preview_response = (
@@ -1444,6 +1450,15 @@ def account_preview_subscription_limit(
         "effective_at":
             effective_at,
 
+        "active_services_count":
+            active_services_count,
+
+        "services_over_new_limit":
+            max(
+                0,
+                active_services_count - limit,
+            ),
+
         "currency_code":
             (
                 result.get("currency_code")
@@ -1535,13 +1550,6 @@ def account_change_subscription_limit(
             subscription.current_services_limit
             or 10
         )
-
-        if limit < current:
-            _ensure_service_limit_can_shrink(
-                db,
-                business.id,
-                limit,
-            )
 
         paddle_response = (
             paddle_original._paddle_request(
