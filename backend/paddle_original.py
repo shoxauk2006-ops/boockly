@@ -849,6 +849,31 @@ def _apply_paddle_event(payload: dict) -> None:
                 or subscription.expires_at
             )
 
+            # Initial checkout may complete before subscription.created.
+            # When the transaction contains the full Bookly item set, use it
+            # immediately so a paid 20/30/50/100-service package cannot sit
+            # at the default 10-service limit while webhook events reorder.
+            if (
+                subscription.pending_services_limit
+                is None
+            ):
+                try:
+                    transaction_limit = (
+                        _limit_from_items(
+                            data.get("items")
+                            or []
+                        )
+                    )
+
+                    subscription.current_services_limit = (
+                        transaction_limit
+                    )
+                except Exception:
+                    # Proration transactions do not always contain the
+                    # complete subscription item set. subscription.created /
+                    # subscription.updated remains the authoritative fallback.
+                    pass
+
             transaction_origin = str(
                 data.get("origin") or ""
             )
