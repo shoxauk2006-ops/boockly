@@ -415,23 +415,18 @@ def account_register(x: AccountRegisterIn):
         db.add(account)
         db.flush()
 
-        slug = f"account-{account.id}-{secrets.token_hex(4)}"
-        business = Business(owner_telegram_id=-account.id, name="My Business", slug=slug)
-        db.add(business)
-        db.flush()
-        db.execute(
-            text("UPDATE businesses SET account_id = :account_id WHERE id = :business_id"),
-            {"account_id": account.id, "business_id": business.id},
-        )
-        account.business_id = business.id
         token = _new_session(db, account.id)
         db.commit()
 
         return {
             "ok": True,
             "token": token,
-            "account": {"id": account.id, "email": account.email, "business_id": business.id},
-            "next": "choose_plan",
+            "account": {
+                "id": account.id,
+                "email": account.email,
+                "business_id": None,
+            },
+            "next": "setup_business",
         }
 
 
@@ -474,6 +469,13 @@ def account_create_business(
             else -int(account.id)
         )
 
+        is_first_business = (
+            db.query(Business)
+            .filter(Business.account_id == account.id)
+            .count()
+            == 0
+        )
+
         business = Business(
             account_id=account.id,
             owner_telegram_id=owner_telegram_id,
@@ -489,6 +491,9 @@ def account_create_business(
 
         db.add(business)
         db.flush()
+
+        if account.business_id is None:
+            account.business_id = business.id
 
         for weekday in range(7):
             db.add(
@@ -518,6 +523,11 @@ def account_create_business(
                 "subscription_active": False,
                 "subscription_status": "inactive",
             },
+            "next": (
+                "choose_plan"
+                if is_first_business
+                else "account"
+            ),
         }
 
 @app.put("/account/businesses/{business_id}")
