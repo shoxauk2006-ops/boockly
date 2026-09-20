@@ -2094,7 +2094,7 @@ def admin_services(
         if not b:
             return []
 
-        return (
+        services = (
             db.query(Service)
             .filter(
                 Service.business_id == b.id,
@@ -2105,6 +2105,29 @@ def admin_services(
             )
             .all()
         )
+
+        allowed_ids = set(
+            service_ids_available_under_plan(
+                db,
+                b.id,
+            )
+        )
+
+        return [
+            {
+                **{
+                    column.name: getattr(
+                        service,
+                        column.name
+                    )
+                    for column
+                    in Service.__table__.columns
+                },
+                "available_under_plan":
+                    service.id in allowed_ids,
+            }
+            for service in services
+        ]
 
 
 @app.post("/admin/services")
