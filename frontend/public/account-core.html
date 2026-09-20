@@ -1387,11 +1387,88 @@ body.logged-in .logout{
   }
 }
 html.has-session:not(.session-ready) body{
+  overflow:hidden;
+}
+
+html.has-session:not(.session-ready) .page{
   visibility:hidden;
 }
 
-html.has-session.session-ready body{
-  visibility:visible;
+.account-boot-loader{
+  display:none;
+}
+
+html.has-session:not(.session-ready) .account-boot-loader{
+  position:fixed;
+  inset:0;
+  z-index:2147483000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f7f8fa;
+}
+
+.account-boot-loader-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:13px;
+}
+
+.account-boot-mark{
+  width:54px;
+  height:54px;
+  display:grid;
+  place-items:center;
+  border-radius:17px;
+  background:#111318;
+  color:#fff;
+  font-size:22px;
+  font-weight:850;
+  line-height:1;
+  box-shadow:0 16px 36px rgba(17,19,24,.14);
+}
+
+.account-boot-copy{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#707782;
+  font-size:12px;
+  font-weight:750;
+}
+
+.account-boot-dots{
+  display:inline-flex;
+  gap:3px;
+}
+
+.account-boot-dots i{
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:#707782;
+  animation:booklyBootDot 1s infinite ease-in-out;
+}
+
+.account-boot-dots i:nth-child(2){
+  animation-delay:.14s;
+}
+
+.account-boot-dots i:nth-child(3){
+  animation-delay:.28s;
+}
+
+@keyframes booklyBootDot{
+  0%,70%,100%{
+    opacity:.28;
+    transform:translateY(0);
+  }
+  35%{
+    opacity:1;
+    transform:translateY(-2px);
+  }
 }
 /* ===== FINAL ACCOUNT WORKSPACE DESIGN ===== */
 
@@ -2104,6 +2181,58 @@ body.logged-in .shell{
 </script>
 </head>
 <body>
+<div
+  id="accountBootLoader"
+  class="account-boot-loader"
+  aria-live="polite"
+  aria-busy="true"
+>
+  <div class="account-boot-loader-inner">
+    <div class="account-boot-mark">B</div>
+
+    <div class="account-boot-copy">
+      <span id="accountBootText">Loading</span>
+
+      <span class="account-boot-dots" aria-hidden="true">
+        <i></i><i></i><i></i>
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var labels={
+    en:'Loading',
+    ru:'Загрузка',
+    uz:'Yuklanmoqda',
+    tr:'Yükleniyor',
+    ar:'جارٍ التحميل'
+  };
+
+  var lang='en';
+
+  try{
+    var stored=String(
+      localStorage.getItem('bookly_language')
+      || ''
+    ).toLowerCase();
+
+    if(labels[stored]){
+      lang=stored;
+    }
+  }catch(e){}
+
+  var el=document.getElementById(
+    'accountBootText'
+  );
+
+  if(el){
+    el.textContent=labels[lang];
+  }
+})();
+</script>
+
 <div class="page"><div class="orb a"></div><div class="orb b"></div>
 <header class="nav"><div class="brand">BOOKLY</div><a class="nav-link" href="landing.html">Back to Bookly</a></header>
 <main class="shell">
@@ -3351,8 +3480,6 @@ function syncOverviewSubscription(businesses){
   }
 }
 function showAccount(data){
-  document.documentElement.classList.add('session-ready');
-  
   document.body.classList.add('logged-in');
 
   accountTrialAvailable=!!(
@@ -3362,7 +3489,7 @@ function showAccount(data){
   );
 
   showWorkspaceView('overview');
-  
+
   auth.style.display='none';
   account.style.display='block';
 
@@ -3383,10 +3510,14 @@ function showAccount(data){
     connect.onclick=createLink;
   }
 
-  loadBusinesses();
+  loadBusinesses().finally(function(){
+    document.documentElement.classList.add(
+      'session-ready'
+    );
+  });
 }
 function loadBusinesses(){
-  call('/account/businesses',{
+  return call('/account/businesses',{
     headers:{
       Authorization:'Bearer '+session
     }
@@ -3403,6 +3534,8 @@ function loadBusinesses(){
       empty.className='status';
       empty.textContent='You do not have any businesses yet.';
       container.appendChild(empty);
+
+      syncOverviewSubscription([]);
       return;
     }
 
