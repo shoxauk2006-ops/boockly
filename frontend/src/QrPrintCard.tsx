@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { jsPDF } from 'jspdf';
 
 type TemplateId =
   | 'classic'
@@ -13,6 +14,22 @@ type ColorThemeId =
   | 'green'
   | 'beige'
   | 'burgundy';
+
+type PrintSizeId =
+  | 'a4'
+  | 'a5'
+  | 'square'
+  | 'landscape';
+
+type PrintSize = {
+  id: PrintSizeId;
+  label: string;
+  hint: string;
+  width: number;
+  height: number;
+  pdfWidthMm: number;
+  pdfHeightMm: number;
+};
 
 type ColorTheme = {
   id: ColorThemeId;
@@ -41,6 +58,9 @@ export function QrPrintCard({
 
   const [colorTheme, setColorTheme] =
     useState<ColorThemeId>('white');
+
+  const [printSize, setPrintSize] =
+  useState<PrintSizeId>('a4');
 
   if (!open || !qrDataUrl) {
     return null;
@@ -173,6 +193,68 @@ export function QrPrintCard({
       border: '#7b3d49'
     }
   ];
+
+  const printSizes: PrintSize[] = [
+  {
+    id: 'a4',
+    label: 'A4',
+    hint: t(
+      'owner.qrSizeA4Hint',
+      'Для стены'
+    ),
+    width: 1654,
+    height: 2339,
+    pdfWidthMm: 210,
+    pdfHeightMm: 297
+  },
+  {
+    id: 'a5',
+    label: 'A5',
+    hint: t(
+      'owner.qrSizeA5Hint',
+      'Компактный'
+    ),
+    width: 1169,
+    height: 1654,
+    pdfWidthMm: 148,
+    pdfHeightMm: 210
+  },
+  {
+    id: 'square',
+    label: t(
+      'owner.qrSizeSquare',
+      'Square'
+    ),
+    hint: t(
+      'owner.qrSizeSquareHint',
+      'Квадрат'
+    ),
+    width: 1800,
+    height: 1800,
+    pdfWidthMm: 210,
+    pdfHeightMm: 210
+  },
+  {
+    id: 'landscape',
+    label: t(
+      'owner.qrSizeLandscape',
+      'Landscape'
+    ),
+    hint: t(
+      'owner.qrSizeLandscapeHint',
+      'Горизонтальный'
+    ),
+    width: 2339,
+    height: 1654,
+    pdfWidthMm: 297,
+    pdfHeightMm: 210
+  }
+];
+
+const selectedPrintSize =
+  printSizes.find(
+    item => item.id === printSize
+  ) || printSizes[0];
 
   const theme =
     colorThemes.find(
@@ -733,51 +815,142 @@ export function QrPrintCard({
     );
   };
 
-  const downloadPrintableQr = async () => {
+  const buildTemplateCanvas =
+  async (): Promise<HTMLCanvasElement> => {
+    const canvas =
+      document.createElement('canvas');
+
+    const ctx =
+      canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error(
+        'Canvas context is unavailable'
+      );
+    }
+
+    ctx.direction =
+      document.documentElement.dir === 'rtl'
+        ? 'rtl'
+        : 'ltr';
+
+    const qrImage =
+      await loadQrImage();
+
+    if (template === 'minimal') {
+      drawMinimal(
+        canvas,
+        ctx,
+        qrImage
+      );
+    } else if (template === 'counter') {
+      drawCounter(
+        canvas,
+        ctx,
+        qrImage
+      );
+    } else if (template === 'poster') {
+      drawPoster(
+        canvas,
+        ctx,
+        qrImage
+      );
+    } else {
+      drawClassic(
+        canvas,
+        ctx,
+        qrImage
+      );
+    }
+
+    return canvas;
+  };
+  const buildOutputCanvas =
+  async (): Promise<HTMLCanvasElement> => {
+    const source =
+      await buildTemplateCanvas();
+
+    const target =
+      document.createElement('canvas');
+
+    target.width =
+      selectedPrintSize.width;
+
+    target.height =
+      selectedPrintSize.height;
+
+    const ctx =
+      target.getContext('2d');
+
+    if (!ctx) {
+      throw new Error(
+        'Output canvas context is unavailable'
+      );
+    }
+
+    ctx.fillStyle = theme.bg;
+
+    ctx.fillRect(
+      0,
+      0,
+      target.width,
+      target.height
+    );
+
+    const margin =
+      Math.round(
+        Math.min(
+          target.width,
+          target.height
+        ) * 0.035
+      );
+
+    const availableWidth =
+      target.width - margin * 2;
+
+    const availableHeight =
+      target.height - margin * 2;
+
+    const scale =
+      Math.min(
+        availableWidth /
+          source.width,
+        availableHeight /
+          source.height
+      );
+
+    const drawWidth =
+      source.width * scale;
+
+    const drawHeight =
+      source.height * scale;
+
+    const x =
+      (target.width -
+        drawWidth) / 2;
+
+    const y =
+      (target.height -
+        drawHeight) / 2;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    ctx.drawImage(
+      source,
+      x,
+      y,
+      drawWidth,
+      drawHeight
+    );
+
+    return target;
+  };
+const downloadPrintableQr =
+  async () => {
     try {
       const canvas =
-        document.createElement('canvas');
-
-      const ctx =
-        canvas.getContext('2d');
-
-      if (!ctx) {
-        return;
-      }
-
-      ctx.direction =
-        document.documentElement.dir === 'rtl'
-          ? 'rtl'
-          : 'ltr';
-
-      const qrImage =
-        await loadQrImage();
-
-      if (template === 'minimal') {
-        drawMinimal(
-          canvas,
-          ctx,
-          qrImage
-        );
-      } else if (template === 'counter') {
-        drawCounter(
-          canvas,
-          ctx,
-          qrImage
-        );
-      } else if (template === 'poster') {
-        drawPoster(
-          canvas,
-          ctx,
-          qrImage
-        );
-      } else {
-        drawClassic(
-          canvas,
-          ctx,
-          qrImage
-        );
-      }
+        await buildOutputCanvas();
 
       const blob =
         await new Promise<Blob>(
@@ -801,7 +974,7 @@ export function QrPrintCard({
         );
 
       const fileName =
-        `${business?.slug || 'bookly'}-qr-${template}-${colorTheme}.png`;
+        `${business?.slug || 'bookly'}-qr-${template}-${colorTheme}-${printSize}.png`;
 
       const file =
         new File(
@@ -843,12 +1016,101 @@ export function QrPrintCard({
       link.click();
       document.body.removeChild(link);
 
-      window.setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 1000);
+      window.setTimeout(
+        () => {
+          URL.revokeObjectURL(url);
+        },
+        1000
+      );
     } catch (error) {
       console.error(
         'QR PRINT DOWNLOAD ERROR:',
+        error
+      );
+
+      alert(
+        t(
+          'owner.qrPrintError',
+          'Не удалось скачать макет'
+        )
+      );
+    }
+  };
+  const downloadPrintablePdf =
+  async () => {
+    try {
+      const canvas =
+        await buildOutputCanvas();
+
+      const imageData =
+        canvas.toDataURL(
+          'image/png',
+          1
+        );
+
+      const pdf =
+        new jsPDF({
+          orientation:
+            selectedPrintSize.pdfWidthMm >
+            selectedPrintSize.pdfHeightMm
+              ? 'landscape'
+              : 'portrait',
+          unit: 'mm',
+          format: [
+            selectedPrintSize.pdfWidthMm,
+            selectedPrintSize.pdfHeightMm
+          ],
+          compress: true
+        });
+
+      pdf.addImage(
+        imageData,
+        'PNG',
+        0,
+        0,
+        selectedPrintSize.pdfWidthMm,
+        selectedPrintSize.pdfHeightMm,
+        undefined,
+        'FAST'
+      );
+
+      const fileName =
+        `${business?.slug || 'bookly'}-qr-${template}-${colorTheme}-${printSize}.pdf`;
+
+      const blob =
+        pdf.output('blob');
+
+      const file =
+        new File(
+          [blob],
+          fileName,
+          {
+            type: 'application/pdf'
+          }
+        );
+
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({
+          files: [file]
+        })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: t(
+            'owner.printQrTitle',
+            'Bookly — QR для печати'
+          )
+        });
+
+        return;
+      }
+
+      pdf.save(fileName);
+    } catch (error) {
+      console.error(
+        'QR PRINT PDF ERROR:',
         error
       );
 
@@ -966,7 +1228,46 @@ export function QrPrintCard({
             ))}
           </div>
         </div>
+        
+<div className="qr-size-section">
+  <span className="qr-size-label">
+    {t(
+      'owner.chooseQrSize',
+      'Размер макета'
+    )}
+  </span>
 
+  <div className="qr-size-picker">
+    {printSizes.map(item => (
+      <button
+        type="button"
+        key={item.id}
+        className={
+          printSize === item.id
+            ? 'qr-size-option active'
+            : 'qr-size-option'
+        }
+        onClick={() =>
+          setPrintSize(item.id)
+        }
+      >
+        <span
+          className={
+            `qr-size-icon qr-size-icon-${item.id}`
+          }
+        />
+
+        <strong>
+          {item.label}
+        </strong>
+
+        <small>
+          {item.hint}
+        </small>
+      </button>
+    ))}
+  </div>
+</div>
         <div
           className={
             `qr-print-sheet qr-print-sheet-${template} qr-color-preview`
@@ -1134,16 +1435,29 @@ export function QrPrintCard({
           )}
         </div>
 
-        <button
-          type="button"
-          className="primary full qr-template-download"
-          onClick={downloadPrintableQr}
-        >
-          {t(
-            'owner.saveLayout',
-            'Скачать макет'
-          )}
-        </button>
+<div className="qr-export-actions">
+  <button
+    type="button"
+    className="primary full"
+    onClick={downloadPrintableQr}
+  >
+    {t(
+      'owner.downloadPng',
+      'Скачать PNG'
+    )}
+  </button>
+
+  <button
+    type="button"
+    className="qr-pdf-button full"
+    onClick={downloadPrintablePdf}
+  >
+    {t(
+      'owner.downloadPdf',
+      'Скачать PDF'
+    )}
+  </button>
+</div>
       </div>
     </div>
   );
