@@ -2199,6 +2199,44 @@ body.logged-in .shell{
   min-width:0 !important;
   margin:0 !important;
 }
+
+/* Clear, visible account sign-out action */
+body.logged-in .logout{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:auto;
+  min-width:112px;
+  height:42px;
+  margin:24px 0 0 auto;
+  padding:0 18px;
+  border:1px solid #d9dde3;
+  border-radius:12px;
+  background:#fff;
+  color:#24272c;
+  font:inherit;
+  font-size:12px;
+  font-weight:750;
+  cursor:pointer;
+  box-shadow:0 4px 14px rgba(15,23,42,.04);
+  transition:
+    background .16s ease,
+    border-color .16s ease,
+    box-shadow .16s ease;
+}
+
+body.logged-in .logout:hover{
+  background:#f5f6f8;
+  border-color:#cfd4db;
+  box-shadow:0 6px 18px rgba(15,23,42,.06);
+}
+
+@media(max-width:560px){
+  body.logged-in .logout{
+    width:100%;
+    margin-top:18px;
+  }
+}
 </style>
 <script>
 (function(){
@@ -3646,18 +3684,32 @@ function showAccount(data){
     'session-ready'
   );
 
-  var businessesRequest=
-    loadBusinesses();
+  var shouldStartBusinessOnboarding=
+    isFirstBusinessOnboarding();
 
-  if(isFirstBusinessOnboarding()){
-    businessesRequest.finally(function(){
+  loadBusinesses().then(function(businesses){
+    if(!shouldStartBusinessOnboarding){
+      return;
+    }
+
+    if(
+      Array.isArray(businesses) &&
+      businesses.length===0
+    ){
       showWorkspaceView('businesses');
 
       window.setTimeout(function(){
         openBusinessModal();
       },0);
-    });
-  }
+
+      return;
+    }
+
+    // Existing accounts must never inherit a stale signup step.
+    if(Array.isArray(businesses)){
+      clearFirstBusinessOnboarding();
+    }
+  });
 }
 
 function setBusinessesLoading(){
@@ -3721,13 +3773,19 @@ function loadBusinesses(){
     }
   }).then(function(d){
 
+    var businesses=
+      d.businesses || [];
+
     var container=document.getElementById('businessesList');
 
-    if(!container)return;
+    if(!container){
+      finishBusinessesLoading();
+      return businesses;
+    }
 
     container.innerHTML='';
 
-    if(!d.businesses || !d.businesses.length){
+    if(!businesses.length){
       var empty=document.createElement('p');
       empty.className='status';
       empty.textContent='You do not have any businesses yet.';
@@ -3735,10 +3793,10 @@ function loadBusinesses(){
 
       syncOverviewSubscription([]);
       finishBusinessesLoading();
-      return;
+      return businesses;
     }
 
-    d.businesses.forEach(function(business){
+    businesses.forEach(function(business){
 
       var item=document.createElement('div');
       item.className='business-item' + (business.is_current ? ' is-current' : '');
@@ -3845,10 +3903,12 @@ function loadBusinesses(){
     });
 
     syncOverviewSubscription(
-      d.businesses || []
+      businesses
     );
 
     finishBusinessesLoading();
+
+    return businesses;
 
   }).catch(function(e){
     var container=document.getElementById(
@@ -3870,6 +3930,8 @@ function loadBusinesses(){
 
     finishBusinessesLoading();
     err(e.message);
+
+    return null;
   });
 }
 function createLink(){clearErr();connect.disabled=true;connectStatus.textContent='Preparing secure Telegram connection…';call('/account/telegram-link',{headers:{Authorization:'Bearer '+session}}).then(function(d){window.location.href=d.telegram_url}).catch(function(e){connectStatus.textContent='';err(e.message)}).finally(function(){connect.disabled=false})}
@@ -4060,7 +4122,10 @@ function handleAccountAuthResult(){
   return qs.has('oauth_code');
 }
 
-document.getElementById('loginTab').onclick=function(){setAuthMode('login')};
+document.getElementById('loginTab').onclick=function(){
+  clearFirstBusinessOnboarding();
+  setAuthMode('login');
+};
 document.getElementById('registerTab').onclick=function(){setAuthMode('register')};
 document.getElementById('googleBtn').onclick=function(){
   if(mode==='register'&&!legalAccept.checked){err(legalConsentError());return}
@@ -4111,6 +4176,8 @@ form.onsubmit=function(e){
       d.next==='setup_business'
     ){
       markFirstBusinessOnboarding();
+    }else{
+      clearFirstBusinessOnboarding();
     }
 
     return call('/account/me',{
@@ -4264,6 +4331,7 @@ document.getElementById('checkout').onclick=function(){
   goPricing(this).catch(function(){});
 };document.getElementById('logout').onclick=function(){
   localStorage.removeItem('bookly_session');
+  clearFirstBusinessOnboarding();
   session='';
   window.booklySession='';
   document.body.classList.remove('logged-in');
