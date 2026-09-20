@@ -842,8 +842,12 @@ def _apply_paddle_event(payload: dict) -> None:
                 subscription.expires_at
             )
 
+            # transaction.completed describes a transaction, not the
+            # subscription lifecycle. In particular, a zero-value checkout
+            # transaction can complete while the subscription is still
+            # trialing. Never overwrite trialing -> active here; lifecycle
+            # state is owned by subscription.* events (and live Paddle sync).
             subscription.active = True
-            subscription.status = "active"
             subscription.expires_at = (
                 _dt(next_billed_at)
                 or subscription.expires_at
@@ -995,7 +999,10 @@ def _apply_paddle_event(payload: dict) -> None:
                 scheduled_action in {"cancel", "pause"}
                 and scheduled_effective_at
             ):
-                if subscription.status == "trialing":
+                if (
+                    status == "trialing"
+                    or subscription.status == "trialing"
+                ):
                     subscription.status = "trialing"
                     subscription.active = True
                 else:
