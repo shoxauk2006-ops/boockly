@@ -2272,7 +2272,7 @@ body.logged-in .shell{
 <div class="tabs"><button id="loginTab" class="active">Sign in</button><button id="registerTab">Create account</button></div>
 <div class="socials"><button class="social" id="googleBtn" type="button"><span>G</span> Continue with Google</button></div>
 <div class="divider">or continue with email</div>
-<form id="form"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required><label for="password">Password</label><input id="password" type="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters" required><div id="legalConsent" class="legal-consent"><label><input id="legalAccept" type="checkbox"><span id="legalText">I accept the <a href="rules.html" target="_blank" rel="noopener">Terms of Use</a> and confirm that I have read the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label></div><button id="submit" class="primary" type="submit">Sign in</button></form>
+<form id="form" autocomplete="off"><label for="email">Email</label><input id="email" type="email" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="you@example.com" required><label for="password">Password</label><input id="password" type="password" minlength="8" autocomplete="current-password" placeholder="At least 8 characters" required><div id="legalConsent" class="legal-consent"><label><input id="legalAccept" type="checkbox"><span id="legalText">I accept the <a href="rules.html" target="_blank" rel="noopener">Terms of Use</a> and confirm that I have read the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label></div><button id="submit" class="primary" type="submit">Sign in</button></form>
 <p class="terms">Use Bookly only for legitimate business activity.</p><div id="error" class="error" hidden></div>
 </div>
 <div id="account" class="account">
@@ -3887,15 +3887,70 @@ function legalConsentError(){
     ar:'يرجى الموافقة على شروط الاستخدام وتأكيد قراءة سياسة الخصوصية.'
   })[l]||'Please accept the Terms of Use and confirm that you have read the Privacy Policy.';
 }
+function clearRegisterAutofill(){
+  var emailField=
+    document.getElementById('email');
+
+  var passwordField=
+    document.getElementById('password');
+
+  function clearIfIdle(field){
+    if(
+      field &&
+      document.activeElement!==field
+    ){
+      field.value='';
+    }
+  }
+
+  clearIfIdle(emailField);
+  clearIfIdle(passwordField);
+
+  // Some password managers fill shortly after the tab changes.
+  // Clear that delayed autofill, but never erase text the user is
+  // actively typing.
+  window.setTimeout(function(){
+    if(mode!=='register')return;
+
+    clearIfIdle(emailField);
+    clearIfIdle(passwordField);
+  },120);
+}
+
 function setAuthMode(nextMode){
   mode=nextMode;
   var isRegister=mode==='register';
+
+  var emailField=
+    document.getElementById('email');
+
+  var passwordField=
+    document.getElementById('password');
+
   document.getElementById('loginTab').classList.toggle('active',!isRegister);
   document.getElementById('registerTab').classList.toggle('active',isRegister);
   submit.textContent=isRegister?'Create account':'Sign in';
-  document.getElementById('password').autocomplete=isRegister?'new-password':'current-password';
-  legalConsent.classList.toggle('active',isRegister);
-  if(!isRegister)legalAccept.checked=false;
+
+  emailField.autocomplete=
+    isRegister ? 'off' : 'email';
+
+  passwordField.autocomplete=
+    isRegister
+      ? 'new-password'
+      : 'current-password';
+
+  legalConsent.classList.toggle(
+    'active',
+    isRegister
+  );
+
+  if(isRegister){
+    legalAccept.checked=false;
+    clearRegisterAutofill();
+  }else{
+    legalAccept.checked=false;
+  }
+
   clearErr();
 }
 function cleanAccountAuthParams(){
