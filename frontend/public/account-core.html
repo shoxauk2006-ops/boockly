@@ -2575,6 +2575,60 @@ var FALLBACK_TIMEZONES=[
   'Pacific/Auckland'
 ];
 
+function getTimezoneOffsetMinutes(timezone){
+  try{
+    var parts=new Intl.DateTimeFormat(
+      'en-US',
+      {
+        timeZone:timezone,
+        timeZoneName:'shortOffset'
+      }
+    ).formatToParts(new Date());
+
+    var offsetLabel='';
+
+    parts.forEach(function(part){
+      if(part.type==='timeZoneName'){
+        offsetLabel=part.value || '';
+      }
+    });
+
+    if(
+      offsetLabel==='GMT' ||
+      offsetLabel==='UTC'
+    ){
+      return 0;
+    }
+
+    var match=offsetLabel.match(
+      /(?:GMT|UTC)([+-])(\d{1,2})(?::(\d{2}))?/i
+    );
+
+    if(!match){
+      return 0;
+    }
+
+    var hours=parseInt(
+      match[2],
+      10
+    ) || 0;
+
+    var minutes=parseInt(
+      match[3] || '0',
+      10
+    ) || 0;
+
+    var total=
+      hours*60+minutes;
+
+    return match[1]==='-'
+      ? -total
+      : total;
+  }catch(e){
+    return 0;
+  }
+}
+
 function getAllBusinessTimezoneNames(){
   var values=[];
 
@@ -2606,7 +2660,29 @@ function getAllBusinessTimezoneNames(){
         array.indexOf(value)===index;
     })
     .sort(function(a,b){
-      return a.localeCompare(b);
+      var offsetA=
+        getTimezoneOffsetMinutes(a);
+
+      var offsetB=
+        getTimezoneOffsetMinutes(b);
+
+      if(offsetA!==offsetB){
+        return offsetA-offsetB;
+      }
+
+      var cityA=
+        getTimezoneDisplayName(a);
+
+      var cityB=
+        getTimezoneDisplayName(b);
+
+      return cityA.localeCompare(
+        cityB,
+        undefined,
+        {
+          sensitivity:'base'
+        }
+      );
     });
 }
 
