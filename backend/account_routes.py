@@ -382,6 +382,8 @@ class BusinessCreateIn(BaseModel):
     description: str = Field(default="", max_length=500)
     phone: str = Field(default="", max_length=40)
     address: str = Field(default="", max_length=255)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     timezone: str = Field(default="Asia/Tashkent", max_length=64)
 
 class BusinessUpdateIn(BaseModel):
@@ -483,6 +485,8 @@ def account_create_business(
             description=x.description.strip(),
             phone=x.phone.strip(),
             address=x.address.strip(),
+            latitude=x.latitude,
+            longitude=x.longitude,
             timezone=business_timezone,
             slug=slug,
             subscription_active=False,
