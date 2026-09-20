@@ -1028,16 +1028,12 @@ def account_billing(authorization: str = Header(default="")):
             .first()
         )
 
-        # Synchronize the current package from Paddle only when
-        # there is no pending package change.
-        #
-        # During a scheduled downgrade Paddle may already report the
-        # future package in its items, while Bookly must keep the
-        # current package active until the billing period ends.
+        # Synchronize lifecycle state from Paddle so Bookly cannot
+        # keep showing a trialing subscription as paid/active after webhook
+        # events arrive out of order. Package items are synchronized only
+        # when there is no pending downgrade.
         if (
             subscription
-            and subscription.active
-            and subscription.pending_services_limit is None
             and subscription.external_subscription_id
         ):
             subscription_id = (
@@ -1059,77 +1055,159 @@ def account_billing(authorization: str = Header(default="")):
                         or {}
                     )
 
-                    detected_limit = (
-                        paddle_original._limit_from_items(
-                            paddle_subscription.get("items")
-                            or []
-                        )
+                    paddle_status = str(
+                        paddle_subscription.get("status")
+                        or ""
+                    ).strip().lower()
+
+                    scheduled_change = (
+                        paddle_subscription.get("scheduled_change")
+                        or {}
                     )
 
-                    billing_interval = (
-                        paddle_app._subscription_interval(
-                            subscription_id
-                        ) 
+                    scheduled_action = str(
+                        scheduled_change.get("action")
+                        or ""
+                    ).strip().lower()
+
+                    next_billed_at = (
+                        paddle_subscription.get("next_billed_at")
+                        or (
+                            paddle_subscription.get(
+                                "current_billing_period"
+                            )
+                            or {}
+                        ).get("ends_at")
                     )
 
-                    if billing_interval == "year":
-                        annual_total = 0.0
+                    state_changed = False
 
-                        for item in (
-                            paddle_subscription.get("items")
-                            or []
-                        ):
-                            price = (
-                                item.get("price")
-                                or {}
+                    # Preserve Bookly's "cancelled" marker while Paddle has a
+                    # scheduled cancel/pause, otherwise trust Paddle's live
+                    # lifecycle status.
+                    if scheduled_action not in {"cancel", "pause"}:
+                        if paddle_status:
+                            if subscription.status != paddle_status:
+                                subscription.status = paddle_status
+                                state_changed = True
+
+                            live_active = (
+                                paddle_status
+                                not in {
+                                    "canceled",
+                                    "cancelled",
+                                    "paused",
+                                }
                             )
 
-                            unit_price = (
-                                price.get("unit_price")
-                                or {}
-                            )
+                            if bool(subscription.active) != bool(live_active):
+                                subscription.active = live_active
+                                state_changed = True
 
-                            amount = unit_price.get(
-                                "amount"
-                            )
-
-                            quantity = item.get(
-                                "quantity",
-                                1
-                            )
-
-                            if amount is not None:
-                                annual_total += (
-                                    float(amount)
-                                    / 100.0
-                                ) * float(quantity)
-
-                        detected_price = round(
-                            annual_total,
-                            2
+                    live_expires_at = (
+                        paddle_original._dt(
+                            next_billed_at
                         )
-
-                    else:
-                        detected_price = (
-                            paddle_original.calculate_subscription_price(
-                                detected_limit
-                            )
-                        )
+                        if next_billed_at
+                        else None
+                    )
 
                     if (
-                        subscription.current_services_limit
-                        != detected_limit
-                        or
-                        float(
-                            subscription.current_price or 0
-                        )
-                        != float(detected_price)
+                        live_expires_at
+                        and subscription.expires_at
+                        != live_expires_at
                     ):
-                        subscription.current_services_limit = (
-                            detected_limit
+                        subscription.expires_at = (
+                            live_expires_at
                         )
-                        subscription.current_price = (
-                            detected_price
+                        state_changed = True
+
+                    if (
+                        subscription.active
+                        and subscription.pending_services_limit
+                        is None
+                    ):
+                        detected_limit = (
+                            paddle_original._limit_from_items(
+                                paddle_subscription.get("items")
+                                or []
+                            )
+                        )
+
+                        billing_interval = (
+                            paddle_app._subscription_interval(
+                                subscription_id
+                            )
+                        )
+
+                        if billing_interval == "year":
+                            annual_total = 0.0
+
+                            for item in (
+                                paddle_subscription.get("items")
+                                or []
+                            ):
+                                price = (
+                                    item.get("price")
+                                    or {}
+                                )
+
+                                unit_price = (
+                                    price.get("unit_price")
+                                    or {}
+                                )
+
+                                amount = unit_price.get(
+                                    "amount"
+                                )
+
+                                quantity = item.get(
+                                    "quantity",
+                                    1
+                                )
+
+                                if amount is not None:
+                                    annual_total += (
+                                        float(amount)
+                                        / 100.0
+                                    ) * float(quantity)
+
+                            detected_price = round(
+                                annual_total,
+                                2
+                            )
+
+                        else:
+                            detected_price = (
+                                paddle_original.calculate_subscription_price(
+                                    detected_limit
+                                )
+                            )
+
+                        if (
+                            subscription.current_services_limit
+                            != detected_limit
+                        ):
+                            subscription.current_services_limit = (
+                                detected_limit
+                            )
+                            state_changed = True
+
+                        if (
+                            float(
+                                subscription.current_price or 0
+                            )
+                            != float(detected_price)
+                        ):
+                            subscription.current_price = (
+                                detected_price
+                            )
+                            state_changed = True
+
+                    if state_changed:
+                        paddle_original._sync_business_from_subscription(
+                            business,
+                            subscription,
                         )
                         db.commit()
 
@@ -1238,6 +1316,28 @@ def account_preview_subscription_limit(
             or 10
         )
 
+        paddle_response = (
+            paddle_original._paddle_request(
+                "GET",
+                f"/subscriptions/{subscription_id}",
+            )
+        )
+
+        paddle_subscription = (
+            paddle_response.get("data")
+            or {}
+        )
+
+        paddle_status = str(
+            paddle_subscription.get("status")
+            or subscription.status
+            or ""
+        ).strip().lower()
+
+        is_trialing = (
+            paddle_status == "trialing"
+        )
+
         billing_interval = (
             paddle_app._subscription_interval(
                 subscription_id
@@ -1252,14 +1352,6 @@ def account_preview_subscription_limit(
             limit
         )
 
-        is_trialing = (
-            str(
-                subscription.status
-                or ""
-            ).strip().lower()
-            == "trialing"
-        )
-
         mode = (
             "do_not_bill"
             if is_trialing
@@ -1271,10 +1363,43 @@ def account_preview_subscription_limit(
         )
 
         trial_ends_at = (
-            subscription.expires_at
+            paddle_original._dt(
+                paddle_subscription.get(
+                    "next_billed_at"
+                )
+                or (
+                    paddle_subscription.get(
+                        "current_billing_period"
+                    )
+                    or {}
+                ).get("ends_at")
+            )
             if is_trialing
             else None
         )
+
+        # Repair any stale local lifecycle state while we already have the
+        # authoritative Paddle subscription in hand.
+        if (
+            is_trialing
+            and (
+                subscription.status != "trialing"
+                or not subscription.active
+            )
+        ):
+            subscription.status = "trialing"
+            subscription.active = True
+
+            if trial_ends_at:
+                subscription.expires_at = (
+                    trial_ends_at
+                )
+
+            paddle_original._sync_business_from_subscription(
+                business,
+                subscription,
+            )
+            db.commit()
 
         active_services_count = (
             _active_service_count(
