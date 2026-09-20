@@ -1408,16 +1408,21 @@ def account_preview_subscription_limit(
             )
         )
 
+    preview_payload = {
+        "items": items,
+        "proration_billing_mode": mode,
+    }
+
+    if not is_trialing:
+        preview_payload[
+            "on_payment_failure"
+        ] = "prevent_change"
+
     preview_response = (
         paddle_original._paddle_request(
             "PATCH",
             f"/subscriptions/{subscription_id}/preview",
-            {
-                "items": items,
-                "proration_billing_mode": mode,
-                "on_payment_failure":
-                    "prevent_change",
-            },
+            preview_payload,
         )
     )
 
@@ -1878,19 +1883,24 @@ def account_change_subscription_limit(
             )
             db.commit()
 
+    update_payload = {
+        "items":
+            paddle_app._items_for_limit(
+                limit
+            ),
+        "proration_billing_mode": mode,
+    }
+
+    if not is_trialing:
+        update_payload[
+            "on_payment_failure"
+        ] = "prevent_change"
+
     try:
         paddle_original._paddle_request(
             "PATCH",
             f"/subscriptions/{subscription_id}",
-            {
-                "items":
-                    paddle_app._items_for_limit(
-                        limit
-                    ),
-                "proration_billing_mode": mode,
-                "on_payment_failure":
-                    "prevent_change",
-            },
+            update_payload,
         )
     except Exception:
         if limit < current and not is_trialing:
