@@ -55,8 +55,44 @@ Base.metadata.create_all(engine)
 
 STATE_SECONDS = 600
 HANDOFF_SECONDS = 600
-FRONTEND_URL = os.getenv("BOOKLY_FRONTEND_URL", "https://boockly.vercel.app").rstrip("/")
-PUBLIC_API_URL = os.getenv("BOOKLY_PUBLIC_API_URL", "https://boockly-3.onrender.com").rstrip("/")
+CANONICAL_FRONTEND_URL = "https://boockly.vercel.app"
+FRONTEND_URL = os.getenv(
+    "BOOKLY_FRONTEND_URL",
+    CANONICAL_FRONTEND_URL,
+).rstrip("/")
+PUBLIC_API_URL = os.getenv(
+    "BOOKLY_PUBLIC_API_URL",
+    "https://boockly-3.onrender.com",
+).rstrip("/")
+
+
+def _oauth_frontend_url() -> str:
+    """
+    OAuth must return users to the current Bookly production site.
+
+    A stale Vercel preview URL can remain in Render environment
+    variables after an old deployment. Preview deployments preserve
+    old frontend code, so redirecting there can resurrect removed UI.
+    Keep custom non-Vercel domains valid, but canonicalize any Bookly
+    Vercel preview host to the stable production alias.
+    """
+    configured = (FRONTEND_URL or "").strip().rstrip("/")
+    if not configured:
+        return CANONICAL_FRONTEND_URL
+
+    try:
+        parsed = urllib.parse.urlparse(configured)
+        host = (parsed.hostname or "").lower()
+
+        if (
+            host.endswith(".vercel.app")
+            and host != "boockly.vercel.app"
+        ):
+            return CANONICAL_FRONTEND_URL
+    except Exception:
+        return CANONICAL_FRONTEND_URL
+
+    return configured
 
 
 def _redirect_uri() -> str:
@@ -64,7 +100,10 @@ def _redirect_uri() -> str:
 
 
 def _frontend_error() -> RedirectResponse:
-    return RedirectResponse(f"{FRONTEND_URL}/account.html?oauth_error=1", status_code=303)
+    return RedirectResponse(
+        f"{_oauth_frontend_url()}/account.html?oauth_error=1",
+        status_code=303,
+    )
 
 
 def _post_form(url: str, data: dict[str, str]) -> dict:
@@ -265,7 +304,7 @@ def google_callback(request: Request):
     except HTTPException as exc:
         if exc.status_code == 400 and "Terms acceptance" in str(exc.detail):
             response = RedirectResponse(
-                f"{FRONTEND_URL}/account.html?terms_required=1",
+                f"{_oauth_frontend_url()}/account.html?terms_required=1",
                 status_code=303,
             )
             response.delete_cookie("bookly_oauth_state_google")
@@ -273,7 +312,7 @@ def google_callback(request: Request):
             return response
         raise
     response = RedirectResponse(
-        f"{FRONTEND_URL}/account.html?oauth_code={urllib.parse.quote(handoff)}",
+        f"{_oauth_frontend_url()}/account.html?oauth_code={urllib.parse.quote(handoff)}",
         status_code=303,
     )
     response.delete_cookie("bookly_oauth_state_google")
