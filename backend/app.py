@@ -1431,13 +1431,33 @@ def subscription_limits(subscription):
         "pending_price": None
     }
 
+    current_limit = int(
+        subscription.current_services_limit
+        or 10
+    )
+
+    pending_limit = (
+        int(subscription.pending_services_limit)
+        if subscription.pending_services_limit
+        is not None
+        else None
+    )
+
+    # Once a downgrade is scheduled, do not allow the active service
+    # count to grow above the future lower limit. Otherwise the business
+    # could reach renewal with more active services than its paid package.
+    max_services = current_limit
+
+    if (
+        pending_limit is not None
+        and pending_limit < current_limit
+    ):
+        max_services = pending_limit
+
     return {
         "plan": subscription.plan or "pro",
 
-        "max_services": (
-            subscription.current_services_limit
-            or 10
-        ),
+        "max_services": max_services,
 
         "current_price": (
             float(subscription.current_price)
@@ -2117,6 +2137,32 @@ def admin_edit_service(service_id: int, x: ServiceIn, x_telegram_init_data: str 
     with SessionLocal() as db:
         b = owner_business(db, int(user["id"])); s = db.get(Service, service_id)
         if not b or not s or s.business_id != b.id: raise HTTPException(404, "Service not found")
+
+        if x.active and not s.active:
+            subscription = owner_subscription(
+                db,
+                b.id
+            )
+
+            max_services = subscription_limits(
+                subscription
+            )["max_services"]
+
+            services_count = (
+                db.query(Service)
+                .filter(
+                    Service.business_id == b.id,
+                    Service.active == True
+                )
+                .count()
+            )
+
+            if services_count >= max_services:
+                raise HTTPException(
+                    403,
+                    f"Достигнут лимит услуг: {max_services}"
+                )
+
         for k,v in x.model_dump().items(): setattr(s,k,v)
         db.commit(); db.refresh(s); return s
 
