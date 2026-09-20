@@ -2711,3 +2711,89 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
     font-size:9px;
   }
 }
+
+
+/* Exact QR export preview */
+.qr-output-preview{
+  min-height:240px;
+  margin:0 0 12px;
+  padding:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  background:#f3f4f6;
+}
+
+.qr-output-preview img{
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:100%;
+  max-height:430px;
+  object-fit:contain;
+  border-radius:4px!important;
+  box-shadow:
+    0 10px 28px
+    rgba(15,23,42,.12);
+  transition:
+    width .18s ease,
+    max-width .18s ease,
+    max-height .18s ease;
+}
+
+.qr-output-preview-a4 img{
+  width:min(100%,330px);
+}
+
+.qr-output-preview-a5 img{
+  width:min(72%,235px);
+}
+
+.qr-output-preview-square img{
+  width:min(88%,340px);
+}
+
+.qr-output-preview-landscape img{
+  width:100%;
+  max-width:430px;
+}
+
+.qr-output-preview-loading{
+  min-height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#8a919b;
+  font-size:12px;
+  font-weight:700;
+}
+
+@media(max-width:420px){
+  .qr-output-preview{
+    min-height:210px;
+    padding:10px;
+  }
+
+  .qr-output-preview img{
+    max-height:360px;
+  }
+
+  .qr-output-preview-a4 img{
+    width:min(100%,285px);
+  }
+
+  .qr-output-preview-a5 img{
+    width:min(72%,205px);
+  }
+
+  .qr-output-preview-square img{
+    width:min(90%,300px);
+  }
+
+  .qr-output-preview-landscape img{
+    max-width:100%;
+  }
+}
