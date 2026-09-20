@@ -2931,7 +2931,67 @@ function err(msg){error.textContent=msg;error.hidden=false}function clearErr(){e
 function call(path,options){return fetch(api+path,options||{}).then(function(r){return r.json().catch(function(){return null}).then(function(d){if(!r.ok)throw new Error((d&&d.detail)||('Request failed ('+r.status+')'));return d})}).catch(function(e){if(e instanceof TypeError)throw new Error('Cannot connect to Bookly API: '+api);throw e})}
 window.booklyCall=call;
 window.booklySession=session;
-function goPricing(){call('/account/paddle/checkout-token',{headers:{Authorization:'Bearer '+session}}).then(function(d){location.href='pricing-v2.html?token='+encodeURIComponent(d.checkout_token)+'&api='+encodeURIComponent(api)}).catch(function(e){err(e.message);document.getElementById('checkout').disabled=false})}
+function goPricing(trigger){
+  var button=trigger||null;
+  if(button)button.disabled=true;
+
+  return call('/account/paddle/checkout-token',{
+    headers:{
+      Authorization:'Bearer '+session
+    }
+  })
+  .then(function(d){
+    location.href=
+      'pricing-v2.html?token='+
+      encodeURIComponent(d.checkout_token)+
+      '&api='+
+      encodeURIComponent(api);
+  })
+  .catch(function(e){
+    err(e.message);
+    if(button)button.disabled=false;
+    throw e;
+  });
+}
+
+function syncOverviewSubscription(businesses){
+  var button=document.getElementById('checkout');
+  if(!button)return;
+
+  var card=button.closest('.workspace-card');
+  if(!card)return;
+
+  var title=card.querySelector('h3');
+  var description=card.querySelector('p');
+
+  var current=(businesses||[]).find(function(item){
+    return !!item.is_current;
+  });
+
+  var active=!!(
+    current &&
+    current.subscription_active
+  );
+
+  button.dataset.booklyHasActivePlan=
+    active ? '1' : '0';
+
+  if(active){
+    if(title)title.textContent='Manage your subscription';
+    if(description){
+      description.textContent=
+        'Your current business already has an active plan. Use Billing to change the package, cancel or restore the subscription.';
+    }
+    button.textContent='Open Billing';
+  }else{
+    if(title)title.textContent='Choose your plan';
+    if(description){
+      description.textContent=
+        'Select the plan for your current business. Payment is handled securely on the Bookly website.';
+    }
+    button.textContent='Continue to plans';
+  }
+}
 function showAccount(data){
   document.documentElement.classList.add('session-ready');
   
@@ -3088,6 +3148,10 @@ function loadBusinesses(){
       container.appendChild(item);
     });
 
+    syncOverviewSubscription(
+      d.businesses || []
+    );
+
   }).catch(function(e){
     err(e.message);
   });
@@ -3127,8 +3191,7 @@ document.getElementById('googleBtn').onclick=function(){
 form.onsubmit=function(e){e.preventDefault();clearErr();var isRegister=mode==='register';if(isRegister&&!legalAccept.checked){err(legalConsentError());return}submit.disabled=true;var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};if(isRegister)body.legal_accept=true;call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);window.booklySession=session;if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
 document.getElementById('billingCheckout').onclick=function(){
   clearErr();
-  this.disabled=true;
-  goPricing();
+  goPricing(this).catch(function(){});
 };
 document.getElementById('billingUpgrade').onclick=function(){
   goPricing();
@@ -3237,7 +3300,19 @@ document.getElementById('billingRestorePackage').onclick=function(){
     button.disabled=false;
   });
 };
-document.getElementById('checkout').onclick=function(){clearErr();this.disabled=true;goPricing()};document.getElementById('logout').onclick=function(){
+document.getElementById('checkout').onclick=function(){
+  clearErr();
+
+  if(
+    this.dataset.booklyHasActivePlan==='1'
+  ){
+    showWorkspaceView('billing');
+    loadBilling();
+    return;
+  }
+
+  goPricing(this).catch(function(){});
+};document.getElementById('logout').onclick=function(){
   localStorage.removeItem('bookly_session');
   document.body.classList.remove('logged-in');
   location.reload();
