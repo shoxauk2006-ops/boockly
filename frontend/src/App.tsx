@@ -541,127 +541,156 @@ setInfoSection={setInfoSection}
           </span>
 
           <h2>
-  {t(
-    'info.howBooklyWorks',
-    'Как работает Bookly'
-  )}
-</h2>
-          <h3>
-  {t(
-    'owner.forBusinessOwner',
-    'Для владельца бизнеса'
-  )}
-</h3>
+            {t(
+              'info.howBooklyWorks',
+              'Как пользоваться Bookly'
+            )}
+          </h2>
 
           <p className="muted">
-  {t(
-    'info.stepCreateBusiness',
-    '1. Создайте бизнес.'
-  )}
-</p>
+            {t(
+              'info.helpIntro',
+              'Bookly разделён на сайт и Telegram Mini App: на сайте вы создаёте аккаунт и бизнес, а в Telegram ежедневно управляете записью клиентов.'
+            )}
+          </p>
 
-          <p className="muted">
-  {t(
-    'info.stepAddInfo',
-    '2. Добавьте информацию и фотографию.'
-  )}
-</p>
+          <div className="bookly-help-sections">
+            <section className="bookly-help-card">
+              <span className="bookly-help-number">
+                1
+              </span>
 
-          <p className="muted">
-  {t(
-    'info.stepAddServices',
-    '3. Добавьте услуги и цены.'
-  )}
-</p>
+              <div>
+                <h3>
+                  {t(
+                    'info.helpWebsiteTitle',
+                    'Начните на сайте'
+                  )}
+                </h3>
 
-          <p className="muted">
-  {t(
-    'owner.setupWorkingHours',
-    '4. Настройте график работы.'
-  )}
-</p>
+                <p>
+                  {t(
+                    'info.helpWebsiteText',
+                    'Зарегистрируйтесь на сайте Bookly, создайте бизнес и настройте подписку или пакет услуг. Оплата и управление подпиской выполняются только на сайте.'
+                  )}
+                </p>
+              </div>
+            </section>
 
-          <p className="muted">
-  {t(
-    'owner.setupBlocks',
-    '5. При необходимости создайте блокировки.'
-  )}
-</p>
+            <section className="bookly-help-card">
+              <span className="bookly-help-number">
+                2
+              </span>
 
-          <p className="muted">
-  {t(
-    'info.stepBookings',
-    '6. Управляйте записями.'
-  )}
-</p>
+              <div>
+                <h3>
+                  {t(
+                    'info.helpTelegramTitle',
+                    'Подключите Telegram'
+                  )}
+                </h3>
 
-          <p className="muted">
-  {t(
-    'info.activationDescription',
-    'Чтобы начать принимать записи от клиентов, активируйте подписку Bookly Pro. После активации вы получите клиентскую ссылку и сможете начать принимать записи.'
-  )}
-</p>
+                <p>
+                  {t(
+                    'info.helpTelegramText',
+                    'Подключите Telegram к аккаунту Bookly. После этого владелец сможет открыть свой бизнес в Mini App и управлять им из Telegram.'
+                  )}
+                </p>
+              </div>
+            </section>
 
-          <h3>
-            Bookly Pro
-          </h3>
+            <section className="bookly-help-card">
+              <span className="bookly-help-number">
+                3
+              </span>
 
-          <p className="muted">
-  {t(
-    'info.proUnlocksClientPart',
-    'Bookly Pro открывает клиентскую часть Bookly:'
-  )}
-</p>
+              <div>
+                <h3>
+                  {t(
+                    'info.helpManageTitle',
+                    'Управляйте бизнесом'
+                  )}
+                </h3>
 
-          <ul>
-            <li>
-  {t(
-    'info.clientPage',
-    'Клиентская страница'
-  )}
-</li>
+                <p>
+                  {t(
+                    'info.helpManageText',
+                    'В Mini App можно управлять услугами, специалистами, графиком, блокировками времени и записями клиентов. Новые записи находятся в одном рабочем кабинете.'
+                  )}
+                </p>
+              </div>
+            </section>
 
-            <li>
-  {t(
-    'info.clientLink',
-    'Персональная ссылка для клиентов'
-  )}
-</li>
+            <section className="bookly-help-card">
+              <span className="bookly-help-number">
+                4
+              </span>
 
-            <li>
-  {t(
-    'info.clientQr',
-    'QR-код для клиентов'
-  )}
-</li>
+              <div>
+                <h3>
+                  {t(
+                    'info.helpShareTitle',
+                    'Дайте клиентам ссылку или QR'
+                  )}
+                </h3>
 
-            <li>
-  {t(
-    'info.onlineBookings',
-    'Онлайн-записи'
-  )}
-</li>
+                <p>
+                  {t(
+                    'info.helpShareText',
+                    'В админке скопируйте ссылку на бизнес или скачайте QR-код. Клиент открывает Bookly в Telegram и сам выбирает специалиста, услугу, дату и свободное время.'
+                  )}
+                </p>
+              </div>
+            </section>
+          </div>
 
-            <li>
-  {t(
-    'info.bookingNotifications',
-    'Уведомления о новых записях'
-  )}
-</li>
-            <li>
-  {t(
-    'info.basePlanServices',
-    'До 10 услуг в базовом тарифе'
-  )}
-</li>
-          </ul>
+          <div className="bookly-help-note">
+            <strong>
+              {t(
+                'info.helpClientTitle',
+                'Для клиента'
+              )}
+            </strong>
 
-          <p className="muted">
-  {t(
-    'info.withoutSubscription',
-    'Без подписки вы можете создавать и настраивать бизнес, добавлять услуги, управлять графиком, блокировками и записями в админке. Подписка нужна для подключения клиентов и начала приёма онлайн-записей.'
-  )}
-</p>
+            <p>
+              {t(
+                'info.helpClientText',
+                'Клиенту не нужен кабинет администратора: он переходит по вашей ссылке или QR, выбирает нужные параметры записи и подтверждает бронирование.'
+              )}
+            </p>
+          </div>
+
+          <div className="bookly-help-note">
+            <strong>
+              {t(
+                'info.helpStaffTitle',
+                'Для сотрудника'
+              )}
+            </strong>
+
+            <p>
+              {t(
+                'info.helpStaffText',
+                'После подключения сотрудник получает свой рабочий кабинет в Telegram: видит собственные записи и график, может добавлять свои записи и временные блокировки в пределах доступных ему функций.'
+              )}
+            </p>
+          </div>
+
+          <div className="bookly-help-billing">
+            <strong>
+              {t(
+                'info.helpBillingTitle',
+                'Подписка и оплата'
+              )}
+            </strong>
+
+            <p>
+              {t(
+                'info.helpBillingText',
+                'Покупка, продление, отмена подписки и изменение пакета выполняются на сайте Bookly. В Telegram Mini App вы пользуетесь уже подключённым сервисом.'
+              )}
+            </p>
+          </div>
         </>
       ) : (
         <>
