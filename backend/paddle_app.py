@@ -392,13 +392,39 @@ def external_checkout_config(token: str):
             business_id,
         )
 
-        if not business or int(business.owner_telegram_id) != owner_id:
-            raise HTTPException(403, "Checkout token does not match business")
-
         account_id = int(
             token_data.get("account_id")
             or 0
         )
+
+        owner_matches = bool(
+            business
+            and int(
+                business.owner_telegram_id
+            ) == owner_id
+        )
+
+        account_matches = bool(
+            business
+            and account_id
+            and int(
+                getattr(
+                    business,
+                    "account_id",
+                    0,
+                )
+                or 0
+            ) == account_id
+        )
+
+        if not business or not (
+            owner_matches
+            or account_matches
+        ):
+            raise HTTPException(
+                403,
+                "Checkout token does not match business"
+            )
 
         trial_available = (
             _original._account_trial_available(
@@ -456,13 +482,39 @@ def external_price(
             _original.Business,
             business_id,
         )
-        if not business or int(business.owner_telegram_id) != owner_id:
-            raise HTTPException(403, "Checkout token does not match business")
-
         account_id = int(
             token_data.get("account_id")
             or 0
         )
+
+        owner_matches = bool(
+            business
+            and int(
+                business.owner_telegram_id
+            ) == owner_id
+        )
+
+        account_matches = bool(
+            business
+            and account_id
+            and int(
+                getattr(
+                    business,
+                    "account_id",
+                    0,
+                )
+                or 0
+            ) == account_id
+        )
+
+        if not business or not (
+            owner_matches
+            or account_matches
+        ):
+            raise HTTPException(
+                403,
+                "Checkout token does not match business"
+            )
 
         trial_available = (
             _original._account_trial_available(
