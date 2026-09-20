@@ -68,6 +68,8 @@ export function Admin({
   
 
   const [loading, setLoading] = useState(true);
+  const [businessesLoadFailed, setBusinessesLoadFailed] =
+    useState(false);
 
   const [businessPanel, setBusinessPanel] =
     useState<'closed' | 'list' | 'create'>(
@@ -208,6 +210,8 @@ const [newBusinessHours, setNewBusinessHours] =
   };
 }, [businessCreatedNotice]);
   const loadBusinesses = async () => {
+    setBusinessesLoadFailed(false);
+
     const response = await fetch(
       API + '/admin/businesses',
       {
@@ -418,6 +422,7 @@ const [newBusinessHours, setNewBusinessHours] =
         e
       );
 
+      setBusinessesLoadFailed(true);
       setLoading(false);
     }
   };
@@ -517,6 +522,49 @@ const [newBusinessHours, setNewBusinessHours] =
           )}
         </p>
       </div>
+    );
+  }
+
+   if (businessesLoadFailed) {
+    return (
+      <section>
+        <button
+          className="back"
+          onClick={onBack}
+        >
+          ← {t('common.back')}
+        </button>
+
+        <div className="card">
+          <h2>
+            {t(
+              'nav.businesses',
+              'Мои бизнесы'
+            )}
+          </h2>
+
+          <p className="muted">
+            {t(
+              'owner.businessesLoadError',
+              'Не удалось загрузить бизнесы'
+            )}
+          </p>
+
+          <button
+            className="primary full"
+            style={{ marginTop: 12 }}
+            onClick={() => {
+              setLoading(true);
+              load();
+            }}
+          >
+            {t(
+              'common.retry',
+              'Повторить'
+            )}
+          </button>
+        </div>
+      </section>
     );
   }
 
