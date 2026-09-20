@@ -130,24 +130,6 @@ def _get_json(url: str, headers: dict[str, str]) -> dict:
         raise HTTPException(502, "Google OAuth provider request failed")
 
 
-def _create_default_business(db, account: BooklyAccount) -> Business:
-    business = Business(
-        owner_telegram_id=-int(account.id),
-        name="My Business",
-        slug=f"account-{account.id}-{secrets.token_hex(4)}",
-    )
-    db.add(business)
-    db.flush()
-    db.execute(
-        __import__("sqlalchemy").text(
-            "UPDATE businesses SET account_id = :account_id WHERE id = :business_id"
-        ),
-        {"account_id": account.id, "business_id": business.id},
-    )
-    account.business_id = business.id
-    return business
-
-
 def _finish_google(subject: str, email: str, legal_accept: bool = False) -> str:
     subject = subject.strip()
     email = email.strip().lower()
@@ -185,7 +167,6 @@ def _finish_google(subject: str, email: str, legal_accept: bool = False) -> str:
                 )
                 db.add(account)
                 db.flush()
-                _create_default_business(db, account)
                 is_new = True
 
             identity = BooklyOAuthIdentity(
@@ -354,5 +335,5 @@ def oauth_exchange(x: OAuthExchangeIn):
                 "email": account.email,
                 "business_id": account.business_id,
             },
-            "next": "choose_plan" if handoff.is_new_account else "account",
+            "next": "setup_business" if handoff.is_new_account else "account",
         }
