@@ -2508,39 +2508,95 @@ body.logged-in .shell{
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){'use strict';
-var TIMEZONE_OPTIONS=[
-  ['Asia/Tashkent','Ташкент'],
-  ['Asia/Almaty','Алматы'],
-  ['Asia/Bishkek','Бишкек'],
-  ['Asia/Dhaka','Дакка'],
-  ['Asia/Karachi','Карачи'],
-  ['Asia/Kolkata','Калькутта'],
-  ['Asia/Dubai','Дубай'],
-  ['Asia/Riyadh','Эр-Рияд'],
-  ['Asia/Tehran','Тегеран'],
-  ['Asia/Baghdad','Багдад'],
-  ['Asia/Jerusalem','Иерусалим'],
-  ['Asia/Baku','Баку'],
-  ['Asia/Tbilisi','Тбилиси'],
-  ['Europe/Moscow','Москва'],
-  ['Europe/Istanbul','Стамбул'],
-  ['Europe/Kiev','Киев'],
-  ['Europe/Berlin','Берлин'],
-  ['Europe/Paris','Париж'],
-  ['Europe/London','Лондон'],
-  ['Europe/Rome','Рим'],
-  ['Europe/Madrid','Мадрид'],
-  ['Africa/Cairo','Каир'],
-  ['Africa/Johannesburg','Йоханнесбург'],
-  ['America/New_York','Нью-Йорк'],
-  ['America/Chicago','Чикаго'],
-  ['America/Denver','Денвер'],
-  ['America/Los_Angeles','Лос-Анджелес'],
-  ['America/Toronto','Торонто'],
-  ['America/Sao_Paulo','Сан-Паулу'],
-  ['Australia/Sydney','Сидней'],
-  ['Pacific/Auckland','Окленд']
+var FALLBACK_TIMEZONES=[
+  'UTC',
+  'Africa/Cairo',
+  'Africa/Johannesburg',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/New_York',
+  'America/Sao_Paulo',
+  'America/Toronto',
+  'Asia/Almaty',
+  'Asia/Baghdad',
+  'Asia/Baku',
+  'Asia/Bishkek',
+  'Asia/Dhaka',
+  'Asia/Dubai',
+  'Asia/Jerusalem',
+  'Asia/Karachi',
+  'Asia/Kolkata',
+  'Asia/Riyadh',
+  'Asia/Tashkent',
+  'Asia/Tbilisi',
+  'Asia/Tehran',
+  'Australia/Sydney',
+  'Europe/Berlin',
+  'Europe/Istanbul',
+  'Europe/Kyiv',
+  'Europe/London',
+  'Europe/Madrid',
+  'Europe/Moscow',
+  'Europe/Paris',
+  'Europe/Rome',
+  'Pacific/Auckland'
 ];
+
+function getAllBusinessTimezoneNames(){
+  var values=[];
+
+  try{
+    if(
+      typeof Intl.supportedValuesOf==='function'
+    ){
+      values=Intl.supportedValuesOf(
+        'timeZone'
+      );
+    }
+  }catch(e){
+    values=[];
+  }
+
+  if(!values || !values.length){
+    values=FALLBACK_TIMEZONES.slice();
+  }else{
+    values=values.slice();
+
+    if(values.indexOf('UTC')===-1){
+      values.unshift('UTC');
+    }
+  }
+
+  return values
+    .filter(function(value,index,array){
+      return value &&
+        array.indexOf(value)===index;
+    })
+    .sort(function(a,b){
+      return a.localeCompare(b);
+    });
+}
+
+function getTimezoneDisplayName(timezone){
+  if(timezone==='UTC'){
+    return 'UTC';
+  }
+
+  var parts=String(timezone).split('/');
+  var city=parts[parts.length-1] || timezone;
+
+  return city.replace(/_/g,' ');
+}
+
+var TIMEZONE_OPTIONS=
+  getAllBusinessTimezoneNames()
+    .map(function(timezone){
+      return [
+        timezone,
+        getTimezoneDisplayName(timezone)
+      ];
+    });
 
 var timezoneCountryMap={
   'Asia/Tashkent':'UZ',
@@ -2636,6 +2692,9 @@ var businessTimezoneLabel=
 var businessTimezoneValue=
   document.getElementById('businessTimezoneValue');
 
+var businessTimezoneHidden=
+  document.getElementById('businessTimezone');
+
 var businessTimezoneChange=
   document.getElementById('businessTimezoneChange');
 
@@ -2651,6 +2710,11 @@ var businessTimezoneList=
 function setBusinessTimezone(timezone){
   businessTimezoneInputValue=
     timezone || 'Asia/Tashkent';
+
+  if(businessTimezoneHidden){
+    businessTimezoneHidden.value=
+      businessTimezoneInputValue;
+  }
 
   businessTimezoneLabel.textContent=
     getTimezoneCity(businessTimezoneInputValue);
