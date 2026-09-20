@@ -1803,6 +1803,38 @@ body.logged-in #billingMessage{
 #packageConfirmText{
   white-space:pre-line;
 }
+
+.package-modal-message{
+  margin-top:12px;
+  line-height:1.45;
+}
+
+.package-modal-message.error{
+  padding:11px 12px;
+  border:1px solid #f1b8b3;
+  border-radius:11px;
+  background:#fff2f0;
+  color:#b42318;
+  font-size:12px;
+  font-weight:750;
+}
+
+.package-confirm-warning{
+  margin:14px 0 2px;
+  padding:12px 13px;
+  border:1px solid #f0b8b3;
+  border-radius:12px;
+  background:#fff4f2;
+  color:#b42318;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.5;
+  text-align:left;
+}
+
+.package-confirm-warning[hidden]{
+  display:none;
+}
   
 /* Logout */
 
@@ -4231,7 +4263,7 @@ check();
 
     <div id="packageOptions" class="package-options"></div>
 
-    <div id="packageModalMessage" class="status"></div>
+    <div id="packageModalMessage" class="status package-modal-message"></div>
 
   </div>
 </div>
@@ -4248,6 +4280,12 @@ check();
     <p id="packageConfirmText">
       Are you sure you want to change your package?
     </p>
+
+    <div
+      id="packageConfirmWarning"
+      class="package-confirm-warning"
+      hidden
+    ></div>
 
     <div class="business-modal-actions">
       <button
@@ -4273,12 +4311,266 @@ check();
 <script>
 var billingPackageLimits=[10,20,30,50,100];
 
+var PACKAGE_TEXT={
+  en:{
+    upgradeTitle:"Upgrade package",
+    downgradeTitle:"Downgrade package",
+    upgradeDesc:"Choose a package with more services.",
+    downgradeDesc:"Choose a package with fewer services.",
+    services:"services",
+    upgradeNow:"Upgrade now",
+    changeNext:"Change next billing period",
+    select:"Select",
+    calculating:"Calculating...",
+    calculatingImpact:"Calculating the billing impact...",
+    currentPackage:"Current package",
+    servicesPackage:"Services package",
+    currentTotal:"Current total",
+    newPackage:"New package",
+    newTotal:"New total",
+    month:"month",
+    year:"year",
+    dueToday:"Due today",
+    packageDifference:"Package difference",
+    vat:"VAT",
+    totalDueToday:"Total due today",
+    appliesNow:"The new package will be applied immediately.",
+    appliesNext:"The new package will start from the next billing period.",
+    updating:"Updating...",
+    updatingPackage:"Updating package...",
+    updated:"Updated",
+    upgradeAction:"Upgrade",
+    downgradeAction:"Downgrade",
+    unablePreview:"Unable to preview package change.",
+    unableChange:"Unable to change package.",
+    nextPeriod:"the next billing period",
+    downgradeWarning:"This business currently has {active} active services, while the new package allows {limit}. You do not need to remove anything now. Until {date}, the current package remains active. After the downgrade, only {limit} services will be available to clients; the other {extra} will remain saved in your account and become available again if you raise the limit."
+  },
+  ru:{
+    upgradeTitle:"Увеличить пакет",
+    downgradeTitle:"Уменьшить пакет",
+    upgradeDesc:"Выберите пакет с большим количеством услуг.",
+    downgradeDesc:"Выберите пакет с меньшим количеством услуг.",
+    services:"услуг",
+    upgradeNow:"Улучшить сейчас",
+    changeNext:"Со следующего периода",
+    select:"Выбрать",
+    calculating:"Расчёт...",
+    calculatingImpact:"Рассчитываем изменение стоимости...",
+    currentPackage:"Текущий пакет",
+    servicesPackage:"Пакет услуг",
+    currentTotal:"Текущая сумма",
+    newPackage:"Новый пакет",
+    newTotal:"Новая сумма",
+    month:"месяц",
+    year:"год",
+    dueToday:"К оплате сегодня",
+    packageDifference:"Разница по пакету",
+    vat:"НДС",
+    totalDueToday:"Итого сегодня",
+    appliesNow:"Новый пакет начнёт действовать сразу.",
+    appliesNext:"Новый пакет начнёт действовать со следующего расчётного периода.",
+    updating:"Обновление...",
+    updatingPackage:"Обновляем пакет...",
+    updated:"Обновлено",
+    upgradeAction:"Увеличить",
+    downgradeAction:"Понизить",
+    unablePreview:"Не удалось рассчитать изменение пакета.",
+    unableChange:"Не удалось изменить пакет.",
+    nextPeriod:"следующего расчётного периода",
+    downgradeWarning:"Сейчас у бизнеса {active} активных услуг, а новый пакет рассчитан на {limit}. Удалять их сейчас не нужно: до {date} действует текущий пакет. После перехода клиентам будут доступны {limit} услуг, а ещё {extra} останутся сохранены в кабинете и снова станут доступны после повышения лимита."
+  },
+  uz:{
+    upgradeTitle:"Paketni oshirish",
+    downgradeTitle:"Paketni kamaytirish",
+    upgradeDesc:"Ko‘proq xizmatli paketni tanlang.",
+    downgradeDesc:"Kamroq xizmatli paketni tanlang.",
+    services:"xizmat",
+    upgradeNow:"Hozir oshirish",
+    changeNext:"Keyingi davrdan",
+    select:"Tanlash",
+    calculating:"Hisoblanmoqda...",
+    calculatingImpact:"To‘lovdagi o‘zgarish hisoblanmoqda...",
+    currentPackage:"Joriy paket",
+    servicesPackage:"Xizmatlar paketi",
+    currentTotal:"Joriy jami",
+    newPackage:"Yangi paket",
+    newTotal:"Yangi jami",
+    month:"oy",
+    year:"yil",
+    dueToday:"Bugun to‘lanadi",
+    packageDifference:"Paket farqi",
+    vat:"QQS",
+    totalDueToday:"Bugungi jami",
+    appliesNow:"Yangi paket darhol kuchga kiradi.",
+    appliesNext:"Yangi paket keyingi hisob-kitob davridan boshlanadi.",
+    updating:"Yangilanmoqda...",
+    updatingPackage:"Paket yangilanmoqda...",
+    updated:"Yangilandi",
+    upgradeAction:"Oshirish",
+    downgradeAction:"Kamaytirish",
+    unablePreview:"Paket o‘zgarishini hisoblab bo‘lmadi.",
+    unableChange:"Paketni o‘zgartirib bo‘lmadi.",
+    nextPeriod:"keyingi hisob-kitob davrigacha",
+    downgradeWarning:"Hozir biznesda {active} ta faol xizmat bor, yangi paket esa {limit} tagacha ruxsat beradi. Hozir hech narsani o‘chirish shart emas: {date} gacha joriy paket ishlaydi. Keyin mijozlarga {limit} ta xizmat ko‘rinadi, qolgan {extra} tasi hisobda saqlanadi va limit oshirilsa yana mavjud bo‘ladi."
+  },
+  tr:{
+    upgradeTitle:"Paketi yükselt",
+    downgradeTitle:"Paketi düşür",
+    upgradeDesc:"Daha fazla hizmet içeren bir paket seçin.",
+    downgradeDesc:"Daha az hizmet içeren bir paket seçin.",
+    services:"hizmet",
+    upgradeNow:"Şimdi yükselt",
+    changeNext:"Sonraki dönemden",
+    select:"Seç",
+    calculating:"Hesaplanıyor...",
+    calculatingImpact:"Faturalandırma etkisi hesaplanıyor...",
+    currentPackage:"Mevcut paket",
+    servicesPackage:"Hizmet paketi",
+    currentTotal:"Mevcut toplam",
+    newPackage:"Yeni paket",
+    newTotal:"Yeni toplam",
+    month:"ay",
+    year:"yıl",
+    dueToday:"Bugün ödenecek",
+    packageDifference:"Paket farkı",
+    vat:"KDV",
+    totalDueToday:"Bugünkü toplam",
+    appliesNow:"Yeni paket hemen uygulanacak.",
+    appliesNext:"Yeni paket bir sonraki fatura döneminde başlayacak.",
+    updating:"Güncelleniyor...",
+    updatingPackage:"Paket güncelleniyor...",
+    updated:"Güncellendi",
+    upgradeAction:"Yükselt",
+    downgradeAction:"Düşür",
+    unablePreview:"Paket değişikliği hesaplanamadı.",
+    unableChange:"Paket değiştirilemedi.",
+    nextPeriod:"bir sonraki fatura dönemine kadar",
+    downgradeWarning:"Bu işletmede şu anda {active} aktif hizmet var, yeni paket ise {limit} hizmete izin veriyor. Şimdi hiçbir şeyi silmeniz gerekmiyor: {date} tarihine kadar mevcut paket geçerli. Sonrasında müşterilere {limit} hizmet sunulacak; kalan {extra} hizmet hesabınızda saklanacak ve limiti yükselttiğinizde yeniden kullanılabilir olacak."
+  },
+  ar:{
+    upgradeTitle:"ترقية الباقة",
+    downgradeTitle:"خفض الباقة",
+    upgradeDesc:"اختر باقة تحتوي على خدمات أكثر.",
+    downgradeDesc:"اختر باقة تحتوي على خدمات أقل.",
+    services:"خدمة",
+    upgradeNow:"الترقية الآن",
+    changeNext:"من الفترة التالية",
+    select:"اختيار",
+    calculating:"جارٍ الحساب...",
+    calculatingImpact:"جارٍ حساب تأثير التغيير على الفوترة...",
+    currentPackage:"الباقة الحالية",
+    servicesPackage:"باقة الخدمات",
+    currentTotal:"الإجمالي الحالي",
+    newPackage:"الباقة الجديدة",
+    newTotal:"الإجمالي الجديد",
+    month:"شهر",
+    year:"سنة",
+    dueToday:"المستحق اليوم",
+    packageDifference:"فرق الباقة",
+    vat:"الضريبة",
+    totalDueToday:"إجمالي اليوم",
+    appliesNow:"سيتم تطبيق الباقة الجديدة فورًا.",
+    appliesNext:"ستبدأ الباقة الجديدة من فترة الفوترة التالية.",
+    updating:"جارٍ التحديث...",
+    updatingPackage:"جارٍ تحديث الباقة...",
+    updated:"تم التحديث",
+    upgradeAction:"ترقية",
+    downgradeAction:"خفض",
+    unablePreview:"تعذر حساب تغيير الباقة.",
+    unableChange:"تعذر تغيير الباقة.",
+    nextPeriod:"فترة الفوترة التالية",
+    downgradeWarning:"يوجد حاليًا {active} خدمة نشطة، بينما تسمح الباقة الجديدة بـ {limit}. لا يلزم حذف أي شيء الآن: ستظل الباقة الحالية فعالة حتى {date}. بعد الخفض ستتوفر {limit} خدمات للعملاء، وستبقى الخدمات الأخرى وعددها {extra} محفوظة في الحساب وتعود تلقائيًا عند رفع الحد."
+  }
+};
+
+function getPackageLanguage(){
+  try{
+    var stored=localStorage.getItem('bookly_language');
+    if(PACKAGE_TEXT[stored]){
+      return stored;
+    }
+  }catch(e){}
+
+  var browser=(navigator.language||'en')
+    .toLowerCase();
+
+  if(browser.indexOf('ru')===0)return 'ru';
+  if(browser.indexOf('uz')===0)return 'uz';
+  if(browser.indexOf('tr')===0)return 'tr';
+  if(browser.indexOf('ar')===0)return 'ar';
+  return 'en';
+}
+
+function getPackageText(){
+  return PACKAGE_TEXT[getPackageLanguage()] ||
+    PACKAGE_TEXT.en;
+}
+
+function packageTokenText(template,values){
+  return String(template).replace(
+    /\{([a-z]+)\}/g,
+    function(_,key){
+      return values[key] == null
+        ? ''
+        : String(values[key]);
+    }
+  );
+}
+
+function formatPackageDate(value,copy){
+  if(!value){
+    return copy.nextPeriod;
+  }
+
+  var locale={
+    en:'en-US',
+    ru:'ru-RU',
+    uz:'uz-UZ',
+    tr:'tr-TR',
+    ar:'ar'
+  }[getPackageLanguage()] || 'en-US';
+
+  try{
+    return new Date(value).toLocaleDateString(
+      locale,
+      {
+        year:'numeric',
+        month:'long',
+        day:'numeric'
+      }
+    );
+  }catch(e){
+    return copy.nextPeriod;
+  }
+}
+
+function resetPackageMessage(){
+  var message=document.getElementById(
+    'packageModalMessage'
+  );
+
+  message.textContent='';
+  message.className=
+    'status package-modal-message';
+}
+
+function showPackageError(messageText){
+  var message=document.getElementById(
+    'packageModalMessage'
+  );
+
+  message.textContent=messageText || '';
+  message.className=
+    'status package-modal-message error';
+}
+
 function openPackageModal(mode){
+  var copy=getPackageText();
   var modal=document.getElementById('packageModal');
   var title=document.getElementById('packageModalTitle');
   var description=document.getElementById('packageModalDescription');
   var options=document.getElementById('packageOptions');
-  var message=document.getElementById('packageModalMessage');
 
   var servicesText=document.getElementById('billingServices').textContent;
   var currentLimit=parseInt(servicesText,10);
@@ -4291,14 +4583,14 @@ function openPackageModal(mode){
   modal.dataset.currentLimit=String(currentLimit);
 
   title.textContent=mode==='upgrade'
-    ? 'Upgrade package'
-    : 'Downgrade package';
+    ? copy.upgradeTitle
+    : copy.downgradeTitle;
 
   description.textContent=mode==='upgrade'
-    ? 'Choose a package with more services.'
-    : 'Choose a package with fewer services.';
+    ? copy.upgradeDesc
+    : copy.downgradeDesc;
 
-  message.textContent='';
+  resetPackageMessage();
   options.innerHTML='';
 
   billingPackageLimits.forEach(function(limit){
@@ -4314,16 +4606,26 @@ function openPackageModal(mode){
     button.type='button';
     button.className='package-option';
 
-    button.innerHTML=
-      '<div>'+
-        '<strong>'+limit+' services</strong>'+
-        '<span>'+
-          (mode==='upgrade'
-            ? 'Upgrade now'
-            : 'Change next billing period')+
-        '</span>'+
-      '</div>'+
-      '<div class="package-option-price">Select</div>';
+    var info=document.createElement('div');
+    var strong=document.createElement('strong');
+    var hint=document.createElement('span');
+    var select=document.createElement('div');
+
+    strong.textContent=
+      limit+' '+copy.services;
+
+    hint.textContent=
+      mode==='upgrade'
+        ? copy.upgradeNow
+        : copy.changeNext;
+
+    select.className='package-option-price';
+    select.textContent=copy.select;
+
+    info.appendChild(strong);
+    info.appendChild(hint);
+    button.appendChild(info);
+    button.appendChild(select);
 
     button.onclick=function(){
       changeBillingPackage(limit,mode);
@@ -4340,6 +4642,8 @@ function closePackageModal(){
 }
 
 function changeBillingPackage(limit,mode){
+  var copy=getPackageText();
+
   var confirmModal=
     document.getElementById(
       'packageConfirmModal'
@@ -4355,14 +4659,14 @@ function changeBillingPackage(limit,mode){
       'packageConfirmText'
     );
 
+  var confirmWarning=
+    document.getElementById(
+      'packageConfirmWarning'
+    );
+
   var confirmOk=
     document.getElementById(
       'packageConfirmOk'
-    );
-
-  var message=
-    document.getElementById(
-      'packageModalMessage'
     );
 
   var currentLimit=
@@ -4372,16 +4676,19 @@ function changeBillingPackage(limit,mode){
 
   confirmTitle.textContent=
     mode==='upgrade'
-      ? 'Upgrade package'
-      : 'Downgrade package';
+      ? copy.upgradeTitle
+      : copy.downgradeTitle;
 
   confirmOk.disabled=true;
-  confirmOk.textContent='Calculating...';
+  confirmOk.textContent=copy.calculating;
+
+  confirmWarning.hidden=true;
+  confirmWarning.textContent='';
 
   confirmModal.hidden=false;
 
   confirmText.textContent=
-    'Calculating the billing impact...';
+    copy.calculatingImpact;
 
   booklyCall(
     '/account/subscription/preview-limit',
@@ -4402,7 +4709,7 @@ function changeBillingPackage(limit,mode){
     if(!d || d.ok!==true){
       throw new Error(
         (d && (d.detail || d.error)) ||
-        'Unable to preview package change.'
+        copy.unablePreview
       );
     }
 
@@ -4413,8 +4720,8 @@ function changeBillingPackage(limit,mode){
 
     var intervalLabel=
       interval==='year'
-        ? 'year'
-        : 'month';
+        ? copy.year
+        : copy.month;
 
     var currentPrice=
       Number(d.current_price || 0)
@@ -4431,8 +4738,8 @@ function changeBillingPackage(limit,mode){
     var dueTodayTax=
       Number(d.due_today_tax || 0)
         .toFixed(2);
- 
-        var currentBasePrice=
+
+    var currentBasePrice=
       Number(d.current_base_price || 0)
         .toFixed(2);
 
@@ -4449,66 +4756,94 @@ function changeBillingPackage(limit,mode){
         .toFixed(2);
 
     var text=
-      'Current package: '+
-      currentLimit+
-      ' services\n\n'+
+      copy.currentPackage+': '+
+      currentLimit+' '+copy.services+
+      '\n\n'+
       'Bookly Pro: $'+
       currentBasePrice+
-      '/'+
-      intervalLabel+
+      '/'+intervalLabel+
       '\n'+
-      'Services package: $'+
+      copy.servicesPackage+': $'+
       currentAddonPrice+
-      '/'+
-      intervalLabel+
+      '/'+intervalLabel+
       '\n'+
-      'Current total: $'+
+      copy.currentTotal+': $'+
       currentPrice+
-      '/'+
-      intervalLabel+
+      '/'+intervalLabel+
       '\n\n'+
-      'New package: '+
-      limit+
-      ' services\n\n'+
+      copy.newPackage+': '+
+      limit+' '+copy.services+
+      '\n\n'+
       'Bookly Pro: $'+
       newBasePrice+
-      '/'+
-      intervalLabel+
+      '/'+intervalLabel+
       '\n'+
-      'Services package: $'+
+      copy.servicesPackage+': $'+
       newAddonPrice+
-      '/'+
-      intervalLabel+
+      '/'+intervalLabel+
       '\n'+
-      'New total: $'+
+      copy.newTotal+': $'+
       newPrice+
-      '/'+
-      intervalLabel+
+      '/'+intervalLabel+
       '\n\n';
 
     if(mode==='upgrade'){
       text+=
-        'Due today\n'+
-        'Package difference: $'+
+        copy.dueToday+'\n'+
+        copy.packageDifference+': $'+
         (
           Number(dueToday) -
           Number(dueTodayTax)
         ).toFixed(2)+
         '\n'+
-        'VAT: $'+
+        copy.vat+': $'+
         dueTodayTax+
         '\n'+
-        'Total due today: $'+
+        copy.totalDueToday+': $'+
         dueToday+
         '\n\n'+
-        'The new package will be applied immediately.';
+        copy.appliesNow;
     }else{
       text+=
-        'Due today: $0.00\n\n'+
-        'The new package will start from the next billing period.';
+        copy.dueToday+': $0.00\n\n'+
+        copy.appliesNext;
     }
 
     confirmText.textContent=text;
+
+    var activeServices=
+      Number(
+        d.active_services_count || 0
+      );
+
+    var extraServices=
+      Number(
+        d.services_over_new_limit || 0
+      );
+
+    if(
+      mode==='downgrade' &&
+      extraServices>0
+    ){
+      confirmWarning.textContent=
+        packageTokenText(
+          copy.downgradeWarning,
+          {
+            active:activeServices,
+            limit:limit,
+            extra:extraServices,
+            date:formatPackageDate(
+              d.effective_at,
+              copy
+            )
+          }
+        );
+
+      confirmWarning.hidden=false;
+    }else{
+      confirmWarning.hidden=true;
+      confirmWarning.textContent='';
+    }
 
     confirmModal.dataset.limit=
       String(limit);
@@ -4518,33 +4853,39 @@ function changeBillingPackage(limit,mode){
 
     confirmOk.textContent=
       mode==='upgrade'
-        ? 'Upgrade'
-        : 'Downgrade';
+        ? copy.upgradeAction
+        : copy.downgradeAction;
 
     confirmOk.disabled=false;
   })
   .catch(function(e){
     confirmModal.hidden=true;
 
-    message.textContent=
+    showPackageError(
       e.message ||
-      'Unable to preview package change.';
+      copy.unablePreview
+    );
   });
 }
 
 function confirmBillingPackageChange(){
+  var copy=getPackageText();
   var confirmModal=document.getElementById('packageConfirmModal');
   var confirmOk=document.getElementById('packageConfirmOk');
   var cancelButton=document.getElementById('packageConfirmCancel');
-  var message=document.getElementById('packageModalMessage');
   var limit=Number(confirmModal.dataset.limit);
   var mode=confirmModal.dataset.mode;
 
   confirmOk.disabled=true;
   cancelButton.disabled=true;
-  confirmOk.textContent='Updating...';
+  confirmOk.textContent=copy.updating;
 
-  message.textContent='Updating package...';
+  resetPackageMessage();
+
+  var message=document.getElementById(
+    'packageModalMessage'
+  );
+  message.textContent=copy.updatingPackage;
 
   booklyCall('/account/subscription/change-limit',{
     method:'POST',
@@ -4560,11 +4901,11 @@ function confirmBillingPackageChange(){
     if(!d || d.ok!==true){
       throw new Error(
         (d && (d.detail || d.error)) ||
-        'Unable to change package.'
+        copy.unableChange
       );
     }
 
-    confirmOk.textContent='Updated';
+    confirmOk.textContent=copy.updated;
 
     return new Promise(function(resolve){
       setTimeout(resolve,500);
@@ -4575,7 +4916,7 @@ function confirmBillingPackageChange(){
     closePackageModal();
 
     setTimeout(function(){
-    window.location.reload();
+      window.location.reload();
     },500);
   })
   .catch(function(e){
@@ -4584,12 +4925,13 @@ function confirmBillingPackageChange(){
 
     confirmOk.textContent=
       mode==='upgrade'
-        ? 'Upgrade'
-        : 'Downgrade';
+        ? copy.upgradeAction
+        : copy.downgradeAction;
 
-    message.textContent=
+    showPackageError(
       e.message ||
-      'Unable to change package.';
+      copy.unableChange
+    );
   });
 }
 document.getElementById('packageConfirmOk').onclick=function(){
