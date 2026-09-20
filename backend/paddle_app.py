@@ -255,6 +255,48 @@ def _public_monthly_prices() -> dict:
     }
 
 
+def _reject_reused_checkout(
+    db,
+    business_id: int,
+) -> None:
+    subscription = (
+        db.query(_original.Subscription)
+        .filter(
+            _original.Subscription.business_id
+            == int(business_id)
+        )
+        .first()
+    )
+
+    if not subscription:
+        return
+
+    external_id = str(
+        subscription.external_subscription_id
+        or ""
+    ).strip()
+
+    status = str(
+        subscription.status
+        or ""
+    ).strip().lower()
+
+    if (
+        subscription.active
+        or (
+            external_id.startswith("sub_")
+            and status not in {
+                "canceled",
+                "cancelled",
+            }
+        )
+    ):
+        raise HTTPException(
+            409,
+            "This business already has a Paddle subscription. Manage it from Billing."
+        )
+
+
 def _price_id_for_selection(
     billing: str,
     limit: int,
@@ -426,6 +468,11 @@ def external_checkout_config(token: str):
                 "Checkout token does not match business"
             )
 
+        _reject_reused_checkout(
+            db,
+            business_id,
+        )
+
         trial_available = (
             _original._account_trial_available(
                 db,
@@ -515,6 +562,11 @@ def external_price(
                 403,
                 "Checkout token does not match business"
             )
+
+        _reject_reused_checkout(
+            db,
+            business_id,
+        )
 
         trial_available = (
             _original._account_trial_available(
