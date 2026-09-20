@@ -44,24 +44,6 @@ export function PersonalHome({
   const [page, setPage] = useState<'home' | 'bookings' | 'saved' | 'staff'>('home');
   const [loading, setLoading] = useState(true);
 
-  const openBooklyWebsite = () => {
-    const url =
-      'https://boockly.vercel.app/account.html';
-
-    const telegram = tg();
-
-    if (telegram?.openLink) {
-      telegram.openLink(url);
-      return;
-    }
-
-    window.open(
-      url,
-      '_blank',
-      'noopener,noreferrer'
-    );
-  };
-
   useEffect(() => {
     let cancelled = false;
 
@@ -235,21 +217,12 @@ export function PersonalHome({
 
                 <button
                   className="personal-white-button"
-                  onClick={
-                    businesses.length
-                      ? onAdmin
-                      : openBooklyWebsite
-                  }
+                  onClick={onAdmin}
                 >
-                  {businesses.length
-                    ? t(
-                        'common.open',
-                        'Открыть'
-                      )
-                    : t(
-                        'home.goToWebsite',
-                        'Перейти на сайт'
-                      )}
+                  {t(
+                    'common.open',
+                    'Открыть'
+                  )}
                 </button>
               </div>
             )}
