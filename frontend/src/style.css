@@ -2603,3 +2603,111 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
     font-size:9px;
   }
 }
+/* QR print sizes + export */
+.qr-size-section{
+  margin:0 0 14px;
+}
+
+.qr-size-label{
+  display:block;
+  margin:0 0 8px 2px;
+  color:#7d848d;
+  font-size:11px;
+  font-weight:800;
+}
+
+.qr-size-picker{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;
+}
+
+.qr-size-option{
+  min-width:0;
+  padding:9px 6px!important;
+  display:flex!important;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  border:1px solid #e2e5e9!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  color:#111!important;
+}
+
+.qr-size-option.active{
+  border-color:#111!important;
+  box-shadow:
+    0 5px 14px
+    rgba(15,23,42,.08)!important;
+}
+
+.qr-size-option strong{
+  font-size:11px;
+}
+
+.qr-size-option small{
+  color:#7d848d;
+  font-size:8px;
+  line-height:1.1;
+  text-align:center;
+}
+
+.qr-size-icon{
+  display:block;
+  border:1.5px solid #111;
+  border-radius:2px;
+  background:#f7f7f7;
+}
+
+.qr-size-icon-a4{
+  width:17px;
+  height:24px;
+}
+
+.qr-size-icon-a5{
+  width:15px;
+  height:21px;
+}
+
+.qr-size-icon-square{
+  width:21px;
+  height:21px;
+}
+
+.qr-size-icon-landscape{
+  width:27px;
+  height:18px;
+}
+
+.qr-export-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+
+.qr-export-actions .full{
+  margin-top:0!important;
+}
+
+.qr-pdf-button{
+  border:1px solid #111!important;
+  background:#fff!important;
+  color:#111!important;
+}
+
+@media(max-width:420px){
+  .qr-size-picker{
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .qr-size-option{
+    min-height:67px;
+  }
+
+  .qr-size-option small{
+    font-size:9px;
+  }
+}
