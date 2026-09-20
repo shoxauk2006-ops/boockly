@@ -1252,10 +1252,28 @@ def account_preview_subscription_limit(
             limit
         )
 
+        is_trialing = (
+            str(
+                subscription.status
+                or ""
+            ).strip().lower()
+            == "trialing"
+        )
+
         mode = (
-            "prorated_immediately"
-            if limit > current
-            else "prorated_next_billing_period"
+            "do_not_bill"
+            if is_trialing
+            else (
+                "prorated_immediately"
+                if limit > current
+                else "prorated_next_billing_period"
+            )
+        )
+
+        trial_ends_at = (
+            subscription.expires_at
+            if is_trialing
+            else None
         )
 
         active_services_count = (
@@ -1448,6 +1466,15 @@ def account_preview_subscription_limit(
         "billing_interval":
             billing_interval,
 
+        "trialing":
+            is_trialing,
+
+        "trial_ends_at": (
+            trial_ends_at.isoformat()
+            if trial_ends_at
+            else None
+        ),
+
         "effective": (
             "next_billing_period"
             if mode ==
@@ -1576,6 +1603,15 @@ def account_change_subscription_limit(
             or []
         )
 
+        is_trialing = (
+            str(
+                paddle_subscription.get("status")
+                or subscription.status
+                or ""
+            ).strip().lower()
+            == "trialing"
+        )
+
         billing_interval = "month"
         annual_price_ids = (
             paddle_app._all_annual_price_ids()
@@ -1695,15 +1731,20 @@ def account_change_subscription_limit(
             )
 
         mode = (
-            "prorated_immediately"
-            if limit > current
-            else "prorated_next_billing_period"
+            "do_not_bill"
+            if is_trialing
+            else (
+                "prorated_immediately"
+                if limit > current
+                else "prorated_next_billing_period"
+            )
         )
 
-        # Persist a scheduled downgrade before asking Paddle
-        # to change its items. This protects Bookly's current
-        # package from an early subscription.updated webhook.
-        if limit < current:
+        # A normal paid downgrade starts next billing period.
+        # During a free trial, Paddle allows item changes only with
+        # do_not_bill, so package changes take effect immediately in
+        # Bookly while the trial itself continues unchanged.
+        if limit < current and not is_trialing:
             subscription.pending_services_limit = (
                 limit
             )
@@ -1727,7 +1768,7 @@ def account_change_subscription_limit(
             },
         )
     except Exception:
-        if limit < current:
+        if limit < current and not is_trialing:
             with SessionLocal() as db:
                 account = _account_from_header(
                     db,
@@ -1762,7 +1803,7 @@ def account_change_subscription_limit(
             )
         )
 
-        if limit > current:
+        if is_trialing or limit > current:
             subscription.current_services_limit = (
                 limit
             )
