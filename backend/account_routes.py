@@ -593,6 +593,40 @@ def account_delete_business(
                 "Business not found"
             )
 
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id == business.id
+            )
+            .first()
+        )
+
+        if subscription:
+            external_id = str(
+                subscription.external_subscription_id
+                or ""
+            ).strip()
+
+            status = str(
+                subscription.status
+                or ""
+            ).strip().lower()
+
+            if (
+                subscription.active
+                or (
+                    external_id.startswith("sub_")
+                    and status not in {
+                        "canceled",
+                        "cancelled",
+                    }
+                )
+            ):
+                raise HTTPException(
+                    409,
+                    "Cancel the active subscription and wait until it ends before deleting this business"
+                )
+
         if account.business_id == business.id:
             other_business = (
                 db.query(Business)
@@ -1369,7 +1403,7 @@ def account_change_subscription_limit(
             )
         )
 
-        current = (
+        current = int(
             subscription.current_services_limit
             or 10
         )
@@ -1391,36 +1425,10 @@ def account_change_subscription_limit(
             or []
         )
 
-    debug_items = []
-
-    for item in paddle_items:
-        price = (
-            item.get("price")
-            or {}
-        )
-
-        cycle = (
-            price.get("billing_cycle")
-            or {}
-        )
-
-        debug_items.append({
-            "price_id": (
-                item.get("price_id")
-                or price.get("id")
-            ),
-            "quantity":
-                item.get("quantity"),
-            "billing_interval":
-                cycle.get("interval"),
-            "price_amount":
-                (
-                    (price.get("unit_price") or {})
-                    .get("amount")
-                ),
-        })
-
         billing_interval = "month"
+        annual_price_ids = (
+            paddle_app._all_annual_price_ids()
+        )
 
         for item in paddle_items:
             price = (
@@ -1439,10 +1447,6 @@ def account_change_subscription_limit(
                 or ""
             ).lower()
 
-            if interval == "year":
-                billing_interval = "year"
-                break
-
             price_id = str(
                 item.get("price_id")
                 or price.get("id")
@@ -1450,9 +1454,11 @@ def account_change_subscription_limit(
             ).strip()
 
             if (
-                price_id
-                and price_id in
-                paddle_app._all_annual_price_ids()
+                interval == "year"
+                or (
+                    price_id
+                    and price_id in annual_price_ids
+                )
             ):
                 billing_interval = "year"
                 break
@@ -1466,25 +1472,28 @@ def account_change_subscription_limit(
                 "ok": True,
                 "current_services_limit": current,
                 "current_price": float(
-                    subscription.current_price or 7.99
+                    subscription.current_price
+                    or 7.99
                 ),
                 "pending_services_limit":
                     subscription.pending_services_limit,
-                "pending_price":
-                    (
-                        float(subscription.pending_price)
-                        if subscription.pending_price is not None
-                        else None
-                    ),
+                "pending_price": (
+                    float(
+                        subscription.pending_price
+                    )
+                    if subscription.pending_price
+                    is not None
+                    else None
+                ),
             }
 
         if billing_interval == "year":
-            annual_price_ids = (
+            annual_prices = (
                 paddle_app.ANNUAL_PRICE_IDS
             )
 
             base_price_id = (
-                annual_price_ids.get(10)
+                annual_prices.get(10)
             )
 
             if not base_price_id:
@@ -1503,7 +1512,7 @@ def account_change_subscription_limit(
                 new_price = base_price
             else:
                 addon_price_id = (
-                    annual_price_ids.get(limit)
+                    annual_prices.get(limit)
                 )
 
                 if not addon_price_id:
@@ -1519,8 +1528,8 @@ def account_change_subscription_limit(
                 )
 
                 new_price = (
-                    base_price +
-                    addon_price
+                    base_price
+                    + addon_price
                 )
 
             new_price = round(
@@ -1534,19 +1543,23 @@ def account_change_subscription_limit(
                 )
             )
 
-        # For a downgrade, save the pending package BEFORE
-        # calling Paddle. This prevents a fast Paddle webhook
-        # from replacing the current package prematurely.
-        if limit < current:
-            subscription.pending_services_limit = limit
-            subscription.pending_price = new_price
-            db.commit()
-
         mode = (
             "prorated_immediately"
             if limit > current
             else "prorated_next_billing_period"
         )
+
+        # Persist a scheduled downgrade before asking Paddle
+        # to change its items. This protects Bookly's current
+        # package from an early subscription.updated webhook.
+        if limit < current:
+            subscription.pending_services_limit = (
+                limit
+            )
+            subscription.pending_price = (
+                new_price
+            )
+            db.commit()
 
     try:
         paddle_original._paddle_request(
@@ -1563,8 +1576,6 @@ def account_change_subscription_limit(
             },
         )
     except Exception:
-        # If Paddle rejected the change, remove the
-        # pending downgrade that was saved above.
         if limit < current:
             with SessionLocal() as db:
                 account = _account_from_header(
@@ -1579,7 +1590,9 @@ def account_change_subscription_limit(
                     )
                 )
 
-                subscription.pending_services_limit = None
+                subscription.pending_services_limit = (
+                    None
+                )
                 subscription.pending_price = None
                 db.commit()
 
@@ -1591,7 +1604,7 @@ def account_change_subscription_limit(
             authorization
         )
 
-        business, subscription, subscription_id = (
+        business, subscription, _ = (
             _account_subscription(
                 db,
                 account
@@ -1599,9 +1612,15 @@ def account_change_subscription_limit(
         )
 
         if limit > current:
-            subscription.current_services_limit = limit
-            subscription.current_price = new_price
-            subscription.pending_services_limit = None
+            subscription.current_services_limit = (
+                limit
+            )
+            subscription.current_price = (
+                new_price
+            )
+            subscription.pending_services_limit = (
+                None
+            )
             subscription.pending_price = None
 
             paddle_original._sync_business_from_subscription(
@@ -1615,18 +1634,20 @@ def account_change_subscription_limit(
             "ok": True,
             "current_services_limit":
                 subscription.current_services_limit,
-            "current_price":
-                float(
-                    subscription.current_price or 7.99
-                ),
+            "current_price": float(
+                subscription.current_price
+                or 7.99
+            ),
             "pending_services_limit":
                 subscription.pending_services_limit,
-            "pending_price":
-                (
-                    float(subscription.pending_price)
-                    if subscription.pending_price is not None
-                    else None
-                ),
+            "pending_price": (
+                float(
+                    subscription.pending_price
+                )
+                if subscription.pending_price
+                is not None
+                else None
+            ),
         }
 
 
@@ -1925,6 +1946,40 @@ def account_paddle_checkout_token(authorization: str = Header(default="")):
         ).scalar_one_or_none()
         if int(account_id or 0) != int(account.id):
             raise HTTPException(403, "Bookly business is not linked to this account")
+
+        subscription = (
+            db.query(Subscription)
+            .filter(
+                Subscription.business_id == business.id
+            )
+            .first()
+        )
+
+        if subscription:
+            external_id = str(
+                subscription.external_subscription_id
+                or ""
+            ).strip()
+
+            status = str(
+                subscription.status
+                or ""
+            ).strip().lower()
+
+            if (
+                subscription.active
+                or (
+                    external_id.startswith("sub_")
+                    and status not in {
+                        "canceled",
+                        "cancelled",
+                    }
+                )
+            ):
+                raise HTTPException(
+                    409,
+                    "This business already has a Paddle subscription. Manage it from Billing."
+                )
 
         return {
             "ok": True,
