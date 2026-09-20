@@ -814,6 +814,10 @@ def account_me(authorization: str = Header(default="")):
                 "telegram_user_id": account.telegram_user_id,
                 "business_id": account.business_id,
                 "business_name": business.name if business else None,
+                "trial_available": _account_trial_available(
+                    db,
+                    account.id,
+                ),
             },
         }
 
@@ -1137,6 +1141,10 @@ def account_billing(authorization: str = Header(default="")):
 
         return {
             "ok": True,
+            "trial_available": _account_trial_available(
+                db,
+                account.id,
+            ),
             "business": {
                 "id": business.id,
                 "name": business.name,
