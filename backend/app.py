@@ -1475,6 +1475,69 @@ def subscription_limits(subscription):
             else None
         )
     }
+def current_service_limit_for_business(
+    db,
+    business_id: int,
+) -> int:
+    subscription = owner_subscription(
+        db,
+        business_id,
+    )
+
+    if not subscription or not subscription.active:
+        return 0
+
+    return max(
+        0,
+        int(
+            subscription.current_services_limit
+            or 10
+        ),
+    )
+
+
+def service_ids_available_under_plan(
+    db,
+    business_id: int,
+) -> list[int]:
+    limit = current_service_limit_for_business(
+        db,
+        business_id,
+    )
+
+    if limit <= 0:
+        return []
+
+    rows = (
+        db.query(Service.id)
+        .filter(
+            Service.business_id == business_id,
+            Service.active == True,
+        )
+        .order_by(Service.id.asc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        int(row[0])
+        for row in rows
+    ]
+
+
+def service_available_under_plan(
+    db,
+    business_id: int,
+    service_id: int,
+) -> bool:
+    return int(service_id) in set(
+        service_ids_available_under_plan(
+            db,
+            business_id,
+        )
+    )
+
+
 def calculate_subscription_price(services_limit: int) -> float:
     """
     Возвращает общую ежемесячную стоимость подписки.
@@ -3157,7 +3220,16 @@ def business_specialists(business_id: int, service_id: Optional[int] = None):
 
         if service_id is not None:
             service = db.get(Service, service_id)
-            if not service or service.business_id != business_id or not service.active:
+            if (
+                not service
+                or service.business_id != business_id
+                or not service.active
+                or not service_available_under_plan(
+                    db,
+                    business_id,
+                    service_id,
+                )
+            ):
                 raise HTTPException(404, "Not found")
             query = query.join(
                 SpecialistService,
@@ -3201,10 +3273,27 @@ def get_business(slug: str):
                 "Business is not active"
             )
 
-        services = db.query(Service).filter_by(
-            business_id=b.id,
-            active=True
-        ).all()
+        allowed_service_ids = (
+            service_ids_available_under_plan(
+                db,
+                b.id,
+            )
+        )
+
+        services = (
+            db.query(Service)
+            .filter(
+                Service.business_id == b.id,
+                Service.active == True,
+                Service.id.in_(
+                    allowed_service_ids
+                )
+                if allowed_service_ids
+                else False,
+            )
+            .order_by(Service.id.asc())
+            .all()
+        )
 
         return {
             "business": b,
@@ -3284,7 +3373,18 @@ def availability(
     with SessionLocal() as db:
         b = db.get(Business, business_id)
         s = db.get(Service, service_id)
-        if not b or not s or s.business_id != business_id or not s.active:
+        if (
+            not b
+            or not b.subscription_active
+            or not s
+            or s.business_id != business_id
+            or not s.active
+            or not service_available_under_plan(
+                db,
+                business_id,
+                service_id,
+            )
+        ):
             raise HTTPException(404, "Not found")
 
         if specialist_id is not None:
@@ -3470,6 +3570,16 @@ def create_booking(
 
         if not b.subscription_active:
             raise HTTPException(403, "Business inactive")
+
+        if not service_available_under_plan(
+            db,
+            b.id,
+            s.id,
+        ):
+            raise HTTPException(
+                403,
+                "Service is outside the current package limit"
+            )
 
         if x.specialist_id is not None:
             specialist = db.get(Specialist, x.specialist_id)
