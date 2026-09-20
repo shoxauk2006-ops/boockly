@@ -443,11 +443,37 @@ def _find_business(
                     business_id,
                 )
 
-                if (
+                token_account_id = int(
+                    token.get("account_id")
+                    or 0
+                )
+
+                owner_matches = bool(
                     business
                     and int(
                         business.owner_telegram_id
                     ) == owner_id
+                )
+
+                account_matches = bool(
+                    business
+                    and token_account_id
+                    and int(
+                        getattr(
+                            business,
+                            "account_id",
+                            0,
+                        )
+                        or 0
+                    ) == token_account_id
+                )
+
+                if (
+                    business
+                    and (
+                        owner_matches
+                        or account_matches
+                    )
                 ):
                     return business
 
