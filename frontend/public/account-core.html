@@ -123,6 +123,36 @@
   margin-top:16px;
 }
 
+.businesses-skeleton{
+  display:grid;
+  gap:8px;
+}
+
+.businesses-skeleton-row{
+  height:62px;
+  border:1px solid #e7e9ed;
+  border-radius:13px;
+  background:
+    linear-gradient(
+      90deg,
+      #f1f3f5 25%,
+      #f8f9fa 38%,
+      #f1f3f5 63%
+    );
+  background-size:400% 100%;
+  animation:booklySkeleton 1.15s ease infinite;
+}
+
+@keyframes booklySkeleton{
+  0%{background-position:100% 0}
+  100%{background-position:0 0}
+}
+
+.overview-loading{
+  opacity:.62;
+  pointer-events:none;
+}
+
 .business-item{
   display:flex;
   align-items:center;
@@ -3510,13 +3540,68 @@ function showAccount(data){
     connect.onclick=createLink;
   }
 
-  loadBusinesses().finally(function(){
-    document.documentElement.classList.add(
-      'session-ready'
-    );
-  });
+  document.documentElement.classList.add(
+    'session-ready'
+  );
+
+  loadBusinesses();
 }
+
+function setBusinessesLoading(){
+  var container=document.getElementById(
+    'businessesList'
+  );
+
+  if(container){
+    container.innerHTML=
+      '<div class="businesses-skeleton" aria-hidden="true">'+
+        '<div class="businesses-skeleton-row"></div>'+
+        '<div class="businesses-skeleton-row"></div>'+
+      '</div>';
+  }
+
+  var checkoutButton=document.getElementById(
+    'checkout'
+  );
+
+  if(checkoutButton){
+    var card=checkoutButton.closest(
+      '.workspace-card'
+    );
+
+    if(card){
+      card.classList.add(
+        'overview-loading'
+      );
+    }
+
+    checkoutButton.disabled=true;
+  }
+}
+
+function finishBusinessesLoading(){
+  var checkoutButton=document.getElementById(
+    'checkout'
+  );
+
+  if(checkoutButton){
+    var card=checkoutButton.closest(
+      '.workspace-card'
+    );
+
+    if(card){
+      card.classList.remove(
+        'overview-loading'
+      );
+    }
+
+    checkoutButton.disabled=false;
+  }
+}
+
 function loadBusinesses(){
+  setBusinessesLoading();
+
   return call('/account/businesses',{
     headers:{
       Authorization:'Bearer '+session
@@ -3536,6 +3621,7 @@ function loadBusinesses(){
       container.appendChild(empty);
 
       syncOverviewSubscription([]);
+      finishBusinessesLoading();
       return;
     }
 
@@ -3649,7 +3735,27 @@ function loadBusinesses(){
       d.businesses || []
     );
 
+    finishBusinessesLoading();
+
   }).catch(function(e){
+    var container=document.getElementById(
+      'businessesList'
+    );
+
+    if(container){
+      container.innerHTML='';
+
+      var failed=document.createElement('p');
+      failed.className='status';
+      failed.textContent=
+        e && e.message
+          ? e.message
+          : 'Unable to load businesses.';
+
+      container.appendChild(failed);
+    }
+
+    finishBusinessesLoading();
     err(e.message);
   });
 }
