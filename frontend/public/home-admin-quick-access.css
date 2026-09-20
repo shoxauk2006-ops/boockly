@@ -14,7 +14,7 @@ body:has(.personal-home) .personal-bottom-nav{order:100!important}
 /* Compact owner access bar. */
 body:has(.personal-home) .personal-business-card{
   min-height:0!important;
-  margin:0 0 12px!important;
+  margin:0 0 8px!important;
   padding:13px 14px!important;
   display:grid!important;
   grid-template-columns:minmax(0,1fr) auto!important;
