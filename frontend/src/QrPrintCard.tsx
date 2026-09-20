@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { jsPDF } from 'jspdf';
 
 type TemplateId =
   | 'classic'
@@ -38,6 +37,146 @@ type ColorTheme = {
   fg: string;
   muted: string;
   border: string;
+};
+
+
+const encodePdfText = (value: string) =>
+  new TextEncoder().encode(value);
+
+const concatPdfBytes = (
+  parts: Uint8Array[]
+) => {
+  const totalLength =
+    parts.reduce(
+      (sum, part) =>
+        sum + part.length,
+      0
+    );
+
+  const output =
+    new Uint8Array(totalLength);
+
+  let offset = 0;
+
+  parts.forEach(part => {
+    output.set(part, offset);
+    offset += part.length;
+  });
+
+  return output;
+};
+
+const createSinglePagePdf = ({
+  jpegBytes,
+  imageWidth,
+  imageHeight,
+  pageWidthMm,
+  pageHeightMm
+}: {
+  jpegBytes: Uint8Array;
+  imageWidth: number;
+  imageHeight: number;
+  pageWidthMm: number;
+  pageHeightMm: number;
+}) => {
+  const mmToPt =
+    72 / 25.4;
+
+  const pageWidth =
+    pageWidthMm * mmToPt;
+
+  const pageHeight =
+    pageHeightMm * mmToPt;
+
+  const content =
+    `q\n${pageWidth.toFixed(3)} 0 0 ${pageHeight.toFixed(3)} 0 0 cm\n/Im0 Do\nQ\n`;
+
+  const contentBytes =
+    encodePdfText(content);
+
+  const objects: Uint8Array[] = [
+    new Uint8Array(),
+    encodePdfText(
+      '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n'
+    ),
+    encodePdfText(
+      '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n'
+    ),
+    encodePdfText(
+      `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth.toFixed(3)} ${pageHeight.toFixed(3)}] /Resources << /ProcSet [/PDF /ImageC] /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>\nendobj\n`
+    ),
+    concatPdfBytes([
+      encodePdfText(
+        `4 0 obj\n<< /Length ${contentBytes.length} >>\nstream\n`
+      ),
+      contentBytes,
+      encodePdfText(
+        'endstream\nendobj\n'
+      )
+    ]),
+    concatPdfBytes([
+      encodePdfText(
+        `5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${imageWidth} /Height ${imageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`
+      ),
+      jpegBytes,
+      encodePdfText(
+        '\nendstream\nendobj\n'
+      )
+    ])
+  ];
+
+  const header =
+    encodePdfText(
+      '%PDF-1.4\n% Bookly\n'
+    );
+
+  const parts: Uint8Array[] = [
+    header
+  ];
+
+  const offsets = [0];
+
+  let currentOffset =
+    header.length;
+
+  for (
+    let index = 1;
+    index <= 5;
+    index += 1
+  ) {
+    offsets[index] =
+      currentOffset;
+
+    parts.push(objects[index]);
+
+    currentOffset +=
+      objects[index].length;
+  }
+
+  const xrefOffset =
+    currentOffset;
+
+  const xrefEntries =
+    offsets
+      .slice(1)
+      .map(offset =>
+        `${String(offset).padStart(10, '0')} 00000 n \n`
+      )
+      .join('');
+
+  const trailer =
+    encodePdfText(
+      `xref\n0 6\n0000000000 65535 f \n${xrefEntries}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`
+    );
+
+  parts.push(trailer);
+
+  return new Blob(
+    [concatPdfBytes(parts)],
+    {
+      type: 'application/pdf'
+    }
+  );
 };
 
 export function QrPrintCard({
@@ -1037,91 +1176,111 @@ const downloadPrintableQr =
     }
   };
   const downloadPrintablePdf =
-  async () => {
-    try {
-      const canvas =
-        await buildOutputCanvas();
+    async () => {
+      try {
+        const canvas =
+          await buildOutputCanvas();
 
-      const imageData =
-        canvas.toDataURL(
-          'image/png',
-          1
+        const jpegBlob =
+          await new Promise<Blob>(
+            (resolve, reject) => {
+              canvas.toBlob(
+                value => {
+                  if (value) {
+                    resolve(value);
+                  } else {
+                    reject(
+                      new Error(
+                        'Failed to create PDF image'
+                      )
+                    );
+                  }
+                },
+                'image/jpeg',
+                0.98
+              );
+            }
+          );
+
+        const jpegBytes =
+          new Uint8Array(
+            await jpegBlob.arrayBuffer()
+          );
+
+        const blob =
+          createSinglePagePdf({
+            jpegBytes,
+            imageWidth: canvas.width,
+            imageHeight: canvas.height,
+            pageWidthMm:
+              selectedPrintSize.pdfWidthMm,
+            pageHeightMm:
+              selectedPrintSize.pdfHeightMm
+          });
+
+        const fileName =
+          `${business?.slug || 'bookly'}-qr-${template}-${colorTheme}-${printSize}.pdf`;
+
+        const file =
+          new File(
+            [blob],
+            fileName,
+            {
+              type: 'application/pdf'
+            }
+          );
+
+        if (
+          navigator.share &&
+          navigator.canShare &&
+          navigator.canShare({
+            files: [file]
+          })
+        ) {
+          await navigator.share({
+            files: [file],
+            title: t(
+              'owner.printQrTitle',
+              'Bookly — QR для печати'
+            )
+          });
+
+          return;
+        }
+
+        const url =
+          URL.createObjectURL(blob);
+
+        const link =
+          document.createElement('a');
+
+        link.href = url;
+        link.download = fileName;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.setTimeout(
+          () => {
+            URL.revokeObjectURL(url);
+          },
+          1000
+        );
+      } catch (error) {
+        console.error(
+          'QR PRINT PDF ERROR:',
+          error
         );
 
-      const pdf =
-        new jsPDF({
-          orientation:
-            selectedPrintSize.pdfWidthMm >
-            selectedPrintSize.pdfHeightMm
-              ? 'landscape'
-              : 'portrait',
-          unit: 'mm',
-          format: [
-            selectedPrintSize.pdfWidthMm,
-            selectedPrintSize.pdfHeightMm
-          ],
-          compress: true
-        });
-
-      pdf.addImage(
-        imageData,
-        'PNG',
-        0,
-        0,
-        selectedPrintSize.pdfWidthMm,
-        selectedPrintSize.pdfHeightMm,
-        undefined,
-        'FAST'
-      );
-
-      const fileName =
-        `${business?.slug || 'bookly'}-qr-${template}-${colorTheme}-${printSize}.pdf`;
-
-      const blob =
-        pdf.output('blob');
-
-      const file =
-        new File(
-          [blob],
-          fileName,
-          {
-            type: 'application/pdf'
-          }
-        );
-
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({
-          files: [file]
-        })
-      ) {
-        await navigator.share({
-          files: [file],
-          title: t(
-            'owner.printQrTitle',
-            'Bookly — QR для печати'
+        alert(
+          t(
+            'owner.qrPrintError',
+            'Не удалось скачать макет'
           )
-        });
-
-        return;
+        );
       }
-
-      pdf.save(fileName);
-    } catch (error) {
-      console.error(
-        'QR PRINT PDF ERROR:',
-        error
-      );
-
-      alert(
-        t(
-          'owner.qrPrintError',
-          'Не удалось скачать макет'
-        )
-      );
-    }
-  };
+    };
 
   return (
     <div
@@ -1270,7 +1429,7 @@ const downloadPrintableQr =
 </div>
         <div
           className={
-            `qr-print-sheet qr-print-sheet-${template} qr-color-preview`
+            `qr-print-sheet qr-print-sheet-${template} qr-color-preview qr-size-preview qr-size-${printSize}`
           }
           style={previewStyle}
         >
