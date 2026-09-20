@@ -1835,6 +1835,22 @@ body.logged-in #billingMessage{
 .package-confirm-warning[hidden]{
   display:none;
 }
+
+.billing-trial-info{
+  margin:14px 0 10px;
+  padding:12px 14px;
+  border:1px solid #cfe7d4;
+  border-radius:13px;
+  background:#f3fbf5;
+  color:#27633a;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.5;
+}
+
+.billing-trial-info[hidden]{
+  display:none;
+}
   
 /* Logout */
 
@@ -2286,6 +2302,12 @@ body.logged-in .shell{
     </button>
 
   </div>
+
+  <div
+    id="billingTrialInfo"
+    class="billing-trial-info"
+    hidden
+  ></div>
 
   <button
     id="billingCheckout"
@@ -3098,7 +3120,7 @@ phoneInput.addEventListener('input',function(){
 });
 
 updatePhoneCode();
-var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var auth=document.getElementById('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
+var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var accountTrialAvailable=false;var auth=document.getElementById('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
 function err(msg){error.textContent=msg;error.hidden=false}function clearErr(){error.hidden=true;error.textContent=''}
 function call(path,options){return fetch(api+path,options||{}).then(function(r){return r.json().catch(function(){return null}).then(function(d){if(!r.ok)throw new Error((d&&d.detail)||('Request failed ('+r.status+')'));return d})}).catch(function(e){if(e instanceof TypeError)throw new Error('Cannot connect to Bookly API: '+api);throw e})}
 window.booklyCall=call;
@@ -3145,22 +3167,53 @@ function syncOverviewSubscription(businesses){
     current.subscription_active
   );
 
+  var currentLimit=Number(
+    current && current.services_limit || 0
+  );
+
   button.dataset.booklyHasActivePlan=
     active ? '1' : '0';
 
+  button.dataset.booklyCurrentLimit=
+    String(currentLimit || 0);
+
   if(active){
     if(title)title.textContent='Manage your subscription';
-    if(description){
-      description.textContent=
-        'Your current business already has an active plan. Use Billing to change the package, cancel or restore the subscription.';
+
+    if(currentLimit<100){
+      if(description){
+        description.textContent=
+          'Increase the service limit for your current business. You can manage cancellation, downgrade and renewal from Billing.';
+      }
+
+      button.dataset.booklyOverviewAction=
+        'upgrade';
+
+      button.textContent='Increase limit';
+    }else{
+      if(description){
+        description.textContent=
+          'Your business already uses the maximum 100-service package. Manage cancellation, downgrade or renewal from Billing.';
+      }
+
+      button.dataset.booklyOverviewAction=
+        'billing';
+
+      button.textContent='Manage subscription';
     }
-    button.textContent='Open Billing';
   }else{
+    button.dataset.booklyOverviewAction=
+      'checkout';
+
     if(title)title.textContent='Choose your plan';
+
     if(description){
       description.textContent=
-        'Select the plan for your current business. Payment is handled securely on the Bookly website.';
+        accountTrialAvailable
+          ? 'Start with a monthly plan and get a one-time 7-day free trial. Annual plans do not include a trial.'
+          : 'Select the plan for your current business. Payment is handled securely on the Bookly website.';
     }
+
     button.textContent='Continue to plans';
   }
 }
@@ -3168,6 +3221,12 @@ function showAccount(data){
   document.documentElement.classList.add('session-ready');
   
   document.body.classList.add('logged-in');
+
+  accountTrialAvailable=!!(
+    data &&
+    data.account &&
+    data.account.trial_available
+  );
 
   showWorkspaceView('overview');
   
@@ -3475,9 +3534,21 @@ document.getElementById('billingRestorePackage').onclick=function(){
 document.getElementById('checkout').onclick=function(){
   clearErr();
 
-  if(
-    this.dataset.booklyHasActivePlan==='1'
-  ){
+  var action=
+    this.dataset.booklyOverviewAction ||
+    'checkout';
+
+  if(action==='upgrade'){
+    openPackageModal(
+      'upgrade',
+      Number(
+        this.dataset.booklyCurrentLimit || 0
+      )
+    );
+    return;
+  }
+
+  if(action==='billing'){
     showWorkspaceView('billing');
     loadBilling();
     return;
@@ -4122,10 +4193,13 @@ function loadBilling(){
   var restoreButton=document.getElementById('billingRestore');
   var restorePackageButton=document.getElementById('billingRestorePackage');
   var messageEl=document.getElementById('billingMessage');
+  var trialInfoEl=document.getElementById('billingTrialInfo');
 
   if(!businessEl)return;
 
   messageEl.textContent='';
+  trialInfoEl.hidden=true;
+  trialInfoEl.textContent='';
   actionsEl.hidden=true;
   checkoutButton.hidden=true;
   upgradeButton.hidden=true;
@@ -4147,9 +4221,17 @@ function loadBilling(){
 
     var active=!!subscription.active;
     var cancelled=subscription.status==='cancelled';
+    var trialing=subscription.status==='trialing';
     var pendingLimit=subscription.pending_services_limit;
 
-    statusEl.textContent=cancelled ? 'Cancelling' : (active ? 'Active' : 'Inactive');
+    statusEl.textContent=
+      trialing
+        ? 'Free trial'
+        : (
+            cancelled
+              ? 'Cancelling'
+              : (active ? 'Active' : 'Inactive')
+          );
     statusEl.className='billing-status '+(active ? 'active' : 'inactive');
 
     planEl.textContent=active ? 'Bookly plan' : 'No active plan';
@@ -4176,6 +4258,29 @@ function loadBilling(){
     if(active){
   actionsEl.hidden=false;
   checkoutButton.hidden=true;
+
+  if(trialing){
+    var trialUntil='';
+
+    if(subscription.expires_at){
+      trialUntil=new Date(
+        subscription.expires_at
+      ).toLocaleDateString(
+        undefined,
+        {
+          year:'numeric',
+          month:'short',
+          day:'numeric'
+        }
+      );
+    }
+
+    trialInfoEl.hidden=false;
+    trialInfoEl.textContent=
+      'Your 7-day free trial is active'+
+      (trialUntil ? ' until '+trialUntil : '')+
+      '. After the trial, the monthly subscription renews automatically unless you cancel it.';
+  }
 
   var currentLimit=Number(subscription.services_limit || 10);
 
@@ -4241,6 +4346,12 @@ function loadBilling(){
   actionsEl.hidden=true;
   checkoutButton.hidden=false;
   checkoutButton.textContent='Continue to plans';
+
+  if(d.trial_available){
+    trialInfoEl.hidden=false;
+    trialInfoEl.textContent=
+      '7-day free trial available on your first monthly subscription. Annual plans do not include a trial.';
+  }
 }
   })
   .catch(function(e){
@@ -4641,7 +4752,7 @@ function showPackageError(messageText){
     'status package-modal-message error';
 }
 
-function openPackageModal(mode){
+function openPackageModal(mode,currentLimitOverride){
   var copy=getPackageText();
   var modal=document.getElementById('packageModal');
   var title=document.getElementById('packageModalTitle');
@@ -4649,7 +4760,9 @@ function openPackageModal(mode){
   var options=document.getElementById('packageOptions');
 
   var servicesText=document.getElementById('billingServices').textContent;
-  var currentLimit=parseInt(servicesText,10);
+  var currentLimit=
+    Number(currentLimitOverride) ||
+    parseInt(servicesText,10);
 
   if(!currentLimit){
     return;
