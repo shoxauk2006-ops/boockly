@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 type TemplateId =
   | 'classic'
@@ -199,11 +199,10 @@ export function QrPrintCard({
     useState<ColorThemeId>('white');
 
   const [printSize, setPrintSize] =
-  useState<PrintSizeId>('a4');
+    useState<PrintSizeId>('a4');
 
-  if (!open || !qrDataUrl) {
-    return null;
-  }
+  const [previewDataUrl, setPreviewDataUrl] =
+    useState('');
 
   const businessName = String(
     business?.name ||
@@ -399,13 +398,6 @@ const selectedPrintSize =
     colorThemes.find(
       item => item.id === colorTheme
     ) || colorThemes[1];
-
-  const previewStyle = {
-    '--qr-theme-bg': theme.bg,
-    '--qr-theme-fg': theme.fg,
-    '--qr-theme-muted': theme.muted,
-    '--qr-theme-border': theme.border
-  } as React.CSSProperties;
 
   const loadQrImage = async () => {
     const image = new Image();
@@ -1085,6 +1077,57 @@ const selectedPrintSize =
 
     return target;
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!open || !qrDataUrl) {
+      setPreviewDataUrl('');
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const renderPreview = async () => {
+      try {
+        const canvas =
+          await buildOutputCanvas();
+
+        if (!cancelled) {
+          setPreviewDataUrl(
+            canvas.toDataURL(
+              'image/jpeg',
+              0.86
+            )
+          );
+        }
+      } catch (error) {
+        console.error(
+          'QR PREVIEW ERROR:',
+          error
+        );
+      }
+    };
+
+    renderPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    qrDataUrl,
+    template,
+    colorTheme,
+    printSize,
+    businessName
+  ]);
+
+  if (!open || !qrDataUrl) {
+    return null;
+  }
+
 const downloadPrintableQr =
   async () => {
     try {
@@ -1429,168 +1472,24 @@ const downloadPrintableQr =
 </div>
         <div
           className={
-            `qr-print-sheet qr-print-sheet-${template} qr-color-preview qr-size-preview qr-size-${printSize}`
+            `qr-output-preview qr-output-preview-${printSize}`
           }
-          style={previewStyle}
         >
-          {template === 'poster' ? (
-            <>
-              <div className="qr-print-brand">
-                BOOKLY
-              </div>
-
-              <h3 className="qr-poster-title">
-                {t(
-                  'owner.bookWithoutCalls',
-                  'Запишитесь без звонков'
-                )}
-              </h3>
-
-              <p>
-                {t(
-                  'owner.chooseServiceTime',
-                  'Выберите услугу, специалиста и время'
-                )}
-              </p>
-
-              <div className="qr-print-code">
-                <img
-                  src={qrDataUrl}
-                  alt={t(
-                    'owner.qrBookingAlt',
-                    'QR-код для записи'
-                  )}
-                />
-              </div>
-
-              <h2>{businessName}</h2>
-
-              <span>
-                {t(
-                  'owner.scanToBook',
-                  'Сканируйте для записи'
-                )}
-              </span>
-
-              <small>
-                powered by Bookly
-              </small>
-            </>
-          ) : template === 'counter' ? (
-            <div className="qr-counter-preview">
-              <div className="qr-counter-copy">
-                <div className="qr-print-brand">
-                  BOOKLY
-                </div>
-
-                <h2>{businessName}</h2>
-
-                <p>
-                  {t(
-                    'owner.onlineBooking247',
-                    'Онлайн-запись 24/7'
-                  )}
-                </p>
-
-                <h3>
-                  {t(
-                    'owner.scanToBook',
-                    'Сканируйте для записи'
-                  )}
-                </h3>
-              </div>
-
-              <div className="qr-print-code">
-                <img
-                  src={qrDataUrl}
-                  alt={t(
-                    'owner.qrBookingAlt',
-                    'QR-код для записи'
-                  )}
-                />
-              </div>
-            </div>
-          ) : template === 'minimal' ? (
-            <>
-              <div className="qr-print-brand">
-                BOOKLY
-              </div>
-
-              <h2>{businessName}</h2>
-
-              <div className="qr-print-code">
-                <img
-                  src={qrDataUrl}
-                  alt={t(
-                    'owner.qrBookingAlt',
-                    'QR-код для записи'
-                  )}
-                />
-              </div>
-
-              <h3>
-                {t(
-                  'owner.scanToBook',
-                  'Сканируйте для записи'
-                )}
-              </h3>
-
-              <span>
-                {t(
-                  'owner.onlineBooking247',
-                  'Онлайн-запись 24/7'
-                )}
-              </span>
-
-              <small>Bookly</small>
-            </>
+          {previewDataUrl ? (
+            <img
+              src={previewDataUrl}
+              alt={t(
+                'owner.printLayout',
+                'Макет для печати'
+              )}
+            />
           ) : (
-            <>
-              <div className="qr-print-brand">
-                BOOKLY
-              </div>
-
-              <h2>{businessName}</h2>
-
-              <p>
-                {t(
-                  'owner.onlineBooking',
-                  'Онлайн-запись'
-                )}
-              </p>
-
-              <div className="qr-print-code">
-                <img
-                  src={qrDataUrl}
-                  alt={t(
-                    'owner.qrBookingAlt',
-                    'QR-код для записи'
-                  )}
-                />
-              </div>
-
-              <h3>
-                {t(
-                  'owner.bookOnline',
-                  'Запишитесь онлайн'
-                )}
-              </h3>
-
-              <span>
-                {t(
-                  'owner.scanQr',
-                  'Отсканируйте QR-код'
-                )}{' '}
-                {t(
-                  'owner.phoneCamera',
-                  'камерой телефона'
-                )}
-              </span>
-
-              <small>
-                powered by Bookly
-              </small>
-            </>
+            <div className="qr-output-preview-loading">
+              {t(
+                'common.loading',
+                'Загрузка...'
+              )}
+            </div>
           )}
         </div>
 
