@@ -103,8 +103,32 @@
       if (!node.classList.contains('subscription-modal')) node.classList.add('bookly-policy-hidden');
     });
     document.querySelectorAll('button,a,[role="button"],[role="tab"]').forEach(function (node) {
+      if (
+        node.closest &&
+        node.closest(
+          '.bookly-legal-links, .profile-legal-list, [data-bookly-policy-safe="true"]'
+        )
+      ) {
+        node.classList.remove('bookly-policy-hidden');
+        return;
+      }
+
+      var href = String(
+        node.getAttribute &&
+        node.getAttribute('href') || ''
+      );
+
+      if (
+        /\/(rules|privacy)\.html(?:$|[?#])/i.test(href)
+      ) {
+        node.classList.remove('bookly-policy-hidden');
+        return;
+      }
+
       var text = normalized(node);
-      if (text && BILLING_RE.test(text)) node.classList.add('bookly-policy-hidden');
+      if (text && BILLING_RE.test(text)) {
+        node.classList.add('bookly-policy-hidden');
+      }
     });
   }
 
