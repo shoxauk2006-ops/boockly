@@ -1630,7 +1630,12 @@ class AdminBookingIn(BaseModel):
     start: time
 # ---------- common ----------
 @app.get("/health")
-def health(): return {"ok": True, "service": "bookly"}
+def health():
+    return {
+        "ok": True,
+        "service": "bookly",
+        "release": "oauth-canonical-20260920",
+    }
 
 @app.get("/me")
 def me(x_telegram_init_data: str = Header(default="")):
