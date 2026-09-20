@@ -3887,6 +3887,37 @@ function legalConsentError(){
     ar:'يرجى الموافقة على شروط الاستخدام وتأكيد قراءة سياسة الخصوصية.'
   })[l]||'Please accept the Terms of Use and confirm that you have read the Privacy Policy.';
 }
+function registerFieldGuard(field){
+  if(!field || field.dataset.booklyRegisterGuard==='1'){
+    return;
+  }
+
+  field.dataset.booklyRegisterGuard='1';
+
+  function unlockForUser(){
+    if(mode!=='register')return;
+
+    field.readOnly=false;
+    field.dataset.booklyUserUnlocked='1';
+  }
+
+  field.addEventListener(
+    'pointerdown',
+    unlockForUser
+  );
+
+  field.addEventListener(
+    'touchstart',
+    unlockForUser,
+    {passive:true}
+  );
+
+  field.addEventListener(
+    'keydown',
+    unlockForUser
+  );
+}
+
 function clearRegisterAutofill(){
   var emailField=
     document.getElementById('email');
@@ -3894,27 +3925,33 @@ function clearRegisterAutofill(){
   var passwordField=
     document.getElementById('password');
 
-  function clearIfIdle(field){
-    if(
-      field &&
-      document.activeElement!==field
-    ){
-      field.value='';
-    }
-  }
+  [emailField,passwordField].forEach(function(field){
+    if(!field)return;
 
-  clearIfIdle(emailField);
-  clearIfIdle(passwordField);
+    field.value='';
+    field.readOnly=true;
+    field.dataset.booklyUserUnlocked='0';
 
-  // Some password managers fill shortly after the tab changes.
-  // Clear that delayed autofill, but never erase text the user is
-  // actively typing.
-  window.setTimeout(function(){
-    if(mode!=='register')return;
+    registerFieldGuard(field);
+  });
 
-    clearIfIdle(emailField);
-    clearIfIdle(passwordField);
-  },120);
+  // Chrome and password managers may try more than once after
+  // switching tabs. Keep fields empty while they are still locked.
+  [60,220,650].forEach(function(delay){
+    window.setTimeout(function(){
+      if(mode!=='register')return;
+
+      [emailField,passwordField].forEach(function(field){
+        if(
+          field &&
+          field.readOnly &&
+          field.dataset.booklyUserUnlocked!=='1'
+        ){
+          field.value='';
+        }
+      });
+    },delay);
+  });
 }
 
 function setAuthMode(nextMode){
@@ -3946,9 +3983,36 @@ function setAuthMode(nextMode){
 
   if(isRegister){
     legalAccept.checked=false;
+
+    emailField.setAttribute(
+      'name',
+      'bookly-new-account-email'
+    );
+
+    passwordField.setAttribute(
+      'name',
+      'bookly-new-account-password'
+    );
+
     clearRegisterAutofill();
   }else{
     legalAccept.checked=false;
+
+    emailField.readOnly=false;
+    passwordField.readOnly=false;
+
+    emailField.dataset.booklyUserUnlocked='0';
+    passwordField.dataset.booklyUserUnlocked='0';
+
+    emailField.setAttribute(
+      'name',
+      'email'
+    );
+
+    passwordField.setAttribute(
+      'name',
+      'password'
+    );
   }
 
   clearErr();
