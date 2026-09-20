@@ -1303,6 +1303,35 @@ def change_subscription_limit(
         if not subscription or not subscription.active:
             raise HTTPException(400, "Active subscription required")
         current = subscription.current_services_limit or 10
+
+        if limit < current:
+            active_services = int(
+                db.execute(
+                    text(
+                        """
+                        SELECT COUNT(*)
+                        FROM services
+                        WHERE business_id = :business_id
+                          AND active = TRUE
+                        """
+                    ),
+                    {
+                        "business_id": business_id
+                    },
+                ).scalar()
+                or 0
+            )
+
+            if active_services > limit:
+                raise HTTPException(
+                    409,
+                    (
+                        f"This business has {active_services} active services. "
+                        f"Remove {active_services - limit} service(s) before "
+                        f"changing the limit to {limit}."
+                    ),
+                )
+
         if limit == current:
             return {
                 "ok": True,
