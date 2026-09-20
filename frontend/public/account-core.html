@@ -3281,6 +3281,19 @@ phoneInput.addEventListener('input',function(){
 updatePhoneCode();
 var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var accountTrialAvailable=false;var auth=document.getElementById('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
 
+var hasOAuthResult=
+  qs.has('oauth_code') ||
+  qs.has('oauth_error') ||
+  qs.has('terms_required');
+
+if(hasOAuthResult && session){
+  localStorage.removeItem('bookly_session');
+  session='';
+  window.booklySession='';
+  document.documentElement.classList.remove('has-session');
+  document.documentElement.classList.remove('session-ready');
+}
+
 function accountUiLanguage(){
   try{
     var value=String(
@@ -3785,10 +3798,58 @@ function setAuthMode(nextMode){
   if(!isRegister)legalAccept.checked=false;
   clearErr();
 }
+function cleanAccountAuthParams(){
+  var u=new URL(location.href);
+  u.searchParams.delete('oauth_code');
+  u.searchParams.delete('oauth_error');
+  u.searchParams.delete('terms_required');
+  return u.pathname+(u.search?u.search:'')+u.hash;
+}
+
+function handleAccountAuthResult(){
+  if(qs.has('terms_required')){
+    localStorage.removeItem('bookly_session');
+    session='';
+    window.booklySession='';
+
+    setAuthMode('register');
+    err(legalConsentError());
+
+    history.replaceState(
+      {},
+      '',
+      cleanAccountAuthParams()
+    );
+
+    return true;
+  }
+
+  if(qs.has('oauth_error')){
+    localStorage.removeItem('bookly_session');
+    session='';
+    window.booklySession='';
+
+    history.replaceState(
+      {},
+      '',
+      cleanAccountAuthParams()
+    );
+
+    return true;
+  }
+
+  return qs.has('oauth_code');
+}
+
 document.getElementById('loginTab').onclick=function(){setAuthMode('login')};
 document.getElementById('registerTab').onclick=function(){setAuthMode('register')};
 document.getElementById('googleBtn').onclick=function(){
   if(mode==='register'&&!legalAccept.checked){err(legalConsentError());return}
+
+  localStorage.removeItem('bookly_session');
+  session='';
+  window.booklySession='';
+
   location.href=api+'/account/oauth/google/start'+(mode==='register'?'?legal_accept=1':'');
 };
 form.onsubmit=function(e){e.preventDefault();clearErr();var isRegister=mode==='register';if(isRegister&&!legalAccept.checked){err(legalConsentError());return}submit.disabled=true;var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};if(isRegister)body.legal_accept=true;call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);window.booklySession=session;if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
@@ -3922,8 +3983,15 @@ document.getElementById('checkout').onclick=function(){
   goPricing(this).catch(function(){});
 };document.getElementById('logout').onclick=function(){
   localStorage.removeItem('bookly_session');
+  session='';
+  window.booklySession='';
   document.body.classList.remove('logged-in');
-  location.reload();
+  document.documentElement.classList.remove('has-session');
+  document.documentElement.classList.remove('session-ready');
+
+  location.replace(
+    cleanAccountAuthParams()
+  );
 };
 
 var businessModal=document.getElementById('businessModal');
@@ -4792,7 +4860,12 @@ if(
 
   }
 );            
-check();
+var accountAuthResult=
+  handleAccountAuthResult();
+
+if(!accountAuthResult){
+  check();
+}
 })();
 </script>
   
