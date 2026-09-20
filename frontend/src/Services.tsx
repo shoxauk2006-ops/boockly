@@ -844,6 +844,28 @@ alert(
                 {service.name}
               </b>
 
+              {service.available_under_plan === false && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    marginLeft: 8,
+                    padding: '3px 7px',
+                    border: '1px solid #f0b8b3',
+                    borderRadius: 999,
+                    background: '#fff4f2',
+                    color: '#b42318',
+                    fontSize: 10,
+                    fontWeight: 750,
+                    verticalAlign: '1px'
+                  }}
+                >
+                  {t(
+                    'owner.unavailableUnderPlan',
+                    'Недоступно клиентам по тарифу'
+                  )}
+                </span>
+              )}
+
               {service.description && (
                 <p>
                   {
