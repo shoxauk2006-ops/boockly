@@ -4671,6 +4671,7 @@ var PACKAGE_TEXT={
     unablePreview:"Unable to preview package change.",
     unableChange:"Unable to change package.",
     nextPeriod:"the next billing period",
+    trialChange:"Your service limit changes immediately and you pay $0 today. Your free trial continues until {date}. When the trial ends, the monthly subscription renews automatically at the new package price.",
     downgradeWarning:"This business currently has {active} active services, while the new package allows {limit}. You do not need to remove anything now. Until {date}, the current package remains active. After the downgrade, only {limit} services will be available to clients; the other {extra} will remain saved in your account and become available again if you raise the limit."
   },
   ru:{
@@ -4705,6 +4706,7 @@ var PACKAGE_TEXT={
     unablePreview:"Не удалось рассчитать изменение пакета.",
     unableChange:"Не удалось изменить пакет.",
     nextPeriod:"следующего расчётного периода",
+    trialChange:"Лимит услуг изменится сразу, а сегодня к оплате $0. Пробный период продолжится до {date}. После его окончания месячная подписка автоматически продлится уже по цене нового пакета.",
     downgradeWarning:"Сейчас у бизнеса {active} активных услуг, а новый пакет рассчитан на {limit}. Удалять их сейчас не нужно: до {date} действует текущий пакет. После перехода клиентам будут доступны {limit} услуг, а ещё {extra} останутся сохранены в кабинете и снова станут доступны после повышения лимита."
   },
   uz:{
@@ -4739,6 +4741,7 @@ var PACKAGE_TEXT={
     unablePreview:"Paket o‘zgarishini hisoblab bo‘lmadi.",
     unableChange:"Paketni o‘zgartirib bo‘lmadi.",
     nextPeriod:"keyingi hisob-kitob davrigacha",
+    trialChange:"Xizmatlar limiti darhol o‘zgaradi va bugun $0 to‘laysiz. Bepul sinov {date} gacha davom etadi. Sinov tugagach, oylik obuna yangi paket narxida avtomatik yangilanadi.",
     downgradeWarning:"Hozir biznesda {active} ta faol xizmat bor, yangi paket esa {limit} tagacha ruxsat beradi. Hozir hech narsani o‘chirish shart emas: {date} gacha joriy paket ishlaydi. Keyin mijozlarga {limit} ta xizmat ko‘rinadi, qolgan {extra} tasi hisobda saqlanadi va limit oshirilsa yana mavjud bo‘ladi."
   },
   tr:{
@@ -4773,6 +4776,7 @@ var PACKAGE_TEXT={
     unablePreview:"Paket değişikliği hesaplanamadı.",
     unableChange:"Paket değiştirilemedi.",
     nextPeriod:"bir sonraki fatura dönemine kadar",
+    trialChange:"Hizmet limiti hemen değişir ve bugün $0 ödersiniz. Ücretsiz deneme {date} tarihine kadar devam eder. Deneme sona erdiğinde aylık abonelik yeni paket fiyatıyla otomatik yenilenir.",
     downgradeWarning:"Bu işletmede şu anda {active} aktif hizmet var, yeni paket ise {limit} hizmete izin veriyor. Şimdi hiçbir şeyi silmeniz gerekmiyor: {date} tarihine kadar mevcut paket geçerli. Sonrasında müşterilere {limit} hizmet sunulacak; kalan {extra} hizmet hesabınızda saklanacak ve limiti yükselttiğinizde yeniden kullanılabilir olacak."
   },
   ar:{
@@ -4807,6 +4811,7 @@ var PACKAGE_TEXT={
     unablePreview:"تعذر حساب تغيير الباقة.",
     unableChange:"تعذر تغيير الباقة.",
     nextPeriod:"فترة الفوترة التالية",
+    trialChange:"سيتم تغيير حد الخدمات فورًا ولن يتم تحصيل أي مبلغ اليوم. تستمر التجربة المجانية حتى {date}. بعد انتهائها يتجدد الاشتراك الشهري تلقائيًا بسعر الباقة الجديدة.",
     downgradeWarning:"يوجد حاليًا {active} خدمة نشطة، بينما تسمح الباقة الجديدة بـ {limit}. لا يلزم حذف أي شيء الآن: ستظل الباقة الحالية فعالة حتى {date}. بعد الخفض ستتوفر {limit} خدمات للعملاء، وستبقى الخدمات الأخرى وعددها {extra} محفوظة في الحساب وتعود تلقائيًا عند رفع الحد."
   }
 };
@@ -5116,19 +5121,497 @@ function changeBillingPackage(limit,mode){
       '/'+intervalLabel+
       '\n\n';
 
-    if(mode==='upgrade'){
+    if(d.trialing){
+      text+=
+        copy.dueToday+': $0.00\n\n'+
+        packageTokenText(
+          copy.trialChange,
+          {
+            date:formatPackageDate(
+              d.trial_ends_at,
+              copy
+            )
+          }
+        );
+    }else if(mode==='upgrade'){
       text+=
         copy.dueToday+'\n'+
-        copy.packageDifference+': $'+
+        copy.packageDifference+': 
+    confirmText.textContent=text;
+
+    var activeServices=
+      Number(
+        d.active_services_count || 0
+      );
+
+    var extraServices=
+      Number(
+        d.services_over_new_limit || 0
+      );
+
+    if(
+      mode==='downgrade' &&
+      !d.trialing &&
+      extraServices>0
+    ){
+      confirmWarning.textContent=
+        packageTokenText(
+          copy.downgradeWarning,
+          {
+            active:activeServices,
+            limit:limit,
+            extra:extraServices,
+            date:formatPackageDate(
+              d.effective_at,
+              copy
+            )
+          }
+        );
+
+      confirmWarning.hidden=false;
+    }else{
+      confirmWarning.hidden=true;
+      confirmWarning.textContent='';
+    }
+
+    confirmModal.dataset.limit=
+      String(limit);
+
+    confirmModal.dataset.mode=
+      mode;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? copy.upgradeAction
+        : copy.downgradeAction;
+
+    confirmOk.disabled=false;
+  })
+  .catch(function(e){
+    confirmModal.hidden=true;
+
+    showPackageError(
+      e.message ||
+      copy.unablePreview
+    );
+  });
+}
+
+function confirmBillingPackageChange(){
+  var copy=getPackageText();
+  var confirmModal=document.getElementById('packageConfirmModal');
+  var confirmOk=document.getElementById('packageConfirmOk');
+  var cancelButton=document.getElementById('packageConfirmCancel');
+  var limit=Number(confirmModal.dataset.limit);
+  var mode=confirmModal.dataset.mode;
+
+  confirmOk.disabled=true;
+  cancelButton.disabled=true;
+  confirmOk.textContent=copy.updating;
+
+  resetPackageMessage();
+
+  var message=document.getElementById(
+    'packageModalMessage'
+  );
+  message.textContent=copy.updatingPackage;
+
+  booklyCall('/account/subscription/change-limit',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+booklySession,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      services_limit:limit
+    })
+  })
+  .then(function(d){
+    if(!d || d.ok!==true){
+      throw new Error(
+        (d && (d.detail || d.error)) ||
+        copy.unableChange
+      );
+    }
+
+    confirmOk.textContent=copy.updated;
+
+    return new Promise(function(resolve){
+      setTimeout(resolve,500);
+    });
+  })
+  .then(function(){
+    confirmModal.hidden=true;
+    closePackageModal();
+
+    setTimeout(function(){
+      window.location.reload();
+    },500);
+  })
+  .catch(function(e){
+    confirmOk.disabled=false;
+    cancelButton.disabled=false;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? copy.upgradeAction
+        : copy.downgradeAction;
+
+    showPackageError(
+      e.message ||
+      copy.unableChange
+    );
+  });
+}
+document.getElementById('packageConfirmOk').onclick=function(){
+  confirmBillingPackageChange();
+};
+
+document.getElementById('packageConfirmCancel').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.querySelector('#packageConfirmModal .save-success-backdrop').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.getElementById('billingUpgrade').onclick=function(){
+  openPackageModal('upgrade');
+};
+
+document.getElementById('billingDowngrade').onclick=function(){
+  openPackageModal('downgrade');
+};
+
+document.getElementById('packageModalClose').onclick=function(){
+  closePackageModal();
+};
+
+document.querySelector('#packageModal .package-modal-backdrop').onclick=function(){
+  closePackageModal();
+};
+</script>
+</body></html>
++
         (
           Number(dueToday) -
           Number(dueTodayTax)
         ).toFixed(2)+
         '\n'+
-        copy.vat+': $'+
+        copy.vat+': 
+    confirmText.textContent=text;
+
+    var activeServices=
+      Number(
+        d.active_services_count || 0
+      );
+
+    var extraServices=
+      Number(
+        d.services_over_new_limit || 0
+      );
+
+    if(
+      mode==='downgrade' &&
+      extraServices>0
+    ){
+      confirmWarning.textContent=
+        packageTokenText(
+          copy.downgradeWarning,
+          {
+            active:activeServices,
+            limit:limit,
+            extra:extraServices,
+            date:formatPackageDate(
+              d.effective_at,
+              copy
+            )
+          }
+        );
+
+      confirmWarning.hidden=false;
+    }else{
+      confirmWarning.hidden=true;
+      confirmWarning.textContent='';
+    }
+
+    confirmModal.dataset.limit=
+      String(limit);
+
+    confirmModal.dataset.mode=
+      mode;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? copy.upgradeAction
+        : copy.downgradeAction;
+
+    confirmOk.disabled=false;
+  })
+  .catch(function(e){
+    confirmModal.hidden=true;
+
+    showPackageError(
+      e.message ||
+      copy.unablePreview
+    );
+  });
+}
+
+function confirmBillingPackageChange(){
+  var copy=getPackageText();
+  var confirmModal=document.getElementById('packageConfirmModal');
+  var confirmOk=document.getElementById('packageConfirmOk');
+  var cancelButton=document.getElementById('packageConfirmCancel');
+  var limit=Number(confirmModal.dataset.limit);
+  var mode=confirmModal.dataset.mode;
+
+  confirmOk.disabled=true;
+  cancelButton.disabled=true;
+  confirmOk.textContent=copy.updating;
+
+  resetPackageMessage();
+
+  var message=document.getElementById(
+    'packageModalMessage'
+  );
+  message.textContent=copy.updatingPackage;
+
+  booklyCall('/account/subscription/change-limit',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+booklySession,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      services_limit:limit
+    })
+  })
+  .then(function(d){
+    if(!d || d.ok!==true){
+      throw new Error(
+        (d && (d.detail || d.error)) ||
+        copy.unableChange
+      );
+    }
+
+    confirmOk.textContent=copy.updated;
+
+    return new Promise(function(resolve){
+      setTimeout(resolve,500);
+    });
+  })
+  .then(function(){
+    confirmModal.hidden=true;
+    closePackageModal();
+
+    setTimeout(function(){
+      window.location.reload();
+    },500);
+  })
+  .catch(function(e){
+    confirmOk.disabled=false;
+    cancelButton.disabled=false;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? copy.upgradeAction
+        : copy.downgradeAction;
+
+    showPackageError(
+      e.message ||
+      copy.unableChange
+    );
+  });
+}
+document.getElementById('packageConfirmOk').onclick=function(){
+  confirmBillingPackageChange();
+};
+
+document.getElementById('packageConfirmCancel').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.querySelector('#packageConfirmModal .save-success-backdrop').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.getElementById('billingUpgrade').onclick=function(){
+  openPackageModal('upgrade');
+};
+
+document.getElementById('billingDowngrade').onclick=function(){
+  openPackageModal('downgrade');
+};
+
+document.getElementById('packageModalClose').onclick=function(){
+  closePackageModal();
+};
+
+document.querySelector('#packageModal .package-modal-backdrop').onclick=function(){
+  closePackageModal();
+};
+</script>
+</body></html>
++
         dueTodayTax+
         '\n'+
-        copy.totalDueToday+': $'+
+        copy.totalDueToday+': 
+    confirmText.textContent=text;
+
+    var activeServices=
+      Number(
+        d.active_services_count || 0
+      );
+
+    var extraServices=
+      Number(
+        d.services_over_new_limit || 0
+      );
+
+    if(
+      mode==='downgrade' &&
+      extraServices>0
+    ){
+      confirmWarning.textContent=
+        packageTokenText(
+          copy.downgradeWarning,
+          {
+            active:activeServices,
+            limit:limit,
+            extra:extraServices,
+            date:formatPackageDate(
+              d.effective_at,
+              copy
+            )
+          }
+        );
+
+      confirmWarning.hidden=false;
+    }else{
+      confirmWarning.hidden=true;
+      confirmWarning.textContent='';
+    }
+
+    confirmModal.dataset.limit=
+      String(limit);
+
+    confirmModal.dataset.mode=
+      mode;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? copy.upgradeAction
+        : copy.downgradeAction;
+
+    confirmOk.disabled=false;
+  })
+  .catch(function(e){
+    confirmModal.hidden=true;
+
+    showPackageError(
+      e.message ||
+      copy.unablePreview
+    );
+  });
+}
+
+function confirmBillingPackageChange(){
+  var copy=getPackageText();
+  var confirmModal=document.getElementById('packageConfirmModal');
+  var confirmOk=document.getElementById('packageConfirmOk');
+  var cancelButton=document.getElementById('packageConfirmCancel');
+  var limit=Number(confirmModal.dataset.limit);
+  var mode=confirmModal.dataset.mode;
+
+  confirmOk.disabled=true;
+  cancelButton.disabled=true;
+  confirmOk.textContent=copy.updating;
+
+  resetPackageMessage();
+
+  var message=document.getElementById(
+    'packageModalMessage'
+  );
+  message.textContent=copy.updatingPackage;
+
+  booklyCall('/account/subscription/change-limit',{
+    method:'POST',
+    headers:{
+      Authorization:'Bearer '+booklySession,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      services_limit:limit
+    })
+  })
+  .then(function(d){
+    if(!d || d.ok!==true){
+      throw new Error(
+        (d && (d.detail || d.error)) ||
+        copy.unableChange
+      );
+    }
+
+    confirmOk.textContent=copy.updated;
+
+    return new Promise(function(resolve){
+      setTimeout(resolve,500);
+    });
+  })
+  .then(function(){
+    confirmModal.hidden=true;
+    closePackageModal();
+
+    setTimeout(function(){
+      window.location.reload();
+    },500);
+  })
+  .catch(function(e){
+    confirmOk.disabled=false;
+    cancelButton.disabled=false;
+
+    confirmOk.textContent=
+      mode==='upgrade'
+        ? copy.upgradeAction
+        : copy.downgradeAction;
+
+    showPackageError(
+      e.message ||
+      copy.unableChange
+    );
+  });
+}
+document.getElementById('packageConfirmOk').onclick=function(){
+  confirmBillingPackageChange();
+};
+
+document.getElementById('packageConfirmCancel').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.querySelector('#packageConfirmModal .save-success-backdrop').onclick=function(){
+  document.getElementById('packageConfirmModal').hidden=true;
+};
+
+document.getElementById('billingUpgrade').onclick=function(){
+  openPackageModal('upgrade');
+};
+
+document.getElementById('billingDowngrade').onclick=function(){
+  openPackageModal('downgrade');
+};
+
+document.getElementById('packageModalClose').onclick=function(){
+  closePackageModal();
+};
+
+document.querySelector('#packageModal .package-modal-backdrop').onclick=function(){
+  closePackageModal();
+};
+</script>
+</body></html>
++
         dueToday+
         '\n\n'+
         copy.appliesNow;
