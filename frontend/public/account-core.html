@@ -3121,6 +3121,138 @@ phoneInput.addEventListener('input',function(){
 
 updatePhoneCode();
 var qs=new URLSearchParams(location.search);var api=(qs.get('api')||'https://boockly-3.onrender.com').replace(/\/$/,'');var mode='login';var session=localStorage.getItem('bookly_session')||'';var accountTrialAvailable=false;var auth=document.getElementById('auth'),account=document.getElementById('account'),form=document.getElementById('form'),submit=document.getElementById('submit'),error=document.getElementById('error'),connect=document.getElementById('connect'),connectStatus=document.getElementById('connectStatus');
+
+function accountUiLanguage(){
+  try{
+    var value=String(
+      localStorage.getItem('bookly_language') || ''
+    ).toLowerCase();
+
+    if(
+      value==='ru' ||
+      value==='en' ||
+      value==='uz' ||
+      value==='tr' ||
+      value==='ar'
+    ){
+      return value;
+    }
+  }catch(e){}
+
+  return 'en';
+}
+
+function accountDynamicCopy(){
+  var all={
+    en:{
+      manage:'Manage your subscription',
+      increaseDesc:'Increase the service limit for your current business. You can manage cancellation, downgrade and renewal from Billing.',
+      increase:'Increase limit',
+      maxDesc:'Your business already uses the maximum 100-service package. Manage cancellation, downgrade or renewal from Billing.',
+      manageButton:'Manage subscription',
+      choose:'Choose your plan',
+      chooseTrial:'Start with a monthly plan and get a one-time 7-day free trial. Annual plans do not include a trial.',
+      chooseRegular:'Select the plan for your current business. Payment is handled securely on the Bookly website.',
+      plans:'Continue to plans',
+      freeTrial:'Free trial',
+      trialAvailable:'7-day free trial available on your first monthly subscription. Annual plans do not include a trial.',
+      trialActivePrefix:'Your 7-day free trial is active',
+      trialUntil:' until ',
+      trialActiveSuffix:'. After the trial, the monthly subscription renews automatically unless you cancel it.'
+    },
+    ru:{
+      manage:'Управлять подпиской',
+      increaseDesc:'Увеличьте лимит услуг для текущего бизнеса. Отменить подписку, понизить пакет или восстановить её можно в разделе «Оплата».',
+      increase:'Увеличить лимит',
+      maxDesc:'Для этого бизнеса уже установлен максимальный пакет на 100 услуг. Отменить, понизить или восстановить подписку можно в разделе «Оплата».',
+      manageButton:'Управлять подпиской',
+      choose:'Выберите план',
+      chooseTrial:'Начните с месячного плана и получите однократный 7-дневный пробный период. Для годового плана пробного периода нет.',
+      chooseRegular:'Выберите план для текущего бизнеса. Оплата безопасно обрабатывается на сайте Bookly.',
+      plans:'Перейти к планам',
+      freeTrial:'Пробный период',
+      trialAvailable:'Доступен однократный 7-дневный пробный период при первой месячной подписке. Для годового плана пробного периода нет.',
+      trialActivePrefix:'Сейчас действует 7-дневный пробный период',
+      trialUntil:' до ',
+      trialActiveSuffix:'. После его окончания месячная подписка продлится автоматически, если её не отменить.'
+    },
+    uz:{
+      manage:'Obunani boshqarish',
+      increaseDesc:'Joriy biznes uchun xizmatlar limitini oshiring. Bekor qilish, paketni kamaytirish yoki obunani tiklash To‘lov bo‘limida amalga oshiriladi.',
+      increase:'Limitni oshirish',
+      maxDesc:'Bu biznes allaqachon 100 xizmatli maksimal paketdan foydalanmoqda. Obunani To‘lov bo‘limida boshqarishingiz mumkin.',
+      manageButton:'Obunani boshqarish',
+      choose:'Rejangizni tanlang',
+      chooseTrial:'Oylik reja bilan boshlang va bir martalik 7 kunlik bepul sinovdan foydalaning. Yillik rejada sinov davri yo‘q.',
+      chooseRegular:'Joriy biznesingiz uchun rejani tanlang. To‘lov Bookly saytida xavfsiz amalga oshiriladi.',
+      plans:'Rejalarga o‘tish',
+      freeTrial:'Bepul sinov',
+      trialAvailable:'Birinchi oylik obunada bir martalik 7 kunlik bepul sinov mavjud. Yillik rejada sinov davri yo‘q.',
+      trialActivePrefix:'7 kunlik bepul sinov hozir faol',
+      trialUntil:' — ',
+      trialActiveSuffix:'. Sinov tugagach, bekor qilmasangiz, oylik obuna avtomatik yangilanadi.'
+    },
+    tr:{
+      manage:'Aboneliği yönet',
+      increaseDesc:'Mevcut işletmenin hizmet limitini artırın. İptal, paket düşürme ve abonelik geri yükleme işlemleri Faturalandırma bölümündedir.',
+      increase:'Limiti artır',
+      maxDesc:'Bu işletme zaten en yüksek 100 hizmet paketini kullanıyor. Aboneliği Faturalandırma bölümünden yönetebilirsiniz.',
+      manageButton:'Aboneliği yönet',
+      choose:'Planınızı seçin',
+      chooseTrial:'Aylık planla başlayın ve tek seferlik 7 günlük ücretsiz denemeden yararlanın. Yıllık planda deneme yoktur.',
+      chooseRegular:'Mevcut işletmeniz için plan seçin. Ödeme Bookly sitesinde güvenli şekilde işlenir.',
+      plans:'Planlara devam et',
+      freeTrial:'Ücretsiz deneme',
+      trialAvailable:'İlk aylık abonelikte tek seferlik 7 günlük ücretsiz deneme mevcuttur. Yıllık planda deneme yoktur.',
+      trialActivePrefix:'7 günlük ücretsiz deneme şu anda aktif',
+      trialUntil:' — ',
+      trialActiveSuffix:'. Deneme sonunda iptal etmezseniz aylık abonelik otomatik yenilenir.'
+    },
+    ar:{
+      manage:'إدارة الاشتراك',
+      increaseDesc:'ارفع حد الخدمات للنشاط الحالي. يمكنك الإلغاء أو خفض الباقة أو استعادة الاشتراك من قسم الفوترة.',
+      increase:'زيادة الحد',
+      maxDesc:'يستخدم هذا النشاط بالفعل الحد الأقصى وهو 100 خدمة. يمكنك إدارة الاشتراك من قسم الفوترة.',
+      manageButton:'إدارة الاشتراك',
+      choose:'اختر خطتك',
+      chooseTrial:'ابدأ بالخطة الشهرية واحصل على تجربة مجانية لمدة 7 أيام لمرة واحدة. الخطة السنوية لا تشمل تجربة مجانية.',
+      chooseRegular:'اختر الخطة للنشاط الحالي. تتم معالجة الدفع بأمان على موقع Bookly.',
+      plans:'المتابعة إلى الخطط',
+      freeTrial:'تجربة مجانية',
+      trialAvailable:'تتوفر تجربة مجانية لمدة 7 أيام لمرة واحدة مع أول اشتراك شهري. الخطة السنوية لا تشمل تجربة مجانية.',
+      trialActivePrefix:'التجربة المجانية لمدة 7 أيام مفعلة الآن',
+      trialUntil:' حتى ',
+      trialActiveSuffix:'. بعد انتهاء التجربة يتجدد الاشتراك الشهري تلقائيًا ما لم تقم بإلغائه.'
+    }
+  };
+
+  return all[accountUiLanguage()] || all.en;
+}
+
+function accountDate(value){
+  if(!value)return '';
+
+  var locale={
+    en:'en-US',
+    ru:'ru-RU',
+    uz:'uz-UZ',
+    tr:'tr-TR',
+    ar:'ar'
+  }[accountUiLanguage()] || 'en-US';
+
+  try{
+    return new Date(value).toLocaleDateString(
+      locale,
+      {
+        year:'numeric',
+        month:'short',
+        day:'numeric'
+      }
+    );
+  }catch(e){
+    return '';
+  }
+}
 function err(msg){error.textContent=msg;error.hidden=false}function clearErr(){error.hidden=true;error.textContent=''}
 function call(path,options){return fetch(api+path,options||{}).then(function(r){return r.json().catch(function(){return null}).then(function(d){if(!r.ok)throw new Error((d&&d.detail)||('Request failed ('+r.status+')'));return d})}).catch(function(e){if(e instanceof TypeError)throw new Error('Cannot connect to Bookly API: '+api);throw e})}
 window.booklyCall=call;
@@ -3157,6 +3289,7 @@ function syncOverviewSubscription(businesses){
 
   var title=card.querySelector('h3');
   var description=card.querySelector('p');
+  var copy=accountDynamicCopy();
 
   var current=(businesses||[]).find(function(item){
     return !!item.is_current;
@@ -3178,43 +3311,43 @@ function syncOverviewSubscription(businesses){
     String(currentLimit || 0);
 
   if(active){
-    if(title)title.textContent='Manage your subscription';
+    if(title)title.textContent=copy.manage;
 
     if(currentLimit<100){
       if(description){
         description.textContent=
-          'Increase the service limit for your current business. You can manage cancellation, downgrade and renewal from Billing.';
+          copy.increaseDesc;
       }
 
       button.dataset.booklyOverviewAction=
         'upgrade';
 
-      button.textContent='Increase limit';
+      button.textContent=copy.increase;
     }else{
       if(description){
         description.textContent=
-          'Your business already uses the maximum 100-service package. Manage cancellation, downgrade or renewal from Billing.';
+          copy.maxDesc;
       }
 
       button.dataset.booklyOverviewAction=
         'billing';
 
-      button.textContent='Manage subscription';
+      button.textContent=copy.manageButton;
     }
   }else{
     button.dataset.booklyOverviewAction=
       'checkout';
 
-    if(title)title.textContent='Choose your plan';
+    if(title)title.textContent=copy.choose;
 
     if(description){
       description.textContent=
         accountTrialAvailable
-          ? 'Start with a monthly plan and get a one-time 7-day free trial. Annual plans do not include a trial.'
-          : 'Select the plan for your current business. Payment is handled securely on the Bookly website.';
+          ? copy.chooseTrial
+          : copy.chooseRegular;
     }
 
-    button.textContent='Continue to plans';
+    button.textContent=copy.plans;
   }
 }
 function showAccount(data){
@@ -4224,9 +4357,11 @@ function loadBilling(){
     var trialing=subscription.status==='trialing';
     var pendingLimit=subscription.pending_services_limit;
 
+    var dynamicCopy=accountDynamicCopy();
+
     statusEl.textContent=
       trialing
-        ? 'Free trial'
+        ? dynamicCopy.freeTrial
         : (
             cancelled
               ? 'Cancelling'
@@ -4277,9 +4412,14 @@ function loadBilling(){
 
     trialInfoEl.hidden=false;
     trialInfoEl.textContent=
-      'Your 7-day free trial is active'+
-      (trialUntil ? ' until '+trialUntil : '')+
-      '. After the trial, the monthly subscription renews automatically unless you cancel it.';
+      dynamicCopy.trialActivePrefix+
+      (
+        trialUntil
+          ? dynamicCopy.trialUntil+
+            accountDate(subscription.expires_at)
+          : ''
+      )+
+      dynamicCopy.trialActiveSuffix;
   }
 
   var currentLimit=Number(subscription.services_limit || 10);
@@ -4350,7 +4490,7 @@ function loadBilling(){
   if(d.trial_available){
     trialInfoEl.hidden=false;
     trialInfoEl.textContent=
-      '7-day free trial available on your first monthly subscription. Annual plans do not include a trial.';
+      dynamicCopy.trialAvailable;
   }
 }
   })
