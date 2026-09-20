@@ -3318,6 +3318,13 @@ function accountDynamicCopy(){
   var all={
     en:{
       manage:'Manage your subscription',
+      setupBusiness:'Set up your business',
+      setupBusinessDesc:'Add your first business before choosing a plan.',
+      setupBusinessAction:'Set up business',
+      firstBusinessEyebrow:'STEP 2 OF 3',
+      firstBusinessTitle:'Set up your first business',
+      firstBusinessDesc:'Add the details clients will see. Next, you’ll choose a plan.',
+      continuePlans:'Continue to plans',
       increaseDesc:'Increase the service limit for your current business. You can manage cancellation, downgrade and renewal from Billing.',
       increase:'Increase limit',
       maxDesc:'Your business already uses the maximum 100-service package. Manage cancellation, downgrade or renewal from Billing.',
@@ -3334,6 +3341,13 @@ function accountDynamicCopy(){
     },
     ru:{
       manage:'Управлять подпиской',
+      setupBusiness:'Настройте бизнес',
+      setupBusinessDesc:'Сначала добавьте первый бизнес, затем выберите тариф.',
+      setupBusinessAction:'Настроить бизнес',
+      firstBusinessEyebrow:'ШАГ 2 ИЗ 3',
+      firstBusinessTitle:'Настройте первый бизнес',
+      firstBusinessDesc:'Добавьте данные бизнеса. Следующим шагом вы выберете тариф.',
+      continuePlans:'Продолжить к тарифам',
       increaseDesc:'Увеличьте лимит услуг для текущего бизнеса. Отменить подписку, понизить пакет или восстановить её можно в разделе «Оплата».',
       increase:'Увеличить лимит',
       maxDesc:'Для этого бизнеса уже установлен максимальный пакет на 100 услуг. Отменить, понизить или восстановить подписку можно в разделе «Оплата».',
@@ -3350,6 +3364,13 @@ function accountDynamicCopy(){
     },
     uz:{
       manage:'Obunani boshqarish',
+      setupBusiness:'Biznesni sozlang',
+      setupBusinessDesc:'Avval birinchi biznesingizni qo‘shing, keyin tarifni tanlang.',
+      setupBusinessAction:'Biznesni sozlash',
+      firstBusinessEyebrow:'2-QADAM / 3',
+      firstBusinessTitle:'Birinchi biznesingizni sozlang',
+      firstBusinessDesc:'Biznes ma’lumotlarini kiriting. Keyingi qadamda tarifni tanlaysiz.',
+      continuePlans:'Tariflarga davom etish',
       increaseDesc:'Joriy biznes uchun xizmatlar limitini oshiring. Bekor qilish, paketni kamaytirish yoki obunani tiklash To‘lov bo‘limida amalga oshiriladi.',
       increase:'Limitni oshirish',
       maxDesc:'Bu biznes allaqachon 100 xizmatli maksimal paketdan foydalanmoqda. Obunani To‘lov bo‘limida boshqarishingiz mumkin.',
@@ -3366,6 +3387,13 @@ function accountDynamicCopy(){
     },
     tr:{
       manage:'Aboneliği yönet',
+      setupBusiness:'İşletmenizi kurun',
+      setupBusinessDesc:'Plan seçmeden önce ilk işletmenizi ekleyin.',
+      setupBusinessAction:'İşletmeyi kur',
+      firstBusinessEyebrow:'ADIM 2 / 3',
+      firstBusinessTitle:'İlk işletmenizi kurun',
+      firstBusinessDesc:'İşletme bilgilerini ekleyin. Sonraki adımda planınızı seçeceksiniz.',
+      continuePlans:'Planlara devam et',
       increaseDesc:'Mevcut işletmenin hizmet limitini artırın. İptal, paket düşürme ve abonelik geri yükleme işlemleri Faturalandırma bölümündedir.',
       increase:'Limiti artır',
       maxDesc:'Bu işletme zaten en yüksek 100 hizmet paketini kullanıyor. Aboneliği Faturalandırma bölümünden yönetebilirsiniz.',
@@ -3382,6 +3410,13 @@ function accountDynamicCopy(){
     },
     ar:{
       manage:'إدارة الاشتراك',
+      setupBusiness:'إعداد نشاطك التجاري',
+      setupBusinessDesc:'أضف نشاطك التجاري الأول قبل اختيار الخطة.',
+      setupBusinessAction:'إعداد النشاط',
+      firstBusinessEyebrow:'الخطوة 2 من 3',
+      firstBusinessTitle:'إعداد نشاطك التجاري الأول',
+      firstBusinessDesc:'أضف بيانات النشاط. في الخطوة التالية ستختار الخطة.',
+      continuePlans:'المتابعة إلى الخطط',
       increaseDesc:'ارفع حد الخدمات للنشاط الحالي. يمكنك الإلغاء أو خفض الباقة أو استعادة الاشتراك من قسم الفوترة.',
       increase:'زيادة الحد',
       maxDesc:'يستخدم هذا النشاط بالفعل الحد الأقصى وهو 100 خدمة. يمكنك إدارة الاشتراك من قسم الفوترة.',
@@ -3452,6 +3487,39 @@ function goPricing(trigger){
   });
 }
 
+function markFirstBusinessOnboarding(){
+  try{
+    sessionStorage.setItem(
+      'bookly_onboarding_step',
+      'business'
+    );
+  }catch(e){}
+}
+
+function isFirstBusinessOnboarding(){
+  try{
+    return sessionStorage.getItem(
+      'bookly_onboarding_step'
+    )==='business';
+  }catch(e){
+    return false;
+  }
+}
+
+function clearFirstBusinessOnboarding(){
+  try{
+    sessionStorage.removeItem(
+      'bookly_onboarding_step'
+    );
+  }catch(e){}
+}
+
+function startFirstBusinessOnboarding(){
+  markFirstBusinessOnboarding();
+  showWorkspaceView('businesses');
+  openBusinessModal();
+}
+
 function syncOverviewSubscription(businesses){
   var button=document.getElementById('checkout');
   if(!button)return;
@@ -3466,6 +3534,27 @@ function syncOverviewSubscription(businesses){
   var current=(businesses||[]).find(function(item){
     return !!item.is_current;
   });
+
+  if(!current){
+    button.dataset.booklyHasActivePlan='0';
+    button.dataset.booklyCurrentLimit='0';
+    button.dataset.booklyOverviewAction=
+      'setup-business';
+
+    if(title){
+      title.textContent=copy.setupBusiness;
+    }
+
+    if(description){
+      description.textContent=
+        copy.setupBusinessDesc;
+    }
+
+    button.textContent=
+      copy.setupBusinessAction;
+
+    return;
+  }
 
   var active=!!(
     current &&
@@ -3557,7 +3646,18 @@ function showAccount(data){
     'session-ready'
   );
 
-  loadBusinesses();
+  var businessesRequest=
+    loadBusinesses();
+
+  if(isFirstBusinessOnboarding()){
+    businessesRequest.finally(function(){
+      showWorkspaceView('businesses');
+
+      window.setTimeout(function(){
+        openBusinessModal();
+      },0);
+    });
+  }
 }
 
 function setBusinessesLoading(){
@@ -3852,7 +3952,64 @@ document.getElementById('googleBtn').onclick=function(){
 
   location.href=api+'/account/oauth/google/start'+(mode==='register'?'?legal_accept=1':'');
 };
-form.onsubmit=function(e){e.preventDefault();clearErr();var isRegister=mode==='register';if(isRegister&&!legalAccept.checked){err(legalConsentError());return}submit.disabled=true;var body={email:document.getElementById('email').value.trim(),password:document.getElementById('password').value};if(isRegister)body.legal_accept=true;call('/account/'+(isRegister?'register':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(d){session=d.token;localStorage.setItem('bookly_session',session);window.booklySession=session;if(isRegister){return goPricing();}return call('/account/me',{headers:{Authorization:'Bearer '+session}})}).then(function(d){if(d)showAccount(d)}).catch(function(e){err(e.message)}).finally(function(){submit.disabled=false})};
+form.onsubmit=function(e){
+  e.preventDefault();
+  clearErr();
+
+  var isRegister=mode==='register';
+
+  if(isRegister&&!legalAccept.checked){
+    err(legalConsentError());
+    return;
+  }
+
+  submit.disabled=true;
+
+  var body={
+    email:document.getElementById('email').value.trim(),
+    password:document.getElementById('password').value
+  };
+
+  if(isRegister){
+    body.legal_accept=true;
+  }
+
+  call(
+    '/account/'+(isRegister?'register':'login'),
+    {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    }
+  )
+  .then(function(d){
+    session=d.token;
+    localStorage.setItem('bookly_session',session);
+    window.booklySession=session;
+
+    if(
+      isRegister &&
+      d.next==='setup_business'
+    ){
+      markFirstBusinessOnboarding();
+    }
+
+    return call('/account/me',{
+      headers:{
+        Authorization:'Bearer '+session
+      }
+    });
+  })
+  .then(function(d){
+    if(d)showAccount(d);
+  })
+  .catch(function(e){
+    err(e.message);
+  })
+  .finally(function(){
+    submit.disabled=false;
+  });
+};
 document.getElementById('billingCheckout').onclick=function(){
   clearErr();
   goPricing(this).catch(function(){});
@@ -3963,6 +4120,11 @@ document.getElementById('checkout').onclick=function(){
   var action=
     this.dataset.booklyOverviewAction ||
     'checkout';
+
+  if(action==='setup-business'){
+    startFirstBusinessOnboarding();
+    return;
+  }
 
   if(action==='upgrade'){
     openPackageModal(
@@ -4426,10 +4588,41 @@ function openBusinessModal(){
     detectBusinessTimezone()
   );
 
-  businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
-  businessModal.querySelector('h3').textContent='Add business';
+  var onboarding=
+    isFirstBusinessOnboarding();
 
-  document.getElementById('createBusiness').textContent='Create business';
+  var copy=
+    accountDynamicCopy();
+
+  businessModal.dataset.firstBusinessOnboarding=
+    onboarding ? '1' : '0';
+
+  businessModal.querySelector('.card-label').textContent=
+    onboarding
+      ? copy.firstBusinessEyebrow
+      : 'NEW BUSINESS';
+
+  businessModal.querySelector('h3').textContent=
+    onboarding
+      ? copy.firstBusinessTitle
+      : 'Add business';
+
+  var modalDescription=
+    businessModal.querySelector(
+      '.business-modal-head p'
+    );
+
+  if(modalDescription){
+    modalDescription.textContent=
+      onboarding
+        ? copy.firstBusinessDesc
+        : 'Create another Bookly business for your account.';
+  }
+
+  document.getElementById('createBusiness').textContent=
+    onboarding
+      ? copy.continuePlans
+      : 'Create business';
 
   businessModal.hidden=false;
 
@@ -4492,6 +4685,9 @@ businessForm.onsubmit=function(e){
 
   var editBusinessId=businessModal.dataset.editBusinessId || '';
   var isEdit=!!editBusinessId;
+  var firstBusinessOnboarding=
+    !isEdit &&
+    businessModal.dataset.firstBusinessOnboarding==='1';
 
   var requestUrl=isEdit
     ? api+'/account/businesses/'+encodeURIComponent(editBusinessId)
@@ -4584,15 +4780,26 @@ businessForm.onsubmit=function(e){
       return d;
     });
   })
-  .then(function(){
+  .then(function(d){
   closeBusinessModalWindow();
 
   delete businessModal.dataset.editBusinessId;
+  delete businessModal.dataset.firstBusinessOnboarding;
 
   businessModal.querySelector('.card-label').textContent='NEW BUSINESS';
   businessModal.querySelector('h3').textContent='Add business';
 
   document.getElementById('createBusiness').textContent='Create business';
+
+  if(
+    firstBusinessOnboarding &&
+    d &&
+    d.next==='choose_plan'
+  ){
+    clearFirstBusinessOnboarding();
+
+    return goPricing();
+  }
 
   loadBusinesses();
 
