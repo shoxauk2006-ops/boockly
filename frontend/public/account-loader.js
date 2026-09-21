@@ -8,6 +8,8 @@
   var wakeShell = document.getElementById('wakeShell');
   var statusElement = document.getElementById('wakeStatus');
   var activeRun = 0;
+  var statusTimer;
+  var SHOW_LOADER_AFTER_MS = 1500;
 
   var COPY = {
     en: {
@@ -108,9 +110,12 @@
   }
 
   function setStatus(key) {
-    if (!statusElement || statusElement.textContent === copy[key]) return;
+    if (!statusElement) return;
+    window.clearTimeout(statusTimer);
+    statusElement.classList.remove('is-changing');
+    if (statusElement.textContent === copy[key]) return;
     statusElement.classList.add('is-changing');
-    window.setTimeout(function () {
+    statusTimer = window.setTimeout(function () {
       statusElement.textContent = copy[key] || copy.connecting;
       statusElement.classList.remove('is-changing');
     }, 170);
@@ -161,6 +166,7 @@
       else if (elapsed >= 3500) setStatus('waking');
 
       if (await serverIsReady()) return true;
+      if (runId !== activeRun) return false;
       await delay(2300);
     }
 
@@ -190,30 +196,44 @@
 
   async function start() {
     var runId = ++activeRun;
-    var started = Date.now();
     retryButton.hidden = true;
     wakeShell.classList.remove('is-ready');
+    wakeShell.classList.remove('is-leaving');
     setStatus('connecting');
 
+    // A warm server should open the account without ever displaying the demo.
+    var revealTimer = window.setTimeout(function () {
+      if (runId === activeRun) wakeShell.hidden = false;
+    }, SHOW_LOADER_AFTER_MS);
+
     try {
-      var results = await Promise.all([loadWorkspaceHtml(), waitForServer(runId)]);
+      var readiness = waitForServer(runId).then(function (ready) {
+        // Slow static HTML is not evidence that the API needs to wake up.
+        if (ready) window.clearTimeout(revealTimer);
+        return ready;
+      });
+      var results = await Promise.all([loadWorkspaceHtml(), readiness]);
 
       if (runId !== activeRun) return;
       if (!results[1]) throw new Error('Server wake-up timed out');
 
-      var minimumDisplay = 300 - (Date.now() - started);
-      if (minimumDisplay > 0) await delay(minimumDisplay);
-
-      wakeShell.classList.add('is-ready');
-      setStatus('ready');
-      await delay(260);
-      wakeShell.classList.add('is-leaving');
-      await delay(200);
+      if (!wakeShell.hidden) {
+        wakeShell.classList.add('is-ready');
+        setStatus('ready');
+        await delay(260);
+        wakeShell.classList.add('is-leaving');
+        await delay(200);
+      }
       openWorkspace(results[0]);
     } catch (_) {
       if (runId !== activeRun) return;
+      // Stop this run's polling before allowing a retry.
+      activeRun += 1;
+      wakeShell.hidden = false;
       setStatus('failed');
       retryButton.hidden = false;
+    } finally {
+      window.clearTimeout(revealTimer);
     }
   }
 

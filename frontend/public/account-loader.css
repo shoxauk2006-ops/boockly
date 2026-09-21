@@ -45,6 +45,9 @@ a { font: inherit; }
   transform: scale(1.015);
 }
 
+/* Keep the first health check invisible, including before JavaScript starts. */
+.wake-shell[hidden] { display: none; }
+
 .wake-glow {
   position: absolute;
   width: 380px;
