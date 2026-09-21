@@ -70,7 +70,7 @@ const response = (body, contentType = 'application/json', ok = true) => ({
   async text() { return String(body); }
 });
 const workspace = () => response(
-  '<html><head></head><body><main>Account</main></body></html>', 'text/html'
+  '<html lang="en"><head></head><body><span id="accountBootText">Loading</span><main>Account</main></body></html>', 'text/html'
 );
 
 function createHarness({ health = () => response({ ok: true }), core = workspace } = {}) {
@@ -127,6 +127,11 @@ function createHarness({ health = () => response({ ok: true }), core = workspace
 
 function assertWorkspace(test) {
   assert.match(test.state.html, /<main>Account<\/main>/);
+  assert.match(test.state.html, /<html lang="ru" dir="ltr">/,
+    'the selected language must be set before the workspace is rendered');
+  assert.match(test.state.html, /<span id="accountBootText">Загрузка<\/span>/,
+    'the boot label must be localized before the first rendered frame');
+  assert.doesNotMatch(test.state.html, /<span id="accountBootText">Loading<\/span>/);
   for (const asset of ['account-workspace-polish.css', 'account-page-i18n.js',
     'account-guest-i18n.js', 'account-workspace.js']) {
     assert.ok(test.state.html.includes(asset), asset + ' must still be injected');

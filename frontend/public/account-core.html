@@ -1464,9 +1464,14 @@ html.has-session:not(.session-ready) .account-boot-loader{
   display:flex;
   align-items:center;
   gap:8px;
+  visibility:hidden;
   color:#707782;
   font-size:12px;
   font-weight:750;
+}
+
+.account-boot-copy.is-localized{
+  visibility:visible;
 }
 
 .account-boot-dots{
@@ -2279,6 +2284,7 @@ body.logged-in .logout:hover{
   };
 
   var lang='en';
+  var hasStoredLanguage=false;
 
   try{
     var stored=String(
@@ -2288,8 +2294,20 @@ body.logged-in .logout:hover{
 
     if(labels[stored]){
       lang=stored;
+      hasStoredLanguage=true;
     }
   }catch(e){}
+
+  if(!hasStoredLanguage){
+    var browser=String(
+      navigator.language || 'en'
+    ).toLowerCase();
+
+    if(/^ru/.test(browser)) lang='ru';
+    else if(/^uz/.test(browser)) lang='uz';
+    else if(/^tr/.test(browser)) lang='tr';
+    else if(/^ar/.test(browser)) lang='ar';
+  }
 
   var el=document.getElementById(
     'accountBootText'
@@ -2297,6 +2315,11 @@ body.logged-in .logout:hover{
 
   if(el){
     el.textContent=labels[lang];
+  }
+
+  var copy=el && el.parentElement;
+  if(copy){
+    copy.classList.add('is-localized');
   }
 })();
 </script>

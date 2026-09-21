@@ -180,6 +180,15 @@
   }
 
   function openWorkspace(html) {
+    var lang = language();
+    var loadingLabels = {
+      en: 'Loading',
+      ru: 'Загрузка',
+      uz: 'Yuklanmoqda',
+      tr: 'Yükleniyor',
+      ar: 'جارٍ التحميل'
+    };
+    var loadingLabel = loadingLabels[lang] || loadingLabels.en;
     var styles = '<link rel="stylesheet" href="/account-workspace-polish.css">';
     var scripts = [
       '<script src="/account-page-i18n.js"><\/script>',
@@ -187,6 +196,16 @@
       '<script src="/account-workspace.js"><\/script>'
     ].join('');
 
+    // Localize the boot screen before document.write(), so its very first
+    // rendered frame already uses the selected language.
+    html = html.replace(
+      '<html lang="en">',
+      '<html lang="' + lang + '" dir="' + (lang === 'ar' ? 'rtl' : 'ltr') + '">'
+    );
+    html = html.replace(
+      '<span id="accountBootText">Loading</span>',
+      '<span id="accountBootText">' + loadingLabel + '</span>'
+    );
     html = html.replace('</head>', styles + '</head>');
     html = html.replace('</body>', scripts + '</body>');
     document.open();
