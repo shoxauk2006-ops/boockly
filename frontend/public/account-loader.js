@@ -201,14 +201,14 @@
       if (runId !== activeRun) return;
       if (!results[1]) throw new Error('Server wake-up timed out');
 
-      var minimumDisplay = 900 - (Date.now() - started);
+      var minimumDisplay = 300 - (Date.now() - started);
       if (minimumDisplay > 0) await delay(minimumDisplay);
 
       wakeShell.classList.add('is-ready');
       setStatus('ready');
-      await delay(470);
+      await delay(260);
       wakeShell.classList.add('is-leaving');
-      await delay(290);
+      await delay(200);
       openWorkspace(results[0]);
     } catch (_) {
       if (runId !== activeRun) return;

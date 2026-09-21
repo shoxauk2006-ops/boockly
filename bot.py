@@ -4,7 +4,14 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 TOKEN=os.getenv("BOT_TOKEN")
-WEBAPP_URL=os.getenv("WEBAPP_URL","https://boockly.vercel.app")
+CANONICAL_WEBAPP_URL="https://boockly.vercel.app"
+configured_webapp_url=os.getenv("WEBAPP_URL","").strip().rstrip("/")
+WEBAPP_URL=(
+    CANONICAL_WEBAPP_URL
+    if not configured_webapp_url
+    or configured_webapp_url == "https://boockly-3.onrender.com"
+    else configured_webapp_url
+)
 BOT_USERNAME=os.getenv("BOT_USERNAME","BooklyBot")
 API_URL=(os.getenv("BOOKLY_API_URL") or os.getenv("PUBLIC_API_URL") or "http://api:8000").rstrip("/")
 
