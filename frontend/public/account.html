@@ -103,6 +103,87 @@
       </section>
     </main>
 
+    <script>
+      (function () {
+        var query = new URLSearchParams(window.location.search);
+        if (query.has('oauth_code') || query.has('oauth_error') || query.has('terms_required')) return;
+
+        try {
+          if (!localStorage.getItem('bookly_session')) return;
+        } catch (_) {
+          return;
+        }
+
+        var copies = {
+          en: {
+            kicker: 'BOOKLY WORKSPACE', title: 'Preparing Bookly', status: 'Loading Bookly…', live: 'Loading',
+            serviceLabel: 'SERVICE', service: 'Choose a service', duration: '45 min',
+            specialistLabel: 'SPECIALIST', specialist: 'Available specialist', available: 'Available today',
+            dateLabel: 'DATE', date: 'Choose a date', timeLabel: 'AVAILABLE TIME', time: 'Choose a time',
+            confirmed: 'Booking confirmed', ready: 'Everything is ready'
+          },
+          ru: {
+            kicker: 'РАБОЧЕЕ ПРОСТРАНСТВО', title: 'Готовим Bookly', status: 'Загружаем Bookly…', live: 'Загрузка',
+            serviceLabel: 'УСЛУГА', service: 'Выберите услугу', duration: '45 мин',
+            specialistLabel: 'СПЕЦИАЛИСТ', specialist: 'Доступный специалист', available: 'Свободен сегодня',
+            dateLabel: 'ДАТА', date: 'Выберите дату', timeLabel: 'СВОБОДНОЕ ВРЕМЯ', time: 'Выберите время',
+            confirmed: 'Запись подтверждена', ready: 'Всё готово'
+          },
+          uz: {
+            kicker: 'BOOKLY ISH MAYDONI', title: 'Bookly tayyorlanmoqda', status: 'Bookly yuklanmoqda…', live: 'Yuklanmoqda',
+            serviceLabel: 'XIZMAT', service: 'Xizmatni tanlang', duration: '45 daq',
+            specialistLabel: 'MUTAXASSIS', specialist: 'Mavjud mutaxassis', available: 'Bugun bo‘sh',
+            dateLabel: 'SANA', date: 'Sanani tanlang', timeLabel: 'BO‘SH VAQT', time: 'Vaqtni tanlang',
+            confirmed: 'Bron tasdiqlandi', ready: 'Hammasi tayyor'
+          },
+          tr: {
+            kicker: 'BOOKLY ÇALIŞMA ALANI', title: 'Bookly hazırlanıyor', status: 'Bookly yükleniyor…', live: 'Yükleniyor',
+            serviceLabel: 'HİZMET', service: 'Hizmet seçin', duration: '45 dk',
+            specialistLabel: 'UZMAN', specialist: 'Uygun uzman', available: 'Bugün uygun',
+            dateLabel: 'TARİH', date: 'Tarih seçin', timeLabel: 'UYGUN SAAT', time: 'Saat seçin',
+            confirmed: 'Rezervasyon onaylandı', ready: 'Her şey hazır'
+          },
+          ar: {
+            kicker: 'مساحة عمل BOOKLY', title: 'جارٍ تجهيز Bookly', status: 'جارٍ تحميل Bookly…', live: 'جارٍ التحميل',
+            serviceLabel: 'الخدمة', service: 'اختر الخدمة', duration: '45 دقيقة',
+            specialistLabel: 'المختص', specialist: 'مختص متاح', available: 'متاح اليوم',
+            dateLabel: 'التاريخ', date: 'اختر التاريخ', timeLabel: 'الوقت المتاح', time: 'اختر الوقت',
+            confirmed: 'تم تأكيد الحجز', ready: 'كل شيء جاهز'
+          }
+        };
+
+        var lang = 'en';
+        try {
+          var stored = String(localStorage.getItem('bookly_language') || '').toLowerCase();
+          if (copies[stored]) lang = stored;
+          else {
+            var browser = String(navigator.language || 'en').toLowerCase();
+            if (/^ru/.test(browser)) lang = 'ru';
+            else if (/^uz/.test(browser)) lang = 'uz';
+            else if (/^tr/.test(browser)) lang = 'tr';
+            else if (/^ar/.test(browser)) lang = 'ar';
+          }
+        } catch (_) {}
+
+        var copy = copies[lang] || copies.en;
+        var fields = {
+          wakeKicker: 'kicker', wakeTitle: 'title', wakeStatus: 'status', demoLive: 'live',
+          demoServiceLabel: 'serviceLabel', demoService: 'service', demoDuration: 'duration',
+          demoSpecialistLabel: 'specialistLabel', demoSpecialist: 'specialist', demoAvailable: 'available',
+          demoDateLabel: 'dateLabel', demoDate: 'date', demoTimeLabel: 'timeLabel', demoTime: 'time',
+          demoConfirmed: 'confirmed', demoReady: 'ready'
+        };
+
+        Object.keys(fields).forEach(function (id) {
+          var element = document.getElementById(id);
+          if (element) element.textContent = copy[fields[id]];
+        });
+
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        document.getElementById('wakeShell').hidden = false;
+      })();
+    </script>
     <script src="/account-loader.js"></script>
   </body>
 </html>

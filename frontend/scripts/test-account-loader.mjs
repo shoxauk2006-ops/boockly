@@ -9,9 +9,15 @@ const [source, html, css, coreHtml] = await Promise.all([
 ]);
 
 assert.match(html, /<main\b[^>]*id="wakeShell"[^>]*\bhidden[\s>]/,
-  'the loader must be hidden before JavaScript or the first paint');
+  'the loader must remain hidden by default for signed-out visitors');
 assert.match(css, /\.wake-shell\[hidden\]\s*\{\s*display:\s*none;/,
   'the grid display must not override the hidden attribute');
+assert.ok(
+  html.indexOf("localStorage.getItem('bookly_session')") < html.indexOf('<script src="/account-loader.js">'),
+  'the saved session must be detected before the external loader script is requested'
+);
+assert.match(html, /getElementById\('wakeShell'\)\.hidden\s*=\s*false/,
+  'returning users must see the loader during the first HTML parse');
 assert.match(coreHtml, /class="account-boot-loader wake-shell"/,
   'the account boot state must reuse the animated loader');
 assert.match(coreHtml, /href="\/account-loader\.css"/,
@@ -87,7 +93,7 @@ const workspace = () => response(
   '<html lang="en"><head></head><body><main>Account</main></body></html>', 'text/html'
 );
 
-function createHarness({ health = () => response({ ok: true }), core = workspace } = {}) {
+function createHarness({ health = () => response({ ok: true }), core = workspace, session = false } = {}) {
   const clock = new FakeClock();
   const shownAt = [];
   const ids = new Map([
@@ -129,7 +135,9 @@ function createHarness({ health = () => response({ ok: true }), core = workspace
       state.healthAttempts += 1;
       return health({ attempt: state.healthAttempts, after, clock, signal: options.signal });
     },
-    localStorage: { getItem: () => 'ru' },
+    localStorage: {
+      getItem: (key) => key === 'bookly_language' ? 'ru' : (session ? 'test-session' : null)
+    },
     navigator: { language: 'en-US' },
     window
   }, { filename: 'account-loader.js' });
@@ -147,6 +155,20 @@ function assertWorkspace(test) {
     'account-guest-i18n.js', 'account-workspace.js']) {
     assert.ok(test.state.html.includes(asset), asset + ' must still be injected');
   }
+}
+
+// A returning user sees the animation immediately, without waiting for the
+// external loader grace period, and transitions straight into the workspace.
+{
+  const test = createHarness({
+    session: true,
+    health: ({ after, signal }) => after(500, response({ ok: true }), signal)
+  });
+  assert.equal(test.shell.hidden, false);
+  assert.deepEqual(test.shownAt, [0]);
+  await test.clock.advanceTo(500);
+  assertWorkspace(test);
+  assert.equal(test.state.openedAt, 500, 'returning users must not get a white exit transition');
 }
 
 // Warm responses never reveal the loader, even just before its grace period ends.
@@ -243,4 +265,4 @@ for (const latency of [0, 500, 1499]) {
   assert.equal(test.status.textContent, 'Не удалось загрузить Bookly.');
 }
 
-console.log('Account loader: 9 scenarios passed (warm, cold, HTML response, slow assets, timeout, retry, failure)');
+console.log('Account loader: first-paint, warm, cold, timeout, retry, and failure scenarios passed');

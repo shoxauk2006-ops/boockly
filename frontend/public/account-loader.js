@@ -11,6 +11,20 @@
   var statusTimer;
   var SHOW_LOADER_AFTER_MS = 1500;
 
+  function hasAccountSession() {
+    if (query.has('oauth_code') || query.has('oauth_error') || query.has('terms_required')) {
+      return false;
+    }
+
+    try {
+      return Boolean(localStorage.getItem('bookly_session'));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  var sessionLoading = hasAccountSession();
+
   var COPY = {
     en: {
       kicker: 'BOOKLY WORKSPACE', title: 'Preparing Bookly', connecting: 'Loading Bookly…',
@@ -190,15 +204,17 @@
     wakeShell.classList.remove('is-leaving');
     setStatus('connecting');
 
-    // A warm server should open the account without ever displaying the demo.
-    var revealTimer = window.setTimeout(function () {
+    // Returning users see the branded loader from the first frame. Guests
+    // still skip it when both the static page and API are already warm.
+    if (sessionLoading) wakeShell.hidden = false;
+    var revealTimer = sessionLoading ? null : window.setTimeout(function () {
       if (runId === activeRun) wakeShell.hidden = false;
     }, SHOW_LOADER_AFTER_MS);
 
     try {
       var readiness = waitForServer(runId).then(function (ready) {
         // Slow static HTML is not evidence that the API needs to wake up.
-        if (ready) window.clearTimeout(revealTimer);
+        if (ready && revealTimer !== null) window.clearTimeout(revealTimer);
         return ready;
       });
       var results = await Promise.all([loadWorkspaceHtml(), readiness]);
@@ -206,7 +222,7 @@
       if (runId !== activeRun) return;
       if (!results[1]) throw new Error('Server wake-up timed out');
 
-      if (!wakeShell.hidden) {
+      if (!wakeShell.hidden && !sessionLoading) {
         wakeShell.classList.add('is-ready');
         setStatus('ready');
         await delay(260);
@@ -222,7 +238,7 @@
       setStatus('failed');
       retryButton.hidden = false;
     } finally {
-      window.clearTimeout(revealTimer);
+      if (revealTimer !== null) window.clearTimeout(revealTimer);
     }
   }
 
