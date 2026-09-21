@@ -13,50 +13,40 @@
 
   var COPY = {
     en: {
-      kicker: 'BOOKING WORKSPACE', title: 'Starting Bookly', connecting: 'Connecting to the server…',
-      waking: 'The server is waking up…', almost: 'Almost ready…', longer: 'Connection is taking a little longer…',
-      ready: 'Bookly is ready', failed: 'Could not connect to the server.',
-      hint: 'The first start after a pause can take up to a minute.', retry: 'Try again', live: 'Connecting',
+      kicker: 'BOOKLY WORKSPACE', title: 'Preparing Bookly', connecting: 'Loading Bookly…',
+      ready: 'Everything is ready', failed: 'Could not load Bookly.', retry: 'Try again', live: 'Loading',
       serviceLabel: 'SERVICE', service: 'Choose a service', duration: '45 min',
       specialistLabel: 'SPECIALIST', specialist: 'Available specialist', available: 'Available today',
       dateLabel: 'DATE', date: 'Choose a date', timeLabel: 'AVAILABLE TIME', time: 'Choose a time',
       confirmed: 'Booking confirmed', allReady: 'Everything is ready'
     },
     ru: {
-      kicker: 'РАБОЧЕЕ ПРОСТРАНСТВО', title: 'Запускаем Bookly', connecting: 'Подключаемся к серверу…',
-      waking: 'Сервер просыпается…', almost: 'Почти готово…', longer: 'Подключение занимает чуть больше времени…',
-      ready: 'Bookly готов', failed: 'Не удалось подключиться к серверу.',
-      hint: 'Первый запуск после паузы может занять до минуты.', retry: 'Повторить', live: 'Подключение',
+      kicker: 'РАБОЧЕЕ ПРОСТРАНСТВО', title: 'Готовим Bookly', connecting: 'Загружаем Bookly…',
+      ready: 'Всё готово', failed: 'Не удалось загрузить Bookly.', retry: 'Повторить', live: 'Загрузка',
       serviceLabel: 'УСЛУГА', service: 'Выберите услугу', duration: '45 мин',
       specialistLabel: 'СПЕЦИАЛИСТ', specialist: 'Доступный специалист', available: 'Свободен сегодня',
       dateLabel: 'ДАТА', date: 'Выберите дату', timeLabel: 'СВОБОДНОЕ ВРЕМЯ', time: 'Выберите время',
       confirmed: 'Запись подтверждена', allReady: 'Всё готово'
     },
     uz: {
-      kicker: 'BRON BOSHQARUVI', title: 'Bookly ishga tushmoqda', connecting: 'Serverga ulanmoqda…',
-      waking: 'Server ishga tushmoqda…', almost: 'Deyarli tayyor…', longer: 'Ulanish biroz ko‘proq vaqt olmoqda…',
-      ready: 'Bookly tayyor', failed: 'Serverga ulanib bo‘lmadi.',
-      hint: 'Tanaffusdan keyingi birinchi ishga tushish bir daqiqagacha davom etishi mumkin.', retry: 'Qayta urinish', live: 'Ulanmoqda',
+      kicker: 'BOOKLY ISH MAYDONI', title: 'Bookly tayyorlanmoqda', connecting: 'Bookly yuklanmoqda…',
+      ready: 'Hammasi tayyor', failed: 'Bookly yuklanmadi.', retry: 'Qayta urinish', live: 'Yuklanmoqda',
       serviceLabel: 'XIZMAT', service: 'Xizmatni tanlang', duration: '45 daq',
       specialistLabel: 'MUTAXASSIS', specialist: 'Mavjud mutaxassis', available: 'Bugun bo‘sh',
       dateLabel: 'SANA', date: 'Sanani tanlang', timeLabel: 'BO‘SH VAQT', time: 'Vaqtni tanlang',
       confirmed: 'Bron tasdiqlandi', allReady: 'Hammasi tayyor'
     },
     tr: {
-      kicker: 'REZERVASYON ALANI', title: 'Bookly başlatılıyor', connecting: 'Sunucuya bağlanılıyor…',
-      waking: 'Sunucu uyanıyor…', almost: 'Neredeyse hazır…', longer: 'Bağlantı biraz daha uzun sürüyor…',
-      ready: 'Bookly hazır', failed: 'Sunucuya bağlanılamadı.',
-      hint: 'Aradan sonraki ilk başlatma bir dakikaya kadar sürebilir.', retry: 'Tekrar dene', live: 'Bağlanıyor',
+      kicker: 'BOOKLY ÇALIŞMA ALANI', title: 'Bookly hazırlanıyor', connecting: 'Bookly yükleniyor…',
+      ready: 'Her şey hazır', failed: 'Bookly yüklenemedi.', retry: 'Tekrar dene', live: 'Yükleniyor',
       serviceLabel: 'HİZMET', service: 'Hizmet seçin', duration: '45 dk',
       specialistLabel: 'UZMAN', specialist: 'Uygun uzman', available: 'Bugün uygun',
       dateLabel: 'TARİH', date: 'Tarih seçin', timeLabel: 'UYGUN SAAT', time: 'Saat seçin',
       confirmed: 'Rezervasyon onaylandı', allReady: 'Her şey hazır'
     },
     ar: {
-      kicker: 'مساحة إدارة الحجوزات', title: 'جارٍ تشغيل Bookly', connecting: 'جارٍ الاتصال بالخادم…',
-      waking: 'جارٍ تشغيل الخادم…', almost: 'أصبحنا جاهزين تقريبًا…', longer: 'يستغرق الاتصال وقتًا أطول قليلًا…',
-      ready: 'Bookly جاهز', failed: 'تعذر الاتصال بالخادم.',
-      hint: 'قد يستغرق التشغيل الأول بعد التوقف ما يصل إلى دقيقة.', retry: 'إعادة المحاولة', live: 'جارٍ الاتصال',
+      kicker: 'مساحة عمل BOOKLY', title: 'جارٍ تجهيز Bookly', connecting: 'جارٍ تحميل Bookly…',
+      ready: 'كل شيء جاهز', failed: 'تعذر تحميل Bookly.', retry: 'إعادة المحاولة', live: 'جارٍ التحميل',
       serviceLabel: 'الخدمة', service: 'اختر الخدمة', duration: '45 دقيقة',
       specialistLabel: 'المختص', specialist: 'مختص متاح', available: 'متاح اليوم',
       dateLabel: 'التاريخ', date: 'اختر التاريخ', timeLabel: 'الوقت المتاح', time: 'اختر الوقت',
@@ -92,7 +82,6 @@
     text('wakeKicker', copy.kicker);
     text('wakeTitle', copy.title);
     text('wakeStatus', copy.connecting);
-    text('wakeHint', copy.hint);
     text('wakeRetry', copy.retry);
     text('demoLive', copy.live);
     text('demoServiceLabel', copy.serviceLabel);
@@ -160,11 +149,6 @@
     var started = Date.now();
 
     while (runId === activeRun && Date.now() - started < 90000) {
-      var elapsed = Date.now() - started;
-      if (elapsed >= 35000) setStatus('longer');
-      else if (elapsed >= 17000) setStatus('almost');
-      else if (elapsed >= 3500) setStatus('waking');
-
       if (await serverIsReady()) return true;
       if (runId !== activeRun) return false;
       await delay(2300);
@@ -181,14 +165,6 @@
 
   function openWorkspace(html) {
     var lang = language();
-    var loadingLabels = {
-      en: 'Loading',
-      ru: 'Загрузка',
-      uz: 'Yuklanmoqda',
-      tr: 'Yükleniyor',
-      ar: 'جارٍ التحميل'
-    };
-    var loadingLabel = loadingLabels[lang] || loadingLabels.en;
     var styles = '<link rel="stylesheet" href="/account-workspace-polish.css">';
     var scripts = [
       '<script src="/account-page-i18n.js"><\/script>',
@@ -196,15 +172,9 @@
       '<script src="/account-workspace.js"><\/script>'
     ].join('');
 
-    // Localize the boot screen before document.write(), so its very first
-    // rendered frame already uses the selected language.
     html = html.replace(
       '<html lang="en">',
       '<html lang="' + lang + '" dir="' + (lang === 'ar' ? 'rtl' : 'ltr') + '">'
-    );
-    html = html.replace(
-      '<span id="accountBootText">Loading</span>',
-      '<span id="accountBootText">' + loadingLabel + '</span>'
     );
     html = html.replace('</head>', styles + '</head>');
     html = html.replace('</body>', scripts + '</body>');

@@ -1,31 +1,31 @@
 :root {
   color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  min-height: 100%;
+}
+
+body.bookly-loader-page {
+  min-height: 100%;
+  margin: 0;
+  background: #f6f5fb;
+  color: #17181c;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+.wake-shell button,
+.wake-shell a { font: inherit; }
+
+.wake-shell {
   --wake-ink: #17181c;
   --wake-muted: #777a86;
   --wake-line: rgba(30, 31, 36, 0.09);
   --wake-purple: #6258e8;
   --wake-purple-soft: #eeecff;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-* { box-sizing: border-box; }
-
-html,
-body {
-  min-height: 100%;
-  margin: 0;
-  background: #f6f5fb;
-}
-
-body {
-  color: var(--wake-ink);
-  overflow: hidden;
-}
-
-button,
-a { font: inherit; }
-
-.wake-shell {
   position: relative;
   display: grid;
   min-height: 100vh;
@@ -37,6 +37,8 @@ a { font: inherit; }
     radial-gradient(circle at 16% 14%, rgba(112, 92, 255, 0.12), transparent 30%),
     radial-gradient(circle at 84% 88%, rgba(149, 129, 255, 0.12), transparent 29%),
     linear-gradient(145deg, #fbfaff 0%, #f4f3f9 100%);
+  color: var(--wake-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -137,14 +139,6 @@ a { font: inherit; }
 .wake-status.is-changing {
   opacity: 0;
   transform: translateY(4px);
-}
-
-.wake-hint {
-  max-width: 370px;
-  margin: 7px 0 0;
-  color: var(--wake-muted);
-  font-size: 12px;
-  line-height: 1.55;
 }
 
 .wake-progress {
@@ -505,7 +499,6 @@ a { font: inherit; }
   .wake-brand { margin-bottom: 34px; }
 
   .wake-copy h1,
-  .wake-hint,
   .wake-progress {
     margin-right: auto;
     margin-left: auto;
@@ -545,9 +538,10 @@ a { font: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  .wake-shell,
+  .wake-shell *,
+  .wake-shell *::before,
+  .wake-shell *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;

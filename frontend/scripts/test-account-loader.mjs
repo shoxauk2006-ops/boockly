@@ -3,14 +3,28 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const readAsset = (name) => readFile(new URL('../public/' + name, import.meta.url), 'utf8');
-const [source, html, css] = await Promise.all([
-  readAsset('account-loader.js'), readAsset('account.html'), readAsset('account-loader.css')
+const [source, html, css, coreHtml] = await Promise.all([
+  readAsset('account-loader.js'), readAsset('account.html'), readAsset('account-loader.css'),
+  readAsset('account-core.html')
 ]);
 
 assert.match(html, /<main\b[^>]*id="wakeShell"[^>]*\bhidden[\s>]/,
   'the loader must be hidden before JavaScript or the first paint');
 assert.match(css, /\.wake-shell\[hidden\]\s*\{\s*display:\s*none;/,
   'the grid display must not override the hidden attribute');
+assert.match(coreHtml, /class="account-boot-loader wake-shell"/,
+  'the account boot state must reuse the animated loader');
+assert.match(coreHtml, /href="\/account-loader\.css"/,
+  'the account boot state must load the shared animation styles');
+assert.doesNotMatch(coreHtml, /account-boot-mark|accountBootText/,
+  'the old B-only loader must be removed');
+assert.match(coreHtml, /title:'Готовим Bookly'/,
+  'the replacement loader must localize itself before it becomes visible');
+
+for (const asset of [source, html, coreHtml]) {
+  assert.doesNotMatch(asset, /server is waking|сервер просыпается|first start after a pause|первый запуск после паузы/i,
+    'server wake-up and long-pause messages must not be shown');
+}
 
 class FakeClock {
   now = 0;
@@ -70,7 +84,7 @@ const response = (body, contentType = 'application/json', ok = true) => ({
   async text() { return String(body); }
 });
 const workspace = () => response(
-  '<html lang="en"><head></head><body><span id="accountBootText">Loading</span><main>Account</main></body></html>', 'text/html'
+  '<html lang="en"><head></head><body><main>Account</main></body></html>', 'text/html'
 );
 
 function createHarness({ health = () => response({ ok: true }), core = workspace } = {}) {
@@ -129,9 +143,6 @@ function assertWorkspace(test) {
   assert.match(test.state.html, /<main>Account<\/main>/);
   assert.match(test.state.html, /<html lang="ru" dir="ltr">/,
     'the selected language must be set before the workspace is rendered');
-  assert.match(test.state.html, /<span id="accountBootText">Загрузка<\/span>/,
-    'the boot label must be localized before the first rendered frame');
-  assert.doesNotMatch(test.state.html, /<span id="accountBootText">Loading<\/span>/);
   for (const asset of ['account-workspace-polish.css', 'account-page-i18n.js',
     'account-guest-i18n.js', 'account-workspace.js']) {
     assert.ok(test.state.html.includes(asset), asset + ' must still be injected');
@@ -209,7 +220,7 @@ for (const latency of [0, 500, 1499]) {
   await test.clock.advanceTo(92500);
   assert.equal(test.retry.hidden, false);
   assert.equal(test.shell.hidden, false);
-  assert.equal(test.status.textContent, 'Не удалось подключиться к серверу.');
+  assert.equal(test.status.textContent, 'Не удалось загрузить Bookly.');
   assert.equal(test.state.html, '');
   ready = true;
   const retry = test.retry.listeners.click();
@@ -229,7 +240,7 @@ for (const latency of [0, 500, 1499]) {
   assert.equal(test.retry.hidden, false);
   assert.equal(test.state.healthAttempts, 1, 'failed runs must stop polling');
   assert.deepEqual(test.shownAt, [0], 'the old reveal timer must be cleared');
-  assert.equal(test.status.textContent, 'Не удалось подключиться к серверу.');
+  assert.equal(test.status.textContent, 'Не удалось загрузить Bookly.');
 }
 
 console.log('Account loader: 9 scenarios passed (warm, cold, HTML response, slow assets, timeout, retry, failure)');
