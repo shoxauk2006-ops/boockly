@@ -177,7 +177,7 @@
     return response.text();
   }
 
-  function openWorkspace(html) {
+  function prepareWorkspaceHtml(html) {
     var lang = language();
     var styles = '<link rel="stylesheet" href="/account-workspace-polish.css">';
     var scripts = [
@@ -192,9 +192,132 @@
     );
     html = html.replace('</head>', styles + '</head>');
     html = html.replace('</body>', scripts + '</body>');
+    return html;
+  }
+
+  function writeWorkspaceDocument(html) {
     document.open();
     document.write(html);
     document.close();
+  }
+
+  function executeWorkspaceScript(spec) {
+    return new Promise(function (resolve) {
+      var script = document.createElement('script');
+
+      spec.attributes.forEach(function (attribute) {
+        script.setAttribute(attribute.name, attribute.value);
+      });
+
+      if (spec.src) {
+        script.onload = resolve;
+        script.onerror = resolve;
+      } else {
+        script.textContent = spec.text;
+      }
+
+      document.body.appendChild(script);
+      if (!spec.src) resolve();
+    });
+  }
+
+  async function mountWorkspace(html) {
+    html = prepareWorkspaceHtml(html);
+
+    // Keep a document.write fallback for very old browsers and the isolated
+    // logic tests. Modern browsers mount the workspace behind the same loader,
+    // so there is no blank frame or second copy of the animation.
+    if (typeof DOMParser !== 'function' || typeof MutationObserver !== 'function') {
+      writeWorkspaceDocument(html);
+      return;
+    }
+
+    var parsed = new DOMParser().parseFromString(html, 'text/html');
+    var coreLoader = parsed.getElementById('accountBootLoader');
+    var coreLoaderScript = coreLoader && coreLoader.nextElementSibling;
+
+    if (coreLoaderScript && coreLoaderScript.tagName === 'SCRIPT') {
+      coreLoaderScript.remove();
+    }
+    if (coreLoader) coreLoader.remove();
+
+    var scriptSpecs = Array.prototype.map.call(
+      parsed.body.querySelectorAll('script'),
+      function (script) {
+        return {
+          src: script.getAttribute('src') || '',
+          text: script.textContent || '',
+          attributes: Array.prototype.map.call(script.attributes, function (attribute) {
+            return { name: attribute.name, value: attribute.value };
+          })
+        };
+      }
+    );
+    parsed.body.querySelectorAll('script').forEach(function (script) {
+      script.remove();
+    });
+
+    document.title = parsed.title || document.title;
+    document.documentElement.lang = language();
+    document.documentElement.dir = language() === 'ar' ? 'rtl' : 'ltr';
+
+    parsed.head.querySelectorAll('style, link[rel="stylesheet"]').forEach(function (asset) {
+      if (asset.tagName === 'LINK' && asset.getAttribute('href') === '/account-loader.css') return;
+      document.head.appendChild(document.importNode(asset, true));
+    });
+
+    if (sessionLoading) {
+      document.documentElement.classList.add('has-session');
+      wakeShell.classList.add('is-persistent');
+    }
+
+    Array.prototype.forEach.call(parsed.body.childNodes, function (node) {
+      document.body.appendChild(document.importNode(node, true));
+    });
+
+    var loaderFinished = false;
+    var observer = null;
+
+    async function finishPersistentLoader(ready) {
+      if (loaderFinished) return;
+      loaderFinished = true;
+      if (observer) observer.disconnect();
+
+      if (ready) {
+        wakeShell.classList.add('is-ready');
+        setStatus('ready');
+        await delay(260);
+      }
+
+      wakeShell.classList.add('is-leaving');
+      await delay(300);
+      wakeShell.hidden = true;
+      wakeShell.classList.remove('is-persistent');
+      document.body.classList.remove('bookly-loader-page');
+    }
+
+    function checkWorkspaceState() {
+      if (!sessionLoading) return;
+      if (document.documentElement.classList.contains('session-ready')) {
+        finishPersistentLoader(true);
+      } else if (!document.documentElement.classList.contains('has-session')) {
+        finishPersistentLoader(false);
+      }
+    }
+
+    if (sessionLoading) {
+      observer = new MutationObserver(checkWorkspaceState);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    } else {
+      wakeShell.hidden = true;
+      document.body.classList.remove('bookly-loader-page');
+    }
+
+    for (var index = 0; index < scriptSpecs.length; index += 1) {
+      await executeWorkspaceScript(scriptSpecs[index]);
+    }
+
+    checkWorkspaceState();
   }
 
   async function start() {
@@ -229,7 +352,7 @@
         wakeShell.classList.add('is-leaving');
         await delay(200);
       }
-      openWorkspace(results[0]);
+      await mountWorkspace(results[0]);
     } catch (_) {
       if (runId !== activeRun) return;
       // Stop this run's polling before allowing a retry.

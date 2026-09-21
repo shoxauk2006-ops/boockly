@@ -18,6 +18,12 @@ assert.ok(
 );
 assert.match(html, /getElementById\('wakeShell'\)\.hidden\s*=\s*false/,
   'returning users must see the loader during the first HTML parse');
+assert.match(source, /new DOMParser\(\)\.parseFromString/,
+  'the workspace must mount behind the existing loader instead of replacing the document');
+assert.match(source, /coreLoader\.remove\(\)/,
+  'the duplicate loader from the workspace document must be removed');
+assert.match(css, /\.wake-shell\.is-persistent\s*\{/,
+  'the single loader must stay above the workspace until it is ready');
 assert.match(coreHtml, /class="account-boot-loader wake-shell"/,
   'the account boot state must reuse the animated loader');
 assert.match(coreHtml, /href="\/account-loader\.css"/,

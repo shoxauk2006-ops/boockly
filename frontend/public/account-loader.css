@@ -47,6 +47,13 @@ body.bookly-loader-page {
   transform: scale(1.015);
 }
 
+.wake-shell.is-persistent {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  width: 100%;
+}
+
 /* Keep the first health check invisible, including before JavaScript starts. */
 .wake-shell[hidden] { display: none; }
 
