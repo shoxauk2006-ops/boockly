@@ -16,11 +16,11 @@ BOT_USERNAME=os.getenv("BOT_USERNAME","BooklyBot")
 API_URL=(os.getenv("BOOKLY_API_URL") or os.getenv("PUBLIC_API_URL") or "http://api:8000").rstrip("/")
 
 BOOKLY_BOT_TEXTS={
-  "ru": ("Открыть Bookly", "Bookly — бронирование внутри Telegram.\n\nОткройте приложение:"),
-  "en": ("Open Bookly", "Bookly — booking inside Telegram.\n\nOpen the app:"),
-  "uz": ("Bookly’ni ochish", "Bookly — Telegram ichida bron qilish.\n\nIlovani oching:"),
-  "tr": ("Bookly’yi aç", "Bookly — Telegram içinde rezervasyon.\n\nUygulamayı açın:"),
-  "ar": ("فتح Bookly", "Bookly — الحجز داخل Telegram.\n\nافتح التطبيق:"),
+  "ru": ("Открыть Skedvo", "Skedvo — бронирование внутри Telegram.\n\nОткройте приложение:"),
+  "en": ("Open Skedvo", "Skedvo — booking inside Telegram.\n\nOpen the app:"),
+  "uz": ("Skedvo’ni ochish", "Skedvo — Telegram ichida bron qilish.\n\nIlovani oching:"),
+  "tr": ("Skedvo’yi aç", "Skedvo — Telegram içinde rezervasyon.\n\nUygulamayı açın:"),
+  "ar": ("فتح Skedvo", "Skedvo — الحجز داخل Telegram.\n\nافتح التطبيق:"),
 }
 
 def normalize_bot_language(code):
@@ -90,7 +90,7 @@ def connect_pending_token(token: str, user) -> bool:
             response.read()
         return True
     except Exception as exc:
-        print(f"Bookly Telegram connection failed: {exc}", flush=True)
+        print(f"Skedvo Telegram connection failed: {exc}", flush=True)
         return False
 
 
@@ -104,7 +104,7 @@ async def main():
         slug=args[1] if len(args)>1 else ''
 
         # Finish the web -> Telegram connection on the bot side first.
-        # The Mini App button then opens the normal Bookly URL, so the
+        # The Mini App button then opens the normal Skedvo URL, so the
         # connection no longer depends on Telegram preserving a token inside
         # a WebAppInfo URL.
         if slug.startswith("bookly-connect-") and message.from_user:
@@ -114,7 +114,7 @@ async def main():
                 message.from_user,
             )
             if not connected:
-                print("Bookly connection token was not consumed; opening Bookly anyway.", flush=True)
+                print("Skedvo connection token was not consumed; opening Skedvo anyway.", flush=True)
 
         url=WEBAPP_URL
         lang=normalize_bot_language(getattr(message.from_user, "language_code", None))
