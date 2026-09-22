@@ -467,7 +467,7 @@ def _bookly_remember_language(user: dict, preferred_language: str | None = None)
             elif explicit_language:
                 # Requests without X-Bookly-Language (for example a Telegram
                 # deep-link connection) must not overwrite the language the
-                # user explicitly selected inside Bookly.
+                # user explicitly selected inside Skedvo.
                 row.language = lang
             db.commit()
     except Exception:
@@ -485,7 +485,7 @@ def _bookly_user_language(telegram_user_id: int) -> str:
 
 _BOOKLY_NOTIFY_TEXT = {
   "ru": {
-    "new": "Новая запись в Bookly",
+    "new": "Новая запись в Skedvo",
     "phone_missing": "номер не передан",
     "cancelled_client": "Ваша запись отменена",
     "cancelled_business": "Ваша запись отменена",
@@ -493,13 +493,13 @@ _BOOKLY_NOTIFY_TEXT = {
     "contact_hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.",
     "waiting": "Ждём вас!",
     "client_cancelled": "Клиент отменил запись",
-    "reminder24": "Напоминание о записи в Bookly",
+    "reminder24": "Напоминание о записи в Skedvo",
     "reminder2": "Ваша запись сегодня в",
     "owner_reminder24": "Напоминание: запись",
   },
 
   "en": {
-    "new": "New booking in Bookly",
+    "new": "New booking in Skedvo",
     "phone_missing": "phone not provided",
     "cancelled_client": "Your booking has been cancelled",
     "cancelled_business": "Your booking has been cancelled",
@@ -507,13 +507,13 @@ _BOOKLY_NOTIFY_TEXT = {
     "contact_hint": "Please contact the business if you want to choose another time.",
     "waiting": "We look forward to seeing you!",
     "client_cancelled": "Client cancelled the booking",
-    "reminder24": "Bookly booking reminder",
+    "reminder24": "Skedvo booking reminder",
     "reminder2": "Your booking is today at",
     "owner_reminder24": "Reminder: booking",
   },
 
   "uz": {
-    "new": "Bookly’da yangi bron",
+    "new": "Skedvo’da yangi bron",
     "phone_missing": "telefon berilmagan",
     "cancelled_client": "Broningiz bekor qilindi",
     "cancelled_business": "Broningiz bekor qilindi",
@@ -521,13 +521,13 @@ _BOOKLY_NOTIFY_TEXT = {
     "contact_hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.",
     "waiting": "Sizni kutamiz!",
     "client_cancelled": "Mijoz bronni bekor qildi",
-    "reminder24": "Bookly bron eslatmasi",
+    "reminder24": "Skedvo bron eslatmasi",
     "reminder2": "Bugungi broningiz vaqti",
     "owner_reminder24": "Eslatma: bron",
   },
 
   "tr": {
-    "new": "Bookly’da yeni rezervasyon",
+    "new": "Skedvo’da yeni rezervasyon",
     "phone_missing": "telefon verilmedi",
     "cancelled_client": "Rezervasyonunuz iptal edildi",
     "cancelled_business": "Rezervasyonunuz iptal edildi",
@@ -535,13 +535,13 @@ _BOOKLY_NOTIFY_TEXT = {
     "contact_hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.",
     "waiting": "Sizi bekliyoruz!",
     "client_cancelled": "Müşteri rezervasyonu iptal etti",
-    "reminder24": "Bookly rezervasyon hatırlatması",
+    "reminder24": "Skedvo rezervasyon hatırlatması",
     "reminder2": "Bugünkü rezervasyon saatiniz",
     "owner_reminder24": "Hatırlatma: rezervasyon",
   },
 
   "ar": {
-    "new": "حجز جديد في Bookly",
+    "new": "حجز جديد في Skedvo",
     "phone_missing": "رقم الهاتف غير متوفر",
     "cancelled_client": "تم إلغاء حجزك",
     "cancelled_business": "تم إلغاء حجزك",
@@ -549,7 +549,7 @@ _BOOKLY_NOTIFY_TEXT = {
     "contact_hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.",
     "waiting": "ننتظركم!",
     "client_cancelled": "ألغى العميل الحجز",
-    "reminder24": "تذكير بحجز Bookly",
+    "reminder24": "تذكير بحجز Skedvo",
     "reminder2": "موعد حجزك اليوم في",
     "owner_reminder24": "تذكير: الحجز",
   },
@@ -1049,11 +1049,11 @@ def ensure_timezone_schema():
 ensure_timezone_schema()
 
 app = FastAPI(
-    title="Bookly API",
+    title="Skedvo API",
     version="0.2.0"
 )
 
-app = FastAPI(title="Bookly API", version="0.2.0")
+app = FastAPI(title="Skedvo API", version="0.2.0")
 ACTIVE_BUSINESS_ID: ContextVar[Optional[int]] = ContextVar(
     "ACTIVE_BUSINESS_ID",
     default=None
@@ -1161,7 +1161,7 @@ def telegram_api(method: str, payload: dict):
 
 
 def telegram_api_for_recipient(method: str, payload: dict):
-    """Send using the recipient's stored Bookly language, not the current request language."""
+    """Send using the recipient's stored Skedvo language, not the current request language."""
     token = BOOKLY_REQUEST_LANGUAGE.set(None)
     try:
         return telegram_api(method, payload)
@@ -1184,7 +1184,7 @@ def notify_owner_new_booking(
         specialist = db.get(Specialist, booking.specialist_id)
 
     lines = [
-        "🔔 <b>Новая запись в Bookly</b>",
+        "🔔 <b>Новая запись в Skedvo</b>",
         "",
         f"👤 {booking.client_name}",
         f"📞 {booking.client_phone or 'номер не передан'}",
@@ -1284,31 +1284,31 @@ _BOOKLY_FINAL_NOTIFICATION_WRAPPER = True
 def _bookly_localize_outgoing_text(text: str, lang: str) -> str:
     d = {
         "ru": {
-            "new": "Новая запись в Bookly", "booked": "Вы успешно записаны!", "cancel_client": "Ваша запись отменена",
+            "new": "Новая запись в Skedvo", "booked": "Вы успешно записаны!", "cancel_client": "Ваша запись отменена",
             "cancel_business": "Ваша запись отменена бизнесом.", "cancel_owner": "Клиент отменил запись",
             "hint": "Пожалуйста, свяжитесь с бизнесом, если хотите выбрать другое время.", "waiting": "Ждём вас!",
             "phone": "номер не передан", "phone_label": "Ваш номер:", "contact_label": "Связаться:", "specialist_label": "Специалист:", "address": "Адрес не указан"
         },
         "en": {
-            "new": "New booking in Bookly", "booked": "You are successfully booked!", "cancel_client": "Your booking has been cancelled",
+            "new": "New booking in Skedvo", "booked": "You are successfully booked!", "cancel_client": "Your booking has been cancelled",
             "cancel_business": "Your booking was cancelled by the business.", "cancel_owner": "Client cancelled the booking",
             "hint": "Please contact the business if you want to choose another time.", "waiting": "We look forward to seeing you!",
             "phone": "phone not provided", "phone_label": "Your number:", "contact_label": "Contact:", "specialist_label": "Specialist:", "address": "Address not provided"
         },
         "uz": {
-            "new": "Bookly’da yangi bron", "booked": "Siz muvaffaqiyatli bron qilindingiz!", "cancel_client": "Broningiz bekor qilindi",
+            "new": "Skedvo’da yangi bron", "booked": "Siz muvaffaqiyatli bron qilindingiz!", "cancel_client": "Broningiz bekor qilindi",
             "cancel_business": "Bron biznes tomonidan bekor qilindi.", "cancel_owner": "Mijoz bronni bekor qildi",
             "hint": "Boshqa vaqt tanlamoqchi bo‘lsangiz, biznes bilan bog‘laning.", "waiting": "Sizni kutamiz!",
             "phone": "telefon berilmagan", "phone_label": "Raqamingiz:", "contact_label": "Bog‘lanish:", "specialist_label": "Mutaxassis:", "address": "Manzil ko‘rsatilmagan"
         },
         "tr": {
-            "new": "Bookly’da yeni rezervasyon", "booked": "Rezervasyonunuz başarıyla oluşturuldu!", "cancel_client": "Rezervasyonunuz iptal edildi",
+            "new": "Skedvo’da yeni rezervasyon", "booked": "Rezervasyonunuz başarıyla oluşturuldu!", "cancel_client": "Rezervasyonunuz iptal edildi",
             "cancel_business": "Rezervasyon işletme tarafından iptal edildi.", "cancel_owner": "Müşteri rezervasyonu iptal etti",
             "hint": "Başka bir zaman seçmek istiyorsanız işletmeyle iletişime geçin.", "waiting": "Sizi bekliyoruz!",
             "phone": "telefon verilmedi", "phone_label": "Numaranız:", "contact_label": "İletişim:", "specialist_label": "Uzman:", "address": "Adres belirtilmedi"
         },
         "ar": {
-            "new": "حجز جديد في Bookly", "booked": "تم حجز موعدك بنجاح!", "cancel_client": "تم إلغاء حجزك",
+            "new": "حجز جديد في Skedvo", "booked": "تم حجز موعدك بنجاح!", "cancel_client": "تم إلغاء حجزك",
             "cancel_business": "تم إلغاء الحجز من قبل النشاط.", "cancel_owner": "ألغى العميل الحجز",
             "hint": "يرجى التواصل مع النشاط إذا أردت اختيار وقت آخر.", "waiting": "ننتظركم!",
             "phone": "رقم الهاتف غير متوفر", "phone_label": "رقمك:", "contact_label": "للتواصل:", "specialist_label": "المختص:", "address": "العنوان غير متوفر"
@@ -1316,7 +1316,7 @@ def _bookly_localize_outgoing_text(text: str, lang: str) -> str:
     }[_bookly_normalize_language(lang)]
 
     replacements = [
-        ("Новая запись в Bookly", d["new"]),
+        ("Новая запись в Skedvo", d["new"]),
         ("Вы успешно записаны!", d["booked"]),
         ("Ваша запись отменена бизнесом.", d["cancel_business"]),
         ("Ваша запись отменена", d["cancel_client"]),
@@ -1337,7 +1337,7 @@ def _bookly_localize_outgoing_text(text: str, lang: str) -> str:
 _BOOKLY_RAW_TELEGRAM_API = telegram_api
 
 def telegram_api(method: str, payload: dict):
-    """Telegram Bot API helper using the language selected in Bookly."""
+    """Telegram Bot API helper using the language selected in Skedvo."""
     if not BOT_TOKEN:
         return None
 
