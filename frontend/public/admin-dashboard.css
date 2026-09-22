@@ -1,4 +1,4 @@
-/* Bookly Admin — visual refresh for the existing working Dashboard.
+/* Skedvo Admin — visual refresh for the existing working Dashboard.
    No layout/state/API logic is changed here. */
 body:has(.admin-bottom-nav){background:#f4f5f7}
 body:has(.admin-bottom-nav) .app{max-width:640px;padding:16px 14px 118px;color:#111}
