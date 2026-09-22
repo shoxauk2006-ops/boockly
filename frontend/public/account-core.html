@@ -3448,6 +3448,7 @@ function accountDynamicCopy(){
       chooseTrial:'Start with a monthly plan and get a one-time 7-day free trial. Annual plans do not include a trial.',
       chooseRegular:'Select the plan for your current business. Payment is handled securely on the Skedwoo website.',
       plans:'Continue to plans',
+      subscriptionFor:'Subscription for {name}',
       freeTrial:'Free trial',
       trialAvailable:'7-day free trial available on your first monthly subscription. Annual plans do not include a trial.',
       trialActivePrefix:'Your 7-day free trial is active',
@@ -3471,6 +3472,7 @@ function accountDynamicCopy(){
       chooseTrial:'Начните с месячного плана и получите однократный 7-дневный пробный период. Для годового плана пробного периода нет.',
       chooseRegular:'Выберите план для текущего бизнеса. Оплата безопасно обрабатывается на сайте Skedwoo.',
       plans:'Перейти к планам',
+      subscriptionFor:'Подписка для {name}',
       freeTrial:'Пробный период',
       trialAvailable:'Доступен однократный 7-дневный пробный период при первой месячной подписке. Для годового плана пробного периода нет.',
       trialActivePrefix:'Сейчас действует 7-дневный пробный период',
@@ -3494,6 +3496,7 @@ function accountDynamicCopy(){
       chooseTrial:'Oylik reja bilan boshlang va bir martalik 7 kunlik bepul sinovdan foydalaning. Yillik rejada sinov davri yo‘q.',
       chooseRegular:'Joriy biznesingiz uchun rejani tanlang. To‘lov Skedwoo saytida xavfsiz amalga oshiriladi.',
       plans:'Rejalarga o‘tish',
+      subscriptionFor:'{name} uchun obuna',
       freeTrial:'Bepul sinov',
       trialAvailable:'Birinchi oylik obunada bir martalik 7 kunlik bepul sinov mavjud. Yillik rejada sinov davri yo‘q.',
       trialActivePrefix:'7 kunlik bepul sinov hozir faol',
@@ -3517,6 +3520,7 @@ function accountDynamicCopy(){
       chooseTrial:'Aylık planla başlayın ve tek seferlik 7 günlük ücretsiz denemeden yararlanın. Yıllık planda deneme yoktur.',
       chooseRegular:'Mevcut işletmeniz için plan seçin. Ödeme Skedwoo sitesinde güvenli şekilde işlenir.',
       plans:'Planlara devam et',
+      subscriptionFor:'{name} aboneliği',
       freeTrial:'Ücretsiz deneme',
       trialAvailable:'İlk aylık abonelikte tek seferlik 7 günlük ücretsiz deneme mevcuttur. Yıllık planda deneme yoktur.',
       trialActivePrefix:'7 günlük ücretsiz deneme şu anda aktif',
@@ -3540,6 +3544,7 @@ function accountDynamicCopy(){
       chooseTrial:'ابدأ بالخطة الشهرية واحصل على تجربة مجانية لمدة 7 أيام لمرة واحدة. الخطة السنوية لا تشمل تجربة مجانية.',
       chooseRegular:'اختر الخطة للنشاط الحالي. تتم معالجة الدفع بأمان على موقع Skedwoo.',
       plans:'المتابعة إلى الخطط',
+      subscriptionFor:'اشتراك {name}',
       freeTrial:'تجربة مجانية',
       trialAvailable:'تتوفر تجربة مجانية لمدة 7 أيام لمرة واحدة مع أول اشتراك شهري. الخطة السنوية لا تشمل تجربة مجانية.',
       trialActivePrefix:'التجربة المجانية لمدة 7 أيام مفعلة الآن',
@@ -5121,14 +5126,17 @@ function loadBilling(){
     var business=d.business;
     var subscription=d.subscription;
 
-    businessEl.textContent='Subscription for '+business.name;
+    var dynamicCopy=accountDynamicCopy();
+
+    businessEl.textContent=dynamicCopy.subscriptionFor.replace(
+      '{name}',
+      business.name
+    );
 
     var active=!!subscription.active;
     var cancelled=subscription.status==='cancelled';
     var trialing=subscription.status==='trialing';
     var pendingLimit=subscription.pending_services_limit;
-
-    var dynamicCopy=accountDynamicCopy();
 
     statusEl.textContent=
       trialing

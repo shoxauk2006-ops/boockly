@@ -26,6 +26,18 @@ assert.doesNotMatch(coreHtml, /account-boot-mark|accountBootText/,
   'the old B-only loader must be removed');
 assert.match(coreHtml, /title:'Готовим Skedwoo'/,
   'the replacement loader must localize itself before it becomes visible');
+assert.match(source, /async function mountWorkspace\(html\)/,
+  'the workspace must mount behind the existing loader instead of replacing the document');
+assert.match(source, /coreLoader\.remove\(\)/,
+  'the duplicate loader from account-core.html must be removed during the handoff');
+assert.match(source, /wakeShell\.classList\.add\('is-persistent'\)/,
+  'the first loader must remain visible until the saved session is ready');
+assert.match(css, /\.wake-shell\.is-persistent/,
+  'the persistent loader must stay above the mounting workspace');
+assert.match(coreHtml, /subscriptionFor:'Подписка для \{name\}'/,
+  'the dynamic billing business label must have a Russian translation');
+assert.match(coreHtml, /dynamicCopy\.subscriptionFor\.replace\(/,
+  'the dynamic billing business label must use the selected language');
 
 for (const asset of [source, html, coreHtml]) {
   assert.doesNotMatch(asset, /server is waking|сервер просыпается|first start after a pause|первый запуск после паузы/i,
