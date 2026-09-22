@@ -27,40 +27,40 @@
 
   var COPY = {
     en: {
-      kicker: 'BOOKLY WORKSPACE', title: 'Preparing Bookly', connecting: 'Loading Bookly…',
-      ready: 'Everything is ready', failed: 'Could not load Bookly.', retry: 'Try again', live: 'Loading',
+      kicker: 'SKEDVO WORKSPACE', title: 'Preparing Skedvo', connecting: 'Loading Skedvo…',
+      ready: 'Everything is ready', failed: 'Could not load Skedvo.', retry: 'Try again', live: 'Loading',
       serviceLabel: 'SERVICE', service: 'Choose a service', duration: '45 min',
       specialistLabel: 'SPECIALIST', specialist: 'Available specialist', available: 'Available today',
       dateLabel: 'DATE', date: 'Choose a date', timeLabel: 'AVAILABLE TIME', time: 'Choose a time',
       confirmed: 'Booking confirmed', allReady: 'Everything is ready'
     },
     ru: {
-      kicker: 'РАБОЧЕЕ ПРОСТРАНСТВО', title: 'Готовим Bookly', connecting: 'Загружаем Bookly…',
-      ready: 'Всё готово', failed: 'Не удалось загрузить Bookly.', retry: 'Повторить', live: 'Загрузка',
+      kicker: 'РАБОЧЕЕ ПРОСТРАНСТВО', title: 'Готовим Skedvo', connecting: 'Загружаем Skedvo…',
+      ready: 'Всё готово', failed: 'Не удалось загрузить Skedvo.', retry: 'Повторить', live: 'Загрузка',
       serviceLabel: 'УСЛУГА', service: 'Выберите услугу', duration: '45 мин',
       specialistLabel: 'СПЕЦИАЛИСТ', specialist: 'Доступный специалист', available: 'Свободен сегодня',
       dateLabel: 'ДАТА', date: 'Выберите дату', timeLabel: 'СВОБОДНОЕ ВРЕМЯ', time: 'Выберите время',
       confirmed: 'Запись подтверждена', allReady: 'Всё готово'
     },
     uz: {
-      kicker: 'BOOKLY ISH MAYDONI', title: 'Bookly tayyorlanmoqda', connecting: 'Bookly yuklanmoqda…',
-      ready: 'Hammasi tayyor', failed: 'Bookly yuklanmadi.', retry: 'Qayta urinish', live: 'Yuklanmoqda',
+      kicker: 'SKEDVO ISH MAYDONI', title: 'Skedvo tayyorlanmoqda', connecting: 'Skedvo yuklanmoqda…',
+      ready: 'Hammasi tayyor', failed: 'Skedvo yuklanmadi.', retry: 'Qayta urinish', live: 'Yuklanmoqda',
       serviceLabel: 'XIZMAT', service: 'Xizmatni tanlang', duration: '45 daq',
       specialistLabel: 'MUTAXASSIS', specialist: 'Mavjud mutaxassis', available: 'Bugun bo‘sh',
       dateLabel: 'SANA', date: 'Sanani tanlang', timeLabel: 'BO‘SH VAQT', time: 'Vaqtni tanlang',
       confirmed: 'Bron tasdiqlandi', allReady: 'Hammasi tayyor'
     },
     tr: {
-      kicker: 'BOOKLY ÇALIŞMA ALANI', title: 'Bookly hazırlanıyor', connecting: 'Bookly yükleniyor…',
-      ready: 'Her şey hazır', failed: 'Bookly yüklenemedi.', retry: 'Tekrar dene', live: 'Yükleniyor',
+      kicker: 'SKEDVO ÇALIŞMA ALANI', title: 'Skedvo hazırlanıyor', connecting: 'Skedvo yükleniyor…',
+      ready: 'Her şey hazır', failed: 'Skedvo yüklenemedi.', retry: 'Tekrar dene', live: 'Yükleniyor',
       serviceLabel: 'HİZMET', service: 'Hizmet seçin', duration: '45 dk',
       specialistLabel: 'UZMAN', specialist: 'Uygun uzman', available: 'Bugün uygun',
       dateLabel: 'TARİH', date: 'Tarih seçin', timeLabel: 'UYGUN SAAT', time: 'Saat seçin',
       confirmed: 'Rezervasyon onaylandı', allReady: 'Her şey hazır'
     },
     ar: {
-      kicker: 'مساحة عمل BOOKLY', title: 'جارٍ تجهيز Bookly', connecting: 'جارٍ تحميل Bookly…',
-      ready: 'كل شيء جاهز', failed: 'تعذر تحميل Bookly.', retry: 'إعادة المحاولة', live: 'جارٍ التحميل',
+      kicker: 'مساحة عمل SKEDVO', title: 'جارٍ تجهيز Skedvo', connecting: 'جارٍ تحميل Skedvo…',
+      ready: 'كل شيء جاهز', failed: 'تعذر تحميل Skedvo.', retry: 'إعادة المحاولة', live: 'جارٍ التحميل',
       serviceLabel: 'الخدمة', service: 'اختر الخدمة', duration: '45 دقيقة',
       specialistLabel: 'المختص', specialist: 'مختص متاح', available: 'متاح اليوم',
       dateLabel: 'التاريخ', date: 'اختر التاريخ', timeLabel: 'الوقت المتاح', time: 'اختر الوقت',
