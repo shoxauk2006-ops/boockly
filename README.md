@@ -1,6 +1,6 @@
 # Telegram Booking Mini App
 
-Bookly v0.4 — Telegram-first booking SaaS MVP.
+Skedvo v0.4 — Telegram-first booking SaaS MVP.
 
 ## Stack
 - FastAPI + SQLAlchemy + SQLite (easy MVP; swap to PostgreSQL for production)
@@ -21,14 +21,14 @@ Set `BOT_TOKEN`, then `python bot.py`.
 
 For production, serve the built frontend over HTTPS and configure the Telegram bot's Mini App URL.
 
-## Bookly v0.4 additions
+## Skedvo v0.4 additions
 - Production-oriented client booking flow with Telegram identity.
 - Past time slots are hidden for the current day.
 - Telegram contact callback stores the shared phone number correctly.
 - Subscription card updated for the $9.99/month product.
 - Business map coordinates are supported in Settings and used by the client map link.
 
-## Bookly v0.3 additions
+## Skedvo v0.3 additions
 - Telegram startapp parameter automatically opens the client business page.
 - New booking notifications are sent to the business owner through Telegram Bot API.
 - Client cancellation and owner cancellation notifications.
@@ -47,4 +47,4 @@ For production, serve the built frontend over HTTPS and configure the Telegram b
 
 ### Lemon Squeezy webhook
 Create a webhook pointing to `/payments/webhook/lemonsqueezy` and subscribe to `subscription_created`, `subscription_updated`, `subscription_expired`, `subscription_cancelled`, `subscription_payment_success`, `subscription_payment_failed`, and `subscription_payment_recovered`.
-Bookly
+Skedvo

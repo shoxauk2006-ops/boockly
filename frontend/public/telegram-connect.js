@@ -87,7 +87,7 @@
       })
       .catch(function (error) {
         console.error(
-          'Bookly staff Telegram connection:',
+          'Skedvo staff Telegram connection:',
           error
         );
         started = false;
@@ -122,7 +122,7 @@
         .then(openAdmin)
         .catch(function (error) {
           console.error(
-            'Bookly Telegram connection:',
+            'Skedvo Telegram connection:',
             error
           );
           started = false;
@@ -173,7 +173,7 @@
         .then(openAdmin)
         .catch(function (error) {
           console.error(
-            'Bookly Telegram connection:',
+            'Skedvo Telegram connection:',
             error
           );
           started = false;
