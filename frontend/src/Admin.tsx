@@ -418,7 +418,7 @@ const [newBusinessHours, setNewBusinessHours] =
       setLoading(false);
     } catch (e) {
       console.error(
-        'Bookly admin load error:',
+        'Skedwoo admin load error:',
         e
       );
 
@@ -447,7 +447,7 @@ const [newBusinessHours, setNewBusinessHours] =
 
   const openBooklyWebsite = () => {
     const url =
-      'https://boockly.vercel.app/account.html';
+      'https://skedwoo.vercel.app/account.html';
 
     const telegram = tg();
 
@@ -488,10 +488,10 @@ const [newBusinessHours, setNewBusinessHours] =
     return (
       <div className="loading-screen">
         <div className="loading-logo">
-          B
+          S
         </div>
 
-        <h2>Bookly</h2>
+        <h2>Skedwoo</h2>
 
         <div className="loading-spinner"></div>
 
@@ -589,7 +589,7 @@ const [newBusinessHours, setNewBusinessHours] =
           <p className="muted">
             {t(
               'home.createBusinessWebsiteHint',
-              'Создайте аккаунт и бизнес на сайте Bookly. После подключения Telegram бизнес появится здесь автоматически.'
+              'Создайте аккаунт и бизнес на сайте Skedwoo. После подключения Telegram бизнес появится здесь автоматически.'
             )}
           </p>
 
@@ -2197,14 +2197,14 @@ borderTopColor: '#d32f2f',
       <p className="muted">
   {t(
     'owner.businessReadyDescription',
-    'После этого бизнес будет готов к работе внутри Bookly. Вы сможете управлять услугами и принимать записи от клиентов.'
+    'После этого бизнес будет готов к работе внутри Skedwoo. Вы сможете управлять услугами и принимать записи от клиентов.'
   )}
 </p>
 
       <p className="muted">
         {t(
           'owner.activateProDescription',
-          'Чтобы клиенты могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Bookly Pro.'
+          'Чтобы клиенты могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Skedwoo Pro.'
         )}
       </p>
 
@@ -2225,7 +2225,7 @@ borderTopColor: '#d32f2f',
       }}
     >
       <strong>
-        Bookly Pro
+        Skedwoo Pro
       </strong>
 
       <p className="muted">
@@ -2397,4 +2397,3 @@ borderTopColor: '#d32f2f',
 </section>
 );
 }
-

@@ -1,4 +1,4 @@
-/* Bookly Home — one shared canvas for the entire home screen.
+/* Skedwoo Home — one shared canvas for the entire home screen.
    The decorative hero artwork lives on the page, not inside a hero card. */
 body:has(.personal-home){
   --bookly-home-bg:#f5f6f8;
@@ -33,7 +33,7 @@ body:has(.personal-home) .personal-home::before{
 }
 
 body:has(.personal-home) .personal-home::after{
-  content:"B";
+  content:"S";
   position:absolute!important;
   z-index:0!important;
   top:246px!important;

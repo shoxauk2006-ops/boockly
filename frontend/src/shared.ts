@@ -7,7 +7,7 @@ declare global {
 }
 
 export const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-export const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || 'BooklyBot';
+export const BOT_USERNAME = import.meta.env.VITE_BOT_USERNAME || 'skedwoo_bot';
 export const tg = () => window.Telegram?.WebApp;
 
 // Свой диалог подтверждения на React (не зависит от Telegram/браузера —

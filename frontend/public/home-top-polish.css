@@ -1,4 +1,4 @@
-/* Bookly Personal Home — compact premium Hero */
+/* Skedwoo Personal Home — compact premium Hero */
 
 body:has(.personal-home){
   background:#f6f7f9;
@@ -105,7 +105,7 @@ body:has(.personal-home) .personal-home-hero::before{
 
 /* Signature B deliberately breaks the lower-right edge so the crop feels intentional. */
 body:has(.personal-home) .personal-home-hero::after{
-  content:"B"!important;
+  content:"S"!important;
   position:absolute!important;
   right:-22px!important;
   bottom:-30px!important;

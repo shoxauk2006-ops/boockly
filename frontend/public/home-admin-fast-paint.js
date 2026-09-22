@@ -1,4 +1,4 @@
-/* Bookly Home — paint the cached/current business access bar before the React list request finishes. */
+/* Skedwoo Home — paint the cached/current business access bar before the React list request finishes. */
 (function () {
   var API = (function () {
     try {

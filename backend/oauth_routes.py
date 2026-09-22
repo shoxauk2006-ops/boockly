@@ -55,7 +55,7 @@ Base.metadata.create_all(engine)
 
 STATE_SECONDS = 600
 HANDOFF_SECONDS = 600
-CANONICAL_FRONTEND_URL = "https://boockly.vercel.app"
+CANONICAL_FRONTEND_URL = "https://skedwoo.vercel.app"
 FRONTEND_URL = os.getenv(
     "BOOKLY_FRONTEND_URL",
     CANONICAL_FRONTEND_URL,
@@ -68,12 +68,12 @@ PUBLIC_API_URL = os.getenv(
 
 def _oauth_frontend_url() -> str:
     """
-    OAuth must return users to the current Bookly production site.
+    OAuth must return users to the current Skedwoo production site.
 
     A stale Vercel preview URL can remain in Render environment
     variables after an old deployment. Preview deployments preserve
     old frontend code, so redirecting there can resurrect removed UI.
-    Keep custom non-Vercel domains valid, but canonicalize any Bookly
+    Keep custom non-Vercel domains valid, but canonicalize any Skedwoo
     Vercel preview host to the stable production alias.
     """
     configured = (FRONTEND_URL or "").strip().rstrip("/")
@@ -86,7 +86,7 @@ def _oauth_frontend_url() -> str:
 
         if (
             host.endswith(".vercel.app")
-            and host != "boockly.vercel.app"
+            and host != "skedwoo.vercel.app"
         ):
             return CANONICAL_FRONTEND_URL
     except Exception:
@@ -156,7 +156,7 @@ def _finish_google(subject: str, email: str, legal_accept: bool = False) -> str:
                 if not legal_accept:
                     raise HTTPException(
                         400,
-                        "Terms acceptance is required for a new Bookly account",
+                        "Terms acceptance is required for a new Skedwoo account",
                     )
                 account = BooklyAccount(
                     email=email,
@@ -324,7 +324,7 @@ def oauth_exchange(x: OAuthExchangeIn):
         token = _new_session(db, handoff.account_id)
         account = db.get(BooklyAccount, handoff.account_id)
         if not account:
-            raise HTTPException(500, "Bookly account not found")
+            raise HTTPException(500, "Skedwoo account not found")
         db.commit()
 
         return {

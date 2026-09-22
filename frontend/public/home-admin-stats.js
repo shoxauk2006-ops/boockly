@@ -1,4 +1,4 @@
-/* Bookly Home — live admin snapshot with instant cached values. */
+/* Skedwoo Home — live admin snapshot with instant cached values. */
 (function () {
   var API = (function () {
     try {
@@ -196,7 +196,7 @@
       setStatsValues(stats.today, stats.upcoming, business);
     } catch (error) {
       if (cachedBusiness) renderCached();
-      console.warn('Bookly Home admin stats error:', error);
+      console.warn('Skedwoo Home admin stats error:', error);
     }
   }
 

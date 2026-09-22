@@ -1,4 +1,4 @@
-/* Bookly Home — final viewport/composition cleanup */
+/* Skedwoo Home — final viewport/composition cleanup */
 
 /* Telegram WebView should keep scrolling, but the native scrollbar must not become part of the UI. */
 html, body{
@@ -15,12 +15,12 @@ body:has(.personal-home){
   overflow-x:hidden;
 }
 
-/* Keep the information control in the Bookly chrome at the very top. */
+/* Keep the information control in the Skedwoo chrome at the very top. */
 body:has(.personal-home) .personal-home-menu{
   top:2px!important;
 }
 
-/* Reduce the visual weight of the secondary Bookly header. */
+/* Reduce the visual weight of the secondary Skedwoo header. */
 body:has(.personal-home) header{
   padding-top:7px!important;
   padding-bottom:9px!important;

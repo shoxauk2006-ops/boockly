@@ -1,4 +1,4 @@
-/* Bookly — main personal home / start screen */
+/* Skedwoo — main personal home / start screen */
 .personal-home{
   position:relative;
   min-height:100vh;
@@ -92,7 +92,7 @@
 }
 
 .personal-home-hero::after{
-  content:"B";
+  content:"S";
   position:absolute;
   right:-30px;
   bottom:-78px;

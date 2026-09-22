@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#ffffff" />
-  <title>Bookly Pro</title>
+  <title>Skedwoo Pro</title>
   <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
   <style>
     :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111;background:#f6f7f9}
@@ -43,9 +43,9 @@
 </head>
 <body>
   <main class="wrap">
-    <div class="brand">BOOKLY</div>
-    <h1 id="title">Bookly Pro</h1>
-    <p class="sub" id="subtitle">Online bookings for your business, powered by Bookly.</p>
+    <div class="brand">SKEDWOO</div>
+    <h1 id="title">Skedwoo Pro</h1>
+    <p class="sub" id="subtitle">Online bookings for your business, powered by Skedwoo.</p>
 
     <section class="card" id="app">
       <div id="loading">Loading…</div>
@@ -68,15 +68,15 @@
         </div>
 
         <button id="payBtn" class="pay" type="button" disabled>Continue to payment</button>
-        <button id="backBtn" class="back" type="button">Back to Bookly</button>
+        <button id="backBtn" class="back" type="button">Back to Skedwoo</button>
         <p class="muted" id="secureNote">Payment is processed securely by Paddle.</p>
       </div>
 
       <div id="success" class="success hidden">
         <div class="success-icon">✓</div>
         <h2 id="successTitle">Payment completed</h2>
-        <p class="muted" id="successText">Your Bookly Pro access is being activated.</p>
-        <button id="successBackBtn" class="pay" type="button">Return to Bookly</button>
+        <p class="muted" id="successText">Your Skedwoo Pro access is being activated.</p>
+        <button id="successBackBtn" class="pay" type="button">Return to Skedwoo</button>
       </div>
     </section>
   </main>
@@ -97,11 +97,11 @@
       var selectedLimit = defaultLimit;
 
       var i18n = {
-        ru:{title:'Bookly Pro',subtitle:'Онлайн-запись клиентов для вашего бизнеса.',billing:'Период оплаты',monthly:'Ежемесячно',yearly:'Ежегодно',limit:'Лимит услуг',services:'услуг',month:'/ месяц',year:'/ год',pay:'Перейти к оплате',secure:'Оплата проходит безопасно через Paddle.',loading:'Загрузка…',back:'Вернуться в Bookly',trialTitle:'7 дней бесплатно',trialText:'После пробного периода подписка автоматически продлится по выбранному тарифу.',success:'Оплата завершена',successText:'Доступ Bookly Pro активируется автоматически.',return:'Вернуться в Bookly',error:'Не удалось загрузить страницу оплаты.'},
-        en:{title:'Bookly Pro',subtitle:'Online bookings for your business.',billing:'Billing period',monthly:'Monthly',yearly:'Yearly',limit:'Service limit',services:'services',month:'/ month',year:'/ year',pay:'Continue to payment',secure:'Payment is processed securely by Paddle.',loading:'Loading…',back:'Back to Bookly',trialTitle:'7 days free',trialText:'After the trial, your subscription renews automatically at the selected plan.',success:'Payment completed',successText:'Your Bookly Pro access is being activated automatically.',return:'Return to Bookly',error:'Unable to load the payment page.'},
-        uz:{title:'Bookly Pro',subtitle:'Biznesingiz uchun onlayn yozilish.',billing:'To‘lov davri',monthly:'Oylik',yearly:'Yillik',limit:'Xizmatlar limiti',services:'xizmat',month:'/ oy',year:'/ yil',pay:'To‘lovga o‘tish',secure:'To‘lov Paddle orqali xavfsiz amalga oshiriladi.',loading:'Yuklanmoqda…',back:'Bookly’ga qaytish',trialTitle:'7 kun bepul',trialText:'Sinov davridan so‘ng tanlangan tarif avtomatik yangilanadi.',success:'To‘lov yakunlandi',successText:'Bookly Pro avtomatik faollashtiriladi.',return:'Bookly’ga qaytish',error:'To‘lov sahifasini yuklab bo‘lmadi.'},
-        tr:{title:'Bookly Pro',subtitle:'İşletmeniz için online rezervasyon.',billing:'Ödeme dönemi',monthly:'Aylık',yearly:'Yıllık',limit:'Hizmet limiti',services:'hizmet',month:'/ ay',year:'/ yıl',pay:'Ödemeye devam et',secure:'Ödeme Paddle tarafından güvenli şekilde işlenir.',loading:'Yükleniyor…',back:'Bookly’ye dön',trialTitle:'7 gün ücretsiz',trialText:'Deneme süresinden sonra seçilen plan otomatik olarak yenilenir.',success:'Ödeme tamamlandı',successText:'Bookly Pro otomatik olarak etkinleştirilecek.',return:'Bookly’ye dön',error:'Ödeme sayfası yüklenemedi.'},
-        ar:{title:'Bookly Pro',subtitle:'الحجز عبر الإنترنت لنشاطك التجاري.',billing:'فترة الفوترة',monthly:'شهري',yearly:'سنوي',limit:'حد الخدمات',services:'خدمات',month:'/ شهر',year:'/ سنة',pay:'المتابعة إلى الدفع',secure:'تتم معالجة الدفع بأمان عبر Paddle.',loading:'جارٍ التحميل…',back:'العودة إلى Bookly',trialTitle:'7 أيام مجانًا',trialText:'بعد الفترة التجريبية، سيتم تجديد الاشتراك تلقائيًا وفق الخطة المحددة.',success:'تم إتمام الدفع',successText:'سيتم تفعيل Bookly Pro تلقائيًا.',return:'العودة إلى Bookly',error:'تعذر تحميل صفحة الدفع.'}
+        ru:{title:'Skedwoo Pro',subtitle:'Онлайн-запись клиентов для вашего бизнеса.',billing:'Период оплаты',monthly:'Ежемесячно',yearly:'Ежегодно',limit:'Лимит услуг',services:'услуг',month:'/ месяц',year:'/ год',pay:'Перейти к оплате',secure:'Оплата проходит безопасно через Paddle.',loading:'Загрузка…',back:'Вернуться в Skedwoo',trialTitle:'7 дней бесплатно',trialText:'После пробного периода подписка автоматически продлится по выбранному тарифу.',success:'Оплата завершена',successText:'Доступ Skedwoo Pro активируется автоматически.',return:'Вернуться в Skedwoo',error:'Не удалось загрузить страницу оплаты.'},
+        en:{title:'Skedwoo Pro',subtitle:'Online bookings for your business.',billing:'Billing period',monthly:'Monthly',yearly:'Yearly',limit:'Service limit',services:'services',month:'/ month',year:'/ year',pay:'Continue to payment',secure:'Payment is processed securely by Paddle.',loading:'Loading…',back:'Back to Skedwoo',trialTitle:'7 days free',trialText:'After the trial, your subscription renews automatically at the selected plan.',success:'Payment completed',successText:'Your Skedwoo Pro access is being activated automatically.',return:'Return to Skedwoo',error:'Unable to load the payment page.'},
+        uz:{title:'Skedwoo Pro',subtitle:'Biznesingiz uchun onlayn yozilish.',billing:'To‘lov davri',monthly:'Oylik',yearly:'Yillik',limit:'Xizmatlar limiti',services:'xizmat',month:'/ oy',year:'/ yil',pay:'To‘lovga o‘tish',secure:'To‘lov Paddle orqali xavfsiz amalga oshiriladi.',loading:'Yuklanmoqda…',back:'Skedwoo’ga qaytish',trialTitle:'7 kun bepul',trialText:'Sinov davridan so‘ng tanlangan tarif avtomatik yangilanadi.',success:'To‘lov yakunlandi',successText:'Skedwoo Pro avtomatik faollashtiriladi.',return:'Skedwoo’ga qaytish',error:'To‘lov sahifasini yuklab bo‘lmadi.'},
+        tr:{title:'Skedwoo Pro',subtitle:'İşletmeniz için online rezervasyon.',billing:'Ödeme dönemi',monthly:'Aylık',yearly:'Yıllık',limit:'Hizmet limiti',services:'hizmet',month:'/ ay',year:'/ yıl',pay:'Ödemeye devam et',secure:'Ödeme Paddle tarafından güvenli şekilde işlenir.',loading:'Yükleniyor…',back:'Skedwoo’ye dön',trialTitle:'7 gün ücretsiz',trialText:'Deneme süresinden sonra seçilen plan otomatik olarak yenilenir.',success:'Ödeme tamamlandı',successText:'Skedwoo Pro otomatik olarak etkinleştirilecek.',return:'Skedwoo’ye dön',error:'Ödeme sayfası yüklenemedi.'},
+        ar:{title:'Skedwoo Pro',subtitle:'الحجز عبر الإنترنت لنشاطك التجاري.',billing:'فترة الفوترة',monthly:'شهري',yearly:'سنوي',limit:'حد الخدمات',services:'خدمات',month:'/ شهر',year:'/ سنة',pay:'المتابعة إلى الدفع',secure:'تتم معالجة الدفع بأمان عبر Paddle.',loading:'جارٍ التحميل…',back:'العودة إلى Skedwoo',trialTitle:'7 أيام مجانًا',trialText:'بعد الفترة التجريبية، سيتم تجديد الاشتراك تلقائيًا وفق الخطة المحددة.',success:'تم إتمام الدفع',successText:'سيتم تفعيل Skedwoo Pro تلقائيًا.',return:'العودة إلى Skedwoo',error:'تعذر تحميل صفحة الدفع.'}
       };
 
       var lang = (navigator.language || 'en').toLowerCase().slice(0,2);
@@ -146,7 +146,7 @@
         limits.forEach(function(limit){
           var b=document.createElement('button'); b.type='button'; b.className='limit'+(selectedLimit===limit?' active':'');
           var strong=document.createElement('strong'); strong.textContent=limit+' '+tr.services;
-          var span=document.createElement('span'); span.textContent=limit===10?'Bookly Pro': '+'+(limit-10)+' '+tr.services;
+          var span=document.createElement('span'); span.textContent=limit===10?'Skedwoo Pro': '+'+(limit-10)+' '+tr.services;
           b.appendChild(strong); b.appendChild(span);
           b.onclick=function(){selectedLimit=limit; renderLimits(); loadPrice();};
           root.appendChild(b);

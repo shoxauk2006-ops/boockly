@@ -92,7 +92,7 @@ export function SavedBusinessesPage({
 
       <div className="personal-home-hero personal-compact">
         <span className="personal-eyebrow">
-          BOOKLY
+          SKEDWOO
         </span>
 
         <h1>
@@ -131,7 +131,7 @@ export function SavedBusinessesPage({
             onClick={() => open(item.slug)}
           >
             <span className="personal-saved-icon">
-              B
+              S
             </span>
 
             <span className="personal-saved-info">

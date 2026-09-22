@@ -35,7 +35,7 @@ export function BooklyAlertModal({
         </button>
 
         <span className="personal-eyebrow">
-          BOOKLY
+          SKEDWOO
         </span>
 
         <h2>{title}</h2>
@@ -91,7 +91,7 @@ export function BooklyConfirmModal({
         </button>
 
         <span className="personal-eyebrow">
-          BOOKLY
+          SKEDWOO
         </span>
 
         <p className="muted">

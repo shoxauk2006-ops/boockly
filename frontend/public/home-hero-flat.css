@@ -1,4 +1,4 @@
-/* Bookly — flat home hero: remove the card/window treatment while keeping the visual hero composition. */
+/* Skedwoo — flat home hero: remove the card/window treatment while keeping the visual hero composition. */
 body:has(.personal-home) .personal-home-hero{
   min-height:236px!important;
   margin:4px 0 18px!important;

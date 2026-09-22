@@ -19,9 +19,9 @@ async def telegram_business_creation_policy(request: Request, call_next):
             return JSONResponse(
                 status_code=403,
                 content={
-                    "detail": "Business creation is available on the Bookly website.",
+                    "detail": "Business creation is available on the Skedwoo website.",
                     "code": "website_only_business_creation",
-                    "website": "https://boockly.vercel.app/landing.html",
+                    "website": "https://skedwoo.vercel.app/landing.html",
                 },
             )
 

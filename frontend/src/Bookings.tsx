@@ -1036,4 +1036,4 @@ const todayBusiness =
     </div>
   );
 }
-// Bookly booking status uses business timezone.
+// Skedwoo booking status uses business timezone.

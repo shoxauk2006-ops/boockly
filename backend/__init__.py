@@ -1,4 +1,4 @@
-# Load the standalone Bookly account/auth routes alongside the API app.
+# Load the standalone Skedwoo account/auth routes alongside the API app.
 from . import account_routes  # noqa: F401
 
 # Load Google OAuth routes after account models/helpers exist.

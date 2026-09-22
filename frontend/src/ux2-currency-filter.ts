@@ -1,6 +1,6 @@
 // Keep service currency selection focused on currencies users can actually use for prices.
 // Intl.supportedValuesOf('currency') may include historical codes, fund units,
-// precious metals, and accounting/index units. Skedvo services should expose
+// precious metals, and accounting/index units. Skedwoo services should expose
 // ordinary current transaction currencies only.
 const blockedCurrencyCodes = new Set([
   // Historical / replaced currencies commonly surfaced by ICU data.

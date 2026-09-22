@@ -13,7 +13,7 @@ from .account_routes import BooklyAccount, _account_from_header
 
 
 LINK_TTL_MINUTES = 15
-BOT_USERNAME = os.getenv("BOT_USERNAME", "BooklyBot").strip().lstrip("@") or "BooklyBot"
+BOT_USERNAME = os.getenv("BOT_USERNAME", "skedwoo_bot").strip().lstrip("@") or "skedwoo_bot"
 
 with SessionLocal() as db:
     db.execute(text("""
@@ -42,7 +42,7 @@ def create_telegram_link(authorization: str = Header(default="")):
         account = _account_from_header(db, authorization)
         business = db.get(Business, account.business_id) if account.business_id else None
         if not business:
-            raise HTTPException(400, "Bookly business not found")
+            raise HTTPException(400, "Skedwoo business not found")
 
         now = datetime.utcnow()
         db.execute(
@@ -111,7 +111,7 @@ def connect_telegram_link(
         account = db.get(BooklyAccount, int(row["account_id"]))
         business = db.get(Business, int(row["business_id"]))
         if not account or not business or int(account.business_id or 0) != int(business.id):
-            raise HTTPException(400, "Bookly account or business not found")
+            raise HTTPException(400, "Skedwoo account or business not found")
 
         existing = (
             db.query(BooklyAccount)
@@ -120,7 +120,7 @@ def connect_telegram_link(
             .first()
         )
         if existing:
-            raise HTTPException(409, "This Telegram account is already connected to another Bookly account")
+            raise HTTPException(409, "This Telegram account is already connected to another Skedwoo account")
 
         from . import paddle_original
         web_owner_id = -int(account.id)

@@ -20,7 +20,7 @@
 
     var box = document.createElement('pre');
     box.id = 'bookly-boot-diagnostic';
-    box.textContent = 'BOOKLY BOOT ERROR\n\n' + kind + '\n\n' + text(detail);
+    box.textContent = 'SKEDWOO BOOT ERROR\n\n' + kind + '\n\n' + text(detail);
     box.style.cssText = [
       'position:fixed',
       'inset:12px',
@@ -38,7 +38,7 @@
     ].join(';');
 
     (document.body || document.documentElement).appendChild(box);
-    try { console.error('[Bookly boot diagnostic]', kind, detail); } catch (_) {}
+    try { console.error('[Skedwoo boot diagnostic]', kind, detail); } catch (_) {}
   }
 
   window.addEventListener('error', function (event) {

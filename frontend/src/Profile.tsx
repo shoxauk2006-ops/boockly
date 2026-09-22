@@ -45,7 +45,7 @@ export default function Profile({
       preferences: 'Настройки',
       legal: 'Документы и условия',
       legalText:
-        'Использование Bookly регулируется актуальными Условиями использования и Политикой конфиденциальности. Они применяются к сайту, кабинету аккаунта и Telegram Mini App.',
+        'Использование Skedwoo регулируется актуальными Условиями использования и Политикой конфиденциальности. Они применяются к сайту, кабинету аккаунта и Telegram Mini App.',
       effective:
         'Актуальная версия: 18 сентября 2026',
       terms:
@@ -57,18 +57,18 @@ export default function Profile({
       privacy:
         'Политика конфиденциальности',
       privacyText:
-        'Какие данные обрабатывает Bookly, зачем они нужны, кому передаются и как запросить удаление.',
+        'Какие данные обрабатывает Skedwoo, зачем они нужны, кому передаются и как запросить удаление.',
       openPrivacy:
         'Открыть политику',
       contact: 'Контакты',
       contactText:
-        'По вопросам Bookly, аккаунта, конфиденциальности или для сообщений о нарушениях:'
+        'По вопросам Skedwoo, аккаунта, конфиденциальности или для сообщений о нарушениях:'
     },
     en: {
       preferences: 'Preferences',
       legal: 'Legal documents',
       legalText:
-        'Use of Bookly is governed by the current Terms of Use and Privacy Policy. They apply to the website, account workspace and Telegram Mini App.',
+        'Use of Skedwoo is governed by the current Terms of Use and Privacy Policy. They apply to the website, account workspace and Telegram Mini App.',
       effective:
         'Current version: September 18, 2026',
       terms:
@@ -80,19 +80,19 @@ export default function Profile({
       privacy:
         'Privacy Policy',
       privacyText:
-        'What data Bookly processes, why it is needed, who receives it and how to request deletion.',
+        'What data Skedwoo processes, why it is needed, who receives it and how to request deletion.',
       openPrivacy:
         'Open policy',
       contact: 'Contact',
       contactText:
-        'For questions about Bookly, your account, privacy or to report violations:'
+        'For questions about Skedwoo, your account, privacy or to report violations:'
     },
     uz: {
       preferences: 'Sozlamalar',
       legal:
         'Hujjatlar va shartlar',
       legalText:
-        'Bookly’dan foydalanish amaldagi Foydalanish shartlari va Maxfiylik siyosati bilan tartibga solinadi. Ular sayt, akkaunt kabineti va Telegram Mini App uchun amal qiladi.',
+        'Skedwoo’dan foydalanish amaldagi Foydalanish shartlari va Maxfiylik siyosati bilan tartibga solinadi. Ular sayt, akkaunt kabineti va Telegram Mini App uchun amal qiladi.',
       effective:
         'Amaldagi versiya: 2026-yil 18-sentabr',
       terms:
@@ -104,19 +104,19 @@ export default function Profile({
       privacy:
         'Maxfiylik siyosati',
       privacyText:
-        'Bookly qanday ma’lumotlarni qayta ishlashi, nima uchun kerakligi, kimga berilishi va o‘chirishni qanday so‘rash mumkinligi.',
+        'Skedwoo qanday ma’lumotlarni qayta ishlashi, nima uchun kerakligi, kimga berilishi va o‘chirishni qanday so‘rash mumkinligi.',
       openPrivacy:
         'Siyosatni ochish',
       contact: 'Aloqa',
       contactText:
-        'Bookly, akkaunt, maxfiylik yoki qoidabuzarliklar haqida savollar uchun:'
+        'Skedwoo, akkaunt, maxfiylik yoki qoidabuzarliklar haqida savollar uchun:'
     },
     tr: {
       preferences: 'Tercihler',
       legal:
         'Belgeler ve şartlar',
       legalText:
-        'Bookly kullanımı güncel Kullanım Şartları ve Gizlilik Politikası tarafından düzenlenir. Bunlar web sitesi, hesap çalışma alanı ve Telegram Mini App için geçerlidir.',
+        'Skedwoo kullanımı güncel Kullanım Şartları ve Gizlilik Politikası tarafından düzenlenir. Bunlar web sitesi, hesap çalışma alanı ve Telegram Mini App için geçerlidir.',
       effective:
         'Güncel sürüm: 18 Eylül 2026',
       terms:
@@ -128,19 +128,19 @@ export default function Profile({
       privacy:
         'Gizlilik Politikası',
       privacyText:
-        'Bookly’nin hangi verileri işlediği, neden gerekli olduğu, kimlerle paylaşıldığı ve silme talebinin nasıl yapılacağı.',
+        'Skedwoo’nin hangi verileri işlediği, neden gerekli olduğu, kimlerle paylaşıldığı ve silme talebinin nasıl yapılacağı.',
       openPrivacy:
         'Politikayı aç',
       contact: 'İletişim',
       contactText:
-        'Bookly, hesabınız, gizlilik veya ihlal bildirimleriyle ilgili sorular için:'
+        'Skedwoo, hesabınız, gizlilik veya ihlal bildirimleriyle ilgili sorular için:'
     },
     ar: {
       preferences: 'التفضيلات',
       legal:
         'المستندات والشروط',
       legalText:
-        'يخضع استخدام Bookly لشروط الاستخدام وسياسة الخصوصية الساريتين. تنطبق هذه المستندات على الموقع ومساحة الحساب وTelegram Mini App.',
+        'يخضع استخدام Skedwoo لشروط الاستخدام وسياسة الخصوصية الساريتين. تنطبق هذه المستندات على الموقع ومساحة الحساب وTelegram Mini App.',
       effective:
         'الإصدار الحالي: 18 سبتمبر 2026',
       terms:
@@ -152,12 +152,12 @@ export default function Profile({
       privacy:
         'سياسة الخصوصية',
       privacyText:
-        'ما البيانات التي يعالجها Bookly ولماذا نحتاجها ولمن قد تُعرض وكيفية طلب حذفها.',
+        'ما البيانات التي يعالجها Skedwoo ولماذا نحتاجها ولمن قد تُعرض وكيفية طلب حذفها.',
       openPrivacy:
         'فتح السياسة',
       contact: 'التواصل',
       contactText:
-        'للاستفسارات حول Bookly أو الحساب أو الخصوصية أو للإبلاغ عن المخالفات:'
+        'للاستفسارات حول Skedwoo أو الحساب أو الخصوصية أو للإبلاغ عن المخالفات:'
     }
   };
 
@@ -201,12 +201,12 @@ export default function Profile({
 
       <div className="profile-hero card">
         <div className="profile-avatar">
-          B
+          S
         </div>
 
         <div>
           <h1>{t('nav.profile')}</h1>
-          <p>Bookly</p>
+          <p>Skedwoo</p>
         </div>
       </div>
 
@@ -257,7 +257,7 @@ export default function Profile({
 
       <div className="card profile-info-card">
         <div className="profile-card-label">
-          Bookly
+          Skedwoo
         </div>
 
         <h2>{c.legal}</h2>
@@ -303,7 +303,7 @@ export default function Profile({
 
       <div className="card profile-info-card">
         <div className="profile-card-label">
-          Bookly
+          Skedwoo
         </div>
 
         <h2>{c.contact}</h2>
@@ -315,8 +315,8 @@ export default function Profile({
         <div className="profile-contact">
           <span>Email</span>
 
-          <a href="mailto:booklyminiapp@gmail.com">
-            booklyminiapp@gmail.com
+          <a href="mailto:skedwoo@gmail.com">
+            skedwoo@gmail.com
           </a>
         </div>
       </div>

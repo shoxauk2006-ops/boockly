@@ -91,7 +91,7 @@ export function Home(p: any) {
 
       <div className="hero">
         <div className="logo">
-          B
+          S
         </div>
 
         <h1>

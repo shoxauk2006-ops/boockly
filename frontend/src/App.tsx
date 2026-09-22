@@ -49,7 +49,7 @@ export function App(){
     applyLanguageDirection(nextLanguage);
 
     // Keep Telegram notifications in the same language the user selected
-    // inside Bookly. Do not wait for some unrelated API request to sync it.
+    // inside Skedwoo. Do not wait for some unrelated API request to sync it.
     if (initData()) {
       fetch(API + '/me', {
         headers: {
@@ -74,11 +74,11 @@ export function App(){
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertModalMessage, setAlertModalMessage] = useState('');
   const [alertModalTitle, setAlertModalTitle] =
-  useState('Bookly');
+  useState('Skedwoo');
 
   const showBooklyAlert = (
   message: string,
-  title = 'Bookly'
+  title = 'Skedwoo'
 ) => {
   setAlertModalTitle(title);
   setAlertModalMessage(message);
@@ -164,7 +164,7 @@ export function App(){
           setMode('admin');
         })
         .catch((error) => {
-          console.error('Bookly Telegram connection error:', error);
+          console.error('Skedwoo Telegram connection error:', error);
           alert(error?.message || 'Telegram connection failed');
         });
       return;
@@ -212,7 +212,7 @@ export function App(){
         })
         .catch((error) => {
           console.error(
-            'Bookly staff Telegram connection error:',
+            'Skedwoo staff Telegram connection error:',
             error
           );
           alert(
@@ -280,7 +280,7 @@ const openClient = (
  return <div className="app">
  <header>
   <div>
-    <b>Bookly</b>
+    <b>Skedwoo</b>
     <small>{t('app.tagline')}</small>
   </div>
 
@@ -327,7 +327,7 @@ const openClient = (
 
         <div className="side-menu-head">
           <div>
-            <b>Bookly</b>
+            <b>Skedwoo</b>
          <small>{t('nav.more')}</small>
           </div>
 
@@ -537,20 +537,20 @@ setInfoSection={setInfoSection}
       {infoSection === 'help' ? (
         <>
           <span className="personal-eyebrow">
-            BOOKLY
+            SKEDWOO
           </span>
 
           <h2>
             {t(
               'info.howBooklyWorks',
-              'Как пользоваться Bookly'
+              'Как пользоваться Skedwoo'
             )}
           </h2>
 
           <p className="muted">
             {t(
               'info.helpIntro',
-              'Bookly разделён на сайт и Telegram Mini App: на сайте вы создаёте аккаунт и бизнес, а в Telegram ежедневно управляете записью клиентов.'
+              'Skedwoo разделён на сайт и Telegram Mini App: на сайте вы создаёте аккаунт и бизнес, а в Telegram ежедневно управляете записью клиентов.'
             )}
           </p>
 
@@ -571,7 +571,7 @@ setInfoSection={setInfoSection}
                 <p>
                   {t(
                     'info.helpWebsiteText',
-                    'Зарегистрируйтесь на сайте Bookly, создайте бизнес и настройте подписку или пакет услуг. Оплата и управление подпиской выполняются только на сайте.'
+                    'Зарегистрируйтесь на сайте Skedwoo, создайте бизнес и настройте подписку или пакет услуг. Оплата и управление подпиской выполняются только на сайте.'
                   )}
                 </p>
               </div>
@@ -593,7 +593,7 @@ setInfoSection={setInfoSection}
                 <p>
                   {t(
                     'info.helpTelegramText',
-                    'Подключите Telegram к аккаунту Bookly. После этого владелец сможет открыть свой бизнес в Mini App и управлять им из Telegram.'
+                    'Подключите Telegram к аккаунту Skedwoo. После этого владелец сможет открыть свой бизнес в Mini App и управлять им из Telegram.'
                   )}
                 </p>
               </div>
@@ -637,7 +637,7 @@ setInfoSection={setInfoSection}
                 <p>
                   {t(
                     'info.helpShareText',
-                    'В админке скопируйте ссылку на бизнес или скачайте QR-код. Клиент открывает Bookly в Telegram и сам выбирает специалиста, услугу, дату и свободное время.'
+                    'В админке скопируйте ссылку на бизнес или скачайте QR-код. Клиент открывает Skedwoo в Telegram и сам выбирает специалиста, услугу, дату и свободное время.'
                   )}
                 </p>
               </div>
@@ -687,7 +687,7 @@ setInfoSection={setInfoSection}
             <p>
               {t(
                 'info.helpBillingText',
-                'Покупка, продление, отмена подписки и изменение пакета выполняются на сайте Bookly. В Telegram Mini App вы пользуетесь уже подключённым сервисом.'
+                'Покупка, продление, отмена подписки и изменение пакета выполняются на сайте Skedwoo. В Telegram Mini App вы пользуетесь уже подключённым сервисом.'
               )}
             </p>
           </div>
@@ -695,7 +695,7 @@ setInfoSection={setInfoSection}
       ) : (
         <>
           <span className="personal-eyebrow">
-            BOOKLY
+            SKEDWOO
           </span>
 
           <h2>
@@ -708,7 +708,7 @@ setInfoSection={setInfoSection}
           <p className="muted">
             {t(
               'info.legalIntro',
-              'Использование Bookly регулируется актуальными Условиями использования и Политикой конфиденциальности. Эти документы применяются к сайту, кабинету аккаунта и Telegram Mini App.'
+              'Использование Skedwoo регулируется актуальными Условиями использования и Политикой конфиденциальности. Эти документы применяются к сайту, кабинету аккаунта и Telegram Mini App.'
             )}
           </p>
 
@@ -762,7 +762,7 @@ setInfoSection={setInfoSection}
                 <span>
                   {t(
                     'info.privacySummary',
-                    'Какие данные обрабатывает Bookly, зачем они нужны, кому передаются и как запросить удаление.'
+                    'Какие данные обрабатывает Skedwoo, зачем они нужны, кому передаются и как запросить удаление.'
                   )}
                 </span>
               </div>
@@ -790,16 +790,16 @@ setInfoSection={setInfoSection}
           <p className="muted">
             {t(
               'info.contactDescription',
-              'По вопросам Bookly, аккаунта, конфиденциальности или для сообщений о нарушениях:'
+              'По вопросам Skedwoo, аккаунта, конфиденциальности или для сообщений о нарушениях:'
             )}
           </p>
 
           <div className="contact-email-row">
             <a
-              href="mailto:booklyminiapp@gmail.com"
+              href="mailto:skedwoo@gmail.com"
               className="contact-email"
             >
-              booklyminiapp@gmail.com
+              skedwoo@gmail.com
             </a>
 
             <button
@@ -808,7 +808,7 @@ setInfoSection={setInfoSection}
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(
-                    'booklyminiapp@gmail.com'
+                    'skedwoo@gmail.com'
                   );
 
                   setEmailCopied(true);

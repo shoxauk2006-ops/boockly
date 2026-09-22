@@ -1,4 +1,4 @@
-/* Bookly Client — visual refresh for the existing booking flow. */
+/* Skedwoo Client — visual refresh for the existing booking flow. */
 body:has(.client-hero){
   background:#f4f5f7;
 }

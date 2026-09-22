@@ -64,7 +64,7 @@ if (telegramMiniApp) {
       const data = await response.json().catch(() => null);
       return typeof data?.trial_available === 'boolean' ? data.trial_available : null;
     } catch (error) {
-      console.error('[Bookly] Trial status lookup failed:', error);
+      console.error('[Skedwoo] Trial status lookup failed:', error);
       return null;
     }
   }
@@ -166,7 +166,7 @@ if (telegramMiniApp) {
     window.__booklyPaddleReady = loadPaddleScript()
       .then(initializePaddle)
       .catch((error) => {
-        console.error('[Bookly] Paddle initialization error:', error);
+        console.error('[Skedwoo] Paddle initialization error:', error);
         throw error;
       });
   }

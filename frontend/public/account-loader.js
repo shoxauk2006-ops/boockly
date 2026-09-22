@@ -27,40 +27,40 @@
 
   var COPY = {
     en: {
-      kicker: 'SKEDVO WORKSPACE', title: 'Preparing Skedvo', connecting: 'Loading Skedvo…',
-      ready: 'Everything is ready', failed: 'Could not load Skedvo.', retry: 'Try again', live: 'Loading',
+      kicker: 'SKEDWOO WORKSPACE', title: 'Preparing Skedwoo', connecting: 'Loading Skedwoo…',
+      ready: 'Everything is ready', failed: 'Could not load Skedwoo.', retry: 'Try again', live: 'Loading',
       serviceLabel: 'SERVICE', service: 'Choose a service', duration: '45 min',
       specialistLabel: 'SPECIALIST', specialist: 'Available specialist', available: 'Available today',
       dateLabel: 'DATE', date: 'Choose a date', timeLabel: 'AVAILABLE TIME', time: 'Choose a time',
       confirmed: 'Booking confirmed', allReady: 'Everything is ready'
     },
     ru: {
-      kicker: 'РАБОЧЕЕ ПРОСТРАНСТВО', title: 'Готовим Skedvo', connecting: 'Загружаем Skedvo…',
-      ready: 'Всё готово', failed: 'Не удалось загрузить Skedvo.', retry: 'Повторить', live: 'Загрузка',
+      kicker: 'РАБОЧЕЕ ПРОСТРАНСТВО', title: 'Готовим Skedwoo', connecting: 'Загружаем Skedwoo…',
+      ready: 'Всё готово', failed: 'Не удалось загрузить Skedwoo.', retry: 'Повторить', live: 'Загрузка',
       serviceLabel: 'УСЛУГА', service: 'Выберите услугу', duration: '45 мин',
       specialistLabel: 'СПЕЦИАЛИСТ', specialist: 'Доступный специалист', available: 'Свободен сегодня',
       dateLabel: 'ДАТА', date: 'Выберите дату', timeLabel: 'СВОБОДНОЕ ВРЕМЯ', time: 'Выберите время',
       confirmed: 'Запись подтверждена', allReady: 'Всё готово'
     },
     uz: {
-      kicker: 'SKEDVO ISH MAYDONI', title: 'Skedvo tayyorlanmoqda', connecting: 'Skedvo yuklanmoqda…',
-      ready: 'Hammasi tayyor', failed: 'Skedvo yuklanmadi.', retry: 'Qayta urinish', live: 'Yuklanmoqda',
+      kicker: 'SKEDWOO ISH MAYDONI', title: 'Skedwoo tayyorlanmoqda', connecting: 'Skedwoo yuklanmoqda…',
+      ready: 'Hammasi tayyor', failed: 'Skedwoo yuklanmadi.', retry: 'Qayta urinish', live: 'Yuklanmoqda',
       serviceLabel: 'XIZMAT', service: 'Xizmatni tanlang', duration: '45 daq',
       specialistLabel: 'MUTAXASSIS', specialist: 'Mavjud mutaxassis', available: 'Bugun bo‘sh',
       dateLabel: 'SANA', date: 'Sanani tanlang', timeLabel: 'BO‘SH VAQT', time: 'Vaqtni tanlang',
       confirmed: 'Bron tasdiqlandi', allReady: 'Hammasi tayyor'
     },
     tr: {
-      kicker: 'SKEDVO ÇALIŞMA ALANI', title: 'Skedvo hazırlanıyor', connecting: 'Skedvo yükleniyor…',
-      ready: 'Her şey hazır', failed: 'Skedvo yüklenemedi.', retry: 'Tekrar dene', live: 'Yükleniyor',
+      kicker: 'SKEDWOO ÇALIŞMA ALANI', title: 'Skedwoo hazırlanıyor', connecting: 'Skedwoo yükleniyor…',
+      ready: 'Her şey hazır', failed: 'Skedwoo yüklenemedi.', retry: 'Tekrar dene', live: 'Yükleniyor',
       serviceLabel: 'HİZMET', service: 'Hizmet seçin', duration: '45 dk',
       specialistLabel: 'UZMAN', specialist: 'Uygun uzman', available: 'Bugün uygun',
       dateLabel: 'TARİH', date: 'Tarih seçin', timeLabel: 'UYGUN SAAT', time: 'Saat seçin',
       confirmed: 'Rezervasyon onaylandı', allReady: 'Her şey hazır'
     },
     ar: {
-      kicker: 'مساحة عمل SKEDVO', title: 'جارٍ تجهيز Skedvo', connecting: 'جارٍ تحميل Skedvo…',
-      ready: 'كل شيء جاهز', failed: 'تعذر تحميل Skedvo.', retry: 'إعادة المحاولة', live: 'جارٍ التحميل',
+      kicker: 'مساحة عمل SKEDWOO', title: 'جارٍ تجهيز Skedwoo', connecting: 'جارٍ تحميل Skedwoo…',
+      ready: 'كل شيء جاهز', failed: 'تعذر تحميل Skedwoo.', retry: 'إعادة المحاولة', live: 'جارٍ التحميل',
       serviceLabel: 'الخدمة', service: 'اختر الخدمة', duration: '45 دقيقة',
       specialistLabel: 'المختص', specialist: 'مختص متاح', available: 'متاح اليوم',
       dateLabel: 'التاريخ', date: 'اختر التاريخ', timeLabel: 'الوقت المتاح', time: 'اختر الوقت',
@@ -177,7 +177,7 @@
     return response.text();
   }
 
-  function prepareWorkspaceHtml(html) {
+  function openWorkspace(html) {
     var lang = language();
     var styles = '<link rel="stylesheet" href="/account-workspace-polish.css">';
     var scripts = [
@@ -192,132 +192,9 @@
     );
     html = html.replace('</head>', styles + '</head>');
     html = html.replace('</body>', scripts + '</body>');
-    return html;
-  }
-
-  function writeWorkspaceDocument(html) {
     document.open();
     document.write(html);
     document.close();
-  }
-
-  function executeWorkspaceScript(spec) {
-    return new Promise(function (resolve) {
-      var script = document.createElement('script');
-
-      spec.attributes.forEach(function (attribute) {
-        script.setAttribute(attribute.name, attribute.value);
-      });
-
-      if (spec.src) {
-        script.onload = resolve;
-        script.onerror = resolve;
-      } else {
-        script.textContent = spec.text;
-      }
-
-      document.body.appendChild(script);
-      if (!spec.src) resolve();
-    });
-  }
-
-  async function mountWorkspace(html) {
-    html = prepareWorkspaceHtml(html);
-
-    // Keep a document.write fallback for very old browsers and the isolated
-    // logic tests. Modern browsers mount the workspace behind the same loader,
-    // so there is no blank frame or second copy of the animation.
-    if (typeof DOMParser !== 'function' || typeof MutationObserver !== 'function') {
-      writeWorkspaceDocument(html);
-      return;
-    }
-
-    var parsed = new DOMParser().parseFromString(html, 'text/html');
-    var coreLoader = parsed.getElementById('accountBootLoader');
-    var coreLoaderScript = coreLoader && coreLoader.nextElementSibling;
-
-    if (coreLoaderScript && coreLoaderScript.tagName === 'SCRIPT') {
-      coreLoaderScript.remove();
-    }
-    if (coreLoader) coreLoader.remove();
-
-    var scriptSpecs = Array.prototype.map.call(
-      parsed.body.querySelectorAll('script'),
-      function (script) {
-        return {
-          src: script.getAttribute('src') || '',
-          text: script.textContent || '',
-          attributes: Array.prototype.map.call(script.attributes, function (attribute) {
-            return { name: attribute.name, value: attribute.value };
-          })
-        };
-      }
-    );
-    parsed.body.querySelectorAll('script').forEach(function (script) {
-      script.remove();
-    });
-
-    document.title = parsed.title || document.title;
-    document.documentElement.lang = language();
-    document.documentElement.dir = language() === 'ar' ? 'rtl' : 'ltr';
-
-    parsed.head.querySelectorAll('style, link[rel="stylesheet"]').forEach(function (asset) {
-      if (asset.tagName === 'LINK' && asset.getAttribute('href') === '/account-loader.css') return;
-      document.head.appendChild(document.importNode(asset, true));
-    });
-
-    if (sessionLoading) {
-      document.documentElement.classList.add('has-session');
-      wakeShell.classList.add('is-persistent');
-    }
-
-    Array.prototype.forEach.call(parsed.body.childNodes, function (node) {
-      document.body.appendChild(document.importNode(node, true));
-    });
-
-    var loaderFinished = false;
-    var observer = null;
-
-    async function finishPersistentLoader(ready) {
-      if (loaderFinished) return;
-      loaderFinished = true;
-      if (observer) observer.disconnect();
-
-      if (ready) {
-        wakeShell.classList.add('is-ready');
-        setStatus('ready');
-        await delay(260);
-      }
-
-      wakeShell.classList.add('is-leaving');
-      await delay(300);
-      wakeShell.hidden = true;
-      wakeShell.classList.remove('is-persistent');
-      document.body.classList.remove('bookly-loader-page');
-    }
-
-    function checkWorkspaceState() {
-      if (!sessionLoading) return;
-      if (document.documentElement.classList.contains('session-ready')) {
-        finishPersistentLoader(true);
-      } else if (!document.documentElement.classList.contains('has-session')) {
-        finishPersistentLoader(false);
-      }
-    }
-
-    if (sessionLoading) {
-      observer = new MutationObserver(checkWorkspaceState);
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    } else {
-      wakeShell.hidden = true;
-      document.body.classList.remove('bookly-loader-page');
-    }
-
-    for (var index = 0; index < scriptSpecs.length; index += 1) {
-      await executeWorkspaceScript(scriptSpecs[index]);
-    }
-
-    checkWorkspaceState();
   }
 
   async function start() {
@@ -352,7 +229,7 @@
         wakeShell.classList.add('is-leaving');
         await delay(200);
       }
-      await mountWorkspace(results[0]);
+      openWorkspace(results[0]);
     } catch (_) {
       if (runId !== activeRun) return;
       // Stop this run's polling before allowing a retry.

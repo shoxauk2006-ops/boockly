@@ -21,7 +21,7 @@ def get_business_setup(authorization: str = Header(default="")):
         account = _account_from_header(db, authorization)
         business = db.get(Business, account.business_id) if account.business_id else None
         if not business:
-            raise HTTPException(404, "Bookly business not found")
+            raise HTTPException(404, "Skedwoo business not found")
         return {
             "ok": True,
             "business": {
@@ -45,7 +45,7 @@ def save_business_setup(
         account = _account_from_header(db, authorization)
         business = db.get(Business, account.business_id) if account.business_id else None
         if not business:
-            raise HTTPException(404, "Bookly business not found")
+            raise HTTPException(404, "Skedwoo business not found")
 
         business.name = x.name.strip()
         business.description = x.description.strip()

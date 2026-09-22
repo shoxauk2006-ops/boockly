@@ -1,4 +1,4 @@
-/* Bookly Home — stable page background. */
+/* Skedwoo Home — stable page background. */
 body:has(.personal-home){background:#f4f5f7!important}
 body:has(.personal-home) .personal-home{
   position:relative!important;

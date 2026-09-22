@@ -127,7 +127,7 @@ const createSinglePagePdf = ({
 
   const header =
     encodePdfText(
-      '%PDF-1.4\n% Bookly\n'
+      '%PDF-1.4\n% Skedwoo\n'
     );
 
   const parts: Uint8Array[] = [
@@ -535,7 +535,7 @@ const selectedPrintSize =
 
     drawFittedText(
       ctx,
-      'BOOKLY',
+      'SKEDWOO',
       800,
       180,
       1200,
@@ -631,7 +631,7 @@ const selectedPrintSize =
     setFont(ctx, 700, 24);
     ctx.fillStyle = theme.muted;
     ctx.fillText(
-      'POWERED BY BOOKLY',
+      'POWERED BY SKEDWOO',
       800,
       2135
     );
@@ -667,7 +667,7 @@ const selectedPrintSize =
     setFont(ctx, 900, 42);
     ctx.fillStyle = theme.fg;
     ctx.fillText(
-      'BOOKLY',
+      'SKEDWOO',
       800,
       165
     );
@@ -719,7 +719,7 @@ const selectedPrintSize =
     setFont(ctx, 700, 22);
     ctx.fillStyle = theme.muted;
     ctx.fillText(
-      'BOOKLY',
+      'SKEDWOO',
       800,
       1885
     );
@@ -754,7 +754,7 @@ const selectedPrintSize =
     setFont(ctx, 900, 48);
     ctx.fillStyle = theme.fg;
     ctx.fillText(
-      'BOOKLY',
+      'SKEDWOO',
       450,
       175
     );
@@ -846,7 +846,7 @@ const selectedPrintSize =
     setFont(ctx, 700, 20);
     ctx.fillStyle = '#9a9fa7';
     ctx.fillText(
-      'POWERED BY BOOKLY',
+      'POWERED BY SKEDWOO',
       1450,
       1010
     );
@@ -873,7 +873,7 @@ const selectedPrintSize =
     setFont(ctx, 900, 42);
     ctx.fillStyle = theme.fg;
     ctx.fillText(
-      'BOOKLY',
+      'SKEDWOO',
       800,
       150
     );
@@ -940,7 +940,7 @@ const selectedPrintSize =
     setFont(ctx, 700, 22);
     ctx.fillStyle = theme.muted;
     ctx.fillText(
-      'POWERED BY BOOKLY',
+      'POWERED BY SKEDWOO',
       800,
       2110
     );
@@ -1178,7 +1178,7 @@ const downloadPrintableQr =
           files: [file],
           title: t(
             'owner.printQrTitle',
-            'Bookly — QR для печати'
+            'Skedwoo — QR для печати'
           )
         });
 
@@ -1284,7 +1284,7 @@ const downloadPrintableQr =
             files: [file],
             title: t(
               'owner.printQrTitle',
-              'Bookly — QR для печати'
+              'Skedwoo — QR для печати'
             )
           });
 

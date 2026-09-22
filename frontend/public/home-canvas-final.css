@@ -1,4 +1,4 @@
-/* Bookly Home — continuous page canvas
+/* Skedwoo Home — continuous page canvas
    Decorations belong to the page itself, not to the Hero/card box. */
 body:has(.personal-home) .personal-home{
   position:relative!important;
@@ -31,7 +31,7 @@ body:has(.personal-home) .personal-home::before{
 
 /* Global decorative B: it can visually continue behind headings, cards and buttons. */
 body:has(.personal-home) .personal-home::after{
-  content:"B"!important;
+  content:"S"!important;
   position:absolute!important;
   z-index:0!important;
   pointer-events:none!important;

@@ -1,4 +1,4 @@
-# Bookly v0.5 — production deployment
+# Skedwoo v0.5 — production deployment
 
 ## What changed
 - Docker images for API, bot, worker and frontend.
@@ -23,7 +23,7 @@ Caddy obtains HTTPS certificates automatically after DNS points to the server.
 
 ## Telegram setup
 1. Open @BotFather.
-2. `/mybots` -> Bookly bot -> Bot Settings.
+2. `/mybots` -> Skedwoo bot -> Bot Settings.
 3. Configure a Main Mini App with `https://app.example.com`.
 4. Set the bot username in `BOT_USERNAME`.
 5. Keep `BOT_TOKEN` only in `.env`; never commit it to Git.

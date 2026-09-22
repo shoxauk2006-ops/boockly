@@ -231,7 +231,7 @@ def _new_session(db, account_id: int) -> str:
 def _account_from_header(db, authorization: str) -> BooklyAccount:
     scheme, _, token = (authorization or "").partition(" ")
     if scheme.lower() != "bearer" or not token:
-        raise HTTPException(401, "Bookly account authentication required")
+        raise HTTPException(401, "Skedwoo account authentication required")
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     session = (
         db.query(BooklySession)
@@ -240,10 +240,10 @@ def _account_from_header(db, authorization: str) -> BooklyAccount:
         .first()
     )
     if not session:
-        raise HTTPException(401, "Invalid or expired Bookly session")
+        raise HTTPException(401, "Invalid or expired Skedwoo session")
     account = db.get(BooklyAccount, session.account_id)
     if not account:
-        raise HTTPException(401, "Bookly account not found")
+        raise HTTPException(401, "Skedwoo account not found")
     return account
 
 
@@ -853,11 +853,11 @@ def account_connect_telegram(
             .first()
         )
         if existing:
-            raise HTTPException(409, "This Telegram account is already connected to another Bookly account")
+            raise HTTPException(409, "This Telegram account is already connected to another Skedwoo account")
 
         business = db.get(Business, account.business_id) if account.business_id else None
         if not business:
-            raise HTTPException(400, "Bookly business not found")
+            raise HTTPException(400, "Skedwoo business not found")
 
         from . import paddle_original
         web_owner_id = -int(account.id)
@@ -921,7 +921,7 @@ def account_telegram_link(authorization: str = Header(default="")):
         account = _account_from_header(db, authorization)
         business = db.get(Business, account.business_id) if account.business_id else None
         if not business:
-            raise HTTPException(400, "Bookly business not found")
+            raise HTTPException(400, "Skedwoo business not found")
 
         raw = secrets.token_urlsafe(32)
         db.add(BooklyTelegramLink(
@@ -932,7 +932,7 @@ def account_telegram_link(authorization: str = Header(default="")):
         ))
         db.commit()
 
-        bot_username = os.getenv("BOT_USERNAME", "Boockly_bot").lstrip("@").strip()
+        bot_username = os.getenv("BOT_USERNAME", "skedwoo_bot").lstrip("@").strip()
         start_parameter = "bookly-connect-" + raw
         if len(start_parameter) > 64:
             raise HTTPException(500, "Telegram connection parameter is too long")
@@ -975,7 +975,7 @@ def account_connect_telegram_from_web(
         account = db.get(BooklyAccount, link.account_id)
         business = db.get(Business, link.business_id)
         if not account or not business or account.business_id != business.id:
-            raise HTTPException(400, "Bookly account or business not found")
+            raise HTTPException(400, "Skedwoo account or business not found")
 
         existing = (
             db.query(BooklyAccount)
@@ -984,7 +984,7 @@ def account_connect_telegram_from_web(
             .first()
         )
         if existing:
-            raise HTTPException(409, "This Telegram account is already connected to another Bookly account")
+            raise HTTPException(409, "This Telegram account is already connected to another Skedwoo account")
 
         from . import paddle_original
         web_owner_id = -int(account.id)
@@ -1031,7 +1031,7 @@ def account_billing(authorization: str = Header(default="")):
         if not business:
             raise HTTPException(
                 400,
-                "Bookly business not found"
+                "Skedwoo business not found"
             )
 
         subscription = (
@@ -1042,7 +1042,7 @@ def account_billing(authorization: str = Header(default="")):
             .first()
         )
 
-        # Synchronize lifecycle state from Paddle so Bookly cannot
+        # Synchronize lifecycle state from Paddle so Skedwoo cannot
         # keep showing a trialing subscription as paid/active after webhook
         # events arrive out of order. Package items are synchronized only
         # when there is no pending downgrade.
@@ -1096,7 +1096,7 @@ def account_billing(authorization: str = Header(default="")):
 
                     state_changed = False
 
-                    # Preserve Bookly's "cancelled" marker while Paddle has a
+                    # Preserve Skedwoo's "cancelled" marker while Paddle has a
                     # scheduled cancel/pause, otherwise trust Paddle's live
                     # lifecycle status.
                     if scheduled_action not in {"cancel", "pause"}:
@@ -1227,7 +1227,7 @@ def account_billing(authorization: str = Header(default="")):
 
                 except Exception as exc:
                     print(
-                        "BOOKLY BILLING PADDLE SYNC SKIPPED:",
+                        "SKEDWOO BILLING PADDLE SYNC SKIPPED:",
                         repr(exc),
                     )
 
@@ -1660,7 +1660,7 @@ def _account_subscription(db, account):
     if not business:
         raise HTTPException(
             400,
-            "Bookly business not found"
+            "Skedwoo business not found"
         )
 
     subscription = (
@@ -1887,7 +1887,7 @@ def account_change_subscription_limit(
         # A normal paid downgrade starts next billing period.
         # During a free trial, Paddle allows item changes only with
         # do_not_bill, so package changes take effect immediately in
-        # Bookly while the trial itself continues unchanged.
+        # Skedwoo while the trial itself continues unchanged.
         if limit < current and not is_trialing:
             subscription.pending_services_limit = (
                 limit
@@ -2279,14 +2279,14 @@ def account_paddle_checkout_token(authorization: str = Header(default="")):
         account = _account_from_header(db, authorization)
         business = db.get(Business, account.business_id) if account.business_id else None
         if not business:
-            raise HTTPException(400, "Bookly business not found")
+            raise HTTPException(400, "Skedwoo business not found")
 
         account_id = db.execute(
             text("SELECT account_id FROM businesses WHERE id = :business_id"),
             {"business_id": business.id},
         ).scalar_one_or_none()
         if int(account_id or 0) != int(account.id):
-            raise HTTPException(403, "Bookly business is not linked to this account")
+            raise HTTPException(403, "Skedwoo business is not linked to this account")
 
         subscription = (
             db.query(Subscription)

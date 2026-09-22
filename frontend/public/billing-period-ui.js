@@ -79,7 +79,7 @@
     var api = getApi();
     var initData = getInitData();
     var businessId = getBusinessId();
-    if (!api || !initData || !businessId) return Promise.reject(new Error('Bookly billing context unavailable'));
+    if (!api || !initData || !businessId) return Promise.reject(new Error('Skedwoo billing context unavailable'));
 
     state.loadingToken = fetchJson(api + '/admin/subscription/checkout-token', {
       method:'POST',

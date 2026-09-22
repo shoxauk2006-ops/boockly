@@ -1,4 +1,4 @@
-"""Bookly Pro subscription pricing and service-limit configuration.
+"""Skedwoo Pro subscription pricing and service-limit configuration.
 
 The base Pro subscription is $7.99/month and includes 10 services.
 Additional service capacity is a recurring add-on applied at the next

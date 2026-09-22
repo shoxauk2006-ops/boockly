@@ -156,7 +156,7 @@ export function PersonalHome({
         <div className="personal-home-main">
           <div className="personal-home-hero">
             <span className="personal-eyebrow">
-              BOOKLY
+              SKEDWOO
             </span>
 
             <h1>
@@ -168,7 +168,7 @@ export function PersonalHome({
             <p>
               {t(
                 'home.description',
-                'Bookly помогает бизнесу принимать записи прямо в Telegram.'
+                'Skedwoo помогает бизнесу принимать записи прямо в Telegram.'
               )}
             </p>
           </div>
@@ -207,11 +207,11 @@ export function PersonalHome({
                   {businesses.length
                     ? t(
                         'home.manageBusiness',
-                        'Управляйте своими бизнесами в Bookly'
+                        'Управляйте своими бизнесами в Skedwoo'
                       )
                     : t(
                         'home.createBusinessWebsiteHint',
-                        'Создайте аккаунт и бизнес на сайте Bookly'
+                        'Создайте аккаунт и бизнес на сайте Skedwoo'
                       )}
                 </p>
 
@@ -323,7 +323,7 @@ export function PersonalHome({
         <div className="personal-page">
           <div className="personal-home-hero personal-compact">
             <span className="personal-eyebrow">
-              BOOKLY
+              SKEDWOO
             </span>
 
             <h1>

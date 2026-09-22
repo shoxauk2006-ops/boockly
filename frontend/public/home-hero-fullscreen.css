@@ -1,4 +1,4 @@
-/* Bookly Home — full-width Hero canvas */
+/* Skedwoo Home — full-width Hero canvas */
 body:has(.personal-home) .personal-home{
   background:
     radial-gradient(circle at 88% 7%, rgba(17,17,17,.06), transparent 18%),

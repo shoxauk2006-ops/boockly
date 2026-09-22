@@ -412,7 +412,7 @@ def admin_specialist_telegram_link(
         if len(start_parameter) > 64:
             raise HTTPException(500, "Telegram staff connection parameter is too long")
 
-        bot_username = os.getenv("BOT_USERNAME", "Boockly_bot").lstrip("@").strip()
+        bot_username = os.getenv("BOT_USERNAME", "skedwoo_bot").lstrip("@").strip()
         return {
             "ok": True,
             "specialist_id": specialist.id,

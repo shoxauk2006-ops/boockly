@@ -266,7 +266,7 @@ useEffect(() => {
       ) {
         await navigator.share({
           files: [file],
-          title: t('owner.qrTitle', 'Bookly QR-код')
+          title: t('owner.qrTitle', 'Skedwoo QR-код')
         });
 
         return;
@@ -1124,7 +1124,7 @@ return (
     {subscriptionLocked
   ? t(
       'owner.activateForQR',
-      'Активируйте Bookly Pro, чтобы получить QR-код'
+      'Активируйте Skedwoo Pro, чтобы получить QR-код'
     )
   : t(
       'owner.clientQrHint',
@@ -1153,14 +1153,14 @@ return (
       <strong>
         {t(
           'owner.booklyProRequired',
-          'Bookly Pro'
+          'Skedwoo Pro'
         )}
       </strong>
 
       <span>
         {t(
           'owner.activateToUnlock',
-          'Активируйте Bookly Pro'
+          'Активируйте Skedwoo Pro'
         )}
       </span>
     </div>

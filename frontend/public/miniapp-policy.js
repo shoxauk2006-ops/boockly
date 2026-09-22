@@ -1,24 +1,24 @@
-/* Skedvo Mini App policy layer.
+/* Skedwoo Mini App policy layer.
    Telegram is the operating interface; account/business creation and
-   Skedvo billing remain on the standalone website. */
+   Skedwoo billing remain on the standalone website. */
 (function () {
   'use strict';
 
   var telegram = window.Telegram && window.Telegram.WebApp;
   if (!telegram || !telegram.initData) return;
 
-  var WEBSITE_URL = 'https://boockly.vercel.app/landing.html';
+  var WEBSITE_URL = 'https://skedwoo.vercel.app/landing.html';
   var CREATE_RE = /создать\s+бизнес|создание\s+бизнеса|добавить\s+бизнес|add\s+business|create\s+business|biznes\s+yaratish|işletme\s+oluştur|إنشاء\s+نشاط/i;
   var BILLING_RE = /подписк|subscription|тариф|tariff|trial|оплат|payment|billing|checkout|bookly\s*pro|telegram\s*stars|\bXTR\b|период\s+оплаты/i;
   var ADD_BUSINESS_RE = /^(добавить\s+бизнес|add\s+business|biznes\s+yaratish|işletme\s+oluştur)$/i;
   var adminLandingCheckScheduled = false;
 
   var LABELS = {
-    ru: { title: 'Создать бизнес через Skedvo', text: 'Создание бизнеса доступно на сайте Skedvo. Там же проходит регистрация и подключение сервиса.', button: 'Открыть сайт Skedvo' },
-    en: { title: 'Create your business on Skedvo', text: 'Business creation is available on the Skedvo website. Registration and setup are completed there.', button: 'Open Skedvo website' },
-    uz: { title: 'Skedvo orqali biznes yaratish', text: 'Biznes yaratish Skedvo saytida mavjud. Ro‘yxatdan o‘tish va sozlash ham shu yerda bajariladi.', button: 'Skedvo saytini ochish' },
-    tr: { title: 'Skedvo üzerinden işletme oluştur', text: 'İşletme oluşturma Skedvo web sitesinde yapılır. Kayıt ve kurulum da orada tamamlanır.', button: 'Skedvo sitesini aç' },
-    ar: { title: 'إنشاء نشاط عبر Skedvo', text: 'إنشاء النشاط متاح على موقع Skedvo. يتم التسجيل والإعداد هناك أيضًا.', button: 'فتح موقع Skedvo' }
+    ru: { title: 'Создать бизнес через Skedwoo', text: 'Создание бизнеса доступно на сайте Skedwoo. Там же проходит регистрация и подключение сервиса.', button: 'Открыть сайт Skedwoo' },
+    en: { title: 'Create your business on Skedwoo', text: 'Business creation is available on the Skedwoo website. Registration and setup are completed there.', button: 'Open Skedwoo website' },
+    uz: { title: 'Skedwoo orqali biznes yaratish', text: 'Biznes yaratish Skedwoo saytida mavjud. Ro‘yxatdan o‘tish va sozlash ham shu yerda bajariladi.', button: 'Skedwoo saytini ochish' },
+    tr: { title: 'Skedwoo üzerinden işletme oluştur', text: 'İşletme oluşturma Skedwoo web sitesinde yapılır. Kayıt ve kurulum da orada tamamlanır.', button: 'Skedwoo sitesini aç' },
+    ar: { title: 'إنشاء نشاط عبر Skedwoo', text: 'إنشاء النشاط متاح على موقع Skedwoo. يتم التسجيل والإعداد هناك أيضًا.', button: 'فتح موقع Skedwoo' }
   };
 
   function language() {
@@ -42,27 +42,27 @@
 
   function replaceLegacyActivationCopy() {
     var replacements = [
-      [/Чтобы начать принимать записи от клиентов, активируйте подписку Skedvo Pro\. После активации вы получите клиентскую ссылку и сможете начать принимать записи\./g, 'После настройки бизнеса клиенты смогут находить его по клиентской ссылке и самостоятельно записываться на услуги.'],
-      [/Чтобы клиентов? могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Skedvo Pro\./g, 'Клиенты смогут найти ваш бизнес по клиентской ссылке и самостоятельно записываться на услуги.'],
-      [/Активируйте подписку, чтобы открыть доступ к функциям Skedvo Pro/g, 'Управляйте функциями Skedvo прямо здесь'],
+      [/Чтобы начать принимать записи от клиентов, активируйте подписку Skedwoo Pro\. После активации вы получите клиентскую ссылку и сможете начать принимать записи\./g, 'После настройки бизнеса клиенты смогут находить его по клиентской ссылке и самостоятельно записываться на услуги.'],
+      [/Чтобы клиентов? могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Skedwoo Pro\./g, 'Клиенты смогут найти ваш бизнес по клиентской ссылке и самостоятельно записываться на услуги.'],
+      [/Активируйте подписку, чтобы открыть доступ к функциям Skedwoo Pro/g, 'Управляйте функциями Skedwoo прямо здесь'],
       [/Активируйте подписку, чтобы получить клиентскую ссылку/g, 'Используйте клиентскую ссылку, чтобы делиться страницей бизнеса'],
       [/Активируйте подписку, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
-      [/Активируйте Skedvo Pro, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
-      [/Активируйте подписку, чтобы получить полный доступ/g, 'Полный доступ к функциям Skedvo'],
-      [/Активировать Skedvo Pro/g, 'Открыть Skedvo'],
-      [/Оплатите подписку, чтобы активировать Skedvo\./g, 'Настройте бизнес, чтобы начать работу с Skedvo.'],
-      [/Функции Skedvo Pro/g, 'Функции Skedvo'],
-      [/Skedvo Pro открывает клиентскую часть Skedvo:/g, 'Клиентская часть Skedvo включает:'],
-      [/Без подписки вы можете создать и настраивать бизнес, добавлять услуги, управлять графиком, блокировками и записями в админке\. Подписка нужна для подключения клиентов и начала приёма онлайн-записей\./g, 'В Skedvo вы настраиваете бизнес, добавляете услуги, управляете графиком, блокировками и записями. Клиенты записываются через клиентскую страницу бизнеса.'],
+      [/Активируйте Skedwoo Pro, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
+      [/Активируйте подписку, чтобы получить полный доступ/g, 'Полный доступ к функциям Skedwoo'],
+      [/Активировать Skedwoo Pro/g, 'Открыть Skedwoo'],
+      [/Оплатите подписку, чтобы активировать Skedwoo\./g, 'Настройте бизнес, чтобы начать работу с Skedwoo.'],
+      [/Функции Skedwoo Pro/g, 'Функции Skedwoo'],
+      [/Skedwoo Pro открывает клиентскую часть Skedwoo:/g, 'Клиентская часть Skedwoo включает:'],
+      [/Без подписки вы можете создать и настраивать бизнес, добавлять услуги, управлять графиком, блокировками и записями в админке\. Подписка нужна для подключения клиентов и начала приёма онлайн-записей\./g, 'В Skedwoo вы настраиваете бизнес, добавляете услуги, управляете графиком, блокировками и записями. Клиенты записываются через клиентскую страницу бизнеса.'],
       [/До 10 услуг в базовом тарифе/gi, 'Добавляйте услуги и устанавливайте цены'],
       [/Activate your subscription to get the client link/gi, 'Use the client link to share your business page'],
       [/Activate your subscription to get the QR code/gi, 'Business page QR code'],
-      [/Activate your subscription to get full access/gi, 'Full access to Skedvo features'],
-      [/Activate Skedvo Pro/gi, 'Open Skedvo'],
-      [/Activate your subscription/gi, 'Use Skedvo'],
-      [/Skedvo Pro opens the client side of Skedvo:/gi, 'The Skedvo client side includes:'],
-      [/activate your subscription/gi, 'use Skedvo'],
-      [/Skedvo Pro/gi, 'Skedvo']
+      [/Activate your subscription to get full access/gi, 'Full access to Skedwoo features'],
+      [/Activate Skedwoo Pro/gi, 'Open Skedwoo'],
+      [/Activate your subscription/gi, 'Use Skedwoo'],
+      [/Skedwoo Pro opens the client side of Skedwoo:/gi, 'The Skedwoo client side includes:'],
+      [/activate your subscription/gi, 'use Skedwoo'],
+      [/Skedwoo Pro/gi, 'Skedwoo']
     ];
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     var nodes = [], node;

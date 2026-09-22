@@ -645,11 +645,11 @@ export function Client({
     return (
       <div className="loading-screen">
         <div className="loading-logo">
-          B
+          S
         </div>
 
         <h2>
-          Bookly
+          Skedwoo
         </h2>
 
         <div className="loading-spinner"></div>

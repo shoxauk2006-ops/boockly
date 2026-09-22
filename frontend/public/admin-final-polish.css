@@ -1,4 +1,4 @@
-/* Final Bookly Admin polish: visual-only layer on top of the existing working UI. */
+/* Final Skedwoo Admin polish: visual-only layer on top of the existing working UI. */
 body:has(.admin-bottom-nav){
   --admin-bg:#f4f5f7;
   --admin-border:#e5e8ec;

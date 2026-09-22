@@ -169,7 +169,7 @@ export function MapPicker({
     },
     error => {
       console.error(
-        'BOOKLY GEOLOCATION ERROR:',
+        'SKEDWOO GEOLOCATION ERROR:',
         error
       );
 
@@ -408,7 +408,7 @@ export function MapPicker({
             },
             error => {
               console.error(
-                'BOOKLY GEOLOCATION ERROR:',
+                'SKEDWOO GEOLOCATION ERROR:',
                 error
               );
 
@@ -535,7 +535,7 @@ export function MapPicker({
         </button>
 
         <span className="personal-eyebrow">
-          BOOKLY
+          SKEDWOO
         </span>
 
         <h2>

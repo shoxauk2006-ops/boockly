@@ -24,7 +24,7 @@ jobs:
     if not business:
         return
     text=(
-        "🔔 <b>Новая запись в Bookly</b>\\n\\n"
+        "🔔 <b>Новая запись в Skedwoo</b>\\n\\n"
         f"👤 {booking.client_name}\\n"
         f"📞 {booking.client_phone or 'номер не передан'}\\n"
         f"💈 {service.name}\\n"
@@ -51,7 +51,7 @@ jobs:
     )
 
     text=(
-        "🔔 <b>Новая запись в Bookly</b>\\n\\n"
+        "🔔 <b>Новая запись в Skedwoo</b>\\n\\n"
         f"👤 {booking.client_name}\\n"
         f"📞 {booking.client_phone or 'номер не передан'}\\n"
         f"💈 {service.name}\\n"

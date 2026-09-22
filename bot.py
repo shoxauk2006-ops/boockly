@@ -4,23 +4,24 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 TOKEN=os.getenv("BOT_TOKEN")
-CANONICAL_WEBAPP_URL="https://boockly.vercel.app"
+CANONICAL_WEBAPP_URL="https://skedwoo.vercel.app"
 configured_webapp_url=os.getenv("WEBAPP_URL","").strip().rstrip("/")
 WEBAPP_URL=(
     CANONICAL_WEBAPP_URL
     if not configured_webapp_url
+    or configured_webapp_url == "https://boockly.vercel.app"
     or configured_webapp_url == "https://boockly-3.onrender.com"
     else configured_webapp_url
 )
-BOT_USERNAME=os.getenv("BOT_USERNAME","BooklyBot")
+BOT_USERNAME=os.getenv("BOT_USERNAME","skedwoo_bot")
 API_URL=(os.getenv("BOOKLY_API_URL") or os.getenv("PUBLIC_API_URL") or "http://api:8000").rstrip("/")
 
 BOOKLY_BOT_TEXTS={
-  "ru": ("Открыть Skedvo", "Skedvo — бронирование внутри Telegram.\n\nОткройте приложение:"),
-  "en": ("Open Skedvo", "Skedvo — booking inside Telegram.\n\nOpen the app:"),
-  "uz": ("Skedvo’ni ochish", "Skedvo — Telegram ichida bron qilish.\n\nIlovani oching:"),
-  "tr": ("Skedvo’yi aç", "Skedvo — Telegram içinde rezervasyon.\n\nUygulamayı açın:"),
-  "ar": ("فتح Skedvo", "Skedvo — الحجز داخل Telegram.\n\nافتح التطبيق:"),
+  "ru": ("Открыть Skedwoo", "Skedwoo — бронирование внутри Telegram.\n\nОткройте приложение:"),
+  "en": ("Open Skedwoo", "Skedwoo — booking inside Telegram.\n\nOpen the app:"),
+  "uz": ("Skedwoo’ni ochish", "Skedwoo — Telegram ichida bron qilish.\n\nIlovani oching:"),
+  "tr": ("Skedwoo’yi aç", "Skedwoo — Telegram içinde rezervasyon.\n\nUygulamayı açın:"),
+  "ar": ("فتح Skedwoo", "Skedwoo — الحجز داخل Telegram.\n\nافتح التطبيق:"),
 }
 
 def normalize_bot_language(code):
@@ -90,7 +91,7 @@ def connect_pending_token(token: str, user) -> bool:
             response.read()
         return True
     except Exception as exc:
-        print(f"Skedvo Telegram connection failed: {exc}", flush=True)
+        print(f"Skedwoo Telegram connection failed: {exc}", flush=True)
         return False
 
 
@@ -104,7 +105,7 @@ async def main():
         slug=args[1] if len(args)>1 else ''
 
         # Finish the web -> Telegram connection on the bot side first.
-        # The Mini App button then opens the normal Skedvo URL, so the
+        # The Mini App button then opens the normal Skedwoo URL, so the
         # connection no longer depends on Telegram preserving a token inside
         # a WebAppInfo URL.
         if slug.startswith("bookly-connect-") and message.from_user:
@@ -114,7 +115,7 @@ async def main():
                 message.from_user,
             )
             if not connected:
-                print("Skedvo connection token was not consumed; opening Skedvo anyway.", flush=True)
+                print("Skedwoo connection token was not consumed; opening Skedwoo anyway.", flush=True)
 
         url=WEBAPP_URL
         lang=normalize_bot_language(getattr(message.from_user, "language_code", None))

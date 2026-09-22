@@ -364,7 +364,7 @@ export default function Specialists({ services, reload, t }: Props) {
       encodeURIComponent(
         t(
           'specialists.telegramInviteShareText',
-          'Подключитесь к команде в Bookly'
+          'Подключитесь к команде в Skedwoo'
         )
       );
 

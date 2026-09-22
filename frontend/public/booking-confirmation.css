@@ -1,4 +1,4 @@
-/* Skedvo Client — successful booking confirmation */
+/* Skedwoo Client — successful booking confirmation */
 body:has(.client-hero) .subscription-modal-overlay{
   background:rgba(15,23,42,.34);
   backdrop-filter:blur(8px);

@@ -1,4 +1,4 @@
-/* Bookly Home — final composition
+/* Skedwoo Home — final composition
    One continuous background canvas, foreground UI cards, fixed bottom navigation. */
 
 body:has(.personal-home){
@@ -38,9 +38,9 @@ body:has(.personal-home) .personal-home::before{
     linear-gradient(72deg,transparent 0 61%,rgba(17,17,17,.012) 61.1%,transparent 61.28%);
 }
 
-/* Large Bookly B is part of the global canvas and is intentionally behind UI cards. */
+/* Large Skedwoo B is part of the global canvas and is intentionally behind UI cards. */
 body:has(.personal-home) .personal-home::after{
-  content:"B"!important;
+  content:"S"!important;
   position:absolute!important;
   z-index:0!important;
   pointer-events:none!important;
@@ -109,7 +109,7 @@ body:has(.personal-home) .personal-business-card{
   background:linear-gradient(145deg,rgba(19,19,19,.98),rgba(39,39,39,.94))!important;
 }
 
-/* Info control belongs to the Bookly top area, not the Hero. */
+/* Info control belongs to the Skedwoo top area, not the Hero. */
 body:has(.personal-home) .personal-home-menu{
   position:absolute!important;
   top:8px!important;

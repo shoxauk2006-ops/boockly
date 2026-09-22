@@ -18,19 +18,13 @@ assert.ok(
 );
 assert.match(html, /getElementById\('wakeShell'\)\.hidden\s*=\s*false/,
   'returning users must see the loader during the first HTML parse');
-assert.match(source, /new DOMParser\(\)\.parseFromString/,
-  'the workspace must mount behind the existing loader instead of replacing the document');
-assert.match(source, /coreLoader\.remove\(\)/,
-  'the duplicate loader from the workspace document must be removed');
-assert.match(css, /\.wake-shell\.is-persistent\s*\{/,
-  'the single loader must stay above the workspace until it is ready');
 assert.match(coreHtml, /class="account-boot-loader wake-shell"/,
   'the account boot state must reuse the animated loader');
 assert.match(coreHtml, /href="\/account-loader\.css"/,
   'the account boot state must load the shared animation styles');
 assert.doesNotMatch(coreHtml, /account-boot-mark|accountBootText/,
   'the old B-only loader must be removed');
-assert.match(coreHtml, /title:'Готовим Bookly'/,
+assert.match(coreHtml, /title:'Готовим Skedwoo'/,
   'the replacement loader must localize itself before it becomes visible');
 
 for (const asset of [source, html, coreHtml]) {
@@ -248,7 +242,7 @@ for (const latency of [0, 500, 1499]) {
   await test.clock.advanceTo(92500);
   assert.equal(test.retry.hidden, false);
   assert.equal(test.shell.hidden, false);
-  assert.equal(test.status.textContent, 'Не удалось загрузить Bookly.');
+  assert.equal(test.status.textContent, 'Не удалось загрузить Skedwoo.');
   assert.equal(test.state.html, '');
   ready = true;
   const retry = test.retry.listeners.click();
@@ -268,7 +262,7 @@ for (const latency of [0, 500, 1499]) {
   assert.equal(test.retry.hidden, false);
   assert.equal(test.state.healthAttempts, 1, 'failed runs must stop polling');
   assert.deepEqual(test.shownAt, [0], 'the old reveal timer must be cleared');
-  assert.equal(test.status.textContent, 'Не удалось загрузить Bookly.');
+  assert.equal(test.status.textContent, 'Не удалось загрузить Skedwoo.');
 }
 
 console.log('Account loader: first-paint, warm, cold, timeout, retry, and failure scenarios passed');

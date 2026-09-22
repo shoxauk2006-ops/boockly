@@ -72,7 +72,7 @@ def _all_annual_price_ids() -> set[str]:
 
 
 def _limit_from_items(items) -> int:
-    """Recognize both monthly and annual Bookly Paddle items."""
+    """Recognize both monthly and annual Skedwoo Paddle items."""
     annual_base = str(ANNUAL_PRICE_IDS[10] or "").strip()
     monthly_base = str(_original.PRICE_IDS[10] or "").strip()
 
@@ -183,7 +183,7 @@ def _subscription_interval(subscription_id: str) -> str:
                 return interval
     except Exception as exc:
         print(
-            "BOOKLY PADDLE INTERVAL DETECTION ERROR:",
+            "SKEDWOO PADDLE INTERVAL DETECTION ERROR:",
             repr(exc),
         )
 
@@ -213,10 +213,10 @@ def _sync_business_from_subscription(
 
 def _sync_limit_from_paddle_event(payload: dict) -> None:
     """
-    Do not sync Bookly's current service limit from Paddle subscription items.
+    Do not sync Skedwoo's current service limit from Paddle subscription items.
 
     Paddle may update subscription items immediately when a downgrade is
-    scheduled for the next billing period. Bookly keeps its own current
+    scheduled for the next billing period. Skedwoo keeps its own current
     package and pending package separately.
     """
     return
@@ -486,7 +486,7 @@ def external_checkout_config(token: str):
         "environment": _original.PADDLE_ENV,
         "client_token": _public_client_token(),
         "app_url": os.getenv("PUBLIC_APP_URL", "").strip(),
-        "bot_username": os.getenv("BOT_USERNAME", "BooklyBot").strip(),
+        "bot_username": os.getenv("BOT_USERNAME", "skedwoo_bot").strip(),
         "business_id": business_id,
         "business_name": business.name,
         "trial_available": trial_available,

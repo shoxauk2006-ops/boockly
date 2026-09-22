@@ -204,7 +204,7 @@ def _require_config() -> None:
 
         raise HTTPException(
             500,
-            "Paddle Price IDs must be unique for Bookly limits: "
+            "Paddle Price IDs must be unique for Skedwoo limits: "
             + ", ".join(map(str, duplicated_limits)),
         )
 
@@ -241,7 +241,7 @@ def _items_for_limit(limit: int) -> list[dict]:
     if limit not in LIMITS:
         raise HTTPException(400, "Недопустимый лимит услуг")
     if not PRICE_IDS[10]:
-        raise HTTPException(500, "Bookly Pro base Price ID is not configured")
+        raise HTTPException(500, "Skedwoo Pro base Price ID is not configured")
 
     items = [{"price_id": PRICE_IDS[10], "quantity": 1}]
     if limit != 10:
@@ -258,7 +258,7 @@ def _limit_from_items(items) -> int:
     if not base_price_id:
         raise HTTPException(
             500,
-            "Bookly Pro base Price ID is not configured",
+            "Skedwoo Pro base Price ID is not configured",
         )
 
     addon_price_to_limit = {
@@ -308,7 +308,7 @@ def _limit_from_items(items) -> int:
 
     raise HTTPException(
         500,
-        "Invalid Bookly Paddle subscription items",
+        "Invalid Skedwoo Paddle subscription items",
     )
 
 
@@ -788,7 +788,7 @@ def _apply_paddle_event(payload: dict) -> None:
 
         if not business:
             print(
-                "BOOKLY PADDLE: unmapped event",
+                "SKEDWOO PADDLE: unmapped event",
                 event_id,
                 event_type,
                 "subscription_id=",
@@ -798,7 +798,7 @@ def _apply_paddle_event(payload: dict) -> None:
             )
             raise ValueError(
                 "Paddle event cannot be mapped "
-                f"to Bookly business: {event_id}"
+                f"to Skedwoo business: {event_id}"
             )
 
         subscription = _get_or_create_subscription(
@@ -854,7 +854,7 @@ def _apply_paddle_event(payload: dict) -> None:
             )
 
             # Initial checkout may complete before subscription.created.
-            # When the transaction contains the full Bookly item set, use it
+            # When the transaction contains the full Skedwoo item set, use it
             # immediately so a paid 20/30/50/100-service package cannot sit
             # at the default 10-service limit while webhook events reorder.
             if (
@@ -1041,12 +1041,12 @@ def _apply_paddle_event(payload: dict) -> None:
                     or subscription.expires_at
                 )
 
-            # Do not change Bookly's current package from
+            # Do not change Skedwoo's current package from
             # subscription.updated.
             #
             # Paddle can update its subscription items immediately
             # even when the billing change is scheduled for the next
-            # billing period. Bookly keeps its own current package
+            # billing period. Skedwoo keeps its own current package
             # until the paid period actually ends.
             pass
 
@@ -1162,7 +1162,7 @@ async def paddle_webhook(request: Request):
     except HTTPException:
         raise
     except Exception as exc:
-        print("BOOKLY PADDLE WEBHOOK ERROR:", repr(exc))
+        print("SKEDWOO PADDLE WEBHOOK ERROR:", repr(exc))
         raise HTTPException(500, "Paddle webhook processing failed")
 
     return {"received": True}
@@ -1242,7 +1242,7 @@ def create_subscription_checkout_token(
         if not trial_available and not NO_TRIAL_BASE_PRICE_ID:
             raise HTTPException(
                 500,
-                "Bookly regular Price ID is not configured",
+                "Skedwoo regular Price ID is not configured",
             )
 
         token = _create_checkout_token(
@@ -1281,7 +1281,7 @@ def preview_subscription_limit(
     paddle_items = paddle_data.get("items") or []
 
     print(
-        "BOOKLY PADDLE DEBUG PREVIEW:",
+        "SKEDWOO PADDLE DEBUG PREVIEW:",
         {
             "bookly_current_limit": current,
             "requested_limit": x.services_limit,

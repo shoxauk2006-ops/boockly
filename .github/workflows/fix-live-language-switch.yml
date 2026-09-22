@@ -1,4 +1,4 @@
-name: Apply Bookly map and services patch
+name: Apply Skedwoo map and services patch
 
 on:
   push:
@@ -52,7 +52,7 @@ jobs:
             },
             error => {
               console.error(
-                'BOOKLY GEOLOCATION ERROR:',
+                'SKEDWOO GEOLOCATION ERROR:',
                 error
               );
 

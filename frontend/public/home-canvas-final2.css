@@ -1,4 +1,4 @@
-/* Bookly Home — final canvas alignment */
+/* Skedwoo Home — final canvas alignment */
 
 /* The page artwork is allowed to extend naturally with the whole document.
    Do not clip it at a fixed Hero/card boundary. */
@@ -30,7 +30,7 @@ body:has(.personal-home) .personal-home::before{
 }
 
 body:has(.personal-home) .personal-home::after{
-  content:"B"!important;
+  content:"S"!important;
   position:absolute!important;
   z-index:0!important;
   pointer-events:none!important;

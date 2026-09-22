@@ -20,45 +20,45 @@
   const tr = {
     ru: {
       home: 'Главная', bookings: 'Записи', saved: 'Сохранённые',
-      greeting: 'С возвращением', subtitle: 'Ваш Bookly — всё важное в одном месте.',
+      greeting: 'С возвращением', subtitle: 'Ваш Skedwoo — всё важное в одном месте.',
       explore: 'Найти место', exploreHint: 'Ссылка или slug бизнеса', search: 'Открыть',
-      manageBusiness: 'Для бизнеса', manageBusinessHint: 'Управляйте своим бизнесом в Bookly',
+      manageBusiness: 'Для бизнеса', manageBusinessHint: 'Управляйте своим бизнесом в Skedwoo',
       manage: 'Управлять', addBusiness: 'Создать бизнес', yourBusinesses: 'Ваши бизнесы',
       allBookings: 'Мои записи', noBookings: 'У вас пока нет записей', savedTitle: 'Сохранённые места',
       emptySaved: 'Сохранённых бизнесов пока нет', upcoming: 'Предстоящая', past: 'Завершённая', loading: 'Загрузка...'
     },
     en: {
       home: 'Home', bookings: 'Bookings', saved: 'Saved',
-      greeting: 'Welcome back', subtitle: 'Your Bookly space — everything important in one place.',
+      greeting: 'Welcome back', subtitle: 'Your Skedwoo space — everything important in one place.',
       explore: 'Find a place', exploreHint: 'Business link or slug', search: 'Open',
-      manageBusiness: 'For business', manageBusinessHint: 'Manage your business in Bookly',
+      manageBusiness: 'For business', manageBusinessHint: 'Manage your business in Skedwoo',
       manage: 'Manage', addBusiness: 'Create business', yourBusinesses: 'Your businesses',
       allBookings: 'My bookings', noBookings: 'You have no bookings yet', savedTitle: 'Saved places',
       emptySaved: 'No saved businesses yet', upcoming: 'Upcoming', past: 'Completed', loading: 'Loading...'
     },
     uz: {
       home: 'Bosh sahifa', bookings: 'Bronlar', saved: 'Saqlanganlar',
-      greeting: 'Xush kelibsiz', subtitle: 'Bookly — barcha muhim narsalar bir joyda.',
+      greeting: 'Xush kelibsiz', subtitle: 'Skedwoo — barcha muhim narsalar bir joyda.',
       explore: 'Joy topish', exploreHint: 'Biznes havolasi yoki slugi', search: 'Ochish',
-      manageBusiness: 'Biznes uchun', manageBusinessHint: 'Biznesingizni Bookly orqali boshqaring',
+      manageBusiness: 'Biznes uchun', manageBusinessHint: 'Biznesingizni Skedwoo orqali boshqaring',
       manage: 'Boshqarish', addBusiness: 'Biznes yaratish', yourBusinesses: 'Bizneslaringiz',
       allBookings: 'Bronlarim', noBookings: 'Hozircha bronlaringiz yo‘q', savedTitle: 'Saqlangan joylar',
       emptySaved: 'Saqlangan bizneslar yo‘q', upcoming: 'Kelgusi', past: 'Yakunlangan', loading: 'Yuklanmoqda...'
     },
     tr: {
       home: 'Ana sayfa', bookings: 'Rezervasyonlar', saved: 'Kaydedilenler',
-      greeting: 'Tekrar hoş geldiniz', subtitle: 'Bookly — önemli olan her şey tek yerde.',
+      greeting: 'Tekrar hoş geldiniz', subtitle: 'Skedwoo — önemli olan her şey tek yerde.',
       explore: 'Bir yer bul', exploreHint: 'İşletme bağlantısı veya slug', search: 'Aç',
-      manageBusiness: 'İşletmeler için', manageBusinessHint: 'İşletmenizi Bookly üzerinden yönetin',
+      manageBusiness: 'İşletmeler için', manageBusinessHint: 'İşletmenizi Skedwoo üzerinden yönetin',
       manage: 'Yönet', addBusiness: 'İşletme oluştur', yourBusinesses: 'İşletmeleriniz',
       allBookings: 'Rezervasyonlarım', noBookings: 'Henüz rezervasyonunuz yok', savedTitle: 'Kaydedilen yerler',
       emptySaved: 'Henüz kaydedilen işletme yok', upcoming: 'Yaklaşan', past: 'Tamamlanan', loading: 'Yükleniyor...'
     },
     ar: {
       home: 'الرئيسية', bookings: 'الحجوزات', saved: 'المحفوظة',
-      greeting: 'مرحباً بعودتك', subtitle: 'Bookly — كل ما يهمك في مكان واحد.',
+      greeting: 'مرحباً بعودتك', subtitle: 'Skedwoo — كل ما يهمك في مكان واحد.',
       explore: 'ابحث عن مكان', exploreHint: 'رابط النشاط أو الـ slug', search: 'فتح',
-      manageBusiness: 'لأصحاب الأعمال', manageBusinessHint: 'أدر نشاطك التجاري عبر Bookly',
+      manageBusiness: 'لأصحاب الأعمال', manageBusinessHint: 'أدر نشاطك التجاري عبر Skedwoo',
       manage: 'إدارة', addBusiness: 'إنشاء نشاط', yourBusinesses: 'أعمالك',
       allBookings: 'حجوزاتي', noBookings: 'لا توجد حجوزات بعد', savedTitle: 'الأماكن المحفوظة',
       emptySaved: 'لا توجد أعمال محفوظة بعد', upcoming: 'القادمة', past: 'المكتملة', loading: 'جارٍ التحميل...'
@@ -147,7 +147,7 @@
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'bookly-page-transition';
-      overlay.innerHTML = '<div class="bookly-transition-spinner"></div><strong>Bookly</strong>';
+      overlay.innerHTML = '<div class="bookly-transition-spinner"></div><strong>Skedwoo</strong>';
       document.body.appendChild(overlay);
     }
     return overlay;
@@ -199,7 +199,7 @@
     if (tab === 'home') {
       const firstName = tg()?.initDataUnsafe?.user?.first_name || '';
       const hero = el('section', 'bookly-hero');
-      hero.append(el('div', 'bookly-eyebrow', 'BOOKLY'));
+      hero.append(el('div', 'bookly-eyebrow', 'SKEDWOO'));
       hero.append(el('h1', '', firstName ? `${text('greeting')}, ${firstName}` : text('greeting')));
       hero.append(el('p', 'bookly-muted', text('subtitle')));
       content.append(hero);
@@ -251,7 +251,7 @@
         state.bookings.forEach(item => {
           const card = el('section', 'bookly-booking');
           card.append(el('span', 'bookly-kicker', item.status === 'cancelled' ? text('past') : text('upcoming')));
-          card.append(el('h2', '', item.business_name || 'Bookly'));
+          card.append(el('h2', '', item.business_name || 'Skedwoo'));
           if (item.service_name) card.append(el('p', 'bookly-service', item.service_name));
           card.append(el('strong', 'bookly-date', `📅 ${formatDate(item.day, item.start)}`));
           content.append(card);
@@ -279,7 +279,7 @@
           const card = el('button', 'bookly-saved-entity');
           card.append(el('span', 'bookly-entity-icon', '♡'));
           const info = el('span');
-          info.append(el('strong', '', item.name || 'Bookly'));
+          info.append(el('strong', '', item.name || 'Skedwoo'));
           if (item.address) info.append(el('small', 'bookly-muted', item.address));
           card.append(info);
           card.append(el('span', 'bookly-arrow', '›'));
@@ -297,11 +297,11 @@
     host.id = SHELL_ID;
     host.innerHTML = `
       <header class="bookly-header">
-        <div class="bookly-wordmark">Bookly</div>
+        <div class="bookly-wordmark">Skedwoo</div>
         <select class="bookly-top-language" aria-label="Language"></select>
       </header>
       <main class="bookly-content"></main>
-      <nav class="bookly-nav" aria-label="Bookly"></nav>
+      <nav class="bookly-nav" aria-label="Skedwoo"></nav>
     `;
     document.body.appendChild(host);
 

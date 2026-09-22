@@ -1,4 +1,4 @@
-/* Bookly Home — continuous artwork layer, with all UI content sitting above it. */
+/* Skedwoo Home — continuous artwork layer, with all UI content sitting above it. */
 body:has(.personal-home) .personal-home{
   position:relative!important;
   isolation:isolate!important;
@@ -26,7 +26,7 @@ body:has(.personal-home) .personal-home::before{
 
 /* Large B belongs to the page canvas, so it can sit behind any Home content. */
 body:has(.personal-home) .personal-home::after{
-  content:"B"!important;
+  content:"S"!important;
   position:absolute!important;
   z-index:0!important;
   pointer-events:none!important;

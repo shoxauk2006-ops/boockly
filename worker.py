@@ -1,4 +1,4 @@
-"""Bookly reminder worker. Run alongside the API in production."""
+"""Skedwoo reminder worker. Run alongside the API in production."""
 import os, asyncio, json
 from datetime import datetime, timedelta
 from urllib import request as urllib_request
