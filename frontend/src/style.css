@@ -2483,6 +2483,42 @@ body.bookly-client-body{background:#f6f7f9;overflow-x:hidden}
   }
 }
 
+.client-powered-by{
+  width:max-content;
+  max-width:100%;
+  margin:24px auto 8px;
+  padding:8px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  color:#8a919b;
+  font-size:12px;
+  line-height:1;
+  text-decoration:none;
+  border:1px solid #e4e7eb;
+  border-radius:999px;
+  background:rgba(255,255,255,.72);
+  transition:color .18s ease,border-color .18s ease,background .18s ease;
+}
+
+.client-powered-by strong{
+  color:#25282e;
+  font-weight:800;
+  letter-spacing:-.15px;
+}
+
+.client-powered-by:hover,
+.client-powered-by:focus-visible{
+  color:#555c66;
+  border-color:#cfd4da;
+  background:#fff;
+}
+
+[dir="rtl"] .client-powered-by span[aria-hidden="true"]{
+  transform:scaleX(-1);
+}
+
 
 /* QR print color themes */
 .qr-color-section{

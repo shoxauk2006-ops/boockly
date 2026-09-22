@@ -1120,6 +1120,21 @@ export function Client({
         </>
       )}
 
+      <a
+        className="client-powered-by"
+        href="https://skedwoo.vercel.app/landing.html"
+        target="_blank"
+        rel="noreferrer"
+        aria-label={t(
+          'client.createBookingPage',
+          'Create your own booking page with Skedwoo'
+        )}
+      >
+        <span>{t('client.poweredBy', 'Powered by')}</span>
+        <strong>Skedwoo</strong>
+        <span aria-hidden="true">↗</span>
+      </a>
+
     </section>
   );
 }

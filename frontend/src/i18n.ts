@@ -1511,12 +1511,35 @@ const uzFull: TranslationMap = { ...uz, ...uzExtra };
 const trFull: TranslationMap = { ...tr, ...trExtra };
 const arFull: TranslationMap = { ...ar, ...arExtra };
 
+const promotionTranslations: Record<Language, TranslationMap> = {
+  ru: {
+    'client.poweredBy': 'Работает на',
+    'client.createBookingPage': 'Создайте свою страницу записи со Skedwoo',
+  },
+  en: {
+    'client.poweredBy': 'Powered by',
+    'client.createBookingPage': 'Create your own booking page with Skedwoo',
+  },
+  uz: {
+    'client.poweredBy': 'Skedwoo yordamida',
+    'client.createBookingPage': 'Skedwoo orqali o‘z bron sahifangizni yarating',
+  },
+  tr: {
+    'client.poweredBy': 'Altyapı',
+    'client.createBookingPage': 'Skedwoo ile kendi rezervasyon sayfanızı oluşturun',
+  },
+  ar: {
+    'client.poweredBy': 'بدعم من',
+    'client.createBookingPage': 'أنشئ صفحة الحجز الخاصة بك مع Skedwoo',
+  },
+};
+
 export const translations: Record<Language, TranslationMap> = {
-  ru,
-  en,
-  uz: uzFull,
-  tr: trFull,
-  ar: arFull,
+  ru: { ...ru, ...promotionTranslations.ru },
+  en: { ...en, ...promotionTranslations.en },
+  uz: { ...uzFull, ...promotionTranslations.uz },
+  tr: { ...trFull, ...promotionTranslations.tr },
+  ar: { ...arFull, ...promotionTranslations.ar },
 };
 export const DEFAULT_LANGUAGE: Language = 'en';
 export const LANGUAGE_STORAGE_KEY = 'bookly_language';
