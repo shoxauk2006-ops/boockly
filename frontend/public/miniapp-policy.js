@@ -1,6 +1,6 @@
-/* Bookly Mini App policy layer.
+/* Skedvo Mini App policy layer.
    Telegram is the operating interface; account/business creation and
-   Bookly billing remain on the standalone website. */
+   Skedvo billing remain on the standalone website. */
 (function () {
   'use strict';
 
@@ -14,11 +14,11 @@
   var adminLandingCheckScheduled = false;
 
   var LABELS = {
-    ru: { title: 'Создать бизнес через Bookly', text: 'Создание бизнеса доступно на сайте Bookly. Там же проходит регистрация и подключение сервиса.', button: 'Открыть сайт Bookly' },
-    en: { title: 'Create your business on Bookly', text: 'Business creation is available on the Bookly website. Registration and setup are completed there.', button: 'Open Bookly website' },
-    uz: { title: 'Bookly orqali biznes yaratish', text: 'Biznes yaratish Bookly saytida mavjud. Ro‘yxatdan o‘tish va sozlash ham shu yerda bajariladi.', button: 'Bookly saytini ochish' },
-    tr: { title: 'Bookly üzerinden işletme oluştur', text: 'İşletme oluşturma Bookly web sitesinde yapılır. Kayıt ve kurulum da orada tamamlanır.', button: 'Bookly sitesini aç' },
-    ar: { title: 'إنشاء نشاط عبر Bookly', text: 'إنشاء النشاط متاح على موقع Bookly. يتم التسجيل والإعداد هناك أيضًا.', button: 'فتح موقع Bookly' }
+    ru: { title: 'Создать бизнес через Skedvo', text: 'Создание бизнеса доступно на сайте Skedvo. Там же проходит регистрация и подключение сервиса.', button: 'Открыть сайт Skedvo' },
+    en: { title: 'Create your business on Skedvo', text: 'Business creation is available on the Skedvo website. Registration and setup are completed there.', button: 'Open Skedvo website' },
+    uz: { title: 'Skedvo orqali biznes yaratish', text: 'Biznes yaratish Skedvo saytida mavjud. Ro‘yxatdan o‘tish va sozlash ham shu yerda bajariladi.', button: 'Skedvo saytini ochish' },
+    tr: { title: 'Skedvo üzerinden işletme oluştur', text: 'İşletme oluşturma Skedvo web sitesinde yapılır. Kayıt ve kurulum da orada tamamlanır.', button: 'Skedvo sitesini aç' },
+    ar: { title: 'إنشاء نشاط عبر Skedvo', text: 'إنشاء النشاط متاح على موقع Skedvo. يتم التسجيل والإعداد هناك أيضًا.', button: 'فتح موقع Skedvo' }
   };
 
   function language() {
@@ -42,27 +42,27 @@
 
   function replaceLegacyActivationCopy() {
     var replacements = [
-      [/Чтобы начать принимать записи от клиентов, активируйте подписку Bookly Pro\. После активации вы получите клиентскую ссылку и сможете начать принимать записи\./g, 'После настройки бизнеса клиенты смогут находить его по клиентской ссылке и самостоятельно записываться на услуги.'],
-      [/Чтобы клиентов? могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Bookly Pro\./g, 'Клиенты смогут найти ваш бизнес по клиентской ссылке и самостоятельно записываться на услуги.'],
-      [/Активируйте подписку, чтобы открыть доступ к функциям Bookly Pro/g, 'Управляйте функциями Bookly прямо здесь'],
+      [/Чтобы начать принимать записи от клиентов, активируйте подписку Skedvo Pro\. После активации вы получите клиентскую ссылку и сможете начать принимать записи\./g, 'После настройки бизнеса клиенты смогут находить его по клиентской ссылке и самостоятельно записываться на услуги.'],
+      [/Чтобы клиентов? могли найти ваш бизнес и самостоятельно записываться на услуги, активируйте Skedvo Pro\./g, 'Клиенты смогут найти ваш бизнес по клиентской ссылке и самостоятельно записываться на услуги.'],
+      [/Активируйте подписку, чтобы открыть доступ к функциям Skedvo Pro/g, 'Управляйте функциями Skedvo прямо здесь'],
       [/Активируйте подписку, чтобы получить клиентскую ссылку/g, 'Используйте клиентскую ссылку, чтобы делиться страницей бизнеса'],
       [/Активируйте подписку, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
-      [/Активируйте Bookly Pro, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
-      [/Активируйте подписку, чтобы получить полный доступ/g, 'Полный доступ к функциям Bookly'],
-      [/Активировать Bookly Pro/g, 'Открыть Bookly'],
-      [/Оплатите подписку, чтобы активировать Bookly\./g, 'Настройте бизнес, чтобы начать работу с Bookly.'],
-      [/Функции Bookly Pro/g, 'Функции Bookly'],
-      [/Bookly Pro открывает клиентскую часть Bookly:/g, 'Клиентская часть Bookly включает:'],
-      [/Без подписки вы можете создать и настраивать бизнес, добавлять услуги, управлять графиком, блокировками и записями в админке\. Подписка нужна для подключения клиентов и начала приёма онлайн-записей\./g, 'В Bookly вы настраиваете бизнес, добавляете услуги, управляете графиком, блокировками и записями. Клиенты записываются через клиентскую страницу бизнеса.'],
+      [/Активируйте Skedvo Pro, чтобы получить QR-код/g, 'QR-код страницы бизнеса'],
+      [/Активируйте подписку, чтобы получить полный доступ/g, 'Полный доступ к функциям Skedvo'],
+      [/Активировать Skedvo Pro/g, 'Открыть Skedvo'],
+      [/Оплатите подписку, чтобы активировать Skedvo\./g, 'Настройте бизнес, чтобы начать работу с Skedvo.'],
+      [/Функции Skedvo Pro/g, 'Функции Skedvo'],
+      [/Skedvo Pro открывает клиентскую часть Skedvo:/g, 'Клиентская часть Skedvo включает:'],
+      [/Без подписки вы можете создать и настраивать бизнес, добавлять услуги, управлять графиком, блокировками и записями в админке\. Подписка нужна для подключения клиентов и начала приёма онлайн-записей\./g, 'В Skedvo вы настраиваете бизнес, добавляете услуги, управляете графиком, блокировками и записями. Клиенты записываются через клиентскую страницу бизнеса.'],
       [/До 10 услуг в базовом тарифе/gi, 'Добавляйте услуги и устанавливайте цены'],
       [/Activate your subscription to get the client link/gi, 'Use the client link to share your business page'],
       [/Activate your subscription to get the QR code/gi, 'Business page QR code'],
-      [/Activate your subscription to get full access/gi, 'Full access to Bookly features'],
-      [/Activate Bookly Pro/gi, 'Open Bookly'],
-      [/Activate your subscription/gi, 'Use Bookly'],
-      [/Bookly Pro opens the client side of Bookly:/gi, 'The Bookly client side includes:'],
-      [/activate your subscription/gi, 'use Bookly'],
-      [/Bookly Pro/gi, 'Bookly']
+      [/Activate your subscription to get full access/gi, 'Full access to Skedvo features'],
+      [/Activate Skedvo Pro/gi, 'Open Skedvo'],
+      [/Activate your subscription/gi, 'Use Skedvo'],
+      [/Skedvo Pro opens the client side of Skedvo:/gi, 'The Skedvo client side includes:'],
+      [/activate your subscription/gi, 'use Skedvo'],
+      [/Skedvo Pro/gi, 'Skedvo']
     ];
     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     var nodes = [], node;
