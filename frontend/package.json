@@ -6,12 +6,12 @@
     "test:account-loader": "node scripts/test-account-loader.mjs"
   },
   "dependencies": {
-    "vite": "latest",
-    "typescript": "latest",
+    "@vercel/analytics": "^2.0.1",
+    "libphonenumber-js": "latest",
+    "qrcode": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "qrcode": "latest",
-    "libphonenumber-js": "latest"
-  },
-  "devDependencies": {}
+    "typescript": "latest",
+    "vite": "latest"
+  }
 }
